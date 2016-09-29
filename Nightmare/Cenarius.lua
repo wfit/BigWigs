@@ -139,7 +139,7 @@ function mod:OnEngage()
 	self:CDBar(212726, 10, CL.count:format(self:SpellName(212726), forcesOfNightmareCount)) -- Forces of Nightmare
 	self:Bar(210290, 28) -- Nightmare Brambles
 	if self:Mythic() then
-		self:Bar(213162, 31.5) -- Nightmare Brambles
+		self:Bar(213162, 30.5) -- Nightmare Brambles
 	end
 
 	wipe(mobCollector)
@@ -191,7 +191,7 @@ function mod:ForcesOfNightmare(args)
 	self:Message(args.spellId, "Urgent", nil, CL.casting:format(args.spellName))
 	forcesOfNightmareCount = forcesOfNightmareCount + 1
 	self:Bar(210346, 6) -- Dread Thorns
-	self:Bar(212681, 13) -- Cleansed Ground
+	self:Bar(212681, 11) -- Cleansed Ground
 	--self:CDBar(args.spellId, 19, CL.incoming:format(L.forces))
 	self:Bar(args.spellId, 77.7, CL.count:format(args.spellName, forcesOfNightmareCount))
 end
@@ -211,6 +211,9 @@ do
 				local id = adds[self:MobId(guid)]
 				if id then
 					self:Message(212726, "Neutral", "Info", id, false)
+				end
+				if self:MobId(guid) == 105495 then
+					self:Bar(211471, 6)
 				end
 			end
 		end
@@ -336,6 +339,7 @@ do
 		if #playerList == 1 then
 			--self:ScheduleTimer("TargetMessage", 0.1, args.spellId, playerList, "Important", "Alert")
 			self:Message(args.spellId, "Important", "Alert")
+			self:Bar(args.spellId, 21)
 		end
 	end
 
