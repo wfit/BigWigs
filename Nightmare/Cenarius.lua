@@ -139,7 +139,7 @@ function mod:OnEngage()
 	self:CDBar(212726, 10, CL.count:format(self:SpellName(212726), forcesOfNightmareCount)) -- Forces of Nightmare
 	self:Bar(210290, 28) -- Nightmare Brambles
 	if self:Mythic() then
-		self:Bar(210290, 28) -- Nightmare Brambles
+		self:Bar(213162, 31.5) -- Nightmare Brambles
 	end
 
 	wipe(mobCollector)
