@@ -165,13 +165,13 @@ function mod:OnEngage()
 	wipe(mobCollector)
 	fixateOnMe = nil
 	insidePhase = 1
-	bloodsRemaining = 20
+	bloodsRemaining = self:LFR() and 15 or self:Mythic() and 25 or 20
 	self:CDBar(208689, 11.5) -- Ground Slam
 	self:CDBar("nightmare_horror", 65, L.nightmare_horror, L.nightmare_horror_icon) -- Summon Nightmare Horror
 
 	phaseStartTime = GetTime()
-	self:StartSpawnTimer(-13190, 1)
-	self:StartSpawnTimer(-13191, 1)
+	self:StartSpawnTimer(-13190, 1) -- Deathglare Tentacle
+	self:StartSpawnTimer(-13191, 1) -- Corruptor Tentacle
 
 
 	wipe(deathglareMarked)
