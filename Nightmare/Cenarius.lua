@@ -54,6 +54,7 @@ function mod:GetOptions()
 		212726, -- Forces of Nightmare
 		210346, -- Dread Thorns
 		214884, -- Corrupt Allies of Nature
+		{213162, "TANK"}, -- Nightmare Blast Mythic
 		-- P2
 		214505, -- Entangling Nightmares
 		214529, -- Spear of Nightmares
@@ -129,6 +130,7 @@ function mod:OnBossEnable()
 
 	--[[ Mythic ]]--
 	self:Log("SPELL_CAST_SUCCESS", "BeastsOfNightmare", 214876) -- untested
+	self:Log("SPELL_CAST_START", "NightmareBlastCast", 213162)
 end
 
 function mod:OnEngage()
@@ -136,6 +138,9 @@ function mod:OnEngage()
 	phase = 1
 	self:CDBar(212726, 10, CL.count:format(self:SpellName(212726), forcesOfNightmareCount)) -- Forces of Nightmare
 	self:Bar(210290, 28) -- Nightmare Brambles
+	if self:Mythic() then
+		self:Bar(210290, 28) -- Nightmare Brambles
+	end
 
 	wipe(mobCollector)
 
@@ -352,4 +357,9 @@ end
 --[[ Mythic ]]--
 function mod:BeastsOfNightmare(args)
 	self:Message(args.spellId, "Important", "Alert")
+end
+
+function mod:NightmareBlastCast(args)
+	self:Message(args.spellId, "Important", "Alert")
+	self:Bar(args.spellId, 32.4)
 end
