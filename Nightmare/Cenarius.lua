@@ -334,7 +334,8 @@ do
 
 		playerList[#playerList+1] = args.destName
 		if #playerList == 1 then
-			self:ScheduleTimer("TargetMessage", 0.1, args.spellId, playerList, "Important", "Alert")
+			--self:ScheduleTimer("TargetMessage", 0.1, args.spellId, playerList, "Important", "Alert")
+			self:Message(args.spellId, "Important", "Alert")
 		end
 	end
 
@@ -362,6 +363,6 @@ function mod:BeastsOfNightmare(args)
 end
 
 function mod:NightmareBlastCast(args)
-	self:Message(args.spellId, "Important", "Alert")
+	self:Message(args.spellId, "Urgent", "Warning")
 	self:Bar(args.spellId, 32.4)
 end
