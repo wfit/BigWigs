@@ -17,7 +17,7 @@ mod:RegisterEnableMob(
 	102683  -- Emeriss
 )
 mod.engageId = 1854
---mod.respawnTime = 0
+mod.respawnTime = 40
 
 --------------------------------------------------------------------------------
 -- Locals
@@ -28,6 +28,13 @@ local dragonsOnGround = {
 	[102682] = nil, -- Lethon
 	[102683] = nil, -- Emeriss
 }
+local markStacks = {
+	[203102] = 0, -- Mark of Ysondre
+	[203125] = 0, -- Mark of Emeriss
+	[203124] = 0, -- Mark of Lethon
+	[203121] = 0, -- Mark of Taerar
+}
+local mythicAdd = 1
 
 --------------------------------------------------------------------------------
 -- Localization
@@ -42,7 +49,7 @@ local L = mod:GetLocale()
 function mod:GetOptions()
 	return {
 		--[[ General ]]--
-		203028, -- Corrupted Breath
+		{203028, "TANK"}, -- Corrupted Breath
 		-12809, -- Marks
 		"berserk",
 
@@ -64,15 +71,19 @@ function mod:GetOptions()
 
 		--[[ Taerar ]]--
 		204100, -- Shades of Taerar
-		204767, -- Corrupted Breath (Shades)
+		{204767, "TANK"}, -- Corrupted Breath (Shades)
 		205331, -- Seeping Fog
 		204078, -- Bellowing Roar
+
+		--[[ Mythic ]]--
+		214497, -- Nightmare Souls (Adds spawning in Hinterlands etc)
 	},{
 		[203028] = "general",
 		[207573] = -12768, -- Ysondre
 		[203787] = -12770, -- Emeriss
-		--[0] = -12772, -- Lethon TODO
+		[203888] = -12772, -- Lethon
 		[204100] = -12774, -- Taerar
+		[214497] = "mythic",
 	}
 end
 
@@ -103,6 +114,9 @@ function mod:OnBossEnable()
 	self:Log("SPELL_CAST_START", "ShadesOfTaerar", 204100)
 	self:Log("SPELL_CAST_START", "ShadeCorruptedBreath", 204767)
 	self:Log("SPELL_CAST_START", "BellowingRoar", 204078)
+
+	--[[ Mythic ]]--
+	self:Log("SPELL_AURA_APPLIED", "NightmareSouls", 214497)
 end
 
 function mod:OnEngage()
@@ -111,10 +125,21 @@ function mod:OnEngage()
 		[102682] = nil, -- Lethon
 		[102683] = nil, -- Emeriss
 	}
+	markStacks = {
+		[203102] = 0, -- Mark of Ysondre
+		[203125] = 0, -- Mark of Emeriss
+		[203124] = 0, -- Mark of Lethon
+		[203121] = 0, -- Mark of Taerar
+	}
+	mythicAdd = 1
 	self:RegisterEvent("INSTANCE_ENCOUNTER_ENGAGE_UNIT")
 	self:INSTANCE_ENCOUNTER_ENGAGE_UNIT()
 	self:Bar(203028, 17) -- Corrupted Breath
 	self:Bar(207573, 30) -- Call Defiled Spirit
+
+	if self:Mythic() then
+		self:Bar(204078, 51) -- Bellowing Roar
+	end
 end
 
 --------------------------------------------------------------------------------
@@ -131,11 +156,12 @@ function mod:INSTANCE_ENCOUNTER_ENGAGE_UNIT()
 
 				if id == 102681 then -- Taerar
 					--self:Bar(204100, ??) -- Shades of Taerar
+					self:StopBar(204078) -- Bellowing Roar
 				elseif id == 102682 then -- Lethon
 					self:Bar(203888, 25) -- Siphon Spirit
 				elseif id == 102683 then -- Emeriss
-					self:Bar(203787, 20)
-					self:Bar(205298, 29)
+					self:Bar(203787, 20) -- Volatile Infection
+					self:Bar(205298, 29) -- Essence of Corruption
 				end
 			end
 		end
@@ -173,6 +199,7 @@ end
 function mod:MarkApplied(args)
 	if self:Me(args.destGUID) then
 		local amount = args.amount or 1
+		markStacks[args.spellId] = args.amount
 		if amount == 1 or amount > 6 then -- could need fine tuning
 			self:StackMessage(-12809, args.destName, amount, "Important", "Warning", args.spellId, args.spellId)
 		end
@@ -189,6 +216,8 @@ end
 function mod:MarkRemoved(args)
 	if self:Me(args.destGUID) then
 		self:Message(-12809, "Positive", "Info", CL.removed:format(args.spellName), args.spellId)
+		self:StopBar(CL.count:format(args.spellName, markStacks[args.spellId]), args.destName)
+		markStacks[args.spellId] = 0
 	end
 end
 
@@ -307,4 +336,14 @@ end
 
 function mod:BellowingRoar(args)
 	self:Message(args.spellId, "Important", "Alarm", CL.casting:format(args.spellName))
+	self:Bar(args.spellId, 6, CL.cast:format(args.spellName))
+	self:Bar(args.spellId, 51)
+end
+
+--[[ Mythic ]]--
+function mod:NightmareSouls(args)
+	local spell = mythicAdd == 1 and 214610 or mythicAdd == 2 and 214588 or 214604 -- Dream Essence: Hinterlands / Ashenvale / Feralas
+	local percentage = mythicAdd == 1 and "90% - " or mythicAdd == 2 and "60% - " or "30% - "
+	self:Message(args.spellId, "Neutral", "Long", percentage .. self:SpellName(spell), spell)
+	mythicAdd = mythicAdd + 1
 end

@@ -23,6 +23,8 @@ end
 L = BigWigs:NewBossLocale("Emerald Nightmare Trash", "deDE")
 if L then
 	L.gelatinizedDecay = "Verrottender Schleim"
+	L.befouler = "Pestherzbesudler"
+	L.shaman = "Terrorschamane"
 end
 
 L = BigWigs:NewBossLocale("Ursoc", "deDE")
