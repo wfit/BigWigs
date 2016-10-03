@@ -129,7 +129,6 @@ function mod:OnBossEnable()
 
 	--[[ Mythic ]]--
 	self:Log("SPELL_CAST_SUCCESS", "BeastsOfNightmare", 214876) -- untested
-	self:Log("SPELL_CAST_START", "NightmareBlastCast", 213162)
 end
 
 function mod:OnEngage()
@@ -180,7 +179,7 @@ end
 
 function mod:NightmareBlast(args)
 	self:Message(args.spellId, "Urgent", "Alert", CL.casting:format(args.spellName))
-	self:CDBar(args.spellId, 32)
+	self:CDBar(args.spellId, 32.4)
 end
 
 function mod:CreepingNightmaresRemoved(args)
@@ -366,9 +365,4 @@ end
 --[[ Mythic ]]--
 function mod:BeastsOfNightmare(args)
 	self:Message(args.spellId, "Important", "Alert")
-end
-
-function mod:NightmareBlastCast(args)
-	self:Message(args.spellId, "Urgent", "Warning")
-	self:Bar(args.spellId, 32.4)
 end
