@@ -25,9 +25,9 @@ local focusedGazeCount = 1
 
 local L = mod:GetLocale()
 if L then
-	L.custom_off_gaze_assist = "Focused Gaze Assist"
-	L.custom_off_gaze_assist_desc = "Show raid icons in bars and messages for Focused Gaze. Using {rt4} for odd, {rt6} for even soaks. Requires promoted or leader."
-	L.custom_off_gaze_assist_icon = 4
+	L.custom_on_gaze_assist = "Focused Gaze Assist"
+	L.custom_on_gaze_assist_desc = "Show raid icons in bars and messages for Focused Gaze. Using {rt4} for odd, {rt6} for even soaks. Requires promoted or leader."
+	L.custom_on_gaze_assist_icon = 4
 end
 
 --------------------------------------------------------------------------------
@@ -39,7 +39,7 @@ function mod:GetOptions()
 		{197943, "TANK"}, -- Overwhelm
 		{204859, "TANK_HEALER"}, -- Rend Flesh
 		{198006, "ICON", "FLASH", "PULSE", "SAY"}, -- Focused Gaze
-		"custom_off_gaze_assist",
+		"custom_on_gaze_assist",
 		198108, -- Momentum
 		197969, -- Roaring Cacophony
 		205611, -- Miasma
@@ -71,7 +71,7 @@ function mod:OnEngage()
 
 	self:Bar(197943, 10) -- Overwhelm
 	self:Bar(204859, 15) -- Rend Flesh, time to _applied
-	if self:GetOption("custom_off_gaze_assist") then
+	if self:GetOption("custom_on_gaze_assist") then
 		self:Bar(198006, 19, CL.count_icon:format(self:SpellName(198006), focusedGazeCount, 4)) -- Focused Gaze, green
 	else
 		self:Bar(198006, 19, CL.count:format(self:SpellName(198006), focusedGazeCount)) -- Focused Gaze
@@ -134,14 +134,16 @@ function mod:FocusedGaze(args)
 	local icon = focusedGazeCount % 2 == 0 and 6 or 4 -- blue (even), green (odd)
 	local countSay = CL.count:format(args.spellName, focusedGazeCount)
 	local countMessage = countSay
+	local showingIcons = false
 
-	if not self:LFR() and self:GetOption("custom_off_gaze_assist") then
+	if not self:LFR() and self:GetOption("custom_on_gaze_assist") then
+		showingIcons = true
 		countSay = CL.count_rticon:format(args.spellName, focusedGazeCount, icon)
 		countMessage = CL.count_icon:format(args.spellName, focusedGazeCount, icon)
 	end
 
 	if self:Me(args.destGUID) then
-		self:Flash(args.spellId, not self:LFR() and self:GetOption("custom_off_gaze_assist") and icon)
+		self:Flash(args.spellId, showingIcons and icon)
 		self:Say(args.spellId, countSay)
 	end
 
@@ -149,7 +151,11 @@ function mod:FocusedGaze(args)
 	self:TargetMessage(args.spellId, args.destName, "Important", "Warning", countMessage, args.spellId, true)
 	self:TargetBar(args.spellId, 6, args.destName, countMessage)
 	focusedGazeCount = focusedGazeCount + 1
-	self:Bar(args.spellId, 40, CL.count_icon:format(args.spellName, focusedGazeCount, focusedGazeCount % 2 == 0 and 6 or 4))
+	if showingIcons then
+		self:Bar(args.spellId, 40, CL.count_icon:format(args.spellName, focusedGazeCount, focusedGazeCount % 2 == 0 and 6 or 4))
+	else
+		self:Bar(args.spellId, 40, CL.count:format(args.spellName, focusedGazeCount))
+	end
 end
 
 function mod:FocusedGazeRemoved(args)
