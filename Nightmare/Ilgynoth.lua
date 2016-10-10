@@ -56,12 +56,12 @@ local spawnDataMythic = {
 			{ 21.5, 1}, -- 1x
 			{ 96.5, 2}, -- 2x
 			{181.5, 1}, -- 1x
-			{241.0, 1}, -- 1x
+			{251.9, 1}, -- 1x
 		},
 		[-13191] = { -- Corruptor Tentacle, Spew Corruption (208929) SPELL_CAST_START
 			{ 90.0, 2}, -- 2x
-			{185.0, 2}, -- 2x
-			{225.0, 1}, -- 1x
+			{185.4, 2}, -- 2x
+			{235.0, 1}, -- 1x
 			{280.0, 2}, -- 2x
 			{300.0, 3}, -- 3x
 		},
@@ -75,9 +75,9 @@ local spawnDataMythic = {
 			{251.5, 1}, -- 1x
 		},
 		[-13191] = { -- Corruptor Tentacle, Spew Corruption (208929) SPELL_CAST_START
-			{ 45.0, 2}, -- 2x
-			{120.0, 2}, -- 2x
-			{235.0, 2}, -- 2x
+			{ 45.2, 2}, -- 2x
+			{120.2, 2}, -- 2x
+			{235.2, 2}, -- 2x
 			{300.0, 4}, -- 4x
 		},
 	}
@@ -219,7 +219,7 @@ function mod:OnEngage()
 	deathBlossomCount = 1
 	bloodsRemaining = self:LFR() and 15 or self:Mythic() and 22 or 20
 	self:CDBar(208689, 11.5) -- Ground Slam
-	self:CDBar("nightmare_horror", self:Mythic() and 80 or 65, L.nightmare_horror, L.nightmare_horror_icon) -- Summon Nightmare Horror
+	self:CDBar("nightmare_horror", self:Mythic() and 79 or 65, L.nightmare_horror, L.nightmare_horror_icon) -- Summon Nightmare Horror
 
 	if self:Mythic() then
 		self:Bar(218415, 60) -- Death Blossom
@@ -456,6 +456,8 @@ function mod:StuffOfNightmaresRemoved()
 	self:Message("stages", "Neutral", "Long", CL.stage:format(2), false)
 	phase = phase + 1
 
+	self:Bar(215128, self:Mythic() and phase == 4 and 25 or self:Mythic() and phase == 2 and 23 or 15) -- Cursed Blood
+
 	if self:Mythic() and phase == 4 then
 		self:Bar("shriveled_eyestalk", 10, L.shriveled_eyestalk, L.shriveled_eyestalk_icon)
 		self:ScheduleTimer("Bar", 10, "shriveled_eyestalk", 20, L.shriveled_eyestalk, L.shriveled_eyestalk_icon)
@@ -504,7 +506,7 @@ do
 
 		if not scheduled then
 			scheduled = self:ScheduleTimer(warn, 0.1, self, args.spellId)
-			self:CDBar(args.spellId, 15)
+			self:CDBar(args.spellId, self:Mythic() and phase == 4 and 28 or self:Mythic() and phase == 2 and 27 or 15)
 		end
 	end
 
@@ -536,7 +538,7 @@ end
 
 function mod:DeathBlossomSuccess(args)
 	self:Message(args.spellId, "Positive", "Long", CL.over:format(args.spellName))
-	local time = deathBlossomCount == 2 and 90 or deathBlossomCount == 3 and 20 or 0
+	local time = deathBlossomCount == 2 and 85 or deathBlossomCount == 3 and 20 or 0
 	if phase == 3 then
 		time = deathBlossomCount == 2 and 60 or deathBlossomCount == 3 and 100 or 0
 	end
