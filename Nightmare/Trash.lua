@@ -39,6 +39,7 @@ function mod:GetOptions()
 		{222719, "SAY"}, -- Befoulment
 		--[[ Dire Shaman ]]--
 		"totem", -- Corrupted Totem
+		"custom_on_mark_totem",
 	}, {
 		[221059] = L.gelatinizedDecay,
 		[222719] = L.befouler,

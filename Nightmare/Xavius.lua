@@ -22,6 +22,7 @@ local lurkingEruption = 1
 local horrorCount = 0
 local isInDream = false
 local bladeList, bondList = mod:NewTargetList(), mod:NewTargetList()
+local dreamingCount = 1
 
 --------------------------------------------------------------------------------
 -- Localization
@@ -117,8 +118,11 @@ end
 
 function mod:OnEngage()
 	phase = 1
-	lurkingEruption = 1 -- Purposely init at 1
-	horrorCount = 0
+	lurkingEruptionCount = 1
+	horrorCount = 1
+	dreamingCount = 1
+	wipe(bladeList)
+	wipe(bondList)
 	isInDream = false
 	wipe(bladeList)
 	wipe(bondList)
