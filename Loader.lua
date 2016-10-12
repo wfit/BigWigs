@@ -810,37 +810,6 @@ do
 		timer = nil
 	end
 
-	local hasWarned, hasReallyWarned, hasExtremelyWarned = nil, nil, nil
-	local function printOutOfDate(tbl)
-		if hasExtremelyWarned then return end
-		local warnedOutOfDate, warnedReallyOutOfDate, warnedExtremelyOutOfDate = 0, 0, 0
-		for k,v in next, tbl do
-			if v > BIGWIGS_VERSION then
-				warnedOutOfDate = warnedOutOfDate + 1
-				if warnedOutOfDate > 1 and not hasWarned then
-					hasWarned = true
-					sysprint(L.getNewRelease)
-				end
-				if (v - 1) > BIGWIGS_VERSION then -- 2+ releases
-					warnedReallyOutOfDate = warnedReallyOutOfDate + 1
-					if warnedReallyOutOfDate > 1 and not hasReallyWarned then
-						hasReallyWarned = true
-						sysprint(L.warnTwoReleases)
-						RaidNotice_AddMessage(RaidWarningFrame, L.warnTwoReleases, {r=1,g=1,b=1})
-					end
-					if (v - 2) > BIGWIGS_VERSION then -- Currently at 3+ releases since it's a quiet period, always adjust this higher for busy periods.
-						warnedExtremelyOutOfDate = warnedExtremelyOutOfDate + 1
-						if warnedExtremelyOutOfDate > 1 and not hasExtremelyWarned then
-							hasExtremelyWarned = true
-							sysprint(L.warnSeveralReleases)
-							message(L.warnSeveralReleases)
-						end
-					end
-				end
-			end
-		end
-	end
-
 	function mod:VersionCheck(prefix, msg, sender)
 		if prefix == "Q" then
 			if timer then timer:Cancel() end
@@ -853,9 +822,6 @@ do
 				usersVersion[sender] = version
 				usersHash[sender] = hash
 				if version > highestFoundVersion then highestFoundVersion = version end
-				if version > BIGWIGS_VERSION then
-					printOutOfDate(usersVersion)
-				end
 			end
 		end
 	end
