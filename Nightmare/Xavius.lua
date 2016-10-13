@@ -185,10 +185,19 @@ do
 		local t = GetTime()
 		if t-prev > 5 then
 			prev = t
-			lurkingEruption = lurkingEruption + 1
-			if lurkingEruption < 3 then
-				self:Bar(args.spellId, 20.5)
-			end
+			lurkingEruptionCount = lurkingEruptionCount + 1
+			self:Bar(args.spellId, lurkingEruptionCount % 3 == 0 and 41 or 20.5, CL.count:format(args.spellName, lurkingEruptionCount))
+		end
+	end
+end
+
+do
+	local prev = 0
+	function mod:TheInfiniteDark(args)
+		local t = GetTime()
+		if self:Me(args.destGUID) and t-prev > 1.5 then
+			prev = t
+			self:Message(args.spellId, "Personal", "Alert", CL.you:format(args.spellName))
 		end
 	end
 end

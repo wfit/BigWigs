@@ -90,6 +90,38 @@ function mod:Befoulment(args)
 end
 
 --[[ Dire Shaman ]]--
-function mod:CorruptedTotem(args)
-	self:Message("totem", "Important", "Long", args.spellName, L.totem_icon)
+do
+	local guids = {}
+	local nextIcon = 8
+	function mod:CorruptedTotem(args)
+		self:Message("totem", "Important", "Long", args.spellName, L.totem_icon)
+		if self:GetOption("custom_on_mark_totem") then
+			if not next(guids) then
+				nextIcon = 8
+				guids[args.destGUID] = nextIcon
+			else
+				if nextIcon == 8 then nextIcon = 7 else nextIcon = 8 end
+				guids[args.destGUID] = nextIcon
+			end
+			self:RegisterTargetEvents("MarkTotem")
+		end
+	end
+
+	function mod:MarkTotem(event, unit)
+		local guid = UnitGUID(unit)
+		local icon = guids[guid]
+		if icon and icon > 0 then
+			local mobId = self:MobId(guid)
+			if mobId == 112474 then -- Corrupted Totem
+				SetRaidTarget(unit, icon)
+				guids[guid] = 0
+			end
+		end
+	end
+
+	function mod:TotemDies(args)
+		if guids[args.destGUID] then
+			guids[args.destGUID] = nil
+		end
+	end
 end
