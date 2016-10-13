@@ -21,9 +21,13 @@ if L then
 	L.gelatinizedDecay = "Gelatinized Decay"
 	L.befouler = "Taintheart Befouler"
 	L.shaman = "Dire Shaman"
+
 	L.totem = 223918 -- Corrupted Totem
 	L.totem_desc = 223923 -- Twisted Nova (cast by the totem)
 	L.totem_icon = "spell_shaman_stormtotem"
+	L.custom_on_mark_totem = "Mark the Totems"
+	L.custom_on_mark_totem_desc = "Mark the Totems with {rt8}{rt7}, requires promoted or leader."
+	L.custom_on_mark_totem_icon = 8
 end
 
 --------------------------------------------------------------------------------
@@ -58,7 +62,8 @@ function mod:OnBossEnable()
 	self:Log("SPELL_AURA_APPLIED", "Befoulment", 222719)
 
 	--[[ Dire Shaman ]]--
-	self:Log("SPELL_CAST_SUCCESS", "CorruptedTotem", 223918)
+	self:Log("SPELL_SUMMON", "CorruptedTotem", 223918)
+	self:Death("TotemDies", 112474)
 end
 
 --------------------------------------------------------------------------------
