@@ -39,7 +39,7 @@ end
 function mod:GetOptions()
 	return {
 		--[[ Spider Form ]]--
-		215300, -- Web of Pain
+		{215300, "FLASH"}, -- Web of Pain
 		212364, -- Feeding Time
 		214348, -- Vile Ambush
 		{215443, "SAY", "FLASH"}, -- Necrotic Venom
@@ -202,11 +202,13 @@ function mod:WebOfPainApplied(args)
 		local _, _, _, _, _, _, expires = UnitDebuff("player", args.spellName)
 		local remaining = expires-GetTime()
 		self:Bar(args.spellId, remaining, L.yourLinkShort:format(self:ColorName(args.sourceName)))
+		self:Flash(args.spellId)
 	elseif self:Me(args.sourceGUID) then
 		self:Message(args.spellId, "Personal", "Warning", L.yourLink:format(self:ColorName(args.destName)))
 		local _, _, _, _, _, _, expires = UnitDebuff("player", args.spellName)
 		local remaining = expires-GetTime()
 		self:Bar(args.spellId, remaining, L.yourLinkShort:format(self:ColorName(args.sourceName)))
+		self:Flash(args.spellId)
 	elseif not self:CheckOption(args.spellId, "ME_ONLY") then
 		self:Message(args.spellId, "Attention", nil, L.isLinkedWith:format(self:ColorName(args.sourceName), self:ColorName(args.destName)))
 	end
