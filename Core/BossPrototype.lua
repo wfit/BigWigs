@@ -1790,3 +1790,18 @@ function boss:FS_MSG_BW_ENCOUNTER(_, msg, channel, source)
 		self[self.netmsgs[event]](self, msg.data, channel, source)
 	end
 end
+
+-------------------------------------------------------------------------------
+-- Misc.
+-- @section misc
+--
+
+function boss:UnitId(guid)
+	if UnitExists(guid) then
+		return guid
+	elseif guid:sub(1, 6) == "Player" then
+		return FS.Roster:GetUnit(guid)
+	else
+		return FS.Tracker:GetUnit(guid)
+	end
+end
