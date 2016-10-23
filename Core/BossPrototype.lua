@@ -1622,6 +1622,12 @@ function boss:Flash(key, icon)
 	end
 end
 
+function boss:Pulse(key, icon)
+	if checkFlag(self, key, C.PULSE) then
+		self:SendMessage("BigWigs_Pulse", self, key, icons[icon or key])
+	end
+end
+
 --- Send a message in SAY.
 -- @param key the option key
 -- @param msg the message to say (if nil, key is used)
