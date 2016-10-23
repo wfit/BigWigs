@@ -22,8 +22,12 @@ mod.instanceId = 1520
 local mobCollector = {}
 local fixateOnMe = nil
 local phase = 1 -- 1 = Outside, 2 = Boss, 3 = Outside, 4 = Boss
-local deathglareMarked = {} -- save GUIDs of marked mobs
-local deathglareMarks  = { [6] = true, [5] = true, [4] = true, [3] = true } -- available marks to use
+
+local ichors = {}
+local ichorsMarked = {}
+local unknownIchorMark = {}
+local ichorsMarks  = { [1] = true, [2] = true, [3] = true, [4] = true, [5] = true, [6] = true, [7] = true, [8] = true }
+
 local deathBlossomCount = 1
 
 local phaseStartTime = 0
@@ -115,10 +119,12 @@ end
 -- Initialization
 --
 
-local ichorsMarks = mod:AddCustomOption("ichors_marks", "Set markers on Ichors", nil, true)
-local ichorsFlash = mod:AddCustomOption("ichors_flash", "Pulse attribution", "Display a Pulse alert with the symbol of the Ichor fixated on you.", true)
+local ichors_marks = mod:AddCustomOption("ichors_marks", "Set markers on Ichors", nil, true)
+local ichors_flash = mod:AddCustomOption("ichors_flash", "Pulse attribution", "Display a Pulse alert with the symbol of the Ichor fixated on you.", true)
+local ichors_fails = mod:AddCustomOption("ichors_fails", "Announce Ichors fails", "Announces name of fixated players whose ichors did not hit the boss", true)
 
-local ichorsToken = mod:CreateToken("ichors", true, ichorsMarks)
+local ichors_marks_token = mod:CreateToken("ichors_marks", true, ichors_marks)
+local ichors_fails_token = mod:CreateToken("ichors_fails", false, ichors_fails)
 
 function mod:GetOptions()
 	return {
@@ -137,8 +143,8 @@ function mod:GetOptions()
 		210099, -- Fixate
 		209469, -- Touch of Corruption
 		209471, -- Nightmare Explosion
-		ichorsMarks,
-		ichorsFlash,
+		ichors_marks,
+		ichors_flash,
 
 		-- Nightmare Horror
 		"nightmare_horror", -- Nightmare Horror
@@ -187,6 +193,9 @@ function mod:OnBossEnable()
 	self:Log("SPELL_AURA_REMOVED", "FixateRemoved", 210099)
 	self:Log("SPELL_AURA_APPLIED_DOSE", "TouchOfCorruption", 209469)
 	self:Log("SPELL_CAST_START", "NightmareExplosion", 209471)
+	self:Log("SPELL_DAMAGE", "NightmareExplosionDamage", 209471)
+	self:Death("IchorDeath", 105721)
+	self:RegisterNetMessage("IchorMarked")
 
 	-- Nightmare Horror
 	self:Log("SPELL_AURA_APPLIED", "SummonNightmareHorror", 209387) -- Seeping Corruption, buffed on spawn
@@ -200,7 +209,6 @@ function mod:OnBossEnable()
 
 	-- Deathglare Tentacle
 	self:Log("SPELL_CAST_START", "MindFlay", 208697) -- Also used for spawn messages
-	self:Death("DeathglareDeath", 105322)
 
 	--[[ Stage Two ]]--
 	self:Log("SPELL_AURA_APPLIED", "StuffOfNightmares", 209915)
@@ -213,6 +221,7 @@ function mod:OnBossEnable()
 	--[[ Mythic ]]--
 	self:Log("SPELL_CAST_START", "DeathBlossom", 218415)
 	self:Log("SPELL_CAST_SUCCESS", "DeathBlossomSuccess", 218415)
+
 end
 
 function mod:OnEngage()
@@ -232,11 +241,12 @@ function mod:OnEngage()
 	self:StartSpawnTimer(-13190, 1) -- Deathglare Tentacle
 	self:StartSpawnTimer(-13191, 1) -- Corruptor Tentacle
 
-	wipe(deathglareMarked)
-	if self:GetOption(tentacleMarker) then
-		deathglareMarks = { [6] = true, [5] = true, [4] = true, [3] = true }
-
-		self:RegisterTargetEvents("DeathglareMark")
+	wipe(ichors)
+	wipe(ichorsMarked)
+	wipe(unknownIchorMark)
+	if self:GetOption(ichors_marks) then
+		ichorsMarks = { [1] = true, [2] = true, [3] = true, [4] = true, [5] = true, [6] = true, [7] = true, [8] = true }
+		self:RegisterTargetEvents("IchorMark")
 	end
 end
 
@@ -265,24 +275,6 @@ function mod:StartSpawnTimer(addType, count)
 	end
 
 	self:ScheduleTimer("StartSpawnTimer", length, addType, count+1)
-end
-
-function mod:DeathglareMark(event, unit)
-	local guid = UnitGUID(unit)
-	if self:MobId(guid) == 105322 and not deathglareMarked[guid] then
-		local icon = next(deathglareMarks)
-		if icon then -- At least one icon unused
-			SetRaidTarget(unit, icon)
-			deathglareMarks[icon] = nil -- Mark is no longer available
-			deathglareMarked[guid] = icon -- Save the tentacle we marked and the icon we marked it with
-		end
-	end
-end
-
-function mod:DeathglareDeath(args)
-	if deathglareMarked[args.destGUID] then -- Did we mark the Tentacle?
-		deathglareMarks[deathglareMarked[args.destGUID]] = true -- Mark used is available again
-	end
 end
 
 do
@@ -330,16 +322,79 @@ function mod:EyeDamage(args)
 end
 
 -- Nightmare Ichor
+local FAIL_MSG = "FAIL: %s's Ichor did not hit the boss :("
+
+local function send_ichor_mark(ichor, player, mark)
+	mod:Send("IchorMarked", { ichor = ichor, player = player, mark = mark }, "RAID")
+end
+
 function mod:Fixate(args)
 	if self:Me(args.destGUID) then
 		self:TargetMessage(args.spellId, args.destName, "Attention", "Info")
 		fixateOnMe = true
+	end
+
+	-- When an Ichor fixates a target, save it as the "owner" of this Ichor
+	local guid = args.sourceGUID
+	ichors[guid] = args.destGUID
+
+	-- This Ichor was marked before fixating a player
+	if unknownIchorMark[guid] then
+		send_ichor_mark(guid, args.destGUID, unknownIchorMark[guid])
+		unknownIchorMark[guid] = nil
 	end
 end
 
 function mod:FixateRemoved(args)
 	if self:Me(args.destGUID) then
 		fixateOnMe = nil
+	end
+end
+
+function mod:IchorDeath(args)
+	if ichorsMarked[args.destGUID] then -- Did we mark the Ichor?
+		ichorsMarks[ichorsMarked[args.destGUID]] = true -- Mark used is available again
+	end
+
+	local owner = ichors[args.destGUID]
+	if owner then
+		ichors[args.destGUID] = nil
+		if self:Token(ichors_fails_token) then
+			-- If an owner still exists when the Icor dies, then the owner failed!
+			SendChatMessage(FAIL_MSG:format(UnitName(self:UnitId(owner))), "RAID")
+		end
+	end
+end
+
+function mod:IchorMarked(data)
+	if self:Me(data.player) and self:GetOption(ichors_flash) then
+		self:Pulse(false, "Interface\\TargetingFrame\\UI-RaidTargetingIcon_" .. data.mark)
+	end
+end
+
+function mod:IchorMark(event, unit)
+	local guid = UnitGUID(unit)
+	if self:MobId(guid) == 105721 and not ichorsMarked[guid] and self:Token(ichors_marks_token) then
+		local icon = next(ichorsMarks)
+		if icon then -- At least one icon unused
+			SetRaidTarget(unit, icon)
+			ichorsMarks[icon] = nil -- Mark is no longer available
+			ichorsMarked[guid] = icon -- Save the tentacle we marked and the icon we marked it with
+
+			if ichors[guid] then
+				send_ichor_mark(guid, ichors[guid], icon)
+			else
+				unknownIchorMark[guid] = icon
+			end
+		end
+	end
+end
+
+-- When an Ichor damages the boss, remove the record for the corresponding ichor
+-- This will prevent the death handler to announce a fail
+function mod:NightmareExplosionDamage(args)
+	if self:MobId(args.sourceGUID) == 105721 and self:MobId(args.destGUID) == 105906 then
+		ichors[args.sourceGUID] = nil
 	end
 end
 
