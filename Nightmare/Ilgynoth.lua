@@ -118,6 +118,8 @@ end
 local ichorsMarks = mod:AddCustomOption("ichors_marks", "Set markers on Ichors", nil, true)
 local ichorsFlash = mod:AddCustomOption("ichors_flash", "Pulse attribution", "Display a Pulse alert with the symbol of the Ichor fixated on you.", true)
 
+local ichorsToken = mod:CreateToken("ichors", true, ichorsMarks)
+
 function mod:GetOptions()
 	return {
 		{"stages", "COUNTDOWN"},
