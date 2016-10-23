@@ -995,7 +995,7 @@ do
 
 		local bw = AceGUI:Create("Frame")
 		bw:SetTitle("BigWigs")
-		bw:SetStatusText(" "..BigWigsLoader:GetReleaseString())
+		bw:SetStatusText(" You are running the From Scratch fork of BigWigs.")
 		bw:SetWidth(858)
 		bw:SetHeight(660)
 		bw:EnableResize(false)
