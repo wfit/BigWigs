@@ -1725,6 +1725,7 @@ end
 --
 
 function boss:EnableTokens()
+	if not self.tokens then return end
 	self:RegisterMessage("BigWigs_FS_Option_Toggled")
 	self:SyncTokensState()
 end
