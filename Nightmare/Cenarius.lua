@@ -58,7 +58,9 @@ end
 -- Initialization
 --
 
-local wispMarker = mod:AddMarkerOption(false, "npc", 8, -13348, 8, 7, 6, 5, 4) -- Corrupted Wisp
+local whisp_marks = mod:AddCustomOption("whisp_marks", "Set markers on Corrupted Whisp", nil, true)
+local whisp_marks_token = mod:CreateToken("whisp_marks", true, whisp_marks)
+
 function mod:GetOptions()
 	return {
 		--[[ Cenarius ]]--
@@ -76,7 +78,7 @@ function mod:GetOptions()
 		212681, -- Cleansed Ground
 
 		--[[ Corrupted Wisp ]]--
-		wispMarker,
+		whisp_marks,
 
 		--[[ Nightmare Treant ]]--
 		226821, -- Desiccating Stomp
@@ -95,7 +97,7 @@ function mod:GetOptions()
 	},{
 		["stages"] = -13339, -- Cenarius
 		[212681] = -13344, -- Malfurion Stormrage
-		[wispMarker] = -13348, -- Corrupted Wisp
+		[whisp_marks] = -13348, -- Corrupted Wisp
 		[226821] = -13350, -- Nightmare Treant
 		[211192] = -13354, -- Rotten Drake
 		[211368] = -13357, -- Twisted Sister
@@ -274,7 +276,7 @@ function mod:ForcesOfNightmare(args)
 	self:Bar(212681, 11) -- Cleansed Ground
 	self:Bar(args.spellId, 77.7, CL.count:format(args.spellName, forcesOfNightmareCount))
 
-	if self:GetOption(wispMarker) then
+	if self:Token(whisp_marks_token) then
 		self:RegisterTargetEvents("WispMark")
 		self:ScheduleTimer("UnregisterTargetEvents", 10)
 	end
