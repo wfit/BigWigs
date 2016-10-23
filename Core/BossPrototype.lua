@@ -188,6 +188,7 @@ function boss:OnEnable(isWipe)
 	if type(self.OnBossEnable) == "function" then self:OnBossEnable() end
 
 	self:EnableTokens()
+	self:RegisterMessage("FS_MSG_BW_ENCOUNTER")
 
 	if IsEncounterInProgress() and not isWipe then -- Safety. ENCOUNTER_END might fire whilst IsEncounterInProgress is still true and engage a module.
 		self:CheckForEncounterEngage("NoEngage") -- Prevent engaging if enabling during a boss fight (after a DC)
@@ -1767,4 +1768,25 @@ end
 
 function boss:Token(token)
 	return token:IsMine()
+end
+
+-------------------------------------------------------------------------------
+-- Networking.
+-- @section network
+--
+
+function boss:Send(event, data, ...)
+	FS:Send("BW_ENCOUNTER", { event = event, data = data }, ...)
+end
+
+function boss:RegisterNetMessage(event, handler)
+	if not self.netmsgs then self.netmsgs = {} end
+	self.netmsgs[event] = handler or event
+end
+
+function boss:FS_MSG_BW_ENCOUNTER(_, msg, channel, source)
+	local event = msg.event
+	if self.netmsgs and self.netmsgs[event] then
+		self[self.netmsgs[event]](self, msg.data, channel, source)
+	end
 end
