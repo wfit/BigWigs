@@ -294,6 +294,18 @@ function boss:AddMarkerOption(state, markType, icon, id, ...)
 	return option
 end
 
+function boss:AddCustomOption(key, title, desc, state, icon)
+	local l = self:GetLocale()
+	local option = format(state and "custom_on_%s" or "custom_off_%s", key)
+	l[option] = title
+	if desc then
+		l[option .. "_desc"] = desc
+	end
+	if icon then
+		l[option .. "_icon"] = icon
+	end
+	return option
+end
 -------------------------------------------------------------------------------
 -- Combat log functions
 -- @section combat_events

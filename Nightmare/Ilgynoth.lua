@@ -114,7 +114,9 @@ end
 -- Initialization
 --
 
-local tentacleMarker = mod:AddMarkerOption(false, "npc", 6, L.deathglare_tentacle, 6, 5, 4, 3) -- Deathglare Tentacle
+local ichorsMarks = mod:AddCustomOption("ichors_marks", "Set markers on Ichors", nil, true)
+local ichorsFlash = mod:AddCustomOption("ichors_flash", "Pulse attribution", "Display a Pulse alert with the symbol of the Ichor fixated on you.", true)
+
 function mod:GetOptions()
 	return {
 		{"stages", "COUNTDOWN"},
@@ -132,6 +134,8 @@ function mod:GetOptions()
 		210099, -- Fixate
 		209469, -- Touch of Corruption
 		209471, -- Nightmare Explosion
+		ichorsMarks,
+		ichorsFlash,
 
 		-- Nightmare Horror
 		"nightmare_horror", -- Nightmare Horror
@@ -142,7 +146,6 @@ function mod:GetOptions()
 
 		-- Deathglare Tentacle
 		208697, -- Mind Flay
-		tentacleMarker,
 
 		--[[ Stage Two ]]--
 		{215128, "SAY", "FLASH", "PROXIMITY"}, -- Cursed Blood
