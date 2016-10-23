@@ -58,10 +58,10 @@ local updateData = function(module)
 	difficulty = diff
 
 	solo = true
-	local _, _, _, mapId = UnitPosition("player")
+	local _, _, _, instanceId = UnitPosition("player")
 	for unit in module:IterateGroup() do
-		local _, _, _, tarMapId = UnitPosition(unit)
-		if tarMapId == mapId and myGUID ~= UnitGUID(unit) and UnitIsConnected(unit) then
+		local _, _, _, tarInstanceId = UnitPosition(unit)
+		if tarInstanceId == instanceId and myGUID ~= UnitGUID(unit) and UnitIsConnected(unit) then
 			solo = false
 			break
 		end
@@ -92,7 +92,7 @@ local icons = setmetatable({}, {__index =
 			if key > 8 then
 				value = GetSpellTexture(key)
 				if not value then
-					core:Print(format("An invalid spell id (%d) is being used in a bar/message.", key))
+					core:Print(format("An invalid spell id (%d) is being used in a boss module.", key))
 				end
 			elseif key > 0 then
 				-- Texture id list for raid icons 1-8 is 137001-137008. Base texture path is Interface\\TARGETINGFRAME\\UI-RaidTargetingIcon_%d
@@ -128,6 +128,10 @@ local spells = setmetatable({}, {__index =
 
 local boss = {}
 core:GetModule("Bosses"):SetDefaultModulePrototype(boss)
+
+--- Register the module to enable on mob id.
+-- @param ... Any number of mob ids
+function boss:RegisterEnableMob(...) core:RegisterEnableMob(self, ...) end
 
 --- The encounter id as used by events ENCOUNTER_START, ENCOUNTER_END & BOSS_KILL.
 -- If this is set, no engage or wipe checking is required. The module will use this id and all engage/wipe checking will be handled automatically.
@@ -289,18 +293,6 @@ function boss:AddMarkerOption(state, markType, icon, id, ...)
 	end
 	return option
 end
-
--------------------------------------------------------------------------------
--- Enable triggers
--- @section enable_triggers
---
-
---- Register the module to enable on mob id.
--- @param ... Any number of mob ids
-function boss:RegisterEnableMob(...) core:RegisterEnableMob(self, ...) end
---- [DEPRECATED] Register the module to enable on mob yell.
--- @param ... Any number of strings
-function boss:RegisterEnableYell(...) core:RegisterEnableYell(self, ...) end
 
 -------------------------------------------------------------------------------
 -- Combat log functions
@@ -923,16 +915,6 @@ do
 	end
 end
 
---- [DEPRECATED] Get the distance between two group members.
--- Warning, this API will need to change in according to WoW 7.1 range regulations, do not rely on it.
--- @param player the first player to check
--- @param[opt="player"] otherPlayer second player to check
--- @return distance
-function boss:Range(player, otherPlayer)
-	BigWigs:Print("The :Range API is deprecated.")
-	return 200
-end
-
 --- Check if you're the only person inside an instance, despite being in a group or not.
 -- @return boolean
 function boss:Solo()
@@ -1319,16 +1301,6 @@ function boss:Message(key, color, sound, text, icon)
 	end
 end
 
---- [DEPRECATED] Display a range warning message.
--- @param key the option key
--- @param[opt] color the message color category
--- @param[opt] sound the message sound
--- @param[opt] text the message text (if nil, key is used)
--- @param[opt] icon the message icon (spell id or texture name)
-function boss:RangeMessage(key, color, sound, text, icon)
-	BigWigs:Print("The :RangeMessage API is deprecated.")
-end
-
 do
 	local hexColors = {}
 	for k, v in next, (CUSTOM_CLASS_COLORS or RAID_CLASS_COLORS) do
@@ -1658,19 +1630,26 @@ function boss:PlaySound(key, sound)
 	end
 end
 
---- Send an addon sync to other players.
--- @param ... the sync message/prefix followed by any other values you want to send
--- @usage self:Sync("abilityPrefix", playerName)
--- @usage self:Sync("ability")
--- @within Core module functionality
-function boss:Sync(...) core:Transmit(...) end
 
---- Register for a sync message.
--- @string sync the sync message/prefix
--- @number[opt=5] throttle the time in seconds to throttle the sync
--- @within Core module functionality
-function boss:AddSyncListener(sync, throttle)
-	core:AddSyncListener(self, sync, throttle)
+do
+	local SendAddonMessage, IsInGroup = BigWigsLoader.SendAddonMessage, IsInGroup
+	--- Send an addon sync to other players.
+	-- @param msg the sync message/prefix
+	-- @param[opt] extra other optional value you want to send
+	-- @usage self:Sync("abilityPrefix", data)
+	-- @usage self:Sync("ability")
+	function boss:Sync(msg, extra)
+		if msg then
+			self:SendMessage("BigWigs_BossComm", msg, extra, pName)
+			if IsInGroup() then
+				msg = "B^".. msg
+				if extra then
+					msg = msg .."^".. extra
+				end
+				SendAddonMessage("BigWigs", msg, IsInGroup(2) and "INSTANCE_CHAT" or "RAID")
+			end
+		end
+	end
 end
 
 --- Start a "berserk" bar and show an engage message.
