@@ -1730,12 +1730,14 @@ function boss:EnableTokens()
 end
 
 function boss:DisableTokens()
+	if not self.tokens then return end
 	for token in pairs(self.tokens) do
 		token:Disable()
 	end
 end
 
 function boss:SyncTokensState()
+	if not self.tokens then return end
 	for token, opt in pairs(self.tokens) do
 		if opt == true or self:GetOption(opt) then
 			token:Enable()
