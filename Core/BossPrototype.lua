@@ -187,6 +187,8 @@ function boss:OnEnable(isWipe)
 	if self.SetupOptions then self:SetupOptions() end
 	if type(self.OnBossEnable) == "function" then self:OnBossEnable() end
 
+	self:EnableTokens()
+
 	if IsEncounterInProgress() and not isWipe then -- Safety. ENCOUNTER_END might fire whilst IsEncounterInProgress is still true and engage a module.
 		self:CheckForEncounterEngage("NoEngage") -- Prevent engaging if enabling during a boss fight (after a DC)
 	end
@@ -229,6 +231,8 @@ function boss:OnDisable(isWipe)
 			allowedEvents[k] = true
 		end
 	end
+
+	self:DisableTokens()
 
 	self.scheduledMessages = nil
 	self.scheduledScans = nil
@@ -306,6 +310,7 @@ function boss:AddCustomOption(key, title, desc, state, icon)
 	end
 	return option
 end
+
 -------------------------------------------------------------------------------
 -- Combat log functions
 -- @section combat_events
@@ -1704,4 +1709,56 @@ function boss:Berserk(seconds, noEngageMessage, customBoss, customBerserk, custo
 	self:DelayedMessage(key, seconds - 10, "Urgent", format(L.custom_sec, berserk, 10))
 	self:DelayedMessage(key, seconds - 5, "Important", format(L.custom_sec, berserk, 5))
 	self:DelayedMessage(key, seconds, "Important", customFinalMessage or format(L.custom_end, name, berserk), icon, "Alarm")
+end
+
+-------------------------------------------------------------------------------
+-- Token binding functions
+-- @section token_bindings
+--
+
+function boss:EnableTokens()
+	self:RegisterMessage("BigWigs_FS_Option_Toggled")
+	self:SyncTokensState()
+end
+
+function boss:DisableTokens()
+	for token in pairs(self.tokens) do
+		token:Disable()
+	end
+end
+
+function boss:SyncTokensState()
+	for token, opt in pairs(self.tokens) do
+		if opt == true or self:GetOption(opt) then
+			token:Enable()
+		else
+			token:Disable()
+		end
+	end
+end
+
+function boss:BigWigs_FS_Option_Toggled(_, module, key, value)
+	if module == self then self:SyncTokensState() end
+end
+
+function boss:CreateToken(key, promote, option)
+	local infix = self.engageId or self:GetName()
+	local fullkey = "BW:" .. infix .. ":" .. key
+
+	if not self.tokens then self.tokens = {} end
+
+	local token = FS.Token:Create(fullkey, 0, false):RequirePromote(promote)
+	self.tokens[token] = option or true
+
+	if self.instanceId then
+		token:RequireZone(self.instanceId)
+	else
+		core:Print("Created a token without an instanceId defined.")
+	end
+
+	return token
+end
+
+function boss:Token(token)
+	return token:IsMine()
 end

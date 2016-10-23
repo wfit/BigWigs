@@ -13,6 +13,7 @@ if not mod then return end
 mod:RegisterEnableMob(105906, 105393, 105304) -- Eye of Il'gynoth, Il'gynoth, Dominator Tentacle
 mod.engageId = 1873
 mod.respawnTime = 30
+mod.instanceId = 1520
 
 --------------------------------------------------------------------------------
 -- Locals
