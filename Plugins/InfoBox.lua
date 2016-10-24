@@ -46,7 +46,7 @@ function plugin:RestyleWindow(dirty)
 		end
 
 		display.title:SetFont(curFont, db.fontSize, newFlags)
-		for i = 1, 25 do
+		for i = 1, 10 do
 			display.text[i]:SetFont(curFont, db.fontSize, newFlags)
 		end
 	end
