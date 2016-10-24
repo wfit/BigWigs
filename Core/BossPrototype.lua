@@ -102,8 +102,10 @@ local icons = setmetatable({}, {__index =
 				local _, _, _, abilityIcon = EJ_GetSectionInfo(-key)
 				value = abilityIcon or false
 			end
-		else
+		elseif not key:find("\\") then
 			value = "Interface\\Icons\\" .. key
+		else
+			value = key
 		end
 		self[key] = value
 		return value
@@ -1627,6 +1629,7 @@ end
 function boss:Pulse(key, icon)
 	if checkFlag(self, key, C.PULSE) then
 		self:SendMessage("BigWigs_Pulse", self, key, icons[icon or key])
+		print(icons[icon or key])
 	end
 end
 
@@ -1790,6 +1793,8 @@ end
 
 function boss:FS_MSG_BW_ENCOUNTER(_, msg, channel, source)
 	local event = msg.event
+	print("receive")
+	FS:Dump(msg)
 	if self.netmsgs and self.netmsgs[event] then
 		self[self.netmsgs[event]](self, msg.data, channel, source)
 	end
