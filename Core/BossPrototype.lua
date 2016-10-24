@@ -191,7 +191,7 @@ function boss:OnEnable(isWipe)
 	if type(self.OnBossEnable) == "function" then self:OnBossEnable() end
 
 	self:EnableTokens()
-	self:RegisterMessage("FS_MSG_BW_ENCOUNTER")
+	self:RegisterMessage("BW_NET_MSG")
 
 	if IsEncounterInProgress() and not isWipe then -- Safety. ENCOUNTER_END might fire whilst IsEncounterInProgress is still true and engage a module.
 		self:CheckForEncounterEngage("NoEngage") -- Prevent engaging if enabling during a boss fight (after a DC)
@@ -1629,7 +1629,6 @@ end
 function boss:Pulse(key, icon)
 	if checkFlag(self, key, C.PULSE) then
 		self:SendMessage("BigWigs_Pulse", self, key, icons[icon or key])
-		print(icons[icon or key])
 	end
 end
 
@@ -1783,7 +1782,7 @@ end
 --
 
 function boss:Send(event, data, ...)
-	FS:Send("BW_ENCOUNTER", { event = event, data = data }, ...)
+	FS:Send("BW_NET_MSG", { event = event, data = data }, ...)
 end
 
 function boss:RegisterNetMessage(event, handler)
@@ -1791,10 +1790,8 @@ function boss:RegisterNetMessage(event, handler)
 	self.netmsgs[event] = handler or event
 end
 
-function boss:FS_MSG_BW_ENCOUNTER(_, msg, channel, source)
+function boss:BW_NET_MSG(_, msg, channel, source)
 	local event = msg.event
-	print("receive")
-	FS:Dump(msg)
 	if self.netmsgs and self.netmsgs[event] then
 		self[self.netmsgs[event]](self, msg.data, channel, source)
 	end
