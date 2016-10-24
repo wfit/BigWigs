@@ -106,6 +106,7 @@ local enablezones, enablemobs = {}, {}
 local monitoring = nil
 
 local function enableBossModule(module, noSync)
+	if not module then return end
 	if not module:IsEnabled() and (not module.lastKill or (GetTime() - module.lastKill) > (module.worldBoss and 5 or 150)) then
 		module:Enable()
 		if not noSync and not module.worldBoss then
