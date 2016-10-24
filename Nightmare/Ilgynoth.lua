@@ -147,6 +147,7 @@ function mod:GetOptions()
 		209469, -- Touch of Corruption
 		ichors_marks,
 		ichors_flash,
+		ichors_fails,
 
 		-- Nightmare Horror
 		"nightmare_horror", -- Nightmare Horror
