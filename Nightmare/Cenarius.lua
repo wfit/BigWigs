@@ -27,7 +27,7 @@ mod.instanceId = 1520
 local mobCollector = {}
 local forcesOfNightmareCount = 1
 local phase = 1
-local wispMarks = { [8] = true, [7] = true, [6] = true, [5] = true, [4] = true }
+local wispMarks = { [1] = true, [2] = true, [3] = true, [4] = true, [5] = true }
 local wispMarked = {}
 local mobTable = {
 	[105468] = {}, -- Nightmare Ancient
@@ -166,7 +166,7 @@ function mod:OnEngage()
 
 	self:RegisterEvent("INSTANCE_ENCOUNTER_ENGAGE_UNIT")
 	wipe(wispMarked)
-	wispMarks = { [8] = true, [7] = true, [6] = true, [5] = true, [4] = true }
+	wispMarks = { [1] = true, [2] = true, [3] = true, [4] = true, [5] = true }
 end
 
 function mod:OnBossDisable()
