@@ -61,6 +61,9 @@ end
 local whisp_marks = mod:AddCustomOption("whisp_marks", "Set markers on Corrupted Whisp", nil, true)
 local whisp_marks_token = mod:CreateToken("whisp_marks", true, whisp_marks)
 
+local skull_mark = mod:AddCustomOption("skull_mark", "Keep a Skull marker on Boss3", nil, true)
+local skull_mark_token = mod:CreateToken("skull_mark", true, skull_mark)
+
 function mod:GetOptions()
 	return {
 		--[[ Cenarius ]]--
@@ -86,6 +89,7 @@ function mod:GetOptions()
 		--[[ Rotten Drake ]]--
 		211192, -- Rotten Breath
 		"custom_off_multiple_breath_bar",
+		skull_mark,
 
 		--[[ Twisted Sister ]]--
 		211368, -- Twisted Touch of Life
@@ -290,6 +294,9 @@ do
 		[105495] = -13357, -- Twisted Sister
 	}
 	function mod:INSTANCE_ENCOUNTER_ENGAGE_UNIT()
+		if self:Token(skull_mark_token) then
+			SetRaidTarget("boss3", 8)
+		end
 		for i = 1, 5 do
 			local unit = ("boss%d"):format(i)
 			local guid = UnitGUID(unit)
