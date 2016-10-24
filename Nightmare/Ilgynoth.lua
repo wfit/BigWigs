@@ -89,7 +89,8 @@ local spawnDataMythic = {
 }
 local nextCorruptorText = "" -- used to stop the bars
 local nextDeathglareText = "" -- used to stop the bars
-local bloodsRemaining = 20
+local blobsRemaining = 20
+local blobsMissed = 0
 
 --------------------------------------------------------------------------------
 -- Localization
@@ -112,7 +113,8 @@ if L then
 	L.shriveled_eyestalk = -13570 -- Shriveled Eyestalk
 	L.shriveled_eyestalk_icon = 208697 -- Mind Flay icon
 
-	L.blobs_remaining = "%d |4Blob:Blobs; remaining"
+	L.remaining = "Remaining"
+	L.missed = "Missed"
 end
 
 --------------------------------------------------------------------------------
@@ -128,6 +130,7 @@ local ichors_fails_token = mod:CreateToken("ichors_fails", false, ichors_fails)
 
 function mod:GetOptions()
 	return {
+		"infobox",
 		{"stages", "COUNTDOWN"},
 		223121, -- Final Torpor
 		212886, -- Nightmare Corruption
@@ -142,7 +145,6 @@ function mod:GetOptions()
 		-- Nightmare Ichor
 		210099, -- Fixate
 		209469, -- Touch of Corruption
-		209471, -- Nightmare Explosion
 		ichors_marks,
 		ichors_flash,
 
@@ -163,7 +165,7 @@ function mod:GetOptions()
 		218415, -- Death Blossom
 		"shriveled_eyestalk",
 	},{
-		["stages"] = "general",
+		["infobox"] = "general",
 		["forces"] = -13184, -- Stage One
 		[208689] = -13189, -- Dominator Tentacle
 		[210099] = -13186, -- Nightmare Ichor
@@ -186,13 +188,13 @@ function mod:OnBossEnable()
 	self:RegisterEvent("RAID_BOSS_WHISPER")
 	self:Log("SPELL_CAST_START", "GroundSlam", 208689)
 	self:Log("SPELL_AURA_APPLIED", "NightmarishFury", 215234)
+	self:Log("SPELL_CAST_SUCCESS", "EyeDamageCast", 209471) -- Nightmare Explosion
 	self:Log("SPELL_DAMAGE", "EyeDamage", 210048) -- Nightmare Explosion, only hits the Eye
 
 	-- Nightmare Ichor
 	self:Log("SPELL_AURA_APPLIED", "Fixate", 210099)
 	self:Log("SPELL_AURA_REMOVED", "FixateRemoved", 210099)
 	self:Log("SPELL_AURA_APPLIED_DOSE", "TouchOfCorruption", 209469)
-	self:Log("SPELL_CAST_START", "NightmareExplosion", 209471)
 	self:Log("SPELL_DAMAGE", "NightmareExplosionDamage", 209471)
 	self:Death("IchorDeath", 105721)
 	self:RegisterNetMessage("IchorMarked")
@@ -229,10 +231,16 @@ function mod:OnEngage()
 	fixateOnMe = nil
 	phase = 1
 	deathBlossomCount = 1
-	bloodsRemaining = self:LFR() and 15 or self:Mythic() and 22 or 20
+	blobsRemaining = self:LFR() and 15 or self:Mythic() and 22 or 20
+	blobsMissed = 0
 	self:CDBar(208689, 11.5) -- Ground Slam
 	self:CDBar("nightmare_horror", self:Mythic() and 79 or 65, L.nightmare_horror, L.nightmare_horror_icon) -- Summon Nightmare Horror
 
+	self:OpenInfo("infobox", self:SpellName(-13186)) -- Nightmare Ichor
+	self:SetInfo("infobox", 1, L.remaining)
+	self:SetInfo("infobox", 2, blobsRemaining)
+	self:SetInfo("infobox", 3, L.missed)
+	self:SetInfo("infobox", 4, blobsMissed)
 	if self:Mythic() then
 		self:Bar(218415, 60) -- Death Blossom
 	end
@@ -314,11 +322,16 @@ do
 	end
 end
 
+function mod:EyeDamageCast(args)
+	blobsMissed = blobsMissed + 1
+	self:SetInfo("infobox", 4, blobsMissed)
+end
+
 function mod:EyeDamage(args)
-	bloodsRemaining = bloodsRemaining - 1
-	if (bloodsRemaining % 5 == 0 or bloodsRemaining < 5) and bloodsRemaining > 0 then
-		self:Message("forces", "Positive", nil, L.blobs_remaining:format(bloodsRemaining), false)
-	end
+	blobsRemaining = blobsRemaining - 1
+	blobsMissed = blobsMissed - 1
+	self:SetInfo("infobox", 2, blobsRemaining)
+	self:SetInfo("infobox", 4, blobsMissed)
 end
 
 -- Nightmare Ichor
@@ -405,17 +418,6 @@ function mod:TouchOfCorruption(args)
 	end
 end
 
-do
-	local prev = 0
-	function mod:NightmareExplosion(args)
-		local t = GetTime()
-		if fixateOnMe and t-prev > 3 then -- Explosion has a small radius, you could only get hit if you are fixated and near the Eye
-			prev = t
-			self:Message(args.spellId, "Important", nil, CL.casting:format(args.spellName))
-		end
-	end
-end
-
 -- Nightmare Horror
 function mod:SummonNightmareHorror(args)
 	self:Message("nightmare_horror", "Important", "Info", CL.spawned:format(self:SpellName(L.nightmare_horror)), L.nightmare_horror_icon)
@@ -491,7 +493,10 @@ function mod:StuffOfNightmares()
 	if self.isEngaged then -- Gets buffed when the boss spawns
 		self:Message("stages", "Neutral", "Long", CL.stage:format(1), false)
 		phase = phase + 1
-		bloodsRemaining = self:LFR() and 15 or self:Mythic() and 22 or 20
+		blobsRemaining = self:LFR() and 15 or self:Mythic() and 22 or 20
+		blobsMissed = 0
+		self:SetInfo("infobox", 2, blobsRemaining)
+		self:SetInfo("infobox", 4, blobsMissed)
 
 		self:Bar("nightmare_horror", 99, L.nightmare_horror, L.nightmare_horror_icon) -- Summon Nightmare Horror
 		phaseStartTime = GetTime()
