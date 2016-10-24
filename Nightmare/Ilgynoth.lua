@@ -115,6 +115,8 @@ if L then
 
 	L.remaining = "Remaining"
 	L.missed = "Missed"
+
+	L.ichor_fail = "FAIL: %s's Ichor did not hit the boss :("
 end
 
 --------------------------------------------------------------------------------
@@ -196,7 +198,6 @@ function mod:OnBossEnable()
 	self:Log("SPELL_AURA_APPLIED", "Fixate", 210099)
 	self:Log("SPELL_AURA_REMOVED", "FixateRemoved", 210099)
 	self:Log("SPELL_AURA_APPLIED_DOSE", "TouchOfCorruption", 209469)
-	self:Log("SPELL_DAMAGE", "NightmareExplosionDamage", 209471)
 	self:Death("IchorDeath", 105721)
 	self:RegisterNetMessage("IchorMarked")
 
@@ -333,11 +334,13 @@ function mod:EyeDamage(args)
 	blobsMissed = blobsMissed - 1
 	self:SetInfo("infobox", 2, blobsRemaining)
 	self:SetInfo("infobox", 4, blobsMissed)
+
+	-- When an Ichor damages the boss, remove the record for the corresponding ichor
+	-- This will prevent the death handler to announce a fail
+	ichors[args.sourceGUID] = nil
 end
 
 -- Nightmare Ichor
-local FAIL_MSG = "FAIL: %s's Ichor did not hit the boss :("
-
 local function send_ichor_mark(ichor, player, mark)
 	mod:Send("IchorMarked", { ichor = ichor, player = player, mark = mark }, "RAID")
 end
@@ -375,7 +378,7 @@ function mod:IchorDeath(args)
 		ichors[args.destGUID] = nil
 		if self:Token(ichors_fails_token) then
 			-- If an owner still exists when the Icor dies, then the owner failed!
-			SendChatMessage(FAIL_MSG:format(UnitName(self:UnitId(owner))), "RAID")
+			SendChatMessage(L.ichor_fail:format(UnitName(self:UnitId(owner))), "RAID")
 		end
 	end
 end
@@ -401,14 +404,6 @@ function mod:IchorMark(event, unit)
 				unknownIchorMark[guid] = icon
 			end
 		end
-	end
-end
-
--- When an Ichor damages the boss, remove the record for the corresponding ichor
--- This will prevent the death handler to announce a fail
-function mod:NightmareExplosionDamage(args)
-	if self:MobId(args.sourceGUID) == 105721 and self:MobId(args.destGUID) == 105906 then
-		ichors[args.sourceGUID] = nil
 	end
 end
 
