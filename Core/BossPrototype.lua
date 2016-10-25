@@ -19,6 +19,7 @@
 
 local L = LibStub("AceLocale-3.0"):GetLocale("BigWigs: Common")
 local UnitAffectingCombat, UnitIsPlayer, UnitGUID, UnitPosition, UnitIsConnected = UnitAffectingCombat, UnitIsPlayer, UnitGUID, UnitPosition, UnitIsConnected
+local UnitExists, UnitIsUnit, UnitName = UnitExists, UnitIsUnit, UnitName
 local EJ_GetSectionInfo, GetSpellInfo, GetSpellTexture, IsSpellKnown = EJ_GetSectionInfo, GetSpellInfo, GetSpellTexture, IsSpellKnown
 local UnitGroupRolesAssigned = UnitGroupRolesAssigned
 local SendChatMessage, GetInstanceInfo = BigWigsLoader.SendChatMessage, BigWigsLoader.GetInstanceInfo
@@ -71,6 +72,10 @@ local updateData = function(module)
 	UpdateDispelStatus()
 	UpdateInterruptStatus()
 end
+
+local Token = FS.Token
+local Roster = FS.Roster
+local Tracker = FS.Tracker
 
 -------------------------------------------------------------------------------
 -- Debug
@@ -917,11 +922,10 @@ end
 -- @param guid player GUID
 -- @return boolean
 function boss:Me(guid)
-	return myGUID == guid
+	return myGUID == guid or (UnitExists(guid) and UnitIsUnit(guid, player))
 end
 
 do
-	local UnitName = UnitName
 	--- Get the full name of a unit.
 	-- @param unit unit token or name
 	-- @return unit name with the server appended if appropriate
@@ -971,55 +975,89 @@ do
 		end
 		return iter, IsInRaid() and raidList or partyList
 	end
+
+	function boss:FSIterateGroup(...)
+		return Roster:Iterate(...)
+	end
 end
 
 -------------------------------------------------------------------------------
 -- Role checking
 -- @section role
 
+function boss:Role(guid)
+	if not guid then
+		guid = myGUID
+	elseif UnitExists(guid) then
+		guid = UnitGUID(guid)
+	end
+	local info = Roster:GetInfo(guid)
+	return info and info.spec_role_detailed or "none"
+end
+
 --- Check if your talent tree role is TANK or MELEE.
 -- @return boolean
-function boss:Melee()
-	return myRole == "TANK" or myDamagerRole == "MELEE"
+function boss:Melee(unit)
+	local role = self:Role(unit)
+	if role == "none" and not unit then
+		return myRole == "TANK" or myDamagerRole == "MELEE"
+	end
+	return role == "melee" or role == "tank"
 end
 
 --- Check if your talent tree role is HEALER or RANGED.
 -- @return boolean
-function boss:Ranged()
-	return myRole == "HEALER" or myDamagerRole == "RANGED"
+function boss:Ranged(unit)
+	local role = self:Role(unit)
+	if role == "none" and not unit then
+		return myRole == "HEALER" or myDamagerRole == "RANGED"
+	end
+	return role == "ranged" or role == "healer"
 end
 
 --- Check if your talent tree role is TANK.
 -- @param[opt="player"] unit check if the chosen role of another unit is set to TANK, or if that unit is listed in the MAINTANK frames.
 -- @return boolean
 function boss:Tank(unit)
-	if unit then
-		return GetPartyAssignment("MAINTANK", unit) or UnitGroupRolesAssigned(unit) == "TANK"
-	else
-		return myRole == "TANK"
+	local role = self:Role(unit)
+	if role == "none" then
+		if unit then
+			return GetPartyAssignment("MAINTANK", unit) or UnitGroupRolesAssigned(unit) == "TANK"
+		else
+			return myRole == "TANK"
+		end
 	end
+	return role == "tank"
 end
 
 --- Check if your talent tree role is HEALER.
 -- @param[opt="player"] unit check if the chosen role of another unit is set to HEALER.
 -- @return boolean
 function boss:Healer(unit)
-	if unit then
-		return UnitGroupRolesAssigned(unit) == "HEALER"
-	else
-		return myRole == "HEALER"
+	local role = self:Role(unit)
+	if role == "none" then
+		if unit then
+			return UnitGroupRolesAssigned(unit) == "HEALER"
+		else
+			return myRole == "HEALER"
+		end
 	end
+	return role == "healer"
 end
 
 --- Check if your talent tree role is DAMAGER.
 -- @param[opt="player"] unit check if the chosen role of another unit is set to DAMAGER.
 -- @return boolean
 function boss:Damager(unit)
-	if unit then
-		return UnitGroupRolesAssigned(unit) == "DAMAGER"
-	else
-		return myDamagerRole
+	local role = self:Role(unit)
+	if role == "none" then
+		if unit then
+			return UnitGroupRolesAssigned(unit) == "DAMAGER"
+		else
+			return myDamagerRole
+		end
 	end
+	return role == "melee" or role == "ranged"
 end
 
 do
@@ -1760,7 +1798,7 @@ function boss:CreateToken(key, promote, option)
 
 	if not self.tokens then self.tokens = {} end
 
-	local token = FS.Token:Create(fullkey, 0, false):RequirePromote(promote)
+	local token = Token:Create(fullkey, 0, false):RequirePromote(promote)
 	self.tokens[token] = option or true
 
 	if self.instanceId then
@@ -1797,6 +1835,10 @@ function boss:BW_NET_MSG(_, msg, channel, source)
 	end
 end
 
+function boss:Emit(msg, ...)
+	FS:SendMessage(msg, ...)
+end
+
 -------------------------------------------------------------------------------
 -- Misc.
 -- @section misc
@@ -1806,8 +1848,8 @@ function boss:UnitId(guid)
 	if UnitExists(guid) then
 		return guid
 	elseif guid:sub(1, 6) == "Player" then
-		return FS.Roster:GetUnit(guid)
+		return Roster:GetUnit(guid)
 	else
-		return FS.Tracker:GetUnit(guid)
+		return Tracker:GetUnit(guid)
 	end
 end
