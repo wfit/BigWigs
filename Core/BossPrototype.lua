@@ -129,6 +129,17 @@ local spells = setmetatable({}, {__index =
 	end
 })
 
+
+local argsVirtuals = {}
+
+function argsVirtuals.spellName(args)
+	return spells[args.spellId]
+end
+
+function argsVirtuals.spellIcon(args)
+	return icons[args.spellId]
+end
+
 -------------------------------------------------------------------------------
 -- Core module functionality
 -- @section core
@@ -159,6 +170,9 @@ boss.worldBoss = nil
 --- The map id the boss should be listed under in the configuration menu, generally used for world bosses.
 -- @within Enable triggers
 boss.otherMenu = nil
+
+boss.spells = spells
+boss.icons = icons
 
 --- Check if a module option is enabled.
 -- This is a wrapper around the self.db.profile[key] table.
@@ -378,7 +392,13 @@ do
 		self:RegisterEvent("CHAT_MSG_MONSTER_YELL")
 	end
 
-	local args = {}
+	local args = setmetatable({}, {
+		__index = function(self, key)
+			local virtual = argsVirtuals[key]
+			if virtual then return virtual(self) end
+		end
+	})
+
 	bossUtilityFrame:SetScript("OnEvent", function(_, _, _, event, _, sourceGUID, sourceName, sourceFlags, sourceRaidFlags, destGUID, destName, destFlags, destRaidFlags, spellId, spellName, _, extraSpellId, amount)
 		if allowedEvents[event] then
 			if event == "UNIT_DIED" then
@@ -911,6 +931,9 @@ function boss:MobId(guid)
 	local _, _, _, _, _, id = strsplit("-", guid)
 	return tonumber(id) or 1
 end
+
+function argsVirtuals.sourceMob(args) return boss:MobId(args.sourceGUID) end
+function argsVirtuals.destMob(args) return boss:MobId(args.destGUID) end
 
 --- Get a localized name from an id. Positive ids for spells (GetSpellInfo) and negative ids for journal entries (EJ_GetSectionInfo).
 -- @return spell name
@@ -1853,3 +1876,6 @@ function boss:UnitId(guid)
 		return Tracker:GetUnit(guid)
 	end
 end
+
+function argsVirtuals.sourceUnit(args) return boss:UnitId(args.sourceGUID) end
+function argsVirtuals.destUnit(args) return boss:UnitId(args.destGUID) end
