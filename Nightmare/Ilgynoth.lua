@@ -26,7 +26,14 @@ local phase = 1 -- 1 = Outside, 2 = Boss, 3 = Outside, 4 = Boss
 local ichors = {}
 local ichorsMarked = {}
 local unknownIchorMark = {}
-local ichorsMarks  = { [1] = true, [2] = true, [3] = true, [4] = true, [5] = true, [6] = true, [7] = true, [8] = true }
+local ichorsMarks = {}
+
+local function resetIchorsMarker()
+	wipe(ichors)
+	wipe(ichorsMarked)
+	wipe(unknownIchorMark)
+	ichorsMarks = { [1] = true, [2] = true, [3] = true, [4] = true, [5] = true, [6] = true, [7] = true, [8] = true }
+end
 
 local deathBlossomCount = 1
 
@@ -251,11 +258,8 @@ function mod:OnEngage()
 	self:StartSpawnTimer(-13190, 1) -- Deathglare Tentacle
 	self:StartSpawnTimer(-13191, 1) -- Corruptor Tentacle
 
-	wipe(ichors)
-	wipe(ichorsMarked)
-	wipe(unknownIchorMark)
+	resetIchorsMarker()
 	if self:GetOption(ichors_marks) then
-		ichorsMarks = { [1] = true, [2] = true, [3] = true, [4] = true, [5] = true, [6] = true, [7] = true, [8] = true }
 		self:RegisterTargetEvents("IchorMark")
 	end
 end
@@ -503,6 +507,8 @@ function mod:StuffOfNightmares()
 		if self:Mythic() then
 			self:Bar(218415, 80) -- Death Blossom
 		end
+
+		resetIchorsMarker()
 	end
 end
 
