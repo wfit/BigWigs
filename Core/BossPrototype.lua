@@ -178,7 +178,8 @@ boss.icons = icons
 -- This is a wrapper around the self.db.profile[key] table.
 -- @return boolean
 function boss:GetOption(key)
-	return self.db.profile[key]
+	return (self.tokens_opt and self.tokens_opt[key] and self.tokens_opt[key]:IsMine()) or
+			self.db.profile[key]
 end
 
 --- Module type check.
