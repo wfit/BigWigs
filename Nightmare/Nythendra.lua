@@ -29,13 +29,15 @@ local infestedStacks = {}
 -- Initialization
 --
 
-local rotMarker = mod:AddMarkerOption(false, "player", 1, 203096, 1, 2, 3, 4, 5) -- Rot
+local rot_marker = mod:AddTokenOption { "rot_marker", "Rot Marker",
+	desc = "Mark players affected by Rot with icons.", promote = true }
+
 function mod:GetOptions()
 	return {
 		--[[ General ]]--
 		202977, -- Infested Breath
 		{203096, "SAY", "FLASH", "PROXIMITY"}, -- Rot
-		rotMarker,
+		rot_marker,
 		{204463, "SAY", "FLASH", "ICON"}, -- Volatile Rot
 		203552, -- Heart of the Swarm
 		203045, -- Infested Ground
@@ -121,7 +123,7 @@ do
 		if not isOnMe then
 			self:OpenProximity(args.spellId, 10, proxList)
 		end
-		if self:GetOption(rotMarker) then
+		if self:GetOption(rot_marker) then
 			SetRaidTarget(args.destName, #proxList)
 		end
 
@@ -143,7 +145,7 @@ do
 			self:CloseProximity(args.spellId)
 		end
 
-		if self:GetOption(rotMarker) then
+		if self:GetOption(rot_marker) then
 			SetRaidTarget(args.destName, 0)
 		end
 		tDeleteItem(proxList, args.destName)
