@@ -303,9 +303,7 @@ do
 		[105495] = -13357, -- Twisted Sister
 	}
 	function mod:INSTANCE_ENCOUNTER_ENGAGE_UNIT()
-		if self:Token(skull_mark) then
-			SetRaidTarget("boss3", 8)
-		end
+		self:SetIcon(skull_mark, "boss3", 8)
 		for i = 1, 5 do
 			local unit = ("boss%d"):format(i)
 			local guid = UnitGUID(unit)
