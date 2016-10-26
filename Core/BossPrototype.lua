@@ -1682,7 +1682,7 @@ function boss:SecondaryIcon(key, player)
 end
 
 function boss:SetIcon(key, target, icon)
-	if self:GetOption(key) then
+	if not key or self:GetOption(key) then
 		local unit = self:UnitId(target)
 		if not unit then return end
 		SetRaidTarget(unit, icon)
