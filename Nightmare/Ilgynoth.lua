@@ -330,6 +330,10 @@ end
 function mod:EyeDamageCast(args)
 	blobsMissed = blobsMissed + 1
 	self:SetInfo("infobox", 4, blobsMissed)
+
+	if ichorsMarked[args.sourceGUID] then -- Did we mark the Ichor?
+		ichorsMarks[ichorsMarked[args.sourceGUID]] = true -- Mark used is available again
+	end
 end
 
 function mod:EyeDamage(args)
