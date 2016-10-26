@@ -38,7 +38,9 @@ end
 -- Initialization
 --
 
-local bladeMarker = mod:AddMarkerOption(false, "player", 1, 211802, 1, 2) -- Nightmare Blades
+local blade_mark = mod:AddTokenOption { "blade_mark", "Blades Marker",
+	desc = "Mark players affected by Nightmare Blades with icons.", promote = true }
+
 function mod:GetOptions()
 	return {
 		--[[ General ]]--
@@ -57,7 +59,7 @@ function mod:GetOptions()
 		--[[ Stage One: The Decent Into Madness ]]--
 		{206651, "TANK_HEALER"}, -- Darkening Soul
 		{211802, "SAY", "FLASH"}, -- Nightmare Blades
-		bladeMarker,
+		blade_mark,
 		210264, -- Manifest Corruption
 		205771, -- Tormenting Fixation
 		205741, -- Lurking Eruption (Lurking Terror)
@@ -262,9 +264,7 @@ do
 		end
 
 		bladeList[#bladeList+1] = args.destName
-		if self:GetOption(bladeMarker) then
-			SetRaidTarget(args.destName, #bladeList) -- 1,2
-		end
+		self:SetIcon(blade_mark, args.destName, #bladeList)
 
 		if #bladeList == 1 then
 			self:CDBar(args.spellId, phase == 1 and 15.5 or 31)
@@ -277,9 +277,7 @@ do
 	end
 
 	function mod:NightmareBladesRemoved(args)
-		if self:GetOption(bladeMarker) then
-			SetRaidTarget(args.destName, 0)
-		end
+		self:SetIcon(blade_mark, args.destName, 0)
 	end
 end
 
