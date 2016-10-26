@@ -20,6 +20,7 @@
 local L = LibStub("AceLocale-3.0"):GetLocale("BigWigs: Common")
 local UnitAffectingCombat, UnitIsPlayer, UnitGUID, UnitPosition, UnitIsConnected = UnitAffectingCombat, UnitIsPlayer, UnitGUID, UnitPosition, UnitIsConnected
 local UnitExists, UnitIsUnit, UnitName = UnitExists, UnitIsUnit, UnitName
+local SetRaidTarget = SetRaidTarget
 local EJ_GetSectionInfo, GetSpellInfo, GetSpellTexture, IsSpellKnown = EJ_GetSectionInfo, GetSpellInfo, GetSpellTexture, IsSpellKnown
 local UnitGroupRolesAssigned = UnitGroupRolesAssigned
 local SendChatMessage, GetInstanceInfo = BigWigsLoader.SendChatMessage, BigWigsLoader.GetInstanceInfo
@@ -1892,13 +1893,16 @@ end
 --
 
 function boss:UnitId(guid)
-	if UnitExists(guid) then
+	if type(guid) == "number" then
+		return self:GetUnitIdByGUID(guid)
+	elseif UnitExists(guid) then
 		return guid
 	elseif guid:sub(1, 6) == "Player" then
 		return Roster:GetUnit(guid)
 	else
 		return Tracker:GetUnit(guid)
 	end
+	return self:GetUnitIdByGUID(guid)
 end
 
 function argsVirtuals.sourceUnit(args) return boss:UnitId(args.sourceGUID) end
