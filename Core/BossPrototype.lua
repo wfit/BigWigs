@@ -321,17 +321,20 @@ function boss:AddMarkerOption(state, markType, icon, id, ...)
 	return option
 end
 
-function boss:AddCustomOption(key, title, desc, state, icon)
+function boss:AddCustomOption(settings)
 	local l = self:GetLocale()
-	local option = format(state and "custom_on_%s" or "custom_off_%s", key)
-	l[option] = title
-	if desc then
-		l[option .. "_desc"] = desc
-	end
-	if icon then
-		l[option .. "_icon"] = icon
-	end
+	local key = settings.key or settings[1]
+	local option = format((settings.default == false) and "custom_off_%s" or "custom_on_%s", key)
+	l[option] = settings.title or settings[2]
+	if settings.desc then l[option .. "_desc"] = settings.desc end
+	if settings.icon then l[option .. "_icon"] = settings.icon end
 	return option
+end
+
+function boss:AddTokenOption(settings)
+	local option = self:AddCustomOption(settings)
+	local token = self:CreateToken(settings.key or settings[1], settings.promote or false, option)
+	return option, token
 end
 
 -------------------------------------------------------------------------------
@@ -1825,10 +1828,15 @@ function boss:CreateToken(key, promote, option)
 	local infix = self.engageId or self:GetName()
 	local fullkey = "BW:" .. infix .. ":" .. key
 
-	if not self.tokens then self.tokens = {} end
+	if not self.tokens then
+		self.tokens = {}
+		self.tokens_opt = {}
+	end
 
 	local token = Token:Create(fullkey, 0, false):RequirePromote(promote)
+
 	self.tokens[token] = option or true
+	if option then self.tokens_opt[option] = token end
 
 	if self.instanceId then
 		token:RequireZone(self.instanceId)
@@ -1840,7 +1848,8 @@ function boss:CreateToken(key, promote, option)
 end
 
 function boss:Token(token)
-	return token:IsMine()
+	local t = (token.IsMine and token) or (self.tokens_opt and self.tokens_opt[token])
+	return t and t:IsMine() or false
 end
 
 -------------------------------------------------------------------------------

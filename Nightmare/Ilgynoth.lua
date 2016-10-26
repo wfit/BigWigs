@@ -130,12 +130,11 @@ end
 -- Initialization
 --
 
-local ichors_marks = mod:AddCustomOption("ichors_marks", "Set markers on Ichors", nil, true)
-local ichors_flash = mod:AddCustomOption("ichors_flash", "Pulse attribution", "Display a Pulse alert with the symbol of the Ichor fixated on you.", true)
-local ichors_fails = mod:AddCustomOption("ichors_fails", "Announce Ichors fails", "Announces name of fixated players whose ichors did not hit the boss", true)
-
-local ichors_marks_token = mod:CreateToken("ichors_marks", true, ichors_marks)
-local ichors_fails_token = mod:CreateToken("ichors_fails", false, ichors_fails)
+local ichors_marks = mod:AddTokenOption { "ichors_marks", "Set markers on Ichors", promote = true }
+local ichors_flash = mod:AddCustomOption { "ichors_flash", "Pulse attribution",
+	desc = "Display a Pulse alert with the symbol of the Ichor fixated on you." }
+local ichors_fails = mod:AddTokenOption { "ichors_fails", "Announce Ichors fails",
+	desc = "Announces name of fixated players whose ichors did not hit the boss" }
 
 function mod:GetOptions()
 	return {
@@ -380,7 +379,7 @@ function mod:IchorDeath(args)
 	local owner = ichors[args.destGUID]
 	if owner then
 		ichors[args.destGUID] = nil
-		if self:Token(ichors_fails_token) then
+		if self:Token(ichors_fails) then
 			-- If an owner still exists when the Icor dies, then the owner failed!
 			SendChatMessage(L.ichor_fail:format(UnitName(self:UnitId(owner))), "RAID")
 		end
@@ -395,7 +394,7 @@ end
 
 function mod:IchorMark(event, unit)
 	local guid = UnitGUID(unit)
-	if self:MobId(guid) == 105721 and not ichorsMarked[guid] and self:Token(ichors_marks_token) then
+	if self:MobId(guid) == 105721 and not ichorsMarked[guid] and self:Token(ichors_marks) then
 		local icon = next(ichorsMarks)
 		if icon then -- At least one icon unused
 			SetRaidTarget(unit, icon)

@@ -59,11 +59,8 @@ end
 -- Initialization
 --
 
-local whisp_marks = mod:AddCustomOption("whisp_marks", "Set markers on Corrupted Whisp", nil, true)
-local whisp_marks_token = mod:CreateToken("whisp_marks", true, whisp_marks)
-
-local skull_mark = mod:AddCustomOption("skull_mark", "Keep a Skull marker on Boss3", nil, true)
-local skull_mark_token = mod:CreateToken("skull_mark", true, skull_mark)
+local whisp_marks = mod:AddTokenOption { "whisp_marks", "Set icons on Corrupted Whisp", promote = true }
+local skull_mark = mod:AddTokenOption { "skull_mark", "Keep the skull icon on the boss3 unit", promote = true }
 
 function mod:GetOptions()
 	return {
@@ -292,7 +289,7 @@ function mod:ForcesOfNightmare(args)
 	self:Bar(212681, 11) -- Cleansed Ground
 	self:Bar(args.spellId, 77.7, CL.count:format(args.spellName, forcesOfNightmareCount))
 
-	if self:Token(whisp_marks_token) then
+	if self:Token(whisp_marks) then
 		self:RegisterTargetEvents("WispMark")
 		self:ScheduleTimer("UnregisterTargetEvents", 10)
 	end
@@ -306,7 +303,7 @@ do
 		[105495] = -13357, -- Twisted Sister
 	}
 	function mod:INSTANCE_ENCOUNTER_ENGAGE_UNIT()
-		if self:Token(skull_mark_token) then
+		if self:Token(skull_mark) then
 			SetRaidTarget("boss3", 8)
 		end
 		for i = 1, 5 do
