@@ -14,12 +14,14 @@ if not mod then return end
 mod:RegisterEnableMob(106087)
 mod.engageId = 1876
 mod.respawnTime = 30
+mod.instanceId = 1520
 
 --------------------------------------------------------------------------------
 -- Locals
 --
 
 local twistingShadowsCount = 1
+local nextWebMark = 1
 
 --------------------------------------------------------------------------------
 -- Localization
@@ -36,10 +38,14 @@ end
 -- Initialization
 --
 
+local web_marks = mod:AddTokenOption { "web_marks", "Mark Web of Pain",
+	desc = "Mark players affected by Web of Pain with icons.", promote = true }
+
 function mod:GetOptions()
 	return {
 		--[[ Spider Form ]]--
 		{215300, "FLASH"}, -- Web of Pain
+		web_marks,
 		212364, -- Feeding Time
 		214348, -- Vile Ambush
 		{215443, "SAY", "FLASH"}, -- Necrotic Venom
@@ -68,6 +74,7 @@ function mod:OnBossEnable()
 
 	--[[ Spider Form ]]--
 	self:Log("SPELL_AURA_APPLIED", "WebOfPainApplied", 215300) -- 215307 is applied to the other player
+	self:Log("SPELL_AURA_REMOVED", "WebOfPainRemoved", 215300)
 	self:Log("SPELL_CAST_SUCCESS", "VileAmbush", 214348)
 	self:Log("SPELL_CAST_SUCCESS", "NecroticVenom", 215443)
 
@@ -90,6 +97,8 @@ end
 
 function mod:OnEngage()
 	twistingShadowsCount = 1
+	nextWebMark = 1
+
 
 	self:Bar(215300, 6) -- Web of Pain
 	self:Bar(215443, 12) -- Necrotic Venom
@@ -211,6 +220,16 @@ function mod:WebOfPainApplied(args)
 	elseif not self:CheckOption(args.spellId, "ME_ONLY") then
 		self:Message(args.spellId, "Attention", nil, L.isLinkedWith:format(self:ColorName(args.sourceName), self:ColorName(args.destName)))
 	end
+
+	self:SetIcon(web_marks, args.sourceUnit, nextWebMark)
+	self:SetIcon(web_marks, args.destUnit, nextWebMark + 1)
+	nextWebMark = nextWebMark + 2
+end
+
+function mod:WebOfPainRemoved(args)
+	self:SetIcon(web_marks, args.sourceUnit, 0)
+	self:SetIcon(web_marks, args.destUnit, 0)
+	nextWebMark = 1
 end
 
 function mod:VileAmbush(args)
