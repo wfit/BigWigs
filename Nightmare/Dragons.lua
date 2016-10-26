@@ -95,6 +95,7 @@ function mod:OnBossEnable()
 
 	--[[ Ysondre ]]--
 	self:Log("SPELL_CAST_START", "CallDefiledSpiritCast", 207573)
+	self:RegisterSync("NightmareBlast")
 	self:Log("SPELL_AURA_APPLIED", "DefiledVines", 203770)
 
 	--[[ Emeriss ]]--
@@ -187,8 +188,7 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, _, _, _, spellId)
 			self:StopBar(205298) -- Essence of Corruption
 		end
 	elseif spellId == 203147 then -- Ysondre: Nightmare Blast
-		self:Message(spellId, "Important", "Alert")
-		self:CDBar(spellId, 16)
+		self:Sync("NightmareBlast")
 	elseif spellId == 205331 then -- Taerar: Seeping Fog
 		self:Message(205341, "Urgent", "Alarm")
 	elseif spellId == 205528 then -- Emeriss: Corruption of the Dream
@@ -236,6 +236,11 @@ end
 function mod:CallDefiledSpiritCast(args)
 	self:Message(args.spellId, "Important")
 	self:Bar(args.spellId, 33)
+end
+
+function mod:NightmareBlast()
+	self:Message(203147, "Important", "Alert")
+	self:CDBar(203147, 16)
 end
 
 do
