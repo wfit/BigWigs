@@ -813,6 +813,7 @@ function mod:CHAT_MSG_ADDON(prefix, msg, channel, sender)
 			self:VersionCheck(bwPrefix, bwMsg, extra, sender)
 		elseif bwPrefix == "B" then
 			public:SendMessage("BigWigs_BossComm", bwMsg, extra, sender)
+			public:SendMessage("BigWigs_BossComm_Sync", bwMsg, extra, sender)
 		elseif bwPrefix == "P" then
 			if bwMsg == "Pull" then
 				local _, _, _, instanceId = UnitPosition("player")

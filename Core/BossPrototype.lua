@@ -213,6 +213,7 @@ function boss:OnEnable(isWipe)
 
 	self:EnableTokens()
 	self:RegisterMessage("BW_NET_MSG")
+	self:RegisterMessage("BigWigs_BossComm_Sync")
 
 	if IsEncounterInProgress() and not isWipe then -- Safety. ENCOUNTER_END might fire whilst IsEncounterInProgress is still true and engage a module.
 		self:CheckForEncounterEngage("NoEngage") -- Prevent engaging if enabling during a boss fight (after a DC)
@@ -257,7 +258,13 @@ function boss:OnDisable(isWipe)
 		end
 	end
 
-	self:DisableTokens()
+	if not isWipe then
+		self:DisableTokens()
+	end
+
+	if self.syncmsg_debounce then
+		wipe(self.syncmsg_debounce)
+	end
 
 	self.scheduledMessages = nil
 	self.scheduledScans = nil
@@ -1748,6 +1755,7 @@ do
 	function boss:Sync(msg, extra)
 		if msg then
 			self:SendMessage("BigWigs_BossComm", msg, extra, pName)
+			self:SendMessage("BigWigs_BossComm_Sync", msg, extra, pName)
 			if IsInGroup() then
 				msg = "B^".. msg
 				if extra then
@@ -1755,6 +1763,36 @@ do
 				end
 				SendAddonMessage("BigWigs", msg, IsInGroup(2) and "INSTANCE_CHAT" or "RAID")
 			end
+		end
+	end
+
+	function boss:RegisterSync(msg, handler, debounce)
+		if not self.syncmsg then
+			self.syncmsg = {}
+			self.syncmsg_debounce_time = {}
+			self.syncmsg_debounce = {}
+		end
+		if type(handler) == "number" then
+			debounce = handler
+			handler = nil
+		end
+		self.syncmsg[msg] = handler or msg
+		self.syncmsg_debounce_time[msg] = debounce or 2
+	end
+
+	function boss:BigWigs_BossComm_Sync(_, msg, arg)
+		if not self.syncmsg or not self.syncmsg[msg] then return end
+		local debounce = self.syncmsg_debounce[msg]
+		if not debounce then
+			debounce = {}
+			self.syncmsg_debounce[msg] = debounce
+		end
+		local key = arg or ""
+		local last = self.syncmsg_debounce[msg][key]
+		local t = GetTime()
+		if not last or t - last > self.syncmsg_debounce_time[msg] then
+			self.syncmsg_debounce[msg][key] = t
+			self[self.syncmsg[msg]](self, arg)
 		end
 	end
 end
@@ -1877,8 +1915,8 @@ function boss:RegisterNetMessage(event, handler)
 end
 
 function boss:BW_NET_MSG(_, msg, channel, source)
-	local event = msg.event
-	if self.netmsgs and self.netmsgs[event] then
+	local event = msg and msg.event
+	if event and self.netmsgs and self.netmsgs[event] then
 		self[self.netmsgs[event]](self, msg.data, channel, source)
 	end
 end
