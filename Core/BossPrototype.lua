@@ -1864,7 +1864,7 @@ end
 function boss:SyncTokensState()
 	if not self.tokens then return end
 	for token, opt in pairs(self.tokens) do
-		if opt == true or self:GetOption(opt) then
+		if opt == true or self.db.profile[opt] then
 			token:Enable()
 		else
 			token:Disable()
