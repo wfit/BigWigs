@@ -1893,7 +1893,7 @@ function boss:CreateToken(key, promote, option)
 	if self.instanceId then
 		token:RequireZone(self.instanceId)
 	else
-		core:Print("Created a token without an instanceId defined.")
+		core:Print("Created a token without an instanceId defined [" .. fullkey .. "]")
 	end
 
 	return token
