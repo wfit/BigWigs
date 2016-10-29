@@ -1402,6 +1402,12 @@ function boss:Message(key, color, sound, text, icon)
 	end
 end
 
+function boss:Emphasized(key, msg, r, g, b)
+	if checkFlag(self, key, C.EMPHASIZE) then
+		self:SendMessage("BigWigs_EmphasizedMessage", msg, r, g, b)
+	end
+end
+
 do
 	local hexColors = {}
 	for k, v in next, (CUSTOM_CLASS_COLORS or RAID_CLASS_COLORS) do
