@@ -1002,7 +1002,8 @@ do
 	--- Iterate over your group.
 	-- Automatically uses "party" or "raid" tokens depending on your group type.
 	-- @return iterator
-	function boss:IterateGroup()
+	function boss:IterateGroup(a, ...)
+		if a ~= nil then return Roster:Iterate(a, ...) end
 		local num = GetNumGroupMembers() or 0
 		local i = 0
 		local size = num > 0 and num+1 or 2
@@ -1013,10 +1014,6 @@ do
 			end
 		end
 		return iter, IsInRaid() and raidList or partyList
-	end
-
-	function boss:FSIterateGroup(...)
-		return Roster:Iterate(...)
 	end
 end
 
