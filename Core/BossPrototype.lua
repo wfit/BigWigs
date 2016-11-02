@@ -1942,9 +1942,8 @@ function boss:UnitId(guid)
 	elseif guid:sub(1, 6) == "Player" then
 		return Roster:GetUnit(guid)
 	else
-		return Tracker:GetUnit(guid)
+		return Tracker:GetUnit(guid) or self:GetUnitIdByGUID(guid)
 	end
-	return self:GetUnitIdByGUID(guid)
 end
 
 function argsVirtuals.sourceUnit(args) return boss:UnitId(args.sourceGUID) end
