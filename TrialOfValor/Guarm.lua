@@ -303,12 +303,20 @@ do
 
 	function mod:VolatileFoamRemoved(args)
 		local guid = args.destGUID
+		-- Free icon allocated for this pair of players
 		local icon = rangedIconsUsed[guid]
 		if icon then
 			rangedIcons[icon] = true
 			rangedIconsUsed[guid] = nil
 			SetRaidTarget(rangedIconsUsedOn[icon], 0)
 			rangedIconsUsedOn[icon] = nil
+		end
+		-- Remove soaker from blacklist once the target loses its debuff
+		for soaker, target in pairs(blacklist) do
+			if target == guid then
+				blacklist[soaker] = nil
+				break
+			end
 		end
 	end
 
@@ -406,7 +414,7 @@ do
 
 						-- Soaker's unit
 						local soaker = soakers[1].unit
-						blacklist[UnitGUID(soaker)] = true
+						blacklist[UnitGUID(soaker)] = guid
 						local msg = L.foam_moveto
 
 						-- If soaker is less mobile than affected unit, unit will move to soaker!
