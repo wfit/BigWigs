@@ -214,9 +214,9 @@ do
 		if not mod:Ranged(unit) then
 			return false
 		end
-		-- Unit must not have another unsuitable foam
+		-- Unit must not have another foam
 		for foam in pairs(foams) do
-			if UnitDebuff(unit, mod:SpellName(foam)) and not IsSuitableExpire(unit, foam) then
+			if UnitDebuff(unit, mod:SpellName(foam)) then
 				return false
 			end
 		end
@@ -224,6 +224,7 @@ do
 		if blacklist and blacklist[UnitGUID(unit)] then
 			return false
 		end
+		-- Debuff should be suitable to expire on the target
 		return IsSuitableExpire(unit, debuff)
 	end
 
