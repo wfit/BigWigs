@@ -18,7 +18,7 @@ mod.instanceId = 1648
 -- Locals
 --
 
-
+local beforeFirstBreath = true
 
 --------------------------------------------------------------------------------
 -- Localization
@@ -81,6 +81,7 @@ function mod:OnEngage()
 		self:Berserk(242)
 	end
 	self:Bar(228187, 13) -- Guardian's Breath
+	beforeFirstBreath = true
 end
 
 --------------------------------------------------------------------------------
@@ -121,6 +122,7 @@ function mod:GuardiansBreath(args)
 	self:Message(228187, "Attention", "Warning")
 	self:Bar(228187, 5, CL.cast:format(args.spellName))
 	self:Flash(228187)
+	beforeFirstBreath = false
 end
 
 function mod:FlashingFangs(args)
@@ -195,13 +197,18 @@ do
 
 	-- Checks if the unit is suitable to let the foam debuff expire
 	local function IsSuitableExpire(unit, debuff)
-		-- Unit must not have a different color
-		for _, color in ipairs(colors) do
-			if color ~= foamColor[debuff] and UnitDebuff(unit, mod:SpellName(color)) then
-				return false
+		if beforeFirstBreath then
+			-- Unit must not have a different color (just in case)
+			for _, color in ipairs(colors) do
+				if color ~= foamColor[debuff] and UnitDebuff(unit, mod:SpellName(color)) then
+					return false
+				end
 			end
+			return true
+		else
+			-- Unit must have matching color
+			return UnitDebuff(unit, mod:SpellName(foamColor[debuff])) or false
 		end
-		return true
 	end
 
 	-- Checks if the unit is suitable to receive the foam debuff
