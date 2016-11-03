@@ -390,9 +390,11 @@ do
 				local soakers = {}
 				for soaker in mod:IterateGroup(20) do
 					if IsSuitableReceive(soaker, foam, blacklist) then
+						local distance = EstimatedRange(guid, UnitGUID(soaker))
 						table.insert(soakers, {
 							unit = soaker,
-							mobility = Mobility(soaker) - (EstimatedRange(guid, UnitGUID(soaker)) / 10)
+							mobility = Mobility(soaker) - (distance / 10),
+							distance = distance
 						})
 					end
 				end
@@ -418,7 +420,7 @@ do
 						local msg = L.foam_moveto
 
 						-- If soaker is less mobile than affected unit, unit will move to soaker!
-						if soakers[1].mobility <= Mobility(unit) then
+						if soakers[1].mobility <= (Mobility(unit) - (soakers[1].distance / 10)) then
 							soaker, unit = unit, soaker
 							msg = L.foam_soakby
 						end
