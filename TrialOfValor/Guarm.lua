@@ -69,7 +69,7 @@ function mod:OnBossEnable()
 
 	self:Log("SPELL_CAST_SUCCESS", "RoaringLeap", 227883)
 
-	self:Log("SPELL_CAST_SUCCESS", "VolatileFoamCast", 227883)
+	self:Log("SPELL_CAST_SUCCESS", "VolatileFoamCast", 228824)
 	self:Log("SPELL_AURA_APPLIED", "VolatileFoamApplied", 228744, 228810, 228818, 228794, 228811, 228819) -- Flaming, Briney, Shadowy + echoes
 	self:Log("SPELL_AURA_REMOVED", "VolatileFoamRemoved", 228744, 228810, 228818, 228794, 228811, 228819)
 	self:RegisterNetMessage("VolatileFoamRanges")
