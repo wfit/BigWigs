@@ -210,6 +210,10 @@ do
 
 	-- Checks if the unit is suitable to receive the foam debuff
 	local function IsSuitableReceive(unit, debuff, blacklist)
+		-- Unit must not be on the blacklist
+		if blacklist and blacklist[UnitGUID(unit)] then
+			return false
+		end
 		-- Unit must be ranged player
 		if not mod:Ranged(unit) then
 			return false
@@ -219,10 +223,6 @@ do
 			if UnitDebuff(unit, mod:SpellName(foam)) then
 				return false
 			end
-		end
-		-- Unit must not be on the blacklist
-		if blacklist and blacklist[UnitGUID(unit)] then
-			return false
 		end
 		-- Debuff should be suitable to expire on the target
 		return IsSuitableExpire(unit, debuff)
