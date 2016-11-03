@@ -175,18 +175,14 @@ do
 	-- Foams constants
 	local Shadow, Fire, Frost = 228769, 228758, 228768
 	local colors = { Shadow, Fire, Frost }
-	local foams = {
+	local foams = { 228744, 228794, 228810, 228811, 228818, 228819 }
+	local foamColor = {
 		[228744] = Fire,
 		[228794] = Fire,
 		[228810] = Frost,
 		[228811] = Frost,
 		[228818] = Shadow,
 		[228819] = Shadow,
-	}
-	local echoes = {
-		[228794] = true,
-		[228811] = true,
-		[228819] = true,
 	}
 	local meleeIcon = {
 		[228744] = 7, -- Cross
@@ -201,7 +197,7 @@ do
 	local function IsSuitableExpire(unit, debuff)
 		-- Unit must not have a different color
 		for _, color in ipairs(colors) do
-			if color ~= foams[debuff] and UnitDebuff(unit, mod:SpellName(color)) then
+			if color ~= foamColor[debuff] and UnitDebuff(unit, mod:SpellName(color)) then
 				return false
 			end
 		end
@@ -219,7 +215,7 @@ do
 			return false
 		end
 		-- Unit must not have another foam
-		for foam in pairs(foams) do
+		for _, foam in ipairs(foams) do
 			if UnitDebuff(unit, mod:SpellName(foam)) then
 				return false
 			end
@@ -241,9 +237,9 @@ do
 
 	local function GetFoam(unit)
 		local unitFoam = false
-		for foam in pairs(foams) do
+		for _, foam in ipairs(foams) do
 			if UnitDebuff(unit, mod:SpellName(foam)) then
-				if unitFoam and foams[unitFoam] ~= foams[foam] then
+				if unitFoam and foamColor[unitFoam] ~= foamColor[foam] then
 					return "multiple"
 				else
 					unitFoam = foam
@@ -255,9 +251,8 @@ do
 
 	local ranges = {}
 	local rangesReceived = 0
-	local initialAttributionDone = false
+	local attributionDone = false
 	local blacklist = {}
-	local pendingFoams = {}
 	local rangedIcons = { [1] = true, [2] = true, [4] = true, [5] = true }
 	local rangedIconsUsed = {}
 	local rangedIconsUsedOn = {}
@@ -272,9 +267,8 @@ do
 	function mod:VolatileFoamCast(args)
 		wipe(ranges)
 		rangesReceived = 0
-		initialAttributionDone = false
+		attributionDone = false
 		wipe(blacklist)
-		wipe(pendingFoams)
 		rangedIcons = { [1] = true, [2] = true, [4] = true, [5] = true }
 		wipe(rangedIconsUsed)
 		wipe(rangedIconsUsedOn)
@@ -282,8 +276,8 @@ do
 	end
 
 	function mod:VolatileFoamApplied(args)
-		if not self:Me(args.destGUID) then
-			-- Only send message when foam is on us
+		if not self:Me(args.destGUID) or attributionDone then
+			-- Only send message when foam is on us and before attribution is done
 			return
 		elseif IsSuitableExpire("player", args.spellId) or self:Melee() then
 			-- Suitable target or melee, send a dummy message without ranges
@@ -311,13 +305,6 @@ do
 			SetRaidTarget(rangedIconsUsedOn[icon], 0)
 			rangedIconsUsedOn[icon] = nil
 		end
-		-- Remove soaker from blacklist once the target loses its debuff
-		for soaker, target in pairs(blacklist) do
-			if target == guid then
-				blacklist[soaker] = nil
-				break
-			end
-		end
 	end
 
 	-- Received ranges data
@@ -327,46 +314,28 @@ do
 			ranges[data.player] = data.ranges
 		end
 		rangesReceived = rangesReceived + 1
-		if not initialAttributionDone and rangesReceived == 3 then
+		if rangesReceived == 3 then
 			-- Shortcut for initial attribution
 			self:VolatileFoamAI()
-		elseif initialAttributionDone and echoes[data.spell] then
-			-- Echoes are handled immediately
-			-- (but after initial attributions, to work around stupid Blizzard devs)
-			if not pendingFoams[data.player] then
-				pendingFoams[data.player] = true
-				self:ScheduleTimer("VolatileFoamAIPlayer", 0.3, data.player)
-			end
 		end
 	end
 
 	-- Perform raid-wide attributions
 	function mod:VolatileFoamAI()
-		if initialAttributionDone then return end
+		if attributionDone then return end
+		attributionDone = true
 		if self:Token(foams_ai) then
-			initialAttributionDone = true
 			for unit in mod:IterateGroup(20) do
-				self:VolatileFoamAIPlayer(unit, true)
+				self:VolatileFoamAIPlayer(unit)
 			end
 		end
 	end
 
 	-- Perform attribution for a specific player
-	function mod:VolatileFoamAIPlayer(player, force)
-		if not initialAttributionDone then return end
-
-		-- Normalize inputs
-		local unit = self:UnitId(player)
+	function mod:VolatileFoamAIPlayer(unit)
 		local guid = UnitGUID(unit)
-
-		-- Ensure there is a pending attribution for this player
-		if pendingFoams[guid] or force then
-			pendingFoams[guid] = nil
-		else
-			return
-		end
-
 		local foam = GetFoam(unit)
+
 		if foam then
 			if foam == "multiple" then
 				-- I HATE YOU BLIZZARD
@@ -398,11 +367,7 @@ do
 						})
 					end
 				end
-				if #soakers > 1 then
-					table.sort(soakers, function(a, b)
-						return a.mobility > b.mobility
-					end)
-				end
+				table.sort(soakers, function(a, b) return a.mobility > b.mobility end)
 				if #soakers == 0 then
 					-- No soakers available ?
 					SendChatMessage(L.foam_noavail:format(UnitName(unit)), "RAID")
@@ -416,7 +381,7 @@ do
 
 						-- Soaker's unit
 						local soaker = soakers[1].unit
-						blacklist[UnitGUID(soaker)] = guid
+						blacklist[UnitGUID(soaker)] = true
 						local msg = L.foam_moveto
 
 						-- If soaker is less mobile than affected unit, unit will move to soaker!
