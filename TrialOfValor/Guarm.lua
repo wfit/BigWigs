@@ -157,7 +157,7 @@ do
 		[258] = function(unit) return UnitBuff(unit, mod:SpellName(193223)) and 9 or 5 end, -- Priest Shadow
 		[262] = 2, -- Shaman Elemental
 		[267] = 1, -- Warlock Destruction
-		[102] = 1, -- Bruid Balance
+		[102] = 1, -- Druid Balance
 	}
 
 	local function Mobility(unit)
