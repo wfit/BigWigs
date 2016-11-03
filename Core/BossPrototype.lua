@@ -1967,7 +1967,7 @@ do
 		item(18, 133940), -- Silkweave Bandage
 		item(23, 21519), -- Mistletoe
 		item(28, 31463), -- Zezzak's Shard
-		interact(10, 4),
+		interact(30, 4),
 		item(33, 34191), -- Handful of Snowflakes
 		item(38, 18904), -- Zorbin's Ultra-Shrinker
 		item(43, 34471), -- Vial of the Sunwell
