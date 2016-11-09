@@ -1002,7 +1002,8 @@ do
 	--- Iterate over your group.
 	-- Automatically uses "party" or "raid" tokens depending on your group type.
 	-- @return iterator
-	function boss:IterateGroup()
+	function boss:IterateGroup(a, ...)
+		if a ~= nil then return Roster:Iterate(a, ...) end
 		local num = GetNumGroupMembers() or 0
 		local i = 0
 		local size = num > 0 and num+1 or 2
@@ -1013,10 +1014,6 @@ do
 			end
 		end
 		return iter, IsInRaid() and raidList or partyList
-	end
-
-	function boss:FSIterateGroup(...)
-		return Roster:Iterate(...)
 	end
 end
 
@@ -1402,6 +1399,12 @@ function boss:Message(key, color, sound, text, icon)
 				self:SendMessage("BigWigs_Sound", self, key, sound)
 			end
 		end
+	end
+end
+
+function boss:Emphasized(key, msg, r, g, b)
+	if checkFlag(self, key, C.EMPHASIZE) then
+		self:SendMessage("BigWigs_EmphasizedMessage", msg, r, g, b)
 	end
 end
 
@@ -1933,6 +1936,61 @@ end
 -- Misc.
 -- @section misc
 --
+
+do
+	local floor = math.floor
+
+	local function item(range, itemid)
+		return {
+			range = range,
+			check = function(unit)
+				return IsItemInRange(itemid, unit)
+			end
+		}
+	end
+
+	local function interact(range, index)
+		return {
+			range = range,
+			check = function(unit)
+				return CheckInteractDistance(unit, index)
+			end
+		}
+	end
+
+	local ranges = {
+		item(5, 37727), -- Ruby Acorn
+		item(8, 63427), -- Worgsaw
+		interact(10, 2),
+		item(11, 33278), -- Burning Torch
+		item(13, 32321), -- Sparrowhawk Net
+		item(18, 133940), -- Silkweave Bandage
+		item(23, 21519), -- Mistletoe
+		item(28, 31463), -- Zezzak's Shard
+		interact(30, 4),
+		item(33, 34191), -- Handful of Snowflakes
+		item(38, 18904), -- Zorbin's Ultra-Shrinker
+		item(43, 34471), -- Vial of the Sunwell
+		item(48, 32698), -- Wrangling Rope
+		item(53, 116139), -- Haunting Memento
+		item(63, 32825), -- Soul Cannon
+		item(73, 41265), -- Eyesore Blaster
+		item(83, 35278), -- Reinforced Net
+	}
+
+	function boss:Range(unit, lower)
+		unit = self:UnitId(unit)
+		local prev = 0
+		for _, entry in ipairs(ranges) do
+			if entry.check(unit) then
+				return lower and prev or entry.range
+			else
+				prev = entry.range
+			end
+		end
+		return prev
+	end
+end
 
 function boss:UnitId(guid)
 	if type(guid) == "number" then
