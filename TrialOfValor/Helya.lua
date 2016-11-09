@@ -68,7 +68,7 @@ function mod:GetOptions()
 		228619, -- Lantern of Darkness
 
 		--[[ Stage Three: Helheim's Last Stand ]]--
-		230267, -- Orb of Corrosion
+		{230267, "SAY", "FLASH"}, -- Orb of Corrosion
 	},{
 		["stages"] = -14213, -- Helya
 		[228300] = -14222, -- Stage Two: From the Mists
@@ -309,6 +309,7 @@ do
 
 		if self:Me(args.destGUID) then
 			self:Say(args.spellId)
+			self:Flash(args.spellId)
 		end
 	end
 end
