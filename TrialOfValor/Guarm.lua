@@ -1,7 +1,7 @@
 
 --------------------------------------------------------------------------------
 -- TODO List:
-
+-- - Figure out how timers work - Breath and Charge could be on some shared cd?
 
 --------------------------------------------------------------------------------
 -- Module Declaration
@@ -43,15 +43,15 @@ local foams_ai = mod:AddTokenOption { "foams_ai", "Automatically call movements 
 
 function mod:GetOptions()
 	return {
-		228248, -- Frost Lick
-		228253, -- Shadow Lick
-		228228, -- Flame Lick
-		{228187, "FLASH"}, -- Guardian's Breath
+		{228248, "SAY", "FLASH"}, -- Frost Lick
+		{228253, "SAY", "FLASH"}, -- Shadow Lick
+		{228228, "SAY", "FLASH"}, -- Flame Lick
+		{228187}, -- Guardian's Breath
 		227514, -- Flashing Fangs
 		227816, -- Headlong Charge
 		227883, -- Roaring Leap
 		foams_ai,
-		"berserk"
+		"berserk",
 	}
 end
 
@@ -78,7 +78,7 @@ end
 
 function mod:OnEngage()
 	if not self:LFR() then -- Probably longer on LFR
-		self:Berserk(242)
+		self:Berserk(307)
 	end
 	self:Bar(228187, 13) -- Guardian's Breath
 	beforeFirstBreath = true
@@ -91,6 +91,10 @@ end
 do
 	local list = mod:NewTargetList()
 	function mod:FrostLick(args)
+		if self:Me(args.destGUID) then
+			self:Flash(args.spellId)
+			self:Say(args.spellId)
+		end
 		list[#list+1] = args.destName
 		if #list == 1 then
 			self:ScheduleTimer("TargetMessage", 0.4, args.spellId, list, "Urgent", "Alarm")
@@ -101,6 +105,10 @@ end
 do
 	local list = mod:NewTargetList()
 	function mod:ShadowLick(args)
+		if self:Me(args.destGUID) then
+			self:Flash(args.spellId)
+			self:Say(args.spellId)
+		end
 		list[#list+1] = args.destName
 		if #list == 1 then
 			self:ScheduleTimer("TargetMessage", 0.4, args.spellId, list, "Urgent", "Alarm")
@@ -111,6 +119,10 @@ end
 do
 	local list = mod:NewTargetList()
 	function mod:FlameLick(args)
+		if self:Me(args.destGUID) then
+			self:Flash(args.spellId)
+			self:Say(args.spellId)
+		end
 		list[#list+1] = args.destName
 		if #list == 1 then
 			self:ScheduleTimer("TargetMessage", 0.4, args.spellId, list, "Urgent", "Alarm")
