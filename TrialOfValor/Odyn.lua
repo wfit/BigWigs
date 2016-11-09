@@ -76,7 +76,7 @@ function mod:GetOptions()
 
 		--[[ Stage Three: The Final Test ]]--
 		{228918, "SAY"}, -- Stormforged Spear
-		{227807, "SAY"}, -- Storm of Justice
+		{227807, "SAY", "FLASH"}, -- Storm of Justice
 		227475, -- Cleansing Flame
 	},{
 		["stages"] = "general",
@@ -239,6 +239,7 @@ function mod:StormOfJustice(args)
 		self:TargetMessage(args.spellId, args.destName, "Personal", "Alarm")
 		self:Bar(args.spellId, 5)
 		self:Say(args.spellId)
+		self:Flash(args.spellId)
 	end
 end
 
