@@ -47,7 +47,7 @@ function mod:GetOptions()
 	return {
 		--[[ Helya ]]--
 		"stages",
-		{229119, "SAY"}, -- Orb of Corruption
+		{229119, "SAY", "FLASH"}, -- Orb of Corruption
 		orbMarker,
 		227967, -- Bilewater Breath
 		227992, -- Bilewater Liquefaction
@@ -174,6 +174,7 @@ do
 
 		if self:Me(args.destGUID) then
 			self:Say(args.spellId)
+			self:Flash(args.spellId)
 		end
 	end
 end
