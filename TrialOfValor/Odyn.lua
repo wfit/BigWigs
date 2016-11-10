@@ -107,6 +107,8 @@ function mod:OnBossEnable()
 	self:Log("SPELL_CAST_SUCCESS", "StormOfJusticeSuccess", 227807)
 	self:Log("SPELL_AURA_APPLIED", "ValarjarsBond", 228018, 229529, 228016, 229469) -- XXX
 	self:Log("SPELL_AURA_APPLIED_DOSE", "OdynsTest", 227626)
+	self:Log("SPELL_AURA_APPLIED", "OdynsTestApplied", 228911)
+	self:Log("SPELL_AURA_REMOVED", "OdynsTestRemoved", 228911)
 	self:Log("SPELL_AURA_APPLIED", "StormforgedSpear", 228918)
 	self:Log("SPELL_AURA_APPLIED", "ExpelLight", 228029)
 	self:Log("SPELL_AURA_REMOVED", "ExpelLightRemoved", 228029)
@@ -142,7 +144,6 @@ function mod:OnEngage()
 	self:Bar(228162, 24) -- Shield of Light
 	self:Bar(228029, 32) -- Expel Light
 	self:Bar(227503, 40) -- Draw Power
-	self:Bar(227629, 73) -- Unerring Blast
 end
 
 --------------------------------------------------------------------------------
@@ -163,7 +164,6 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 		self:RegisterEvent("INSTANCE_ENCOUNTER_ENGAGE_UNIT")
 		self:Bar(-14404, 16, L.hyrja, L.hyrja_icon)
 		self:Bar(227503, 43) -- Draw Power
-		self:Bar(227629, 73) -- Unerring Blast
 	elseif spellId == 228740 then
 		phase = 3
 		self:Message("stages", "Neutral", "Long", CL.stage:format(3), false)
@@ -176,6 +176,7 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 	elseif spellId == 229576 or spellId == 227503 then -- Draw Power, TODO first spellId was mythic PTR, delete if not present on live
 		runesUp = 5
 		self:Message(227503, "Attention", "Long")
+		self:Bar(227629, 30)  -- Unerring Blast
 	end
 end
 
@@ -223,8 +224,7 @@ do
 	function mod:UnerringBlast(args)
 		self:Message(args.spellId, "Urgent", "Alert", CL.casting:format(args.spellName))
 		self:Bar(args.spellId, 3, CL.cast:format(args.spellName))
-		self:Bar(227503, 35) -- Draw Power
-		self:Bar(args.spellId, 68)
+		self:Bar(227503, 40) -- Draw Power
 
 		if self:Mythic() and not UnitDebuff("player", protected) then
 			self:Message(args.spellId, "Personal", nil, CL.no:format(protected))
@@ -256,7 +256,7 @@ end
 function mod:HornOfValor(args)
 	self:Message(args.spellId, "Urgent", "Alert", CL.casting:format(args.spellName))
 	hornCount = hornCount + 1
-	self:Bar(args.spellId, hornCount % 2 == 0 and 27 or 43) -- TODO phase 2 CD
+	self:Bar(args.spellId, phase == 2 and 30 or hornCount % 2 == 0 and 27 or 43) -- TODO phase 2 CD
 end
 
 function mod:StormOfJustice(args)
@@ -282,6 +282,16 @@ function mod:OdynsTest(args)
 		-- This is the buff the boss gains if he is hitting the same tank. It's not really a stack message on the tank, but this is a clearer way of presenting it.
 		self:StackMessage(args.spellId, self:UnitName("boss1target"), args.amount, "Attention")
 	end
+end
+
+function mod:OdynsTestApplied(args)
+	self:TargetMessage(227626, args.sourceName, "Positive", "Long")
+	local text = CL.other:format(args.sourceName, args.spellName)
+	self:Bar(227626, 10, text)
+end
+
+function mod:OdynsTestRemoved(args)
+	self:Bar(227626, 40)
 end
 
 function mod:StormforgedSpear(args)
