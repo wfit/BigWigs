@@ -95,9 +95,11 @@ function mod:OnBossEnable()
 	--[[ Helya ]]--
 	self:Log("SPELL_CAST_START", "OrbOfCorruption", 227903)
 	self:Log("SPELL_AURA_APPLIED", "OrbOfCorruptionApplied", 229119)
+	self:Log("SPELL_AURA_REMOVED", "RemoveRaidIcon", 229119)
 	self:Log("SPELL_DAMAGE", "OrbDamage", 227930)
 	self:Log("SPELL_MISSED", "OrbDamage", 227930)
 	self:Log("SPELL_AURA_APPLIED", "TaintOfTheSea", 228054)
+	self:Log("SPELL_AURA_REMOVED", "RemoveRaidIcon", 228054)
 	self:Log("SPELL_CAST_START", "BilewaterBreath", 227967)
 	self:Log("SPELL_CAST_START", "TentacleStrike", 228730)
 	self:Log("SPELL_CAST_START", "CorrossiveNova", 228872)
@@ -343,4 +345,8 @@ function mod:CorruptedBreath(args)
 	self:Message(args.spellId, "Important", "Alarm")
 	self:Bar(args.spellId, 4.5, CL.cast:format(args.spellName))
 	self:Bar(args.spellId, 47)
+end
+
+function mod:RemoveRaidIcon(args)
+	SetRaidTarget(args.destName, 0)
 end
