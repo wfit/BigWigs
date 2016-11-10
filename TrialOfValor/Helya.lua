@@ -169,6 +169,12 @@ end
 function mod:RAID_BOSS_WHISPER(event, msg)
 	if msg:find("227920") then
 		self:Message(229119, "Personal", "Warning", CL.you:format(self:SpellName(229119))) -- Orb of Corruption
+		self:Say(229119)
+		self:Flash(229119)
+	elseif msg:find("228058") then
+		self:Message(230267, "Personal", "Warning", CL.you:format(self:SpellName(230267))) -- Orb of Corrosion
+		self:Say(230267)
+		self:Flash(230267)
 	end
 end
 
@@ -192,11 +198,6 @@ do
 			else -- Damager
 				SetRaidTarget(args.destName, 3)
 			end
-		end
-
-		if self:Me(args.destGUID) then
-			self:Say(args.spellId)
-			self:Flash(args.spellId)
 		end
 	end
 end
@@ -293,7 +294,7 @@ function mod:FetidRot(args)
 		self:TargetBar(args.spellId, t, args.destName)
 		self:ScheduleTimer("Say", t-5, args.spellId, 5, true)
 		self:ScheduleTimer("Say", t-4, args.spellId, 4, true)
-		self:ScheduleTimer("Say", t-3, args.spellId, "3\n" .. args.destName, true)
+		self:ScheduleTimer("Say", t-3, args.spellId, "3 [" .. args.destName .. "]", true)
 		self:ScheduleTimer("Say", t-2, args.spellId, 2, true)
 		self:ScheduleTimer("Say", t-1, args.spellId, 1, true)
 	end
@@ -334,11 +335,6 @@ do
 			else -- Damager
 				SetRaidTarget(args.destName, 3)
 			end
-		end
-
-		if self:Me(args.destGUID) then
-			self:Say(args.spellId)
-			self:Flash(args.spellId)
 		end
 	end
 end
