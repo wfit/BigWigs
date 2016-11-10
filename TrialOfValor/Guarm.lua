@@ -85,8 +85,8 @@ function mod:OnEngage()
 		self:Berserk(307)
 	end
 	self:Bar(227514, 5) -- Flashing Fangs
-	self:Bar(228187, 14) -- Guardian's Breath
-	self:Bar(227816, 57) -- Headlong Charge
+	self:Bar(228187, 14.5) -- Guardian's Breath
+	self:Bar(227816, 58) -- Headlong Charge
 	self:Bar(227883, 48) -- Roaring Leap
 end
 
@@ -98,14 +98,16 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(_, spellName, _, _, spellId)
 	if spellId == 228187 then -- Guardian's Breath (starts casting)
 		breathCounter = breathCounter + 1
 		if breathCounter % 2 == 0 then
-			self:Bar(spellId, 51)
-			self:Bar(227514, 13.4) -- Adjust Flashing Fangs timer
+			self:Bar(spellId, 54)
 		else
 			self:Bar(spellId, 20.7)
 		end
 		self:Message(spellId, "Attention", "Warning")
 		self:Bar(spellId, 5, CL.cast:format(spellName))
 		self:Flash(spellId)
+	elseif spellId == 228201 then -- Off the leash 30sec
+		self:Bar(227514, 34) -- Flashing Fangs
+		self:Bar(228187, 41.3) -- Guardian's Breath
 	end
 end
 
@@ -154,20 +156,19 @@ end
 function mod:FlashingFangs(args)
 	fangCounter = fangCounter + 1
 	self:Message(args.spellId, "Attention", nil, CL.casting:format(args.spellName))
-	self:CDBar(args.spellId, (fangCounter % 2 == 0 and 51) or 20)
+	self:CDBar(args.spellId, (fangCounter % 2 == 0 and 54) or 20.7)
 end
 
 function mod:HeadlongCharge(args)
 	self:Message(args.spellId, "Important", "Long")
 	self:Bar(args.spellId, 75.2)
 	self:Bar(args.spellId, 7, CL.cast:format(args.spellName))
-	self:Bar(228187, 29.1) -- Correct Guardian's Breath timer
 end
 
 function mod:RoaringLeap(args)
 	leapCounter = leapCounter + 1
 	self:Message(args.spellId, "Urgent", "Info")
-	self:Bar(args.spellId, (leapCounter % 2 == 0 and 22) or 53)
+	self:Bar(args.spellId, (leapCounter % 2 == 0 and 21) or 53.5)
 end
 
 --------------------------------------------------------------------------------
