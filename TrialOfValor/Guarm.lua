@@ -156,7 +156,7 @@ end
 function mod:FlashingFangs(args)
 	fangCounter = fangCounter + 1
 	self:Message(args.spellId, "Attention", nil, CL.casting:format(args.spellName))
-	self:CDBar(args.spellId, (fangCounter % 2 == 0 and 54) or 20.7)
+	self:CDBar(args.spellId, (fangCounter % 2 == 0 and 54) or (fangCounter == 1 and 23.1) or 20.7)
 end
 
 function mod:HeadlongCharge(args)
@@ -168,7 +168,7 @@ end
 function mod:RoaringLeap(args)
 	leapCounter = leapCounter + 1
 	self:Message(args.spellId, "Urgent", "Info")
-	self:Bar(args.spellId, (leapCounter % 2 == 0 and 21) or 53.5)
+	self:Bar(args.spellId, (leapCounter % 2 == 0 and 53.5) or 21.8)
 end
 
 --------------------------------------------------------------------------------
