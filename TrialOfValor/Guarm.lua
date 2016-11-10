@@ -17,7 +17,6 @@ mod.instanceId = 1648
 --------------------------------------------------------------------------------
 -- Locals
 --
-local beforeFirstBreath = true
 local breathCounter = 0
 local fangCounter = 0
 local leapCounter = 0
@@ -63,7 +62,7 @@ function mod:OnBossEnable()
 	self:Log("SPELL_AURA_APPLIED", "FrostLick", 228248)
 	self:Log("SPELL_AURA_APPLIED", "ShadowLick", 228253)
 	self:Log("SPELL_AURA_APPLIED", "FlameLick", 228228)
-	
+
 	self:Log("SPELL_CAST_START", "FlashingFangs", 227514)
 
 	self:Log("SPELL_CAST_SUCCESS", "HeadlongCharge", 227816)
@@ -75,7 +74,7 @@ function mod:OnBossEnable()
 	self:Log("SPELL_AURA_REMOVED", "VolatileFoamRemoved", 228744, 228810, 228818, 228794, 228811, 228819)
 	self:RegisterNetMessage("VolatileFoamRanges")
 	self:RegisterNetMessage("VolatileFoamMove")
-	
+
 	self:RegisterUnitEvent("UNIT_SPELLCAST_SUCCEEDED", nil, "boss1")
 end
 
@@ -85,7 +84,6 @@ function mod:OnEngage()
 	if not self:LFR() then -- Probably longer on LFR
 		self:Berserk(307)
 	end
-	beforeFirstBreath = true
 	self:Bar(227514, 5) -- Flashing Fangs
 	self:Bar(228187, 14) -- Guardian's Breath
 	self:Bar(227816, 57) -- Headlong Charge
@@ -232,7 +230,7 @@ do
 
 	-- Checks if the unit is suitable to let the foam debuff expire
 	local function IsSuitableExpire(unit, debuff)
-		if beforeFirstBreath then
+		if breathCounter < 1 then
 			-- Unit must not have a different color (just in case)
 			for _, color in ipairs(colors) do
 				if color ~= foamColor[debuff] and UnitDebuff(unit, mod:SpellName(color)) then
