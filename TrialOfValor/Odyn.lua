@@ -287,7 +287,7 @@ end
 function mod:OdynsTestApplied(args)
 	self:TargetMessage(227626, args.sourceName, "Positive", "Long")
 	local text = CL.other:format(args.sourceName, args.spellName)
-	self:Bar(227626, 10, text)
+	self:Bar(227626, 30, text)
 end
 
 function mod:OdynsTestRemoved(args)
