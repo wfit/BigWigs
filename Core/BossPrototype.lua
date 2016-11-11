@@ -1880,15 +1880,14 @@ function boss:BigWigs_FS_Option_Toggled(_, module, key, value)
 end
 
 function boss:CreateToken(key, promote, option)
-	local infix = self.engageId or self:GetName()
-	local fullkey = "BW:" .. infix .. ":" .. key
+	local fullkey = (self.engageId or self:GetName()) .. ":" .. key
 
 	if not self.tokens then
 		self.tokens = {}
 		self.tokens_opt = {}
 	end
 
-	local token = Token:Create(fullkey, 0, false):RequirePromote(promote)
+	local token = Token:Create(fullkey, false):RequirePromote(promote)
 
 	self.tokens[token] = option or true
 	if option then self.tokens_opt[option] = token end
