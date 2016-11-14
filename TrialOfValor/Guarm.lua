@@ -82,7 +82,7 @@ function mod:OnEngage()
 	breathCounter = 0
 	fangCounter = 0
 	if not self:LFR() then -- Probably longer on LFR
-		self:Berserk(307)
+		self:Berserk(300)
 	end
 	self:Bar(227514, 5) -- Flashing Fangs
 	self:Bar(228187, 14.5) -- Guardian's Breath
@@ -97,11 +97,7 @@ end
 function mod:UNIT_SPELLCAST_SUCCEEDED(_, spellName, _, _, spellId)
 	if spellId == 228187 then -- Guardian's Breath (starts casting)
 		breathCounter = breathCounter + 1
-		if breathCounter % 2 == 0 then
-			self:Bar(spellId, 54)
-		else
-			self:Bar(spellId, 20.7)
-		end
+		self:Bar(spellId, (breathCounter % 2 == 0 and 54) or 20.7)
 		self:Message(spellId, "Attention", "Warning")
 		self:Bar(spellId, 5, CL.cast:format(spellName))
 		self:Flash(spellId)
