@@ -44,6 +44,7 @@ local foams_ai = mod:AddTokenOption { "foams_ai", "Automatically call movements 
 
 function mod:GetOptions()
 	return {
+		"proximity",
 		{228248, "SAY", "FLASH"}, -- Frost Lick
 		{228253, "SAY", "FLASH"}, -- Shadow Lick
 		{228228, "SAY", "FLASH"}, -- Flame Lick
@@ -88,6 +89,32 @@ function mod:OnEngage()
 	self:Bar(228187, 14.5) -- Guardian's Breath
 	self:Bar(227816, 58) -- Headlong Charge
 	self:Bar(227883, 48) -- Roaring Leap
+	self:SmartProximity()
+end
+
+function mod:SmartProximity()
+	if self:Ranged() or self:Healer() then
+		-- Ranged and healers have range 5 from everyone
+		self:OpenProximity("proximity", 5)
+	elseif self:Melee() then
+		-- Melees have range 5 from everyone except melees
+		local nonMelees = {}
+		for unit in self:IterateGroup() do
+			if not self:Melee(unit) then
+				nonMelees[#nonMelees + 1] = unit
+			end
+		end
+		self:OpenProximity("proximity", 5, nonMelees)
+	else
+		-- Tanks have range 5 except from the other tank
+		local nonTank = {}
+		for unit in self:IterateGroup() do
+			if not self:Tank(unit) then
+				nonTank[#nonTank + 1] = unit
+			end
+		end
+		self:OpenProximity("proximity", 5, nonTank)
+	end
 end
 
 --------------------------------------------------------------------------------
@@ -159,6 +186,8 @@ function mod:HeadlongCharge(args)
 	self:Message(args.spellId, "Important", "Long")
 	self:Bar(args.spellId, 75.2)
 	self:Bar(args.spellId, 7, CL.cast:format(args.spellName))
+	self:CloseProximity()
+	self:ScheduleTimer("SmartProximity", 7)
 end
 
 function mod:RoaringLeap(args)
