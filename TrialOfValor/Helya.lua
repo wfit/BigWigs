@@ -198,7 +198,7 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 		self:Bar(230267, 15.5) -- Orb of Corrosion
 		self:Bar(228565, 19.5) -- Corrupted Breath
 		self:Bar(228054, 24.5) -- Taint of the Sea
-		self:Bar(228300, 31.5) -- Fury of the Maw
+		self:Bar(228300, 30.4) -- Fury of the Maw
 		self:Bar(167910, 38, self:SpellName(L.mariner)) -- Kvaldir Longboat
 	elseif spellId == 228838 then -- Fetid Rot (Grimelord)
 		self:Bar(193367, 12.2) -- Fetid Rot
