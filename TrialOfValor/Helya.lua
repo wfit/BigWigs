@@ -120,6 +120,7 @@ function mod:OnBossEnable()
 	--[[ Grimelord ]]--
 	self:Log("SPELL_CAST_START", "SludgeNova", 228390)
 	self:Log("SPELL_AURA_APPLIED", "FetidRot", 193367)
+	self:Log("SPELL_AURA_REMOVED_DOSE", "FetidRotRemovedDose", 193367)
 	self:Log("SPELL_AURA_REMOVED", "FetidRotRemoved", 193367)
 	self:Log("SPELL_CAST_START", "AnchorSlam", 228519)
 
@@ -324,20 +325,6 @@ function mod:SludgeNova(args)
 	self:Bar(args.spellId, 24.3)
 end
 
---[[function mod:FetidRot(args)
-	if self:Me(args.destGUID) then
-		self:TargetMessage(args.spellId, args.destName, "Personal", "Alarm")
-		self:Flash(args.spellId)
-		self:Say(args.spellId)
-		local _, _, _, _, _, _, expires = UnitDebuff("player", args.spellName)
-		local t = expires - GetTime()
-		self:TargetBar(args.spellId, t, args.destName)
-		self:ScheduleTimer("Say", t-5, args.spellId, 5, true)
-		self:ScheduleTimer("Say", t-4, args.spellId, 4, true)
-		self:ScheduleTimer("Say", t-3, args.spellId, "3 [" .. args.destName .. "]", true)
-		self:ScheduleTimer("Say", t-2, args.spellId, 2, true)
-		self:ScheduleTimer("Say", t-1, args.spellId, 1, true)
-		]]
 do
 	local proxList, isOnMe = {}, nil
 
@@ -347,14 +334,17 @@ do
 			self:TargetMessage(args.spellId, args.destName, "Personal", "Alarm")
 			self:Flash(args.spellId)
 			self:Say(args.spellId)
-			local _, _, _, _, _, _, expires = UnitDebuff("player", args.spellName)
-			local t = expires - GetTime()
-			self:TargetBar(args.spellId, t, args.destName)
-			local limit = self:Mythic() and 15 or 5
-			for i = 1, limit do
-				if t - i < 0 then break end
-				local alert = (i % 3 == 0) and (i .. " [" .. args.destName .. "]") or i
-				self:ScheduleTimer("Say", t - i, args.spellId, alert, true)
+			if self:Mythic() then
+				self:ScheduleTimer("Say", 1, args.spellId, 2, true)
+				self:ScheduleTimer("Say", 2, args.spellId, 1, true)
+			else
+				local _, _, _, _, _, _, expires = UnitDebuff("player", args.spellName)
+				local t = expires - GetTime()
+				for i = 1, 5 do
+					if t - i < 0 then break end
+					local alert = (i % 3 == 0) and (i .. " [" .. args.destName .. "]") or i
+					self:ScheduleTimer("Say", t - i, args.spellId, alert, true)
+				end
 			end
 			self:OpenProximity(args.spellId, 5)
 		end
@@ -363,6 +353,15 @@ do
 		if not isOnMe then
 			self:OpenProximity(args.spellId, 5, proxList)
 		end
+	end
+
+	function mod:FetidRotRemovedDose(args)
+		if self:Mythic() then
+			local stacks = args.amount > 1 and " stacks" or " stack"
+			self:Say(args.spellId, args.destName .. " - " .. args.amount .. stacks)
+			self:ScheduleTimer("Say", 1, args.spellId, 2, true)
+			self:ScheduleTimer("Say", 2, args.spellId, 1, true)
+		else
 	end
 
 	function mod:FetidRotRemoved(args)
