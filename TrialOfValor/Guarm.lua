@@ -12,6 +12,7 @@ if not mod then return end
 mod:RegisterEnableMob(114323)
 mod.engageId = 1962
 mod.respawnTime = 15
+mod.instanceId = 1648
 
 --------------------------------------------------------------------------------
 -- Locals
@@ -19,6 +20,7 @@ mod.respawnTime = 15
 local breathCounter = 0
 local fangCounter = 0
 local leapCounter = 0
+local breathSoaked = {}
 
 --------------------------------------------------------------------------------
 -- Localization
@@ -26,24 +28,20 @@ local leapCounter = 0
 
 local L = mod:GetLocale()
 if L then
-	L.foam_ok = "[FOAM] %s => OK!"
-	L.foam_multiple = "[FOAM] %s => Multiple Foams!"
-	L.foam_moveto_melee = "[FOAM] %s => Move to {rt%d} (melee)"
-	L.foam_moveto = "[FOAM] %s => Move to {rt%d} %s"
-	L.foam_soakby = "[FOAM] %s {rt%d} <= Soaked by %s"
-	L.foam_noavail = "[FOAM] %s => No soaker available?"
-	L.foam_noicon = "[FOAM] %s => No icon available?"
+	L.soak_fail = "[FAIL] %s failed to soak Guardian's Breath!"
 end
 
 --------------------------------------------------------------------------------
 -- Initialization
 --
 
-local foams = mod:AddCustomOption {
+local foams_pulse = mod:AddCustomOption {
 	key = "foams",
 	title = "Pulse Volatile Foams",
 	desc = "Display a Pulse warning when affected by one kind of Volatile Foam"
 }
+
+local soak_fails = mod:AddTokenOption { "fails", "Announce Guardian's Breath soaking fails.", promote = false }
 
 function mod:GetOptions()
 	return {
@@ -55,7 +53,8 @@ function mod:GetOptions()
 		227514, -- Flashing Fangs
 		227816, -- Headlong Charge
 		227883, -- Roaring Leap
-		foams,
+		foams_pulse,
+		soak_fails,
 		"berserk",
 	}
 end
@@ -72,6 +71,9 @@ function mod:OnBossEnable()
 	self:Log("SPELL_CAST_SUCCESS", "HeadlongCharge", 227816)
 
 	self:Log("SPELL_CAST_SUCCESS", "RoaringLeap", 227883)
+
+	self:Log("SPELL_DAMAGE", "BreathDamage", 232777, 232798, 232800)
+	self:Log("SPELL_MISSED", "BreathDamage", 232777, 232798, 232800)
 
 	-- Flaming, Briney, Shadowy + echoes
 	self:Log("SPELL_AURA_APPLIED", "VolatileFoamApplied", 228744, 228810, 228818, 228794, 228811, 228819)
@@ -130,6 +132,8 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(_, spellName, _, _, spellId)
 		self:Flash(spellId)
 		self:CloseProximity()
 		self:ScheduleTimer("SmartProximity", 5)
+		self:ScheduleTimer("CheckBreathSoakers", 6)
+		wipe(breathSoaked)
 	elseif spellId == 228201 then -- Off the leash 30sec
 		self:Bar(227514, 34) -- Flashing Fangs
 		self:Bar(228187, 41.3) -- Guardian's Breath
@@ -198,6 +202,20 @@ function mod:RoaringLeap(args)
 	self:Bar(args.spellId, (leapCounter % 2 == 0 and 53.5) or 21.8)
 end
 
+function mod:BreathDamage(args)
+	breathSoaked[args.destGUID] = true
+end
+
+function mod:CheckBreathSoakers()
+	if self:GetOption(soak_fails) then
+		for unit in self:IterateGroup() do
+			if not breathSoaked[UnitGUID(unit)] then
+				SendChatMessage(L.soak_fail:format(UnitName(unit)), "RAID")
+			end
+		end
+	end
+end
+
 do
 	local foamSoakers = {
 		[228744] = "MELEES",
@@ -209,7 +227,7 @@ do
 	}
 
 	function mod:VolatileFoamApplied(args)
-		if self:Me(args.destGUID) and self:GetOption(foams) then
+		if self:Me(args.destGUID) and self:GetOption(foams_pulse) then
 			self:Pulse(false, args.spellId)
 			self:PlaySound(false, "Warning")
 			self:Emphasized(false, "Soak on " .. foamSoakers[args.spellId])
