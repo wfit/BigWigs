@@ -131,6 +131,8 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(_, spellName, _, _, spellId)
 	elseif spellId == 228201 then -- Off the leash 30sec
 		self:Bar(227514, 34) -- Flashing Fangs
 		self:Bar(228187, 41.3) -- Guardian's Breath
+		self:CloseProximity()
+		self:ScheduleTimer("SmartProximity", 30)
 	end
 end
 
@@ -186,8 +188,6 @@ function mod:HeadlongCharge(args)
 	self:Message(args.spellId, "Important", "Long")
 	self:Bar(args.spellId, 75.2)
 	self:Bar(args.spellId, 7, CL.cast:format(args.spellName))
-	self:CloseProximity()
-	self:ScheduleTimer("SmartProximity", 7)
 end
 
 function mod:RoaringLeap(args)
