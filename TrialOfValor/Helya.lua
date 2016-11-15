@@ -166,7 +166,7 @@ end
 --
 
 function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
-	if spellId == 34098 then -- ClearAllDebuffs
+	if spellId == 228372 then -- Mists of Helheim
 		phase = 2
 		self:Message("stages", "Neutral", "Long", CL.stage:format(2), false)
 		self:StopBar(229119) -- Orb of Corruption
