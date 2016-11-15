@@ -22,6 +22,7 @@ mod.instanceId = 1648
 local taintMarkerCount = 4
 local tentaclesUp = 9
 local phase = 1
+local mistCount = 1
 
 --------------------------------------------------------------------------------
 -- Localization
@@ -162,6 +163,7 @@ function mod:OnEngage()
 	taintMarkerCount = 4
 	tentaclesUp = 9
 	phase = 1
+	mistCount = 1
 	self:Bar(227967, 12) -- Bilewater Breath
 	self:Bar(228054, 19.5) -- Taint of the Sea
 	self:Bar(229119, 31) -- Orb of Corruption
@@ -508,7 +510,11 @@ end
 
 --[[ Helarjer Mistcaller ]]--
 function mod:MistInfusion(args) -- untested
-	self:Message(args.spellId, "Positive", self:Interrupter(args.sourceGUID) and "Info")
+	if self:Interrupter() then
+		self:Message(args.spellId, "Attention", nil, CL.count:format(args.spellName, mistCount))
+	end
+	mistCount = mistCount + 1
+	if mistCount > 3 then mistCount = 1 end
 end
 
 --[[ Stage Three: Helheim's Last Stand ]]--
