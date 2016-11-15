@@ -46,6 +46,14 @@ end
 
 local orbMarker = mod:AddMarkerOption(false, "player", 1, 229119, 1, 2, 3) -- Orb of Corruption
 local taintMarker = mod:AddMarkerOption(false, "player", 4, 228054, 4, 5, 6) -- Taint of the Sea
+
+local filterTentacleStrikes = mod:AddCustomOption {
+	key = "filter_tentacle_strikes",
+	title = "Filter Tentacle Strike messages",
+	desc = "Filter Tentacle Strike messages, only showing the ones relevent to your role.",
+	default = false
+}
+
 function mod:GetOptions()
 	return {
 		--[[ Helya ]]--
@@ -55,6 +63,7 @@ function mod:GetOptions()
 		227967, -- Bilewater Breath
 		227992, -- Bilewater Liquefaction
 		228730, -- Tentacle Strike
+		filterTentacleStrikes,
 		{228054, "SAY"}, -- Taint of the Sea
 		taintMarker,
 		228872, -- Corrossive Nova
@@ -163,9 +172,13 @@ end
 function mod:RAID_BOSS_EMOTE(event, msg)
 	if msg:find("inv_misc_monsterhorn_03") then -- texture used in the message
 		if msg:find(L.near) then --|TInterface\\Icons\\inv_misc_monsterhorn_03.blp:20|t A %s emerges near Helya!
-			self:Message(228730, "Urgent", nil, L.tentacle_near)
+			if not self:GetOption(filterTentacleStrikes) or self:Tank() or self:Melee() then
+				self:Message(228730, "Urgent", nil, L.tentacle_near)
+			end
 		else -- |TInterface\\Icons\\inv_misc_monsterhorn_03.blp:20|t A %s emerges far from Helya!
-			self:Message(228730, "Urgent", nil, L.tentacle_far)
+			if not self:GetOption(filterTentacleStrikes) or self:Ranged() or self:Healer() then
+				self:Message(228730, "Urgent", nil, L.tentacle_far)
+			end
 		end
 	end
 end
