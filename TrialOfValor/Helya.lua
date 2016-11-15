@@ -13,6 +13,7 @@ if not mod then return end
 mod:RegisterEnableMob(114537)
 mod.engageId = 2008
 mod.respawnTime = 30
+mod.instanceId = 1648
 
 --------------------------------------------------------------------------------
 -- Locals
@@ -39,6 +40,8 @@ if L then
 	L.gripping_tentacle = -14309
 	L.grimelord = -14263
 	L.mariner = -14278
+
+	L.rot_fail = "[FAIL] Fetid rot failed: %s => %s"
 end
 
 --------------------------------------------------------------------------------
@@ -47,6 +50,8 @@ end
 
 local orbMarker = mod:AddMarkerOption(false, "player", 1, 229119, 1, 2, 3) -- Orb of Corruption
 local taintMarker = mod:AddMarkerOption(false, "player", 4, 228054, 4, 5, 6) -- Taint of the Sea
+
+local rot_fails = mod:AddTokenOption { "rot_fails", "Announce Fetid Rot fails.", promote = false }
 
 function mod:GetOptions()
 	return {
@@ -71,6 +76,7 @@ function mod:GetOptions()
 		--[[ Grimelord ]]--
 		228390, -- Sludge Nova
 		{193367, "SAY", "FLASH", "PROXIMITY"}, -- Fetid Rot
+		rot_fails,
 		228519, -- Anchor Slam
 
 		--[[ Night Watch Mariner ]]--
@@ -402,6 +408,10 @@ do
 	local proxList, isOnMe = {}, nil
 
 	function mod:FetidRot(args)
+		if self:MobId(args.sourceGUID) == 1 and self:GetOptions(rot_fails) then
+			SendChatMessage(L.rot_fail:format(args.sourceName, args.destName), "RAID")
+		end
+
 		if self:Me(args.destGUID) then
 			isOnMe = true
 			self:TargetMessage(args.spellId, args.destName, "Personal", "Warning")
