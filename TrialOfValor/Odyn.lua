@@ -69,7 +69,7 @@ function mod:GetOptions()
 		228171, -- Revivify
 
 		--[[ Hymdall ]]--
-		228012, -- Horn of Valor
+		{228012, "PROXIMITY"}, -- Horn of Valor
 
 		--[[ Hyrja ]]--
 		{228029, "SAY", "ICON"}, -- Expel Light
@@ -108,6 +108,7 @@ function mod:OnBossEnable()
 	self:Log("SPELL_CAST_START", "ShieldOfLight", 228162)
 	self:Log("SPELL_CAST_SUCCESS", "ShieldOfLightSuccess", 228162)
 	self:Log("SPELL_CAST_START", "HornOfValor", 228012)
+	self:Log("SPELL_CAST_SUCCESS", "HornOfValorSuccess", 228012)
 	self:Log("SPELL_AURA_APPLIED", "StormOfJustice", 227807)
 	self:Log("SPELL_CAST_SUCCESS", "StormOfJusticeSuccess", 227807)
 	self:Log("SPELL_AURA_APPLIED", "ValarjarsBond", 228018, 229529, 228016, 229469) -- XXX
@@ -269,6 +270,11 @@ function mod:HornOfValor(args)
 	self:Message(args.spellId, "Urgent", "Alert", CL.casting:format(args.spellName))
 	hornCount = hornCount + 1
 	self:Bar(args.spellId, phase == 2 and 30 or hornCount % 2 == 0 and 27 or 43) -- TODO phase 2 CD
+	self:OpenProximity(args.spellId, 5)
+end
+
+function mod:HornOfValorSuccess(args)
+	self:CloseProximity(args.spellId)
 end
 
 function mod:StormOfJustice(args)
