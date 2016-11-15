@@ -239,6 +239,8 @@ do
 	local function printTarget(self, player, guid)
 		if self:Me(guid) then
 			self:Say(228162)
+			self:ScheduleTimer("Say", 2, 228162)
+			self:ScheduleTimer("Say", 4, 228162)
 		end
 		self:PrimaryIcon(228162, player)
 		self:TargetMessage(228162, player, "Important", "Alarm", nil, nil, true)
