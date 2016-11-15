@@ -128,6 +128,8 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(_, spellName, _, _, spellId)
 		self:Message(spellId, "Attention", "Warning")
 		self:Bar(spellId, 5, CL.cast:format(spellName))
 		self:Flash(spellId)
+		self:CloseProximity()
+		self:ScheduleTimer("SmartProximity", 5)
 	elseif spellId == 228201 then -- Off the leash 30sec
 		self:Bar(227514, 34) -- Flashing Fangs
 		self:Bar(228187, 41.3) -- Guardian's Breath
