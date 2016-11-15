@@ -15,6 +15,7 @@ if not mod then return end
 mod:RegisterEnableMob(114263, 114361, 114360) -- Odyn, Hymdall, Hyrja
 mod.engageId = 1958
 mod.respawnTime = 30
+mod.instanceId = 1648
 
 --------------------------------------------------------------------------------
 -- Locals
@@ -56,6 +57,8 @@ end
 -- Initialization
 --
 
+local brand_marks = mod:AddTokenOption { "brands", "Automatically set raid icons for each brand group.", promote = true }
+
 function mod:GetOptions()
 	return {
 		--[[ General ]]--
@@ -85,6 +88,8 @@ function mod:GetOptions()
 		--[[ Stage Three: The Final Test ]]--
 		{228918, "SAY"}, -- Stormforged Spear
 		{227807, "SAY", "FLASH"}, -- Storm of Justice
+		{-14495, "PROXIMITY"},
+		brand_marks,
 		227475, -- Cleansing Flame
 	},{
 		["stages"] = "general",
@@ -120,6 +125,8 @@ function mod:OnBossEnable()
 	self:Death("RunebearerDeath", 114996)
 	self:Log("SPELL_AURA_APPLIED", "Branded", 229579, 229580, 229581, 229582, 229583) -- Mythic Debuffs
 	self:Log("SPELL_AURA_APPLIED", "Protected", 229584)
+	self:Log("SPELL_AURA_APPLIED", "RunicBrand", 231311, 231342, 231344, 231345, 231346) -- P3 Runes
+	self:Log("SPELL_AURA_REMOVED", "RunicBrandRemoved", 231311, 231342, 231344, 231345, 231346)
 
 	self:Log("SPELL_AURA_APPLIED", "CleansingFlameDamage", 227475)
 	self:Log("SPELL_PERIODIC_DAMAGE", "CleansingFlameDamage", 227475)
@@ -397,6 +404,82 @@ end
 function mod:Protected(args)
 	if self:Me(args.destGUID) then
 		self:Message(args.spellId, "Positive", "Info", CL.you:format(args.spellName))
+	end
+end
+
+do
+	local directions = {
+		[231311] = "HYMDAL",
+		[231342] = "BOSS",
+		[231344] = "THRONE",
+		[231345] = "HYRJA",
+		[231346] = "ENTRANCE"
+	}
+
+	local symbols = {
+		[231311] = 3,
+		[231342] = 2,
+		[231344] = 1,
+		[231345] = 6,
+		[231346] = 4
+	}
+
+	local scheduled = false
+	local brands = {}
+	local otherBrands = {}
+	local marked = {}
+	local myBrand
+
+	function mod:RunicBrand(args)
+		if not scheduled then
+			scheduled = true
+			wipe(brands)
+			wipe(marked)
+			self:ScheduleTimer("RunicBrandProximity", 0.1)
+		end
+
+		if self:Me(args.destGUID) then
+			myBrand = args.spellId
+			self:Pulse(false, "Interface\\TargetingFrame\\UI-RaidTargetingIcon_" .. symbols[args.spellId])
+			self:PlaySound(false, "Warning")
+			self:Emphasized(false, directions[args.spellId])
+		else
+			brands[args.destName] = args.spellId
+		end
+
+		if self:GetOption(brand_marks) then
+			local symbol = symbols[args.spellId]
+			if not marked[symbol] then
+				local unit = args.destUnit
+				marked[symbol] = unit
+				marked[args.destGUID] = symbol
+				SetRaidTarget(unit, synbol)
+			end
+		end
+	end
+
+	function mod:RunicBrandProximity()
+		scheduled = false
+		wipe(otherBrands)
+		for name, brand in pairs(brands) do
+			if brand ~= myBrand then
+				otherBrands[#otherBrands + 1] = name
+			end
+		end
+		self:OpenProximity(-14495, 5, otherBrands)
+	end
+
+	function mod:RunicBrandRemoved(args)
+		if self:Me(args.destGUID) then
+			self:CloseProximity(-14495)
+		end
+		if marked[args.destGUID] then
+			local symbol = marked[args.destGUID]
+			local unit = marked[symbol]
+			SetRaidTarget(unit, 0)
+			marked[args.destGUID] = nil
+			marked[symbol] = nil
+		end
 	end
 end
 
