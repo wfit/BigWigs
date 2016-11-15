@@ -380,19 +380,19 @@ do
 		self:Message(args.spellId, "Neutral", t-prev > 1 and "Long", args.destName) -- destName = name of the spawning add
 		prev = t
 		if phase == 2 then
-			self:Bar(args.spellId, 75, CL.adds)
+			self:Bar(args.spellId, 76, CL.adds)
 		else
 			self:Bar(args.spellId, 71.5, self:SpellName(L.mariner))
 		end
 
 		if self:MobId(args.destGUID) == 114809 then -- Mariner
 			self:Bar(228633, 7) -- Give No Quarter
-			self:Bar(228611, 10) -- Ghostly Rage
+			self:Bar(228611, 11) -- Ghostly Rage
 			self:Bar(228619, phase == 2 and 30 or 35) -- Lantern of Darkness
 		elseif self:MobId(args.destGUID) == 114709 then -- Grimelord
 			self:Bar(193367, 7) -- Fetid Rot
 			self:Bar(228519, 12) -- Anchor Slam
-			self:Bar(228390, 14) -- Sludge Nova
+			self:Bar(228390, 14.5) -- Sludge Nova
 		end
 	end
 end
@@ -468,7 +468,7 @@ end
 
 function mod:AnchorSlam(args)
 	self:Message(args.spellId, "Urgent", "Alarm", CL.casting:format(args.spellName))
-	self:Bar(args.spellId, 12)
+	self:Bar(args.spellId, 12.2)
 end
 
 function mod:GrimelordDeath(args)
