@@ -361,7 +361,7 @@ do
 			self:Say(args.spellId, args.destName .. " - " .. args.amount .. stacks)
 			self:ScheduleTimer("Say", 1, args.spellId, 2, true)
 			self:ScheduleTimer("Say", 2, args.spellId, 1, true)
-		else
+		end
 	end
 
 	function mod:FetidRotRemoved(args)
