@@ -155,6 +155,7 @@ function mod:OnBossEnable()
 	self:Log("SPELL_CAST_START", "CorruptedBreath", 228565)
 	self:Log("SPELL_AURA_APPLIED", "DarkHatred", 232488)
 	self:Log("SPELL_AURA_APPLIED", "CorruptedAxiom", 232450)
+	self:Log("SPELL_CAST_START", "FotMClean", 228032)
 end
 
 function mod:OnEngage()
@@ -197,6 +198,7 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 		self:Bar(230267, 15.5) -- Orb of Corrosion
 		self:Bar(228565, 19.5) -- Corrupted Breath
 		self:Bar(228054, 24.5) -- Taint of the Sea
+		self:Bar(228300, 31.5) -- Fury of the Maw
 		self:Bar(167910, 38, self:SpellName(L.mariner)) -- Kvaldir Longboat
 	elseif spellId == 228838 then -- Fetid Rot (Grimelord)
 		self:Bar(193367, 12.2) -- Fetid Rot
@@ -382,7 +384,7 @@ do
 		if phase == 2 then
 			self:Bar(args.spellId, 76, CL.adds)
 		else
-			self:Bar(args.spellId, 71.5, self:SpellName(L.mariner))
+			self:Bar(args.spellId, 71.7, self:SpellName(L.mariner))
 		end
 
 		if self:MobId(args.destGUID) == 114809 then -- Mariner
@@ -551,4 +553,10 @@ do
 			isOnMe = true
 		end
 	end
+end
+
+
+function mod:FotMClean(args)
+	self:Message(args.spellId, "Important", "Info")
+	self:Bar(228300, 71.7) -- Fury of the Maw
 end
