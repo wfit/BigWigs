@@ -23,6 +23,10 @@ local taintMarkerCount = 4
 local tentaclesUp = 9
 local phase = 1
 local mistCount = 1
+local mobTable = {
+        [114881] = {}, -- Tentacle Strike
+}
+
 
 --------------------------------------------------------------------------------
 -- Localization
@@ -164,11 +168,26 @@ function mod:OnEngage()
 	tentaclesUp = 9
 	phase = 1
 	mistCount = 1
+	local mobTable = {
+	        [114881] = {}, -- Tentacle Strike
+	}
 	self:Bar(227967, self:Mythic() and 10.5 or 12) -- Bilewater Breath
 	self:Bar(228054, self:Mythic() and 15.5 or 19.5) -- Taint of the Sea
 	self:Bar(229119, self:Mythic() and 14 or 31) -- Orb of Corruption
 	self:Bar(228730, self:Mythic() and 35 or 37) -- Tentacle Strike
 end
+
+--------------------------------------------------------------------------------
+-- Local Functions
+--
+
+local function getMobNumber(mobId, guid)
+        if mobTable[mobId][guid] then return mobTable[mobId][guid] end
+        mobCount[mobId] = mobCount[mobId] + 1
+        mobTable[mobId][guid] = mobCount[mobId]
+        return mobCount[mobId]
+end
+
 
 --------------------------------------------------------------------------------
 -- Event Handlers
@@ -341,11 +360,11 @@ end
 do 
 	local prev = 0
 	function mod:TentacleStrike(args)
+		-- Message is in RAID_BOSS_EMOTE
+		self:Bar(args.spellId, 6, L.count:format(args.spellName, getMobNumber(114881, args.sourceGUID)))
 		local t = GetTime()
 		if t-prev > 10 then
 			prev = t
-			-- Message is in RAID_BOSS_EMOTE
-			self:Bar(args.spellId, 6, CL.cast:format(args.spellName))
 			self:Bar(args.spellId, self:Mythic() and 35 or 42)
 		end
 	end
