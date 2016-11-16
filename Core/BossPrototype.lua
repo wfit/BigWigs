@@ -337,7 +337,12 @@ end
 function boss:AddCustomOption(settings)
 	local l = self:GetLocale()
 	local key = settings.key or settings[1]
-	local option = format((settings.default == false) and "custom_off_%s" or "custom_on_%s", key)
+	local option
+	if settings.configurable then
+		option = key
+	else
+		option = format((settings.default == false) and "custom_off_%s" or "custom_on_%s", key)
+	end
 	l[option] = settings.title or settings[2]
 	if settings.desc then l[option .. "_desc"] = settings.desc end
 	if settings.icon then l[option .. "_icon"] = settings.icon end
