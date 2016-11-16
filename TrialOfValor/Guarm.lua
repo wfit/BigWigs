@@ -251,7 +251,7 @@ do
 		local t = GetTime()
 		if t - prev > 15 then
 			prev = t
-			self:Message("foams", "Important", "Long", "Volatile Foam", 228744)	
+			self:Message("foams_pulse", "Important", "Long", "Volatile Foam", 228744)	
 		end
 	end
 end
