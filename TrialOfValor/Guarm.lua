@@ -226,8 +226,21 @@ do
 		[228819] = "RANGED",
 	}
 
+	local Shadow, Fire, Frost = 228769, 228758, 228768
+	local foamColor = {
+		[228744] = Fire,
+		[228794] = Fire,
+		[228810] = Frost,
+		[228811] = Frost,
+		[228818] = Shadow,
+		[228819] = Shadow,
+	}
+
 	function mod:VolatileFoamApplied(args)
 		if self:Me(args.destGUID) and self:GetOption(foams_pulse) then
+			if UnitDebuff("player", self:SpellName(foamColor[args.spellId])) then
+				return
+			end
 			self:Pulse(false, args.spellId)
 			self:PlaySound(false, "Warning")
 			self:Emphasized(false, "Soak on " .. foamSoakers[args.spellId])
