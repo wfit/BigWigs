@@ -238,6 +238,7 @@ do
 		[228819] = Shadow,
 	}
 
+	local prev = 0
 	function mod:VolatileFoamApplied(args)
 		if self:Me(args.destGUID) and self:GetOption(foams_pulse) then
 			if UnitDebuff("player", self:SpellName(foamColor[args.spellId])) then
@@ -246,6 +247,11 @@ do
 			self:Pulse(false, args.spellId)
 			self:PlaySound(false, "Warning")
 			self:Emphasized(false, "Soak on " .. foamSoakers[args.spellId])
+		end
+		local t = GetTime()
+		if t - prev > 15 then
+			prev = t
+			self:Message("foams_pulse", "Important", "Long", "Volatile Foam", 228744)	
 		end
 	end
 end
