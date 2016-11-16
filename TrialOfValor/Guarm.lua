@@ -211,7 +211,7 @@ end
 function mod:CheckBreathSoakers()
 	if self:GetOption(soak_fails) then
 		for unit in self:IterateGroup() do
-			if not breathSoaked[UnitGUID(unit)] then
+			if not breathSoaked[UnitGUID(unit)] and not UnitIsDeadOrGhost(unit) then
 				SendChatMessage(L.soak_fail:format(UnitName(unit)), "RAID")
 			end
 		end
