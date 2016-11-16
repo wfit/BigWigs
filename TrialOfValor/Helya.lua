@@ -27,7 +27,7 @@ local mobTable = {
         [114881] = {}, -- Tentacle Strike
 }
 local mobCount = {
-        [114881] = 0, -- Nightmare Ancient
+        [114881] = 0, -- Tentacle Strike
 }
 
 
@@ -171,11 +171,11 @@ function mod:OnEngage()
 	tentaclesUp = 9
 	phase = 1
 	mistCount = 1
-	local mobTable = {
+	mobTable = {
 	        [114881] = {}, -- Tentacle Strike
 	}
-	local mobCount = {
-        	[114881] = 0, -- Nightmare Ancient
+	mobCount = {
+        	[114881] = 0, -- Tentacle Strike
 	}
 	self:Bar(227967, self:Mythic() and 10.5 or 12) -- Bilewater Breath
 	self:Bar(228054, self:Mythic() and 15.5 or 19.5) -- Taint of the Sea
