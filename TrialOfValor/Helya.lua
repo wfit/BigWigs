@@ -29,7 +29,14 @@ local mobTable = {
 local mobCount = {
         [114881] = 0, -- Tentacle Strike
 }
-
+local strikeCount = 1
+local strikeWave = {
+	"MELEE x 2",
+	"MELEE + RANGED",
+	"RANGED x 2",
+	"RANGED x 2 + CAC",
+	"CAC x 2",
+}
 
 --------------------------------------------------------------------------------
 -- Localization
@@ -177,10 +184,11 @@ function mod:OnEngage()
 	mobCount = {
         	[114881] = 0, -- Tentacle Strike
 	}
+	strikeCount = 1
 	self:Bar(227967, self:Mythic() and 10.5 or 12) -- Bilewater Breath
 	self:Bar(228054, self:Mythic() and 15.5 or 19.5) -- Taint of the Sea
 	self:Bar(229119, self:Mythic() and 14 or 31) -- Orb of Corruption
-	self:Bar(228730, self:Mythic() and 35 or 37) -- Tentacle Strike
+	self:Bar(228730, self:Mythic() and 35 or 37, ("Tentacle Strike (%s) : %s"):format(strikeCount, strikeWave[strikeCount] or "DUNNO")) -- Tentacle Strike
 end
 
 --------------------------------------------------------------------------------
@@ -373,7 +381,8 @@ do
 		local t = GetTime()
 		if t-prev > 10 then
 			prev = t
-			self:Bar(args.spellId, self:Mythic() and 35 or 42)
+			strikeCount = strikeCount + 1
+			self:Bar(args.spellId, self:Mythic() and 35 or 42, ("Tentacle Strike (%s) : %s"):format(strikeCount, strikeWave[strikeCount] or "DUNNO"))
 		end
 	end
 end
