@@ -174,7 +174,7 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 	elseif spellId == 227882 then -- Leap into Battle (Phase 2 start)
 		self:RegisterEvent("INSTANCE_ENCOUNTER_ENGAGE_UNIT")
 		self:Bar(-14404, 16, L.hyrja, L.hyrja_icon)
-		self:Bar(227503, 43) -- Draw Power
+		self:Bar(227503, self:Mythic() and 38 or 43) -- Draw Power
 	elseif spellId == 228740 then
 		phase = 3
 		self:Message("stages", "Neutral", "Long", CL.stage:format(3), false)
@@ -205,7 +205,7 @@ function mod:INSTANCE_ENCOUNTER_ENGAGE_UNIT()
 					isHymdallFighting = true
 					self:Message(-14404, "Neutral", "Info", self:SpellName(L.hymdall), false)
 					self:CDBar(228012, 10) -- Horn of Valor
-					self:CDBar(-14404, 69.5, L.hyrja, L.hyrja_icon)
+					self:CDBar(-14404, self:Mythic() and 65.5 or 69.5, L.hyrja, L.hyrja_icon)
 				end
 			elseif mobId == 114360 then -- Hyrja
 				hyrjaFound = true
@@ -214,7 +214,7 @@ function mod:INSTANCE_ENCOUNTER_ENGAGE_UNIT()
 					self:Message(-14404, "Neutral", "Info", self:SpellName(L.hyrja), false)
 					self:CDBar(228029, 5) -- Expel Light
 					self:CDBar(228162, 9.5) -- Shield of Light
-					self:CDBar(-14404, 69.5, L.hymdall, L.hymdall_icon)
+					self:CDBar(-14404, self:Mythic() and 65.5 or 69.5, L.hymdall, L.hymdall_icon)
 				end
 			end
 		end
@@ -235,7 +235,7 @@ do
 	function mod:UnerringBlast(args)
 		self:Message(args.spellId, "Urgent", "Alert", CL.casting:format(args.spellName))
 		self:Bar(args.spellId, 3, CL.cast:format(args.spellName))
-		self:Bar(227503, 40) -- Draw Power
+		self:Bar(227503, self:Mythic() and 35 or 40) -- Draw Power
 
 		if self:Mythic() and not UnitDebuff("player", protected) then
 			self:Message(args.spellId, "Personal", nil, CL.no:format(protected))
