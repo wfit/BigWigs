@@ -37,6 +37,7 @@ local strikeWave = {
 	"RANGED x 2 + CAC",
 	"CAC x 2",
 }
+local breathCount = 1
 
 --------------------------------------------------------------------------------
 -- Localization
@@ -185,7 +186,8 @@ function mod:OnEngage()
         	[114881] = 0, -- Tentacle Strike
 	}
 	strikeCount = 1
-	self:Bar(227967, self:Mythic() and 10.5 or 12) -- Bilewater Breath
+	breathCount = 1
+	self:Bar(227967, self:Mythic() and 10.5 or 12, CL.count:format(self:SpellName(227967), breathCount)) -- Bilewater Breath
 	self:Bar(228054, self:Mythic() and 15.5 or 19.5) -- Taint of the Sea
 	self:Bar(229119, self:Mythic() and 14 or 31) -- Orb of Corruption
 	self:Bar(228730, self:Mythic() and 35 or 37, ("Tentacle Strike (%s) : %s"):format(strikeCount, strikeWave[strikeCount] or "DUNNO")) -- Tentacle Strike
@@ -337,10 +339,11 @@ do
 end
 
 function mod:BilewaterBreath(args)
-	self:Message(args.spellId, "Important", "Alarm")
+	self:Message(args.spellId, "Important", "Alarm", CL.count:format(args.spellName, breathCount))
 	self:Bar(args.spellId, 3, CL.cast:format(args.spellName))
 	self:Bar(227992, self:Normal() and 25.5 or 20.5, CL.cast:format(self:SpellName(227992))) -- Bilewater Liquefaction
-	self:Bar(args.spellId, 52)
+	breathCount = breathCount + 1
+	self:Bar(args.spellId, self:Mythic() and 43.5 or 52, CL.count:format(args.spellName, breathCount))
 end
 
 do
