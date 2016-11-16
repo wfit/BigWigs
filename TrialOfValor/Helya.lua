@@ -31,11 +31,13 @@ local mobCount = {
 }
 local strikeCount = 1
 local strikeWave = {
-	"MELEE x 2",
-	"MELEE RANGED",
-	"RANGED x 2",
-	"RANGEDx2 MELEE",
-	"MELEE x 2",
+	"CAC x 2",
+	"CAC RANGE",
+	"RANGE x 2",
+	"RANGEx2 CAC",
+	"CAC x 2",
+	"CAC RANGE",
+	"RANGE X 2",
 }
 local breathCount = 1
 
