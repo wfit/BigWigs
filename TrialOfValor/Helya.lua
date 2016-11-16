@@ -349,7 +349,9 @@ do
 		SetRaidTarget(args.destName, 0)
 		if self:Me(args.destGUID) then
 			self:Message(args.spellId, "Personal", "Warning", CL.underyou:format(args.spellName))
-			self:Say(args.spellId)
+			if not self:Mythic() then
+				self:Say(args.spellId)
+			end
 		end
 		if self:GetOption(taintMarker) then
 			SetRaidTarget(args.destName, 0)
@@ -357,7 +359,7 @@ do
 	end
 end
 
-do 
+do
 	local prev = 0
 	function mod:TentacleStrike(args)
 		-- Message is in RAID_BOSS_EMOTE
