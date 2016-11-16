@@ -361,7 +361,7 @@ do
 	local prev = 0
 	function mod:TentacleStrike(args)
 		-- Message is in RAID_BOSS_EMOTE
-		self:Bar(args.spellId, 6, L.count:format(args.spellName, getMobNumber(114881, args.sourceGUID)))
+		self:Bar(args.spellId, 6, CL.count:format(args.spellName, getMobNumber(114881, args.sourceGUID)))
 		local t = GetTime()
 		if t-prev > 10 then
 			prev = t
