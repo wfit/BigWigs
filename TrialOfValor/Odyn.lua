@@ -151,7 +151,7 @@ function mod:OnEngage()
 	self:Bar(228012, 8) -- Horn of Valor
 	self:Bar(228162, 24) -- Shield of Light
 	self:Bar(228029, 32) -- Expel Light
-	self:Bar(227503, 40) -- Draw Power
+	self:Bar(227503, self:Mythic() and 35 or 40) -- Draw Power
 end
 
 --------------------------------------------------------------------------------
