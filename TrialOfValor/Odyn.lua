@@ -416,7 +416,7 @@ end
 do
 	local directions = {
 		[231311] = "HYMDAL",
-		[231342] = "BOSS",
+		[231342] = "CENTER",
 		[231344] = "THRONE",
 		[231345] = "HYRJA",
 		[231346] = "ENTRANCE"
