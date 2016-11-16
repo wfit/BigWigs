@@ -164,10 +164,10 @@ function mod:OnEngage()
 	tentaclesUp = 9
 	phase = 1
 	mistCount = 1
-	self:Bar(227967, 12) -- Bilewater Breath
-	self:Bar(228054, 19.5) -- Taint of the Sea
-	self:Bar(229119, 31) -- Orb of Corruption
-	self:Bar(228730, 37) -- Tentacle Strike
+	self:Bar(227967, self:Mythic() and 10.5 or 12) -- Bilewater Breath
+	self:Bar(228054, self:Mythic() and 15.5 or 19.5) -- Taint of the Sea
+	self:Bar(229119, self:Mythic() and 14 or 31) -- Orb of Corruption
+	self:Bar(228730, self:Mythic() and 35 or 37) -- Tentacle Strike
 end
 
 --------------------------------------------------------------------------------
@@ -289,7 +289,7 @@ do
 end
 
 function mod:OrbOfCorruption(args)
-	self:Bar(229119, 28) -- Orb of Corruption
+	self:Bar(229119, self:Mythic() and 24.2 or 28) -- Orb of Corruption
 end
 
 do
@@ -316,7 +316,7 @@ do
 		list[#list+1] = args.destName
 		if #list == 1 then
 			self:ScheduleTimer("TargetMessage", 0.1, args.spellId, list, "Attention", "Alert", nil, nil, self:Dispeller("magic"))
-			self:CDBar(args.spellId, phase == 1 and 14.6 or 26)
+			self:CDBar(args.spellId, self:Mythic() and 12.2 or phase == 1 and 14.6 or 26)
 		end
 
 		if self:GetOption(taintMarker) then
@@ -338,10 +338,17 @@ do
 	end
 end
 
-function mod:TentacleStrike(args)
-	-- Message is in RAID_BOSS_EMOTE
-	self:Bar(args.spellId, 6, CL.cast:format(args.spellName))
-	self:Bar(args.spellId, 42)
+do 
+	local prev = 0
+	function mod:TentacleStrike(args)
+		local t = GetTime()
+		if t-prev > 10 then
+			prev = t
+			-- Message is in RAID_BOSS_EMOTE
+			self:Bar(args.spellId, 6, CL.cast:format(args.spellName))
+			self:Bar(args.spellId, self:Mythic() and 35 or 42)
+		end
+	end
 end
 
 do
