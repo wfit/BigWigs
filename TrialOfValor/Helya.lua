@@ -79,6 +79,7 @@ function mod:GetOptions()
 		orbMarker,
 		227967, -- Bilewater Breath
 		227992, -- Bilewater Liquefaction
+		227998, -- Bilewater Corrosion
 		228730, -- Tentacle Strike
 		"tentacle_near",
 		"tentacle_far",
@@ -137,6 +138,7 @@ function mod:OnBossEnable()
 	self:Log("SPELL_CAST_START", "BilewaterBreath", 227967)
 	self:Log("SPELL_CAST_START", "TentacleStrike", 228730)
 	self:Log("SPELL_CAST_START", "CorrossiveNova", 228872)
+	self:Log("SPELL_PERIODIC_DAMAGE", "BilewaterCorrosion", 227998)
 
 	self:Log("SPELL_AURA_APPLIED", "DarkWatersDamage", 230197)
 	self:Log("SPELL_PERIODIC_DAMAGE", "DarkWatersDamage", 230197)
@@ -388,6 +390,17 @@ do
 			prev = t
 			strikeCount = strikeCount + 1
 			self:Bar(args.spellId, self:Mythic() and 35 or 42, ("Tentacle (%s) : %s"):format(strikeCount, strikeWave[strikeCount] or "DUNNO"))
+		end
+	end
+end
+
+do
+	local prev = 0
+	function mod:BilewaterCorrosion(args)
+		local t = GetTime()
+		if self:Me(args.destGUID) and t - prev > 1.5 then
+			prev = t
+			self:Message(args.spellId, "Personal", "Alert", CL.you:format(args.spellName))
 		end
 	end
 end
