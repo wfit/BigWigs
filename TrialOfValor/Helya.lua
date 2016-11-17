@@ -202,7 +202,6 @@ function mod:OnEngage()
 	strikeCount = 1
 	breathCount = 1
 	orbCount = 1
-	mistCount = 1
 	if self:Mythic() then
 		self:Berserk(660)
 	end
