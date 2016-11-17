@@ -264,6 +264,7 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 	elseif spellId == 201126 then -- Bleak Eruption (Helarjar Mistwatcher)
 		if mistCount < 3 then
 			self:Message(228854, "Attention", "Warning", L.mist:format(mistCount))
+			SetRaidTarget(unit, 8)
 			mistCount = 3
 		end
 	end
