@@ -61,6 +61,10 @@ if L then
 	L.mariner = -14278
 
 	L.rot_fail = "[FAIL] Fetid rot failed: %s => %s"
+	L.orb = "%s (%s)"
+	L.ranged = "Ranged"
+	L.melee = "Melee"
+	L.tentacle = "Tentacle (%s) : %s"
 end
 
 --------------------------------------------------------------------------------
@@ -196,8 +200,8 @@ function mod:OnEngage()
 	orbCount = 1
 	self:Bar(227967, self:Mythic() and 10.5 or 12, CL.count:format(self:SpellName(227967), breathCount)) -- Bilewater Breath
 	self:Bar(228054, self:Mythic() and 15.5 or 19.5) -- Taint of the Sea
-	self:Bar(229119, self:Mythic() and 14 or 31, "Orb of Corruption (Ranged)") -- Orb of Corruption
-	self:Bar(228730, self:Mythic() and 35 or 37, ("Tentacle (%s) : %s"):format(strikeCount, strikeWave[strikeCount] or "DUNNO")) -- Tentacle Strike
+	self:Bar(229119, self:Mythic() and 14 or 31, L.orb:format(self:SpellName(229119), L.ranged)) -- Orb of Corruption
+	self:Bar(228730, self:Mythic() and 35 or 37, L.tentacle:format(strikeCount, strikeWave[strikeCount] or "DUNNO")) -- Tentacle Strike
 end
 
 --------------------------------------------------------------------------------
@@ -332,8 +336,8 @@ end
 
 function mod:OrbOfCorruption(args)
 	orbCount = orbCount + 1
-	local type = orbCount % 2 == 0 and "Melee" or "Ranged"
-	self:Bar(229119, self:Mythic() and 24.2 or 28, ("%s (%s)"):format(args.spellName, type)) -- Orb of Corruption
+	local type = orbCount % 2 == 0 and L.melee or L.ranged
+	self:Bar(229119, self:Mythic() and 24.2 or 28, L.orb:format(args.spellName, type)) -- Orb of Corruption
 end
 
 do
@@ -394,7 +398,7 @@ do
 		if t-prev > 10 then
 			prev = t
 			strikeCount = strikeCount + 1
-			self:Bar(args.spellId, self:Mythic() and 35 or 42, ("Tentacle (%s) : %s"):format(strikeCount, strikeWave[strikeCount] or "DUNNO"))
+			self:Bar(args.spellId, self:Mythic() and 35 or 42, L.tentacle:format(strikeCount, strikeWave[strikeCount] or "DUNNO"))
 		end
 	end
 end
