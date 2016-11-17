@@ -441,6 +441,9 @@ end
 function mod:FuryOfTheMaw(args)
 	self:Message(args.spellId, "Important", "Info")
 	self:Bar(args.spellId, self:Mythic() and 24 or 32, CL.cast:format(args.spellName))
+	if self:Mythic() then
+		self:Bar(167910, 14, CL.adds)
+	end
 end
 
 function mod:FuryOfTheMawRemoved(args)
@@ -464,7 +467,7 @@ do
 		if self:MobId(args.destGUID) == 114809 then -- Mariner
 			self:Bar(228633, 7) -- Give No Quarter
 			self:Bar(228611, 11) -- Ghostly Rage
-			self:Bar(228619, phase == 2 and 30 or 35) -- Lantern of Darkness
+			self:Bar(228619, self:Mythic() and 25 or phase == 2 and 30 or 35) -- Lantern of Darkness
 		elseif self:MobId(args.destGUID) == 114709 then -- Grimelord
 			self:Bar(193367, 7) -- Fetid Rot
 			self:Bar(228519, 12) -- Anchor Slam
