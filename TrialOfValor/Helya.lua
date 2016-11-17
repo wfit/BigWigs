@@ -482,7 +482,7 @@ do
 	local proxList, isOnMe = {}, nil
 
 	function mod:FetidRot(args)
-		if self:MobId(args.sourceGUID) == 1 and self:GetOptions(rot_fails) then
+		if self:MobId(args.sourceGUID) == 1 and self:GetOption(rot_fails) then
 			SendChatMessage(L.rot_fail:format(args.sourceName, args.destName), "RAID")
 		end
 
