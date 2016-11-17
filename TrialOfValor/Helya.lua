@@ -42,6 +42,7 @@ local strikeWave = {
 }
 local breathCount = 1
 local orbCount = 1
+local mistCount = 1
 
 --------------------------------------------------------------------------------
 -- Localization
@@ -67,6 +68,7 @@ if L then
 	L.ranged = "Ranged"
 	L.melee = "Melee"
 	L.tentacle = "Tentacle (%s) : %s"
+	L.mist = "Mistwatcher x %s"
 end
 
 --------------------------------------------------------------------------------
@@ -172,7 +174,7 @@ function mod:OnBossEnable()
 	self:Death("MarinerDeath", 114809)
 
 	--[[ Helarjer Mistcaller ]]--
-	self:Log("SPELL_CAST_START", "MistInfusion", 228854) -- untested
+	--self:Log("SPELL_CAST_START", "MistInfusion", 228854) -- untested
 
 	--[[ Stage Three: Helheim's Last Stand ]]--
 	self:Log("SPELL_CAST_START", "OrbOfCorrosion", 228056)
@@ -200,6 +202,7 @@ function mod:OnEngage()
 	strikeCount = 1
 	breathCount = 1
 	orbCount = 1
+	mistCount = 1
 	self:Bar(227967, self:Mythic() and 10.5 or 12, CL.count:format(self:SpellName(227967), breathCount)) -- Bilewater Breath
 	self:Bar(228054, self:Mythic() and 15.5 or 19.5) -- Taint of the Sea
 	self:Bar(229119, self:Mythic() and 14 or 31, L.orb:format(self:SpellName(229119), L.ranged)) -- Orb of Corruption
@@ -254,6 +257,11 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 		self:Bar(167910, 38, self:SpellName(L.mariner)) -- Kvaldir Longboat
 	elseif spellId == 228838 then -- Fetid Rot (Grimelord)
 		self:Bar(193367, 12.2) -- Fetid Rot
+	elseif spellId == 201126 then -- Bleak Eruption (Helarjar Mistwatcher)
+		if mistCount == 2 then
+			self:Message(228854, "Attention", "Warning", L.mist:format(mistCount))
+			mistCount = 1
+		end
 	end
 end
 
@@ -448,7 +456,11 @@ end
 
 function mod:FuryOfTheMawRemoved(args)
 	self:Message(args.spellId, "Important", nil, CL.over:format(args.spellName))
-	self:Bar(args.spellId, 44.5)
+	self:Bar(args.spellId, 45)
+        if mistCount == 1 then
+		self:Message(228854, "Attention", "Warning", L.mist:format(mistCount))
+                mistCount = 2
+	end
 end
 
 do
