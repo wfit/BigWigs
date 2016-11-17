@@ -119,6 +119,7 @@ function mod:GetOptions()
 		228565, -- Corrupted Breath
 		{232488, "TANK"}, -- Dark Hatred
 		{232450, "HEALER"}, -- Corrupted Axiom
+		"berserk"
 	},{
 		["stages"] = -14213, -- Helya
 		[228300] = -14222, -- Stage Two: From the Mists
@@ -201,6 +202,10 @@ function mod:OnEngage()
 	strikeCount = 1
 	breathCount = 1
 	orbCount = 1
+	mistCount = 1
+	if self:Mythic() then
+		self:Berserk(660)
+	end
 	self:Bar(227967, self:Mythic() and 10.5 or 12, CL.count:format(self:SpellName(227967), breathCount)) -- Bilewater Breath
 	self:Bar(228054, self:Mythic() and 15.5 or 19.5) -- Taint of the Sea
 	self:Bar(229119, self:Mythic() and 14 or 31, L.orb:format(self:SpellName(229119), L.ranged)) -- Orb of Corruption
