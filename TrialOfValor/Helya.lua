@@ -253,11 +253,13 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 		self:StopBar(228300) -- Fury of the Maw
 		self:StopBar(CL.cast:format(self:SpellName(228300))) -- Cast: Fury of the Maw
 		self:StopBar(CL.adds)
-		self:Bar(230267, 15.5) -- Orb of Corrosion
-		self:Bar(228565, 19.5) -- Corrupted Breath
-		self:Bar(228054, 24.5) -- Taint of the Sea
-		self:Bar(228300, 30.4) -- Fury of the Maw
-		self:Bar(167910, 38, self:SpellName(L.mariner)) -- Kvaldir Longboat
+		self:StopBar(L.mist:format(1))
+		orbCount = 1
+		self:Bar(230267, self:Mythic() and 9 or 15.5, L.orb:format(self:SpellName(230267), L.ranged)) -- Orb of Corrosion
+		self:Bar(228565, self:Mythic() and 10 or 19.5) -- Corrupted Breath
+		self:Bar(228054, self:Mythic() and 1 or 24.5) -- Taint of the Sea
+		self:Bar(228300, self:Mythic() and 35 or 30.4) -- Fury of the Maw
+		self:Bar(167910, self:Mythic() and 43 or 38, self:SpellName(L.mariner)) -- Kvaldir Longboat
 	elseif spellId == 228838 then -- Fetid Rot (Grimelord)
 		self:Bar(193367, 12.2) -- Fetid Rot
 	elseif spellId == 201126 then -- Bleak Eruption (Helarjar Mistwatcher)
@@ -379,7 +381,7 @@ do
 		list[#list+1] = args.destName
 		if #list == 1 then
 			self:ScheduleTimer("TargetMessage", 0.1, args.spellId, list, "Attention", "Alert", nil, nil, self:Dispeller("magic"))
-			self:CDBar(args.spellId, self:Mythic() and 12.2 or phase == 1 and 14.6 or 26)
+			self:CDBar(args.spellId, self:Mythic() and phase == 1 and 12.2 or self:Mythic() and phase == 3 and 20 or phase == 1 and 14.6 or 26)
 		end
 
 		if self:GetOption(taintMarker) then
@@ -607,13 +609,15 @@ end
 
 --[[ Stage Three: Helheim's Last Stand ]]--
 function mod:OrbOfCorrosion(args)
-	self:Bar(230267, 17) -- Orb of Corrosion
+	orbCount = orbCount + 1
+	local type = orbCount % 2 == 0 and L.melee or L.ranged
+	self:Bar(230267, self:Mythic() and 13 or 17, L.orb:format(args.spellName, type)) -- Orb of Corrosion
 end
 
 function mod:CorruptedBreath(args)
 	self:Message(args.spellId, "Important", "Alarm")
 	self:Bar(args.spellId, 4.5, CL.cast:format(args.spellName))
-	self:Bar(args.spellId, 47.4)
+	self:Bar(args.spellId, self:Mythic() and 43 or 47.4)
 end
 
 function mod:DarkHatred(args)
@@ -651,6 +655,6 @@ end
 
 
 function mod:FotMClean(args)
-	self:Message(args.spellId, "Important", "Info")
+	self:Message(228300, "Important", "Info")
 	self:Bar(228300, 71.7) -- Fury of the Maw
 end
