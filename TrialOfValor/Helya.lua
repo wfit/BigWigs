@@ -22,7 +22,6 @@ mod.instanceId = 1648
 local taintMarkerCount = 4
 local tentaclesUp = 9
 local phase = 1
-local mistCount = 1
 local mobTable = {
         [114881] = {}, -- Tentacle Strike
 }
@@ -42,7 +41,7 @@ local strikeWave = {
 }
 local breathCount = 1
 local orbCount = 1
-local mistCount = 1
+local mistCount = 3
 
 --------------------------------------------------------------------------------
 -- Localization
@@ -192,7 +191,7 @@ function mod:OnEngage()
 	taintMarkerCount = 4
 	tentaclesUp = 9
 	phase = 1
-	mistCount = 1
+	mistCount = 3
 	mobTable = {
 	        [114881] = {}, -- Tentacle Strike
 	}
@@ -202,7 +201,6 @@ function mod:OnEngage()
 	strikeCount = 1
 	breathCount = 1
 	orbCount = 1
-	mistCount = 1
 	self:Bar(227967, self:Mythic() and 10.5 or 12, CL.count:format(self:SpellName(227967), breathCount)) -- Bilewater Breath
 	self:Bar(228054, self:Mythic() and 15.5 or 19.5) -- Taint of the Sea
 	self:Bar(229119, self:Mythic() and 14 or 31, L.orb:format(self:SpellName(229119), L.ranged)) -- Orb of Corruption
@@ -242,6 +240,7 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 			self:Bar(167910, 14, CL.adds) -- Kvaldir Longboat
 		end
 		self:Bar(228300, self:Mythic() and 10.5 or 50) -- Fury of the Maw
+		mistCount = 3
 		self:RegisterUnitEvent("UNIT_HEALTH_FREQUENT", nil, "boss1")
 	elseif spellId == 228546 then -- Helya
 		self:UnregisterUnitEvent("UNIT_HEALTH_FREQUENT", "boss1")
@@ -258,9 +257,9 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 	elseif spellId == 228838 then -- Fetid Rot (Grimelord)
 		self:Bar(193367, 12.2) -- Fetid Rot
 	elseif spellId == 201126 then -- Bleak Eruption (Helarjar Mistwatcher)
-		if mistCount == 2 then
+		if mistCount < 3 then
 			self:Message(228854, "Attention", "Warning", L.mist:format(mistCount))
-			mistCount = 1
+			mistCount = 3
 		end
 	end
 end
@@ -450,17 +449,16 @@ function mod:FuryOfTheMaw(args)
 	self:Message(args.spellId, "Important", "Info")
 	self:Bar(args.spellId, self:Mythic() and 24 or 32, CL.cast:format(args.spellName))
 	if self:Mythic() then
-		self:Bar(167910, 14, CL.adds)
+		self:Bar(167910, 7, CL.adds)
+        	mistCount = 2
 	end
 end
 
 function mod:FuryOfTheMawRemoved(args)
 	self:Message(args.spellId, "Important", nil, CL.over:format(args.spellName))
 	self:Bar(args.spellId, 45)
-        if mistCount == 1 then
-		self:Message(228854, "Attention", "Warning", L.mist:format(mistCount))
-                mistCount = 2
-	end
+        mistCount = 1
+	self:Bar(228854, 10, L.mist:format(mistCount))
 end
 
 do
@@ -600,8 +598,6 @@ function mod:MistInfusion(args) -- untested
 	if self:Interrupter() then
 		self:Message(args.spellId, "Attention", nil, CL.count:format(args.spellName, mistCount))
 	end
-	mistCount = mistCount + 1
-	if mistCount > 3 then mistCount = 1 end
 end
 
 --[[ Stage Three: Helheim's Last Stand ]]--
