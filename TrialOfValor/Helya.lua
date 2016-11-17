@@ -38,6 +38,7 @@ local strikeWave = {
 	"CAC x 2",
 	"CAC RANGE",
 	"RANGE X 2",
+	"RANGEx2 CAC",
 }
 local breathCount = 1
 local orbCount = 1
@@ -225,17 +226,19 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 	if spellId == 228372 then -- Mists of Helheim
 		phase = 2
 		self:Message("stages", "Neutral", "Long", CL.stage:format(2), false)
-		self:StopBar(229119) -- Orb of Corruption
+		self:StopBar(L.orb:format(self:SpellName(229119), orbCount % 2 == 0 and L.melee or L.ranged)) -- Orb of Corruption
 		self:StopBar(228054) -- Taint of the Sea
-		self:StopBar(227967) -- Bilewater Breath
+		self:StopBar(CL.count:format(self:SpellName(227967), breathCount)) -- Bilewater Breath
 		if self:BarTimeLeft(CL.cast:format(self:SpellName(227967))) > 0 then -- Breath
 			-- if she transitions while casting the breath she won't spawn the blobs
 			self:StopBar(CL.cast:format(self:SpellName(227992))) -- Bilewater Liquefaction
 		end
 		self:StopBar(CL.cast:format(self:SpellName(227967))) -- Bilewater Breath
-		self:StopBar(228730) -- Tentacle Strike
-		self:Bar(167910, 14, CL.adds) -- Kvaldir Longboat
-		self:Bar(228300, 50) -- Fury of the Maw
+		self:StopBar(L.tentacle:format(strikeCount, strikeWave[strikeCount] or "DUNNO")) -- Tentacle Strike
+		if not self:Mythic() then
+			self:Bar(167910, 14, CL.adds) -- Kvaldir Longboat
+		end
+		self:Bar(228300, self:Mythic() and 10.5 or 50) -- Fury of the Maw
 		self:RegisterUnitEvent("UNIT_HEALTH_FREQUENT", nil, "boss1")
 	elseif spellId == 228546 then -- Helya
 		self:UnregisterUnitEvent("UNIT_HEALTH_FREQUENT", "boss1")
@@ -437,7 +440,7 @@ end
 
 function mod:FuryOfTheMaw(args)
 	self:Message(args.spellId, "Important", "Info")
-	self:Bar(args.spellId, 32, CL.cast:format(args.spellName))
+	self:Bar(args.spellId, self:Mythic() and 24 or 32, CL.cast:format(args.spellName))
 end
 
 function mod:FuryOfTheMawRemoved(args)
