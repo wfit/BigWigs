@@ -255,7 +255,7 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 		self:StopBar(CL.adds)
 		self:StopBar(L.mist:format(1))
 		orbCount = 1
-		self:Bar(230267, self:Mythic() and 9 or 15.5, L.orb:format(self:SpellName(230267), L.ranged)) -- Orb of Corrosion
+		self:Bar(230267, self:Mythic() and 6 or 15.5, L.orb:format(self:SpellName(230267), L.ranged)) -- Orb of Corrosion
 		self:Bar(228565, self:Mythic() and 10 or 19.5) -- Corrupted Breath
 		self:Bar(228054, self:Mythic() and 1 or 24.5) -- Taint of the Sea
 		self:Bar(228300, self:Mythic() and 35 or 30.4) -- Fury of the Maw
