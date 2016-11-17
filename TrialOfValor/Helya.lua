@@ -470,15 +470,15 @@ do
 			self:Flash(args.spellId)
 			self:Say(args.spellId)
 			if self:Mythic() then
-				self:ScheduleTimer("Say", 1, args.spellId, 2, true)
-				self:ScheduleTimer("Say", 2, args.spellId, 1, true)
+				self:ScheduleTimer("Say", 1, false, 2, true)
+				self:ScheduleTimer("Say", 2, false, 1, true)
 			else
 				local _, _, _, _, _, _, expires = UnitDebuff("player", args.spellName)
 				local t = expires - GetTime()
 				for i = 1, 5 do
 					if t - i < 0 then break end
 					local alert = (i % 3 == 0) and (i .. " [" .. args.destName .. "]") or i
-					self:ScheduleTimer("Say", t - i, args.spellId, alert, true)
+					self:ScheduleTimer("Say", t - i, false, alert, true)
 				end
 			end
 			self:OpenProximity(args.spellId, 5)
@@ -491,11 +491,11 @@ do
 	end
 
 	function mod:FetidRotRemovedDose(args)
-		if self:Mythic() then
+		if self:Mythic() and self:Me(args.destGUID) then
 			local stacks = args.amount > 1 and " stacks" or " stack"
-			self:Say(args.spellId, args.destName .. " - " .. args.amount .. stacks)
-			self:ScheduleTimer("Say", 1, args.spellId, 2, true)
-			self:ScheduleTimer("Say", 2, args.spellId, 1, true)
+			self:Say(false, args.destName .. " - " .. args.amount .. stacks, true)
+			self:ScheduleTimer("Say", 1, false, 2, true)
+			self:ScheduleTimer("Say", 2, false, 1, true)
 		end
 	end
 
