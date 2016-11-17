@@ -40,6 +40,7 @@ local strikeWave = {
 	"RANGE X 2",
 }
 local breathCount = 1
+local orbCount = 1
 
 --------------------------------------------------------------------------------
 -- Localization
@@ -192,9 +193,10 @@ function mod:OnEngage()
 	}
 	strikeCount = 1
 	breathCount = 1
+	orbCount = 1
 	self:Bar(227967, self:Mythic() and 10.5 or 12, CL.count:format(self:SpellName(227967), breathCount)) -- Bilewater Breath
 	self:Bar(228054, self:Mythic() and 15.5 or 19.5) -- Taint of the Sea
-	self:Bar(229119, self:Mythic() and 14 or 31) -- Orb of Corruption
+	self:Bar(229119, self:Mythic() and 14 or 31, "Orb of Corruption (Ranged)") -- Orb of Corruption
 	self:Bar(228730, self:Mythic() and 35 or 37, ("Tentacle (%s) : %s"):format(strikeCount, strikeWave[strikeCount] or "DUNNO")) -- Tentacle Strike
 end
 
@@ -329,7 +331,9 @@ do
 end
 
 function mod:OrbOfCorruption(args)
-	self:Bar(229119, self:Mythic() and 24.2 or 28) -- Orb of Corruption
+	orbCount = orbCount + 1
+	local type = orbCount % 2 == 0 and "Melee" or "Ranged"
+	self:Bar(229119, self:Mythic() and 24.2 or 28, ("%s (%s)"):format(args.spellName, type)) -- Orb of Corruption
 end
 
 do
