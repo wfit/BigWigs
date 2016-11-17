@@ -611,7 +611,7 @@ end
 function mod:OrbOfCorrosion(args)
 	orbCount = orbCount + 1
 	local type = orbCount % 2 == 0 and L.melee or L.ranged
-	self:Bar(230267, self:Mythic() and 13 or 17, L.orb:format(args.spellName, type)) -- Orb of Corrosion
+	self:Bar(230267, self:Mythic() and orbCount == 4 and 23.5 or self:Mythic() and 13 or 17, L.orb:format(args.spellName, type)) -- Orb of Corrosion
 end
 
 function mod:CorruptedBreath(args)
