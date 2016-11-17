@@ -138,6 +138,7 @@ function mod:OnBossEnable()
 	self:Log("SPELL_CAST_START", "BilewaterBreath", 227967)
 	self:Log("SPELL_CAST_START", "TentacleStrike", 228730)
 	self:Log("SPELL_CAST_START", "CorrossiveNova", 228872)
+	self:Log("SPELL_AURA_APPLIED", "BilewaterCorrosion", 227998)
 	self:Log("SPELL_PERIODIC_DAMAGE", "BilewaterCorrosion", 227998)
 
 	self:Log("SPELL_AURA_APPLIED", "DarkWatersDamage", 230197)
