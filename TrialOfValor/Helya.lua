@@ -670,6 +670,10 @@ do
 					return -1
 				elseif aRole == "healer" then
 					return 1
+				elseif bRole == "healer" and lastOrbTargets[b] and healerAvailable then
+					return 1
+				elseif bRole == "healer" then
+					return -1
 				else
 					-- If no healer involved, potential targets of the next orb are after anybody else
 					return (aRole == nextOrbType) and 1 or -1
