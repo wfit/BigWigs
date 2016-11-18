@@ -215,7 +215,7 @@ function mod:OnEngage()
 	end
 	self:Bar(227967, self:Mythic() and 10.5 or 12, CL.count:format(self:SpellName(227967), breathCount)) -- Bilewater Breath
 	self:Bar(228054, self:Mythic() and 15.5 or 19.5) -- Taint of the Sea
-	self:Bar(229119, self:Mythic() and 15 or 31, L.orb:format(self:SpellName(229119), L.ranged)) -- Orb of Corruption
+	self:Bar(229119, self:Mythic() and 14.5 or 31, L.orb:format(self:SpellName(229119), L.ranged)) -- Orb of Corruption
 	self:Bar(228730, self:Mythic() and 35 or 37, L.tentacle:format(strikeCount, strikeWave[strikeCount] or "DUNNO")) -- Tentacle Strike
 end
 
