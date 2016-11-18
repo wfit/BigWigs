@@ -253,7 +253,7 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 		end
 		self:Bar(228300, self:Mythic() and 10.5 or 50) -- Fury of the Maw
 		mistCount = 3
-		orbCount = (GetTime() - lastOrbTime < 10) and 2 or 1
+		orbCount = 1
 		self:RegisterUnitEvent("UNIT_HEALTH_FREQUENT", nil, "boss1")
 	elseif spellId == 228546 then -- Helya
 		self:UnregisterUnitEvent("UNIT_HEALTH_FREQUENT", "boss1")
