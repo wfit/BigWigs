@@ -736,7 +736,7 @@ do
 			local position = 7 - i
 			if soaker then
 				msg = msg .. (soakerName:format(UnitName(soaker), position))
-				soakersList[UnitName(soaker)] = true
+				soakersList[UnitName(soaker)] = position
 				if UnitIsUnit("player", soaker) and self:GetOption(axion_soak) then
 					self:Pulse(false, 232450)
 					self:PlaySound(false, "Warning")
