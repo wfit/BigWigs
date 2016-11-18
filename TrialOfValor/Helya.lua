@@ -255,11 +255,12 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 		self:StopBar(CL.adds)
 		self:StopBar(L.mist:format(1))
 		orbCount = 1
+		breathCount = 1
 		self:Bar(230267, self:Mythic() and 6 or 15.5, L.orb:format(self:SpellName(230267), L.ranged)) -- Orb of Corrosion
-		self:Bar(228565, self:Mythic() and 10 or 19.5) -- Corrupted Breath
+		self:Bar(228565, self:Mythic() and 10 or 19.5, CL.count:format(self:SpellName(228565), breathCount)) -- Corrupted Breath
 		self:Bar(228054, self:Mythic() and 1 or 24.5) -- Taint of the Sea
 		self:Bar(228300, self:Mythic() and 35 or 30.4) -- Fury of the Maw
-		self:Bar(167910, self:Mythic() and 43 or 38, self:SpellName(L.mariner)) -- Kvaldir Longboat
+		-- self:Bar(167910, self:Mythic() and 43 or 38, self:SpellName(L.mariner)) -- Kvaldir Longboat
 	elseif spellId == 228838 then -- Fetid Rot (Grimelord)
 		self:Bar(193367, 12.2) -- Fetid Rot
 	elseif spellId == 201126 then -- Bleak Eruption (Helarjar Mistwatcher)
@@ -453,6 +454,7 @@ do
 end
 
 function mod:FuryOfTheMaw(args)
+	self:StopBar(args.spellId)
 	self:Message(args.spellId, "Important", "Info")
 	self:Bar(args.spellId, self:Mythic() and 24 or 32, CL.cast:format(args.spellName))
 	if self:Mythic() then
@@ -615,9 +617,10 @@ function mod:OrbOfCorrosion(args)
 end
 
 function mod:CorruptedBreath(args)
-	self:Message(args.spellId, "Important", "Alarm")
+	self:Message(args.spellId, "Important", "Alarm", CL.count:format(args.spellName, breathCount))
 	self:Bar(args.spellId, 4.5, CL.cast:format(args.spellName))
-	self:Bar(args.spellId, self:Mythic() and 43 or 47.4)
+	breathCount = breathCount + 1
+	self:Bar(args.spellId, self:Mythic() and 43 or 47.4, CL.count:format(args.spellName, breathCount))
 end
 
 function mod:DarkHatred(args)
@@ -656,5 +659,6 @@ end
 
 function mod:FotMClean(args)
 	self:Message(228300, "Important", "Info")
-	self:Bar(228300, 71.7) -- Fury of the Maw
+	self:Bar(228300, self:Mythic() and 56 or 71.7) -- Fury of the Maw
+	self:Bar(167910, 7.7, self:SpellName(L.mariner)) -- Mariner P3
 end
