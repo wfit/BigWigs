@@ -118,7 +118,7 @@ function mod:GetOptions()
 		{230267, "SAY", "FLASH"}, -- Orb of Corrosion
 		228565, -- Corrupted Breath
 		{232488, "TANK"}, -- Dark Hatred
-		{232450, "HEALER"}, -- Corrupted Axiom
+		232450, -- Corrupted Axion 
 		"berserk"
 	},{
 		["stages"] = -14213, -- Helya
@@ -184,7 +184,7 @@ function mod:OnBossEnable()
 	self:Log("SPELL_MISSED", "OrbDamage", 228063)
 	self:Log("SPELL_CAST_START", "CorruptedBreath", 228565)
 	self:Log("SPELL_AURA_APPLIED", "DarkHatred", 232488)
-	self:Log("SPELL_AURA_APPLIED", "CorruptedAxiom", 232450)
+	self:Log("SPELL_AURA_APPLIED", "CorruptedAxion", 232450)
 	self:Log("SPELL_CAST_START", "FotMClean", 228032)
 end
 
@@ -622,6 +622,7 @@ function mod:CorruptedBreath(args)
 	self:Bar(args.spellId, 4.5, CL.cast:format(args.spellName))
 	breathCount = breathCount + 1
 	self:Bar(args.spellId, self:Mythic() and 43 or 47.4, CL.count:format(args.spellName, breathCount))
+	self:Bar(232450, 9.5) -- Corrupted Axion
 end
 
 function mod:DarkHatred(args)
@@ -644,7 +645,7 @@ do
 		isOnMe = nil
 	end
 
-	function mod:CorruptedAxiom(args)
+	function mod:CorruptedAxion(args)
 		list[#list+1] = args.destName
 		if #list == 1 then
 			scheduled = self:ScheduleTimer(warn, 0.1, self, args.spellId)
