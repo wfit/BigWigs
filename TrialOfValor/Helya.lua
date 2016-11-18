@@ -665,26 +665,31 @@ do
 	-- Sort the list of soakers based on suitableness
 	local function sortSoakers(nextOrbType, healerAvailable)
 		local delta = GetTime() - lastOrbTime
-		local function compare(a, b)
-			local aRole, bRole = unitRole[a], unitRole[b]
-			if aRole ~= bRole then
-				if aRole == "healer" and lastOrbTargets[a] and healerAvailable then
-					return -1
-				elseif aRole == "healer" then
-					return 1
-				elseif bRole == "healer" and lastOrbTargets[b] and healerAvailable then
-					return 1
-				elseif bRole == "healer" then
-					return -1
+		local function unitIsTarget(unit)
+			if unitRole[unit] == "healer" then
+				if lastOrbTargets[unit] and delta > 4 then
+					return false
 				else
-					-- If no healer involved, potential targets of the next orb are after anybody else
-					return (aRole == nextOrbType) and 1 or -1
+					return true
 				end
 			else
-				local aTarget = lastOrbTargets[a] and delta < 12
-				local bTarget = lastOrbTargets[b] and delta < 12
-				if aTarget ~= bTarget then
-					return aTarget and 1 or -1
+				return lastOrbTargets[a] and delta < 12
+			end
+		end
+		local function compare(a, b)
+			local aTarget = unitIsTarget(a)
+			local bTarget = unitIsTarget(b)
+			if aTarget ~= bTarget then
+				return aTarget and 1 or -1
+			else
+				local aRole, bRole = unitRole[a], unitRole[b]
+				if aRole ~= bRole then
+					if aRole == "healer" then
+						return -1
+					else
+						-- If no healer involved, potential targets of the next orb are after anybody else
+						return (aRole == nextOrbType) and 1 or -1
+					end
 				else
 					local aPriority = unitClassPriority[a]
 					local bPriority = unitClassPriority[b]
