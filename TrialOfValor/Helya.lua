@@ -42,7 +42,7 @@ local strikeWave = {
 local breathCount = 1
 local orbCount = 1
 local mistCount = 3
-
+local orbTimer = { 6, 13, 13, 27.3, 10.7, 14.4 } 
 --------------------------------------------------------------------------------
 -- Localization
 --
@@ -256,7 +256,7 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 		self:StopBar(L.mist:format(1))
 		orbCount = 1
 		breathCount = 1
-		self:Bar(230267, self:Mythic() and 6 or 15.5, L.orb:format(self:SpellName(230267), L.ranged)) -- Orb of Corrosion
+		self:Bar(230267, self:Mythic() and orbTimer[orbCount] and orbTimer[orbCount] or 15.5, L.orb:format(self:SpellName(230267), L.ranged)) -- Orb of Corrosion
 		self:Bar(228565, self:Mythic() and 10 or 19.5, CL.count:format(self:SpellName(228565), breathCount)) -- Corrupted Breath
 		self:Bar(228054, self:Mythic() and 1 or 24.5) -- Taint of the Sea
 		self:Bar(228300, self:Mythic() and 35 or 30.4) -- Fury of the Maw
@@ -613,7 +613,8 @@ end
 function mod:OrbOfCorrosion(args)
 	orbCount = orbCount + 1
 	local type = orbCount % 2 == 0 and L.melee or L.ranged
-	self:Bar(230267, self:Mythic() and orbCount == 4 and 27 or self:Mythic() and 13 or 17, L.orb:format(args.spellName, type)) -- Orb of Corrosion
+	--self:Bar(230267, self:Mythic() and orbCount == 4 and 27 or self:Mythic() and 13 or 17, L.orb:format(args.spellName, type)) -- Orb of Corrosion
+	self:Bar(230267, self:Mythic() and orbTimer[orbCount] and orbTimer[orbCount] or self:Mythic() and 13 or 17, L.orb:format(args.spellName, type)) -- Orb of Corrosion
 end
 
 function mod:CorruptedBreath(args)
