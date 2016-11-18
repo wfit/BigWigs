@@ -665,13 +665,10 @@ do
 		local function compare(a, b)
 			local aRole, bRole = unitRole[a], unitRole[b]
 			if aRole ~= bRole then
-				if aRole == "healer" then
-					-- Healer of the last orb before anybody else
-					return (lastOrbTargets[a] and healerAvailable) and -1 or 1
-				elseif bRole == "healer" then
-					-- Anybody after healer of the last orb
-					-- Anybody before other healers
-					return (lastOrbTargets[b] and healerAvailable) and 1 or -1
+				if aRole == "healer" and lastOrbTargets[a] and healerAvailable then
+					return -1
+				elseif aRole == "healer" then
+					return 1
 				else
 					-- If no healer involved, potential targets of the next orb are after anybody else
 					return (aRole == nextOrbType) and 1 or -1
