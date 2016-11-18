@@ -41,8 +41,11 @@ local strikeWave = {
 }
 local breathCount = 1
 local orbCount = 1
+local lastOrbTime = 0
+local lastOrbTargets = {}
 local mistCount = 3
-local orbTimer = { 6, 13, 13, 27.3, 10.7, 14.4 } 
+local orbTimer = { 6, 13, 13, 27.3, 10.7, 14.4 }
+
 --------------------------------------------------------------------------------
 -- Localization
 --
@@ -78,6 +81,8 @@ local orbMarker = mod:AddMarkerOption(false, "player", 1, 229119, 1, 2, 3) -- Or
 local taintMarker = mod:AddMarkerOption(false, "player", 4, 228054, 4, 5, 6) -- Taint of the Sea
 
 local rot_fails = mod:AddTokenOption { "rot_fails", "Announce Fetid Rot fails.", promote = false }
+
+local axion_soak = mod:AddCustomOption { "axion_soak", "Announce Corrupted Axions soakers during Phase 3." }
 
 function mod:GetOptions()
 	return {
@@ -119,6 +124,7 @@ function mod:GetOptions()
 		228565, -- Corrupted Breath
 		{232488, "TANK"}, -- Dark Hatred
 		{232450, "HEALER"}, -- Corrupted Axiom
+		axion_soak,
 		"berserk"
 	},{
 		["stages"] = -14213, -- Helya
@@ -202,6 +208,8 @@ function mod:OnEngage()
 	strikeCount = 1
 	breathCount = 1
 	orbCount = 1
+	lastOrbTime = 0
+	wipe(lastOrbTargets)
 	if self:Mythic() then
 		self:Berserk(660)
 	end
@@ -327,7 +335,11 @@ do
 		list[#list+1] = args.destName
 		if #list == 1 then
 			scheduled = self:ScheduleTimer(warn, 0.1, self, args.spellId)
+			lastOrbTime = GetTime()
+			wipe(lastOrbTargets)
 		end
+
+		lastOrbTargets[args.destUnit] = true
 
 		if self:GetOption(orbMarker) then
 			if self:Healer(args.destName) then
@@ -620,8 +632,109 @@ end
 function mod:CorruptedBreath(args)
 	self:Message(args.spellId, "Important", "Alarm", CL.count:format(args.spellName, breathCount))
 	self:Bar(args.spellId, 4.5, CL.cast:format(args.spellName))
+	if self:Mythic() then
+		self:ScheduleTimer("CallAxionsSoakers", 4, breathCount)
+	end
 	breathCount = breathCount + 1
 	self:Bar(args.spellId, self:Mythic() and 43 or 47.4, CL.count:format(args.spellName, breathCount))
+end
+
+do
+	-- List of eligible soakers
+	local soakers = {}
+
+	-- Mapping of units to raid index and role
+	local unitIndex = {}
+	local unitRole = {}
+
+	-- Token for mutex of raid announce
+	local announce = mod:CreateToken("axions")
+
+	-- Sort the list of soakers based on suitableness
+	local function sortSoakers(nextOrbType, healerAvailable)
+		local delta = GetTime() - lastOrbTime
+		local function compare(a, b)
+			local aRole, bRole = unitRole[a], unitRole[b]
+			if aRole ~= bRole then
+				if aRole == "healer" then
+					-- Healer of the last orb before anybody else
+					return (lastOrbTargets[a] and healerAvailable) and -1 or 1
+				elseif bRole == "healer" then
+					-- Anybody after healer of the last orb
+					-- Anybody before other healers
+					return (lastOrbTargets[b] and healerAvailable) and 1 or -1
+				else
+					-- If no healer involved, potential targets of the next orb are after anybody else
+					return (aRole == nextOrbType) and 1 or -1
+				end
+			else
+				-- aRole == bRole
+				if aRole ~= nextOrbType and delta < 12 then
+					-- Set soakers of the current orb as lower priority
+					local aTarget, bTarget = lastOrbTargets[a], lastOrbTargets[b]
+					if aTarget ~= bTarget then
+						return aTarget and 1 or -1
+					end
+				end
+
+				-- Compare raid index, soaking in the same order as the raid roster
+				return (unitIndex[a] > unitIndex[b]) and -1 or 1
+			end
+		end
+		return function(a, b) return compare(a, b) < 0 end
+	end
+
+	-- Healer availability for each breath
+	local healerAvailablility = {}
+
+	-- Default attribution handler
+	local function defaultHandler(breathId)
+		wipe(soakers)
+		wipe(unitIndex)
+		wipe(unitRole)
+
+		local nextOrbType = (orbCount % 2 == 0) and "melee" or "ranged"
+		local healerAvailable = healerAvailablility[breathId]
+		if healerAvailable == nil then healerAvailable = true end
+
+		for unit in mod:IterateGroup(20) do
+			if not UnitIsDeadOrGhost(unit) and mod:Role(unit) ~= "tank" then
+				soakers[#soakers + 1] = unit
+				unitIndex[unit] = #soakers
+				local role = mod:Role(unit)
+				unitRole[unit] = role
+			end
+		end
+
+		table.sort(soakers, sortSoakers(nextOrbType, healerAvailable))
+		return soakers
+	end
+
+	-- Override handler for specific breath
+	local handlers = {}
+	local soakerName = " %s(%s)"
+
+	function mod:CallAxionsSoakers(breathId)
+		local soakers = (handlers[breathId] or defaultHandler)(breathId)
+		local msg = "Axions soaked by:" .. (soakerName:format("tank", 1))
+		for i = 5, 2, -1 do
+			local soaker = soakers[i - 1]
+			if soaker then
+				msg = msg .. (soakerName:format(UnitName(soaker), i))
+				if UnitIsUnit("player", soaker) and self:GetOption(axion_soak) then
+					self:Pulse(false, 232450)
+					self:PlaySound(false, "Warning")
+					self:Emphasized(false, "Soak Axion: " .. i)
+					self:Emit("HELYA_AXION_SOAK", i)
+				end
+			else
+				msg = msg .. (soakerName:format("?", i))
+			end
+		end
+		if announce:IsMine() then
+			SendChatMessage(msg, "RAID")
+		end
+	end
 end
 
 function mod:DarkHatred(args)
