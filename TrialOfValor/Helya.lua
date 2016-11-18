@@ -682,6 +682,8 @@ do
 				if aRole ~= bRole then
 					if aRole == "healer" then
 						return -1
+					elseif bRole == "healer" then
+						return 1
 					else
 						-- If no healer involved, potential targets of the next orb are after anybody else
 						return (aRole == nextOrbType) and 1 or -1
@@ -714,7 +716,8 @@ do
 		local healerAvailable = healerAvailablility[breathId]
 		if healerAvailable == nil then healerAvailable = true end
 
-		for unit in mod:IterateGroup(20) do
+		for i = 1, 20 do
+			local unit = "raid" .. i
 			if not UnitIsDeadOrGhost(unit) and mod:Role(unit) ~= "tank" then
 				soakers[#soakers + 1] = unit
 				unitIndex[unit] = #soakers
