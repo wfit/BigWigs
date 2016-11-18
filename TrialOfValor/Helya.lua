@@ -336,7 +336,6 @@ do
 		if #list == 1 then
 			scheduled = self:ScheduleTimer(warn, 0.1, self, args.spellId)
 			lastOrbTime = GetTime()
-			wipe(lastOrbTargets)
 		end
 
 		lastOrbTargets[args.destUnit] = true
@@ -365,6 +364,7 @@ end
 
 function mod:OrbOfCorruption(args)
 	orbCount = orbCount + 1
+	wipe(lastOrbTargets)
 	if phase > 1 then return end
 	local type = orbCount % 2 == 0 and L.melee or L.ranged
 	self:Bar(229119, self:Mythic() and 24.2 or 28, L.orb:format(args.spellName, type)) -- Orb of Corruption
@@ -625,6 +625,7 @@ end
 --[[ Stage Three: Helheim's Last Stand ]]--
 function mod:OrbOfCorrosion(args)
 	orbCount = orbCount + 1
+	wipe(lastOrbTargets)
 	local type = orbCount % 2 == 0 and L.melee or L.ranged
 	--self:Bar(230267, self:Mythic() and orbCount == 4 and 27 or self:Mythic() and 13 or 17, L.orb:format(args.spellName, type)) -- Orb of Corrosion
 	self:Bar(230267, self:Mythic() and orbTimer[orbCount] and orbTimer[orbCount] or self:Mythic() and 13 or 17, L.orb:format(args.spellName, type)) -- Orb of Corrosion
