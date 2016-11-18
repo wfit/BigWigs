@@ -667,13 +667,9 @@ do
 		local delta = GetTime() - lastOrbTime
 		local function unitIsTarget(unit)
 			if unitRole[unit] == "healer" then
-				if lastOrbTargets[unit] and delta > 4 then
-					return false
-				else
-					return true
-				end
+				return not lastOrbTargets[unit]
 			else
-				return lastOrbTargets[a] and delta < 12
+				return lastOrbTargets[unit] and delta < 12
 			end
 		end
 		local function compare(a, b)
