@@ -253,7 +253,7 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 		end
 		self:Bar(228300, self:Mythic() and 10.5 or 50) -- Fury of the Maw
 		mistCount = 3
-		orbCount = 1
+		orbCount = (GetTime() - lastOrbTime < 10) and 2 or 1
 		self:RegisterUnitEvent("UNIT_HEALTH_FREQUENT", nil, "boss1")
 	elseif spellId == 228546 then -- Helya
 		self:UnregisterUnitEvent("UNIT_HEALTH_FREQUENT", "boss1")
@@ -336,9 +336,12 @@ do
 		if #list == 1 then
 			scheduled = self:ScheduleTimer(warn, 0.1, self, args.spellId)
 			lastOrbTime = GetTime()
+			wipe(lastOrbTargets)
 		end
 
-		lastOrbTargets[args.destUnit] = true
+		self:ScheduleTimer(function()
+			lastOrbTargets[args.destUnit] = true
+		end, 2)
 
 		if self:GetOption(orbMarker) then
 			if self:Healer(args.destName) then
@@ -365,7 +368,6 @@ end
 function mod:OrbOfCorruption(args)
 	orbCount = orbCount + 1
 	wipe(lastOrbTargets)
-	if phase > 1 then return end
 	local type = orbCount % 2 == 0 and L.melee or L.ranged
 	self:Bar(229119, self:Mythic() and 24.2 or 28, L.orb:format(args.spellName, type)) -- Orb of Corruption
 end
@@ -479,7 +481,7 @@ end
 function mod:FuryOfTheMawRemoved(args)
 	self:Message(args.spellId, "Important", nil, CL.over:format(args.spellName))
 	self:Bar(args.spellId, 45)
-        mistCount = 1
+	mistCount = 1
 	self:Bar(228854, 10, L.mist:format(mistCount))
 end
 
