@@ -44,7 +44,7 @@ local orbCount = 1
 local lastOrbTime = 0
 local lastOrbTargets = {}
 local mistCount = 3
-local orbTimer = { 6, 13, 13, 27.3, 10.7, 14.4 }
+local orbTimer = { 7, 13, 13, 27.3, 10.7, 14.4 }
 
 --------------------------------------------------------------------------------
 -- Localization
@@ -143,7 +143,7 @@ function mod:OnBossEnable()
 	self:RegisterEvent("RAID_BOSS_WHISPER")
 
 	--[[ Helya ]]--
-	self:Log("SPELL_CAST_START", "OrbOfCorruption", 227903)
+	self:Log("SPELL_CAST_SUCCESS", "OrbOfCorruption", 227903)
 	self:Log("SPELL_AURA_APPLIED", "OrbApplied", 229119)
 	self:Log("SPELL_AURA_REMOVED", "OrbRemoved", 229119)
 	self:Log("SPELL_DAMAGE", "OrbDamage", 227930)
@@ -183,7 +183,7 @@ function mod:OnBossEnable()
 	--self:Log("SPELL_CAST_START", "MistInfusion", 228854) -- untested
 
 	--[[ Stage Three: Helheim's Last Stand ]]--
-	self:Log("SPELL_CAST_START", "OrbOfCorrosion", 228056)
+	self:Log("SPELL_CAST_SUCCESS", "OrbOfCorrosion", 228056)
 	self:Log("SPELL_AURA_APPLIED", "OrbApplied", 230267)
 	self:Log("SPELL_AURA_REMOVED", "OrbRemoved", 230267)
 	self:Log("SPELL_DAMAGE", "OrbDamage", 228063)
@@ -215,7 +215,7 @@ function mod:OnEngage()
 	end
 	self:Bar(227967, self:Mythic() and 10.5 or 12, CL.count:format(self:SpellName(227967), breathCount)) -- Bilewater Breath
 	self:Bar(228054, self:Mythic() and 15.5 or 19.5) -- Taint of the Sea
-	self:Bar(229119, self:Mythic() and 14 or 31, L.orb:format(self:SpellName(229119), L.ranged)) -- Orb of Corruption
+	self:Bar(229119, self:Mythic() and 15 or 31, L.orb:format(self:SpellName(229119), L.ranged)) -- Orb of Corruption
 	self:Bar(228730, self:Mythic() and 35 or 37, L.tentacle:format(strikeCount, strikeWave[strikeCount] or "DUNNO")) -- Tentacle Strike
 end
 
@@ -264,7 +264,7 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 		self:StopBar(CL.adds)
 		self:StopBar(L.mist:format(1))
 		breathCount = 1
-		self:Bar(230267, self:Mythic() and orbTimer[orbCount] and orbTimer[orbCount] or 15.5, L.orb:format(self:SpellName(230267), L.ranged)) -- Orb of Corrosion
+		self:Bar(230267, self:Mythic() and orbTimer[orbCount] and orbTimer[orbCount] or 15.5, L.orb:format(self:SpellName(230267), orbCount % 2 == 0 and L.melee or L.ranged)) -- Orb of Corrosion
 		self:Bar(228565, self:Mythic() and 10 or 19.5, CL.count:format(self:SpellName(228565), breathCount)) -- Corrupted Breath
 		self:Bar(228054, self:Mythic() and 1 or 24.5) -- Taint of the Sea
 		self:Bar(228300, self:Mythic() and 35 or 30.4) -- Fury of the Maw
