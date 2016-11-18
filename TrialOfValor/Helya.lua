@@ -646,9 +646,17 @@ do
 	-- Mapping of units to raid index and role
 	local unitIndex = {}
 	local unitRole = {}
+	local unitClassPriority = {}
 
 	-- Token for mutex of raid announce
 	local announce = mod:CreateToken("axions")
+
+	local classPriority = {
+		[3] = 5, -- Hunter
+		[8] = 4, -- Mage
+		[4] = 5, -- Rogue
+		[1] = 4, -- Warrior
+	}
 
 	-- Sort the list of soakers based on suitableness
 	local function sortSoakers(nextOrbType, healerAvailable)
@@ -668,17 +676,19 @@ do
 					return (aRole == nextOrbType) and 1 or -1
 				end
 			else
-				-- aRole == bRole
-				if aRole ~= nextOrbType and delta < 12 then
-					-- Set soakers of the current orb as lower priority
-					local aTarget, bTarget = lastOrbTargets[a], lastOrbTargets[b]
-					if aTarget ~= bTarget then
-						return aTarget and 1 or -1
+				local aTarget = lastOrbTargets[a] and delta < 12
+				local bTarget = lastOrbTargets[b] and delta < 12
+				if aTarget ~= bTarget then
+					return aTarget and 1 or -1
+				else
+					local aPriority = unitClassPriority[a]
+					local bPriority = unitClassPriority[b]
+					if aPriority ~= bPriority then
+						return aPriority > bPriority and -1 or 0
+					else
+						return (unitIndex[a] > unitIndex[b]) and -1 or 1
 					end
 				end
-
-				-- Compare raid index, soaking in the same order as the raid roster
-				return (unitIndex[a] > unitIndex[b]) and -1 or 1
 			end
 		end
 		return function(a, b) return compare(a, b) < 0 end
@@ -692,6 +702,7 @@ do
 		wipe(soakers)
 		wipe(unitIndex)
 		wipe(unitRole)
+		wipe(unitClassPriority)
 
 		local nextOrbType = (orbCount % 2 == 0) and "melee" or "ranged"
 		local healerAvailable = healerAvailablility[breathId]
@@ -703,6 +714,7 @@ do
 				unitIndex[unit] = #soakers
 				local role = mod:Role(unit)
 				unitRole[unit] = role
+				unitClassPriority[unit] = classPriority[select(3, UnitClass(unit))] or 1
 			end
 		end
 
@@ -717,20 +729,24 @@ do
 	function mod:CallAxionsSoakers(breathId)
 		local soakers = (handlers[breathId] or defaultHandler)(breathId)
 		local msg = "Axions soaked by:" .. (soakerName:format("tank", 1))
+		local soakersList = {}
 		for i = 5, 2, -1 do
 			local soaker = soakers[i - 1]
+			local position = 7 - i
 			if soaker then
-				msg = msg .. (soakerName:format(UnitName(soaker), i))
+				msg = msg .. (soakerName:format(UnitName(soaker), position))
+				soakersList[UnitName(soaker)] = true
 				if UnitIsUnit("player", soaker) and self:GetOption(axion_soak) then
 					self:Pulse(false, 232450)
 					self:PlaySound(false, "Warning")
-					self:Emphasized(false, "Soak Axion: " .. i)
-					self:Emit("HELYA_AXION_SOAK", i)
+					self:Emphasized(false, "Soak: " .. position)
+					self:Emit("HELYA_AXION_SOAK", position)
 				end
 			else
-				msg = msg .. (soakerName:format("?", i))
+				msg = msg .. (soakerName:format("?", position))
 			end
 		end
+		self:Emit("HELYA_AXION_SOAKERS", soakersList)
 		if announce:IsMine() then
 			SendChatMessage(msg, "RAID")
 		end
