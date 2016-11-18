@@ -253,6 +253,7 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 		end
 		self:Bar(228300, self:Mythic() and 10.5 or 50) -- Fury of the Maw
 		mistCount = 3
+		orbCount = 1
 		self:RegisterUnitEvent("UNIT_HEALTH_FREQUENT", nil, "boss1")
 	elseif spellId == 228546 then -- Helya
 		self:UnregisterUnitEvent("UNIT_HEALTH_FREQUENT", "boss1")
@@ -262,7 +263,6 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 		self:StopBar(CL.cast:format(self:SpellName(228300))) -- Cast: Fury of the Maw
 		self:StopBar(CL.adds)
 		self:StopBar(L.mist:format(1))
-		orbCount = 1
 		breathCount = 1
 		self:Bar(230267, self:Mythic() and orbTimer[orbCount] and orbTimer[orbCount] or 15.5, L.orb:format(self:SpellName(230267), L.ranged)) -- Orb of Corrosion
 		self:Bar(228565, self:Mythic() and 10 or 19.5, CL.count:format(self:SpellName(228565), breathCount)) -- Corrupted Breath
@@ -748,6 +748,7 @@ do
 			end
 		end
 		self:Emit("HELYA_AXION_SOAKERS", soakersList)
+		print(msg)
 		if announce:IsMine() then
 			SendChatMessage(msg, "RAID")
 		end
