@@ -645,7 +645,7 @@ function mod:CorruptedBreath(args)
 	self:Message(args.spellId, "Important", "Alarm", CL.count:format(args.spellName, breathCount))
 	self:Bar(args.spellId, 4.5, CL.cast:format(args.spellName))
 	if self:Mythic() then
-		self:ScheduleTimer("CallAxionsSoakers", 4, breathCount)
+		self:ScheduleTimer("CallAxionsSoakers", 3, breathCount)
 	end
 	breathCount = breathCount + 1
 	self:Bar(args.spellId, self:Mythic() and 43.2 or 47.4, CL.count:format(args.spellName, breathCount))
@@ -679,29 +679,21 @@ do
 
 	-- Sort the list of soakers based on suitableness
 	local function sortSoakers(nextOrbType)
-		local delta = GetTime() - lastOrbTime
 		return function(a, b)
-			local aTarget = lastOrbTargets[a] and delta < 12
-			local bTarget = lastOrbTargets[b] and delta < 12
-			if aTarget ~= bTarget then
-				-- Non-targeted units before targeted ones
-				return not aTarget
+			local aRole = unitRole[a]
+			local bRole = unitRole[b]
+			if aRole ~= bRole then
+				-- Units of a different type than the next orb before units of the same type
+				return aRole ~= nextOrbType
 			else
-				local aRole = unitRole[a]
-				local bRole = unitRole[b]
-				if aRole ~= bRole then
-					-- Units of a different type than the next orb before units of the same type
-					return aRole ~= nextOrbType
+				local aPriority = unitClassPriority[a]
+				local bPriority = unitClassPriority[b]
+				if aPriority ~= bPriority then
+					-- Units of the higher priority
+					return aPriority > bPriority
 				else
-					local aPriority = unitClassPriority[a]
-					local bPriority = unitClassPriority[b]
-					if aPriority ~= bPriority then
-						-- Units of the higher priority
-						return aPriority > bPriority
-					else
-						-- Last units in the group
-						return unitIndex[a] > unitIndex[b]
-					end
+					-- Last units in the group
+					return unitIndex[a] > unitIndex[b]
 				end
 			end
 		end
@@ -714,11 +706,15 @@ do
 		wipe(unitRole)
 		wipe(unitClassPriority)
 
+		local delta = GetTime() - lastOrbTime
 		local nextOrbType = (orbCount % 2 == 0) and "melee" or "ranged"
 
 		for i = 1, 20 do
 			local unit = "raid" .. i
-			if not UnitIsDeadOrGhost(unit) and mod:Damager(unit) then
+			if UnitExists(unit)
+					and not UnitIsDeadOrGhost(unit)
+					and mod:Damager(unit)
+					and (not lastOrbTargets[unit] or delta > 12) then
 				soakers[#soakers + 1] = unit
 				unitIndex[unit] = #soakers
 				local role = mod:Role(unit)
@@ -745,7 +741,6 @@ do
 	function mod:AxionSoakers(soakers)
 		local msg = "Axions soakers:" .. (soakerName:format("tank", 1))
 		local soakersList = {}
-		local soaking = false
 		self:OpenInfo(232450)
 		self:ScheduleTimer("CloseInfo", 10, 232450)
 		self:SetInfo(232450, 1, "1")
@@ -758,7 +753,6 @@ do
 				msg = msg .. (soakerName:format(UnitName(soaker), position))
 				soakersList[UnitName(soaker)] = position
 				if UnitIsUnit("player", soaker) and self:GetOption(axion_soak) then
-					soaking = true
 					self:Pulse(false, 232450)
 					self:PlaySound(false, "Warning")
 					self:Emphasized(false, "Soak: " .. position)
@@ -771,7 +765,7 @@ do
 			end
 		end
 		self:Emit("HELYA_AXION_SOAKERS", soakersList)
-		if announce:IsMine() or soaking then
+		if announce:IsMine() then
 			SendChatMessage(msg, "RAID")
 		end
 	end
