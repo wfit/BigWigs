@@ -202,7 +202,31 @@ function plugin:BigWigs_ShowInfoBox(_, module, title)
 end
 
 function plugin:BigWigs_SetInfoBoxLine(_, _, line, text)
-	display.text[line]:SetText(text)
+	if type(line) == "table" then
+		local pick = next(line)
+		if not pick then return end
+		if type(line[pick]) == "table" then
+			for i = 1, 5 do
+				display.text[i * 2 - 1]:SetText(line[i] and line[i][1] or "")
+				display.text[i * 2]:SetText(line[i] and line[i][2] or "")
+			end
+		else
+			local key, first = nil, true
+			for i = 1, 5 do
+				key = (key ~= nil or first) and next(line, key) or nil
+				first = false
+				if key then
+					display.text[i * 2 - 1]:SetText(key)
+					display.text[i * 2]:SetText(line[key])
+				else
+					display.text[i * 2 - 1]:SetText("")
+					display.text[i * 2]:SetText("")
+				end
+			end
+		end
+	else
+		display.text[line]:SetText(text)
+	end
 end
 
 do

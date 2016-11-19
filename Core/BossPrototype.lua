@@ -1302,6 +1302,7 @@ function boss:SetInfo(key, line, text)
 	if checkFlag(self, key, C.INFOBOX) then
 		self:SendMessage("BigWigs_SetInfoBoxLine", self, line, text)
 	end
+
 end
 
 function boss:SetInfoByTable(key, tbl)
@@ -1312,7 +1313,7 @@ end
 
 function boss:OpenInfo(key, title)
 	if checkFlag(self, key, C.INFOBOX) then
-		self:SendMessage("BigWigs_ShowInfoBox", self, title)
+		self:SendMessage("BigWigs_ShowInfoBox", self, title or spells[title])
 	end
 end
 
