@@ -2,8 +2,7 @@
 --------------------------------------------------------------------------------
 -- TODO List:
 -- - Get/Confirm timers for all difficulties on live
---   LFR (✘) - Normal (✘) - Heroic (✔) - Mythic (✘)
--- - Draw Power used another spell id on mythic ptr, check if they changed it
+--   LFR (✘) - Normal (✘) - Heroic (✔) - Mythic (✔)
 -- - Horn of Valor CD in p2
 
 --------------------------------------------------------------------------------
@@ -29,9 +28,22 @@ local spearCount = 1
 local stormCount = 1
 local runesUp = 0
 local myAddGUID = ""
+local addGUIDs = {}
 local isHymdallFighting, isHyrjaFighting = nil, nil
 local revivifyBarTexts = {}
 local addFixates = {}
+local proxLists = {
+	[231311] = {}, -- Boss_OdunRunes_Purple
+	[231342] = {}, -- Boss_OdunRunes_Orange
+	[231344] = {}, -- Boss_OdunRunes_Yellow
+	[231345] = {}, -- Boss_OdunRunes_Blue
+	[231346] = {}, -- Boss_OdunRunes_Green
+}
+local timers = { -- Mythic P1 is timed
+	[228012] = {8, 22, 20, 35, 53}, -- Horn of Valor
+	[228162] = {20, 20, 33, 22, 20, 35}, -- Shield of Light
+	[228029] = {20, 15, 30, 20, 15}, -- ExpelLight
+}
 
 --------------------------------------------------------------------------------
 -- Localization
@@ -45,6 +57,15 @@ if L then
 	L.hymdall_icon = "inv_helm_mail_vrykuldragonrider_b_01" -- 214382 / Follower: Hymdall
 	L.hyrja = -14006
 	L.hyrja_icon = "inv_shield_1h_hyrja_d_01"
+
+	L.say = {}
+	L.say[227490] = "{rt3} %s {rt3}" -- Boss_OdunRunes_Purple
+	L.say[227491] = "{rt2} %s {rt2}" -- Boss_OdunRunes_Orange
+	L.say[227498] = "{rt1} %s {rt1}" -- Boss_OdunRunes_Yellow
+	L.say[227499] = "{rt6} %s {rt6}" -- Boss_OdunRunes_Blue
+	L.say[227500] = "{rt4} %s {rt4}" -- Boss_OdunRunes_Green
+
+	L.yields = "%s yields" -- used when Hymdall and Helya leave the fight in P2: "Hymdall yields"
 
 	L[227490] = "|cFF800080Top Right|r (|T1323037:15:15:0:0:64:64:4:60:4:60|t)" -- Boss_OdunRunes_Purple
 	L[227491] = "|cFFFFA500Bottom Right|r (|T1323039:15:15:0:0:64:64:4:60:4:60|t)" -- Boss_OdunRunes_Orange
@@ -72,15 +93,15 @@ function mod:GetOptions()
 		{228012, "PROXIMITY"}, -- Horn of Valor
 
 		--[[ Hyrja ]]--
-		{228029, "SAY", "ICON"}, -- Expel Light
+		{228029, "SAY", "ICON", "PROXIMITY"}, -- Expel Light
 		{228162, "SAY", "ICON"}, -- Shield of Light
 
 		--[[ Odyn ]]--
 		227503, -- Draw Power
 		227629, -- Unerring Blast
 		{227626, "TANK"}, -- Odyn's Test
-		{-14495, "INFOBOX"}, -- Runic Brand
-		229584, -- Protected
+		{-14495, "INFOBOX", "SAY", "PULSE"}, -- Runic Brand
+		{229584, "EMPHASIZE"}, -- Protected
 
 		--[[ Stage Two: The Prime Designate ]]--
 		-14404, -- Test of the Ages
@@ -88,9 +109,10 @@ function mod:GetOptions()
 		--[[ Stage Three: The Final Test ]]--
 		{228918, "SAY"}, -- Stormforged Spear
 		{227807, "SAY", "FLASH"}, -- Storm of Justice
-		{-14495, "PROXIMITY"},
-		brand_marks,
 		227475, -- Cleansing Flame
+		{197961, "PROXIMITY", "SAY", "PULSE"}, -- Runic Brand
+		brand_marks,
+		231350, -- Radiant Smite
 	},{
 		["stages"] = "general",
 		[228018] = -14002, -- Stage One: Might of the Valarjar
@@ -116,7 +138,8 @@ function mod:OnBossEnable()
 	self:Log("SPELL_AURA_APPLIED", "OdynsTestApplied", 228911)
 	self:Log("SPELL_AURA_REMOVED", "OdynsTestRemoved", 228911)
 	self:Log("SPELL_AURA_APPLIED", "StormforgedSpear", 228918)
-	self:Log("SPELL_AURA_APPLIED", "ExpelLight", 228029)
+	self:Log("SPELL_CAST_SUCCESS", "ExpelLightSuccess", 228028)
+	self:Log("SPELL_AURA_APPLIED", "ExpelLightApplied", 228029)
 	self:Log("SPELL_AURA_REMOVED", "ExpelLightRemoved", 228029)
 	self:Log("SPELL_CAST_START", "Revivify", 228171)
 
@@ -125,13 +148,14 @@ function mod:OnBossEnable()
 	self:Log("SPELL_CAST_SUCCESS", "RunicShield", 227594, 227595, 227596, 227597, 227598) -- Add regains shield
 	self:Death("RunebearerDeath", 114996)
 	self:Log("SPELL_AURA_APPLIED", "Branded", 229579, 229580, 229581, 229582, 229583) -- Mythic Debuffs
-	self:Log("SPELL_AURA_APPLIED", "Protected", 229584)
-	self:Log("SPELL_AURA_APPLIED", "RunicBrand", 231311, 231342, 231344, 231345, 231346) -- P3 Runes
-	self:Log("SPELL_AURA_REMOVED", "RunicBrandRemoved", 231311, 231342, 231344, 231345, 231346)
+	self:Log("SPELL_AURA_APPLIED", "Protected", 229584) -- Mythic Debuffs
+	self:Log("SPELL_AURA_APPLIED", "RunicBrand", 231311, 231342, 231344, 231345, 231346) -- Mythic P3 Debuffs
+	self:Log("SPELL_AURA_REMOVED", "RunicBrandRemoved", 231311, 231342, 231344, 231345, 231346) -- Mythic P3 Debuffs
+	self:Log("SPELL_CAST_SUCCESS", "RadiantSmite", 231350)
 
-	self:Log("SPELL_AURA_APPLIED", "CleansingFlameDamage", 227475)
-	self:Log("SPELL_PERIODIC_DAMAGE", "CleansingFlameDamage", 227475)
-	self:Log("SPELL_PERIODIC_MISSED", "CleansingFlameDamage", 227475)
+	self:Log("SPELL_AURA_APPLIED", "CleansingFlameDamage", 227475) -- different spellIds for aura and damage
+	self:Log("SPELL_DAMAGE", "CleansingFlameDamage", 228683) -- different spellIds for aura and damage
+	self:Log("SPELL_MISSED", "CleansingFlameDamage", 228683) -- different spellIds for aura and damage
 end
 
 function mod:OnEngage()
@@ -143,15 +167,20 @@ function mod:OnEngage()
 	stormCount = 1
 	runesUp = 0
 	myAddGUID = ""
+	wipe(addGUIDs)
 	isHymdallFighting = true
 	isHyrjaFighting = true
 	wipe(revivifyBarTexts)
 	wipe(addFixates)
+	for _,t in pairs(proxLists) do
+		wipe(t)
+	end
 
-	self:Bar(228012, 8) -- Horn of Valor
-	self:Bar(228162, 24) -- Shield of Light
-	self:Bar(228029, 32) -- Expel Light
+	self:Bar(228012, 8, CL.count:format(self:SpellName(228012), hornCount)) -- Horn of Valor
+	self:Bar(228162, self:Mythic() and 20 or 24, CL.count:format(self:SpellName(228162), shieldCount)) -- Shield of Light
+	self:Bar(228029, self:Mythic() and 25 or 32) -- Expel Light
 	self:Bar(227503, self:Mythic() and 35 or 40) -- Draw Power
+	self:Bar(227629, self:Mythic() and 68 or 73) -- Unerring Blast
 end
 
 --------------------------------------------------------------------------------
@@ -165,16 +194,18 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 		for _,barText in pairs(revivifyBarTexts) do
 			self:StopBar(barText)
 		end
-		self:StopBar(228162) -- Shield of Light
+		self:StopBar(CL.count:format(self:SpellName(228162), shieldCount)) -- Shield of Light
 		self:StopBar(228029) -- Expel Light
-		self:StopBar(228012) -- Horn of Valor
+		self:StopBar(CL.count:format(self:SpellName(228012), hornCount)) -- Horn of Valor
+		self:StopBar(227503) -- Draw Power
 		self:CDBar("stages", 8, self:SpellName(L.odyn), L.odyn_icon)
 		isHymdallFighting = nil
 		isHyrjaFighting = nil
 	elseif spellId == 227882 then -- Leap into Battle (Phase 2 start)
 		self:RegisterEvent("INSTANCE_ENCOUNTER_ENGAGE_UNIT")
 		self:Bar(-14404, 16, L.hyrja, L.hyrja_icon)
-		self:Bar(227503, self:Mythic() and 38 or 43) -- Draw Power
+		self:Bar(227503, self:Mythic() and 37.5 or 43) -- Draw Power
+		self:Bar(227629, self:Mythic() and 70 or 73) -- Unerring Blast
 	elseif spellId == 228740 then
 		phase = 3
 		self:Message("stages", "Neutral", "Long", CL.stage:format(3), false)
@@ -184,10 +215,14 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 		self:StopBar(227629) -- Unerring Blast
 		self:Bar(227807, 4) -- Storm of Justice
 		self:Bar(228918, 9) -- Stormforged Spear
-	elseif spellId == 229576 or spellId == 227503 then -- Draw Power, TODO first spellId was mythic PTR, delete if not present on live
-		runesUp = 5
+		if self:Mythic() then
+			self:Bar(197961, 21) -- Runic Brand
+		end
+	elseif spellId == 229576 or spellId == 227503 then -- Draw Power, 229576 = mythic, 227503 = others
+		runesUp = (self:Easy() and phase == 1 and 3) or 5 -- could be :Normal(), not sure about LFR
 		self:Message(227503, "Attention", "Long")
-		self:Bar(227629, 30)  -- Unerring Blast
+	elseif spellId == 231297 then -- Runic Brand P3, Mythic
+		self:Bar(231350, 7.5) -- Radiant Smite
 	end
 end
 
@@ -203,29 +238,33 @@ function mod:INSTANCE_ENCOUNTER_ENGAGE_UNIT()
 				hymdallFound = true
 				if not isHymdallFighting then
 					isHymdallFighting = true
+					hornCount = 1
 					self:Message(-14404, "Neutral", "Info", self:SpellName(L.hymdall), false)
 					self:CDBar(228012, 10) -- Horn of Valor
-					self:CDBar(-14404, self:Mythic() and 65.5 or 69.5, L.hyrja, L.hyrja_icon)
+					self:CDBar(-14404, self:Mythic() and 66 or 69.5, L.hyrja, L.hyrja_icon)
 				end
 			elseif mobId == 114360 then -- Hyrja
 				hyrjaFound = true
 				if not isHyrjaFighting then
 					isHyrjaFighting = true
+					shieldCount = 1
 					self:Message(-14404, "Neutral", "Info", self:SpellName(L.hyrja), false)
 					self:CDBar(228029, 5) -- Expel Light
 					self:CDBar(228162, 9.5) -- Shield of Light
-					self:CDBar(-14404, self:Mythic() and 65.5 or 69.5, L.hymdall, L.hymdall_icon)
+					self:CDBar(-14404, self:Mythic() and 66 or 69.5, L.hymdall, L.hymdall_icon)
 				end
 			end
 		end
 	end
-	if not hymdallFound then
+	if not hymdallFound and isHymdallFighting then
+		self:Message(-14404, "Positive", "Info", L.yields:format(self:SpellName(L.hymdall)), false)
 		isHymdallFighting = nil
-		self:StopBar(228012) -- Horn of Valor
+		self:StopBar(CL.count:format(self:SpellName(228012), hornCount)) -- Horn of Valor
 	end
-	if not hyrjaFound then
+	if not hyrjaFound and isHyrjaFighting then
+		self:Message(-14404, "Positive", "Info", L.yields:format(self:SpellName(L.hyrja)), false)
 		isHyrjaFighting = nil
-		self:StopBar(228162) -- Shield of Light
+		self:StopBar(CL.count:format(self:SpellName(228162), shieldCount)) -- Shield of Light
 		self:StopBar(228029) -- Expel Light
 	end
 end
@@ -235,7 +274,8 @@ do
 	function mod:UnerringBlast(args)
 		self:Message(args.spellId, "Urgent", "Alert", CL.casting:format(args.spellName))
 		self:Bar(args.spellId, 3, CL.cast:format(args.spellName))
-		self:Bar(227503, self:Mythic() and 35 or 40) -- Draw Power
+		self:Bar(227503, 35) -- Draw Power
+		self:Bar(args.spellId, self:Mythic() and 65 or 68)
 
 		if self:Mythic() and not UnitDebuff("player", protected) then
 			self:Message(args.spellId, "Personal", nil, CL.no:format(protected))
@@ -258,7 +298,8 @@ do
 	function mod:ShieldOfLight(args)
 		self:GetBossTarget(printTarget, 0.4, args.sourceGUID)
 		shieldCount = shieldCount + 1
-		self:Bar(args.spellId, shieldCount % 2 == 0 and 32 or 38)
+		local t = (self:Mythic() and (timers[args.spellId][shieldCount] or 20)) or phase == 2 and 25.5 or shieldCount % 2 == 0 and 32 or 38
+		self:Bar(args.spellId, t, CL.count:format(args.spellName, shieldCount))
 	end
 
 	function mod:ShieldOfLightSuccess(args)
@@ -268,8 +309,10 @@ end
 
 function mod:HornOfValor(args)
 	self:Message(args.spellId, "Urgent", "Alert", CL.casting:format(args.spellName))
+	self:Bar(args.spellId, 4.5, CL.cast:format(CL.count:format(args.spellName, hornCount)))
 	hornCount = hornCount + 1
-	self:Bar(args.spellId, phase == 2 and 30 or hornCount % 2 == 0 and 27 or 43) -- TODO phase 2 CD
+	local t = (self:Mythic() and (timers[args.spellId][hornCount] or 20)) or hornCount % 2 == 0 and 27 or 43 -- TODO phase 2 CD
+	self:Bar(args.spellId, t, CL.count:format(args.spellName, hornCount))
 	self:OpenProximity(args.spellId, 5)
 end
 
@@ -322,19 +365,27 @@ function mod:StormforgedSpear(args)
 	end
 end
 
+function mod:ExpelLightSuccess(args)
+	expelCount = expelCount + 1
+	local t = (self:Mythic() and (timers[228029][expelCount] or 20)) or phase == 2 and 18 or expelCount % 2 == 0 and 32 or 38
+	self:Bar(228029, t)
+end
+
 do
-	function mod:ExpelLight(args)
+	function mod:ExpelLightApplied(args)
 		self:TargetMessage(args.spellId, args.destName, "Important", "Alarm")
 		self:PrimaryIcon(args.spellId, args.destName)
-		expelCount = expelCount + 1
-		self:Bar(args.spellId, phase == 2 and 18 or expelCount % 2 == 0 and 32 or 38)
 		if self:Me(args.destGUID) then
 			self:Say(args.spellId)
+			self:OpenProximity(args.spellId, 8)
+		else
+			self:OpenProximity(args.spellId, 8, args.destName)
 		end
 	end
 
 	function mod:ExpelLightRemoved(args)
 		self:PrimaryIcon(args.spellId)
+		self:CloseProximity(args.spellId)
 	end
 end
 
@@ -367,9 +418,12 @@ end
 function mod:BrandedFixate(args)
 	if self:Me(args.destGUID) then
 		self:Message(-14495, "Personal", "Warning", L[args.spellId], args.spellId)
+		self:Flash(-14495, args.spellId)
+		self:Say(-14495, L.say[args.spellId]:format(args.spellName))
 		myAddGUID = args.sourceGUID
 	end
 	addFixates[args.spellId] = self:ColorName(args.destName)
+	addGUIDs[args.spellId] = args.sourceGUID
 	updateInfoBox()
 end
 
@@ -387,9 +441,28 @@ function mod:RunicShield(args)
 	end
 end
 
-function mod:RunebearerDeath()
-	runesUp = runesUp - 1
-	self:Message(227503, "Positive", nil, CL.add_remaining:format(runesUp))
+do
+	local texTable = {
+		[227490] = "|T1323037:15:15:0:0:64:64:4:60:4:60|t", -- Boss_OdunRunes_Purple
+		[227491] = "|T1323039:15:15:0:0:64:64:4:60:4:60|t", -- Boss_OdunRunes_Orange
+		[227498] = "|T1323038:15:15:0:0:64:64:4:60:4:60|t", -- Boss_OdunRunes_Yellow
+		[227499] = "|T1323035:15:15:0:0:64:64:4:60:4:60|t", -- Boss_OdunRunes_Blue
+		[227500] = "|T1323036:15:15:0:0:64:64:4:60:4:60|t", -- Boss_OdunRunes_Green
+	}
+
+	function mod:RunebearerDeath(args)
+		local addsUp = ""
+		for spellId,tex in pairs(texTable) do
+			if addGUIDs[spellId] == args.destGUID then
+				addGUIDs[spellId] = nil
+			end
+			if addGUIDs[spellId] then
+				addsUp = addsUp .. tex
+			end
+		end
+		runesUp = runesUp - 1
+		self:ScheduleTimer("Message", 0.3, 227503, "Positive", nil, CL.add_remaining:format(runesUp) .. addsUp)
+	end
 end
 
 do
@@ -403,6 +476,7 @@ do
 	function mod:Branded(args)
 		if self:Me(args.destGUID) then
 			self:Message(-14495, "Personal", "Warning", L[lookupTable[args.spellId]], lookupTable[args.spellId])
+			self:Flash(-14495, args.spellId)
 		end
 	end
 end
@@ -449,6 +523,7 @@ do
 			self:Pulse(false, "Interface\\TargetingFrame\\UI-RaidTargetingIcon_" .. symbols[args.spellId])
 			self:PlaySound(false, "Warning")
 			self:Emphasized(false, directions[args.spellId])
+			self:TargetBar(197961, 10, args.destName, nil, args.spellId)
 		else
 			brands[args.destName] = args.spellId
 		end
@@ -472,12 +547,12 @@ do
 				otherBrands[#otherBrands + 1] = name
 			end
 		end
-		self:OpenProximity(-14495, 5, otherBrands)
+		self:OpenProximity(197961, 5, otherBrands)
 	end
 
 	function mod:RunicBrandRemoved(args)
 		if self:Me(args.destGUID) then
-			self:CloseProximity(-14495)
+			self:CloseProximity(197961)
 		end
 		if marked[args.destGUID] then
 			local symbol = marked[args.destGUID]
@@ -487,6 +562,11 @@ do
 			marked[symbol] = nil
 		end
 	end
+
+	function mod:RadiantSmite(args)
+		self:Message(args.spellId, "Important", "Long")
+		self:Bar(197961, 28)
+	end
 end
 
 do
@@ -495,7 +575,7 @@ do
 		local t = GetTime()
 		if self:Me(args.destGUID) and t-prev > 2 then
 			prev = t
-			self:Message(args.spellId, "Personal", "Alarm", CL.underyou:format(args.spellName))
+			self:Message(227475, "Personal", "Alarm", CL.underyou:format(args.spellName))
 		end
 	end
 end

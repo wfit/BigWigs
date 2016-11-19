@@ -84,10 +84,8 @@ end
 function mod:OnEngage()
 	breathCounter = 0
 	fangCounter = 0
-	if self:Mythic() then
-		self:Berserk(240)
-	elseif not self:LFR() then -- Probably longer on LFR
-		self:Berserk(300)
+	if not self:LFR() then -- Probably longer on LFR
+		self:Berserk(self:Mythic() and 240 or 300)
 	end
 	self:Bar(227514, 5) -- Flashing Fangs
 	self:Bar(228187, 14.5) -- Guardian's Breath
@@ -251,7 +249,7 @@ do
 		local t = GetTime()
 		if t - prev > 15 then
 			prev = t
-			self:Message("foams_pulse", "Important", "Long", "Volatile Foam", 228744)	
+			self:Message("foams_pulse", "Important", "Long", "Volatile Foam", 228744)
 		end
 	end
 end
