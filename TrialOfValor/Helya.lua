@@ -208,8 +208,6 @@ function mod:OnEngage()
 	strikeCount = 1
 	breathCount = 1
 	orbCount = 1
-	lastOrbTime = 0
-	wipe(lastOrbTargets)
 	if self:Mythic() then
 		self:Berserk(660)
 	end
@@ -332,14 +330,11 @@ do
 	end
 
 	function mod:OrbApplied(args)
+		list[#list+1] = args.destName
 		if not scheduled then
+			scheduled = self:ScheduleTimer(warn, 0.1, self, args.spellId)
 			lastOrbTime = GetTime()
 			wipe(lastOrbTargets)
-		end
-
-		list[#list+1] = args.destName
-		if #list == 1 then
-			scheduled = self:ScheduleTimer(warn, 0.1, self, args.spellId)
 		end
 
 		lastOrbTargets[args.destUnit] = true
@@ -656,54 +651,47 @@ do
 	local announce = mod:CreateToken("axions")
 
 	local classPriority = {
-		[3] = 5, -- Hunter
-		[8] = 4, -- Mage
-		[4] = 5, -- Rogue
-		[1] = 4, -- Warrior
+		["melee"] = {
+			[1] = 5, -- Warrior
+			[4] = 4, -- Rogue
+			[11] = 3, -- Druid
+			[2] = 2, -- Paladin
+		},
+		["ranged"] = {
+			[8] = 5, -- Mage
+			[3] = 4, -- Hunter
+		}
 	}
 
 	-- Sort the list of soakers based on suitableness
-	local function sortSoakers(nextOrbType, healerAvailable)
+	local function sortSoakers(nextOrbType)
 		local delta = GetTime() - lastOrbTime
-		local function unitIsTarget(unit)
-			if unitRole[unit] == "healer" then
-				return not lastOrbTargets[unit]
-			else
-				return lastOrbTargets[unit] and delta < 12
-			end
-		end
-		local function compare(a, b)
-			local aTarget = unitIsTarget(a)
-			local bTarget = unitIsTarget(b)
+		return function(a, b)
+			local aTarget = lastOrbTargets[a] and delta < 12
+			local bTarget = lastOrbTargets[b] and delta < 12
 			if aTarget ~= bTarget then
-				return aTarget and 1 or -1
+				-- Non-targeted units before targeted ones
+				return not aTarget
 			else
-				local aRole, bRole = unitRole[a], unitRole[b]
+				local aRole = unitRole[a]
+				local bRole = unitRole[b]
 				if aRole ~= bRole then
-					if aRole == "healer" then
-						return -1
-					elseif bRole == "healer" then
-						return 1
-					else
-						-- If no healer involved, potential targets of the next orb are after anybody else
-						return (aRole == nextOrbType) and 1 or -1
-					end
+					-- Units of a different type than the next orb before units of the same type
+					return aRole ~= nextOrbType
 				else
 					local aPriority = unitClassPriority[a]
 					local bPriority = unitClassPriority[b]
 					if aPriority ~= bPriority then
-						return aPriority > bPriority and -1 or 0
+						-- Units of the higher priority
+						return aPriority > bPriority
 					else
-						return (unitIndex[a] > unitIndex[b]) and -1 or 1
+						-- Last units in the group
+						return unitIndex[a] > unitIndex[b]
 					end
 				end
 			end
 		end
-		return function(a, b) return compare(a, b) < 0 end
 	end
-
-	-- Healer availability for each breath
-	local healerAvailablility = {}
 
 	-- Default attribution handler
 	local function defaultHandler(breathId)
@@ -713,21 +701,19 @@ do
 		wipe(unitClassPriority)
 
 		local nextOrbType = (orbCount % 2 == 0) and "melee" or "ranged"
-		local healerAvailable = healerAvailablility[breathId]
-		if healerAvailable == nil then healerAvailable = true end
 
 		for i = 1, 20 do
 			local unit = "raid" .. i
-			if not UnitIsDeadOrGhost(unit) and mod:Role(unit) ~= "tank" then
+			if not UnitIsDeadOrGhost(unit) and mod:Damager(unit) then
 				soakers[#soakers + 1] = unit
 				unitIndex[unit] = #soakers
 				local role = mod:Role(unit)
 				unitRole[unit] = role
-				unitClassPriority[unit] = classPriority[select(3, UnitClass(unit))] or 1
+				unitClassPriority[unit] = classPriority[role][select(3, UnitClass(unit))] or 1
 			end
 		end
 
-		table.sort(soakers, sortSoakers(nextOrbType, healerAvailable))
+		table.sort(soakers, sortSoakers(nextOrbType))
 		return soakers
 	end
 
@@ -737,7 +723,7 @@ do
 
 	function mod:CallAxionsSoakers(breathId)
 		local soakers = (handlers[breathId] or defaultHandler)(breathId)
-		local msg = "Axions soaked by:" .. (soakerName:format("tank", 1))
+		local msg = "Axions soakers:" .. (soakerName:format("tank", 1))
 		local soakersList = {}
 		for i = 5, 2, -1 do
 			local soaker = soakers[i - 1]
@@ -756,7 +742,6 @@ do
 			end
 		end
 		self:Emit("HELYA_AXION_SOAKERS", soakersList)
-		print(msg)
 		if announce:IsMine() then
 			SendChatMessage(msg, "RAID")
 		end
