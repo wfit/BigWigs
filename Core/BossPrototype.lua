@@ -1313,7 +1313,7 @@ end
 
 function boss:OpenInfo(key, title)
 	if checkFlag(self, key, C.INFOBOX) then
-		self:SendMessage("BigWigs_ShowInfoBox", self, title or spells[title])
+		self:SendMessage("BigWigs_ShowInfoBox", self, title or spells[key])
 	end
 end
 

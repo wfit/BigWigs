@@ -124,7 +124,7 @@ function mod:GetOptions()
 		{230267, "SAY", "FLASH"}, -- Orb of Corrosion
 		228565, -- Corrupted Breath
 		{232488, "TANK"}, -- Dark Hatred
-		232450, -- Corrupted Axion
+		{232450, "INFOBOX"}, -- Corrupted Axion
 		axion_soak,
 		"berserk"
 	},{
@@ -738,9 +738,14 @@ do
 		local soakers = (handlers[breathId] or defaultHandler)(breathId)
 		local msg = "Axions soakers:" .. (soakerName:format("tank", 1))
 		local soakersList = {}
+		self:OpenInfo(232450)
+		self:ScheduleTimer("CloseInfo", 10, 232450)
+		self:SetInfo(232450, 1, "1")
+		self:SetInfo(232450, 2, "tank")
 		for i = 5, 2, -1 do
 			local soaker = soakers[i - 1]
 			local position = 7 - i
+			self:SetInfo(232450, (position - 1) * 2 - 1, position)
 			if soaker then
 				msg = msg .. (soakerName:format(UnitName(soaker), position))
 				soakersList[UnitName(soaker)] = position
@@ -750,8 +755,10 @@ do
 					self:Emphasized(false, "Soak: " .. position)
 					self:Emit("HELYA_AXION_SOAK", position)
 				end
+				self:SetInfo(232450, (position - 1) * 2, UnitName(soaker))
 			else
 				msg = msg .. (soakerName:format("?", position))
+				self:SetInfo(232450, (position - 1) * 2, "?")
 			end
 		end
 		self:Emit("HELYA_AXION_SOAKERS", soakersList)
