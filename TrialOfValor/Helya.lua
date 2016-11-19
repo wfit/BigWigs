@@ -738,6 +738,7 @@ do
 		local soakers = (handlers[breathId] or defaultHandler)(breathId)
 		local msg = "Axions soakers:" .. (soakerName:format("tank", 1))
 		local soakersList = {}
+		local soaking = false
 		self:OpenInfo(232450)
 		self:ScheduleTimer("CloseInfo", 10, 232450)
 		self:SetInfo(232450, 1, "1")
@@ -750,6 +751,7 @@ do
 				msg = msg .. (soakerName:format(UnitName(soaker), position))
 				soakersList[UnitName(soaker)] = position
 				if UnitIsUnit("player", soaker) and self:GetOption(axion_soak) then
+					soaking = true
 					self:Pulse(false, 232450)
 					self:PlaySound(false, "Warning")
 					self:Emphasized(false, "Soak: " .. position)
@@ -762,7 +764,7 @@ do
 			end
 		end
 		self:Emit("HELYA_AXION_SOAKERS", soakersList)
-		if announce:IsMine() then
+		if announce:IsMine() or soaking then
 			SendChatMessage(msg, "RAID")
 		end
 	end
