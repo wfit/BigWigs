@@ -365,6 +365,10 @@ end
 
 function mod:OrbOfCorruption(args)
 	orbCount = orbCount + 1
+	if phase > 1 then 
+		self:Message(229119, "Important", "Alarm", "1st Orb in P3 will be Melee !")
+		return
+	end
 	local type = orbCount % 2 == 0 and L.melee or L.ranged
 	self:Bar(229119, self:Mythic() and 24.2 or 28, L.orb:format(args.spellName, type)) -- Orb of Corruption
 end
