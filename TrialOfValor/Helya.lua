@@ -742,7 +742,7 @@ do
 		end
 	end
 
-	function mod:AxionSoakers(data)
+	function mod:AxionSoakers(soakers)
 		local msg = "Axions soakers:" .. (soakerName:format("tank", 1))
 		local soakersList = {}
 		local soaking = false
