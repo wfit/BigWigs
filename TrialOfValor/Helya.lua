@@ -690,12 +690,17 @@ do
 
 	-- Sort the list of soakers based on suitableness
 	local function sortSoakers(nextOrbType)
+		local rolePriority = {
+			["healer"] = 2,
+			["melee"] = (nextOrbType == "melee" and 1 or 3),
+			["ranged"] = (nextOrbType == "ranged" and 1 or 3),
+		}
 		return function(a, b)
 			local aRole = unitRole[a]
 			local bRole = unitRole[b]
 			if aRole ~= bRole then
 				-- Units of a different type than the next orb before units of the same type
-				return aRole ~= nextOrbType
+				return rolePriority[aRole] > rolePriority[bRole]
 			else
 				local aPriority = unitClassPriority[a]
 				local bPriority = unitClassPriority[b]
@@ -724,7 +729,7 @@ do
 			local unit = "raid" .. i
 			if UnitExists(unit)
 					and not UnitIsDeadOrGhost(unit)
-					and mod:Damager(unit)
+					and (not mod:Tank(unit))
 					and (not lastOrbTargets[unit] or delta > 12) then
 				soakers[#soakers + 1] = unit
 				unitIndex[unit] = #soakers
