@@ -340,6 +340,17 @@ do
 			wipe(lastOrbTargets)
 		end
 
+		-- Fix bad orb type
+		local orbType = (orbCount - 1) % 2 == 0 and "melee" or "ranged"
+		local role = self:Role(args.destUnit)
+		if role ~= "healer" and role ~= "tank" and role ~= orbType then
+			local bar = L.orb:format(args.spellName, orbCount % 2 == 0 and L.melee or L.ranged)
+			local time = self:BarTimeLeft(bar)
+			self:StopBar(bar)
+			orbCount = orbCount - 1
+			self:Bar(args.spellId, time, L.orb:format(args.spellName, orbCount % 2 == 0 and L.melee or L.ranged))
+		end
+
 		lastOrbTargets[args.destUnit] = true
 
 		if self:GetOption(orbMarker) then
