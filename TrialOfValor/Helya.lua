@@ -194,6 +194,7 @@ function mod:OnBossEnable()
 	self:Log("SPELL_AURA_APPLIED", "DarkHatred", 232488)
 	self:Log("SPELL_AURA_APPLIED", "CorruptedAxion", 232450)
 	self:Log("SPELL_CAST_START", "FotMClean", 228032)
+	self:RegisterNetMessage("AxionSoakers")
 end
 
 function mod:OnEngage()
@@ -365,7 +366,7 @@ end
 
 function mod:OrbOfCorruption(args)
 	orbCount = orbCount + 1
-	if phase > 1 then 
+	if phase > 1 then
 		self:Message(229119, "Important", "Alarm", "1st Orb in P3 will be Melee !")
 		return
 	end
@@ -735,7 +736,13 @@ do
 	local soakerName = " %s(%s)"
 
 	function mod:CallAxionsSoakers(breathId)
-		local soakers = (handlers[breathId] or defaultHandler)(breathId)
+		if announce:IsMine() then
+			local soakers = (handlers[breathId] or defaultHandler)(breathId)
+			mod:Send("AxionSoakers", soakers, "RAID")
+		end
+	end
+
+	function mod:AxionSoakers(data)
 		local msg = "Axions soakers:" .. (soakerName:format("tank", 1))
 		local soakersList = {}
 		local soaking = false

@@ -390,7 +390,7 @@ function mod:IchorDeath(args)
 	end
 end
 
-function mod:IchorMarked(data)
+function mod:IchorMarkedIchorMarked(data)
 	if self:Me(data.player) and self:GetOption(ichors_flash) then
 		self:Pulse(false, "Interface\\TargetingFrame\\UI-RaidTargetingIcon_" .. data.mark)
 	end
