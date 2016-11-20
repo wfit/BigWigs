@@ -44,7 +44,8 @@ local orbCount = 1
 local lastOrbTime = 0
 local lastOrbTargets = {}
 local mistCount = 3
-local orbTimer = { 7, 13, 13, 27.3, 10.7, 13.0, 25.9 }
+local orbTimer = { 7, 13, 13, 27.3, 10.7, 13, 25, 13, 13, 25, 13 }
+-- ["228056-Orb of Corrosion"] = "pull:429.8, 13.0, 13.0, 27.4, 10.6, 13.0, 25.0, 13.0, 13.0, 25.0, 13.0",
 
 --------------------------------------------------------------------------------
 -- Localization
