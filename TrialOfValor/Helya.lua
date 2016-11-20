@@ -779,7 +779,7 @@ do
 				self:SetInfo(232450, (position - 1) * 2, UnitName(soaker))
 				if announce_icon:IsMine() then
 					SetRaidTarget(soaker, position + 2)
-					self:ScheduleTime(function()
+					self:ScheduleTimer(function()
 						SetRaidTarget(soaker, 0)
 					end, 10)
 				end
