@@ -676,6 +676,10 @@ do
 	-- Token for mutex of raid announce
 	local announce = mod:CreateToken("axions")
 
+	local healerAvailability = {
+		[1] = true
+	}
+
 	local classPriority = {
 		["melee"] = {
 			[1] = 5, -- Warrior
@@ -723,15 +727,26 @@ do
 		wipe(unitRole)
 		wipe(unitClassPriority)
 
+		local healerAvailable = healerAvailability[breathId]
 		local delta = GetTime() - lastOrbTime
 		local nextOrbType = (orbCount % 2 == 0) and "melee" or "ranged"
 
+		local function unitSuitable(unit)
+			if not UnitExists(unit) or UnitIsDeadOrGhost(unit) then
+				return false
+			elseif mod:Damager(unit) then
+				return not lastOrbTargets[unit] or delta > 12
+			elseif mod:Healer(unit) then
+				--return lastOrbTargets[unit] and healerAvailable
+				return false
+			else
+				return false
+			end
+		end
+
 		for i = 1, 20 do
 			local unit = "raid" .. i
-			if UnitExists(unit)
-					and not UnitIsDeadOrGhost(unit)
-					and (not mod:Tank(unit))
-					and (not lastOrbTargets[unit] or delta > 12) then
+			if unitSuitable(unit) then
 				soakers[#soakers + 1] = unit
 				unitIndex[unit] = #soakers
 				local role = mod:Role(unit)
