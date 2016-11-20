@@ -255,7 +255,6 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 		end
 		self:Bar(228300, self:Mythic() and 10.5 or 50) -- Fury of the Maw
 		mistCount = 3
-		orbCount = 1
 		self:RegisterUnitEvent("UNIT_HEALTH_FREQUENT", nil, "boss1")
 	elseif spellId == 228546 then -- Helya
 		self:UnregisterUnitEvent("UNIT_HEALTH_FREQUENT", "boss1")
@@ -266,6 +265,7 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 		self:StopBar(CL.adds)
 		self:StopBar(L.mist:format(1))
 		breathCount = 1
+		orbCount = 1
 		self:Bar(230267, self:Mythic() and orbTimer[orbCount] and orbTimer[orbCount] or 15.5, L.orb:format(self:SpellName(230267), orbCount % 2 == 0 and L.melee or L.ranged)) -- Orb of Corrosion
 		self:Bar(228565, self:Mythic() and 10 or 19.5, CL.count:format(self:SpellName(228565), breathCount)) -- Corrupted Breath
 		self:Bar(228054, self:Mythic() and 1 or 24.5) -- Taint of the Sea
@@ -341,17 +341,6 @@ do
 			wipe(lastOrbTargets)
 		end
 
-		-- Fix bad orb type
-		local orbType = (orbCount - 1) % 2 == 0 and "melee" or "ranged"
-		local role = self:Role(args.destUnit)
-		if role ~= "healer" and role ~= "tank" and role ~= orbType then
-			local bar = L.orb:format(args.spellName, orbCount % 2 == 0 and L.melee or L.ranged)
-			local time = self:BarTimeLeft(bar)
-			self:StopBar(bar)
-			orbCount = orbCount - 1
-			self:Bar(args.spellId, time, L.orb:format(args.spellName, orbCount % 2 == 0 and L.melee or L.ranged))
-		end
-
 		lastOrbTargets[args.destUnit] = true
 
 		if self:GetOption(orbMarker) then
@@ -378,10 +367,6 @@ end
 
 function mod:OrbOfCorruption(args)
 	orbCount = orbCount + 1
-	if phase > 1 then
-		self:Message(229119, "Important", "Alarm", "1st Orb in P3 will be Melee !")
-		return
-	end
 	local type = orbCount % 2 == 0 and L.melee or L.ranged
 	self:Bar(229119, self:Mythic() and 24.2 or 28, L.orb:format(args.spellName, type)) -- Orb of Corruption
 end
