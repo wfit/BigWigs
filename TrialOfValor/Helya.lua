@@ -81,9 +81,8 @@ end
 local orbMarker = mod:AddMarkerOption(false, "player", 1, 229119, 1, 2, 3) -- Orb of Corruption
 local taintMarker = mod:AddMarkerOption(false, "player", 4, 228054, 4, 5, 6) -- Taint of the Sea
 
-local rot_fails = mod:AddTokenOption { "rot_fails", "Announce Fetid Rot fails.", promote = false }
-
-local axion_soak = mod:AddCustomOption { "axion_soak", "Announce Corrupted Axions soakers during Phase 3." }
+local rot_fails = mod:AddTokenOption { "rot_fails", "Announce Fetid Rot fails", promote = false }
+local axion_soak = mod:AddCustomOption { "axion_soak", "Announce Corrupted Axions soakers" }
 
 function mod:GetOptions()
 	return {
@@ -660,6 +659,7 @@ do
 
 	-- Token for mutex of raid announce
 	local announce = mod:CreateToken("axions")
+	local announce_icon = mod:CreateToken("axions_icon", true)
 
 	local healerAvailability = {
 		[1] = true
@@ -776,6 +776,12 @@ do
 					self:Emit("HELYA_AXION_SOAK", position)
 				end
 				self:SetInfo(232450, (position - 1) * 2, UnitName(soaker))
+				if announce_icon:IsMine() then
+					SetRaidTarget(soaker, position + 2)
+					self:ScheduleTime(function()
+						SetRaidTarget(soaker, 0)
+					end, 10)
+				end
 			else
 				msg = msg .. (soakerName:format("?", position))
 				self:SetInfo(232450, (position - 1) * 2, "?")
