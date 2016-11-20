@@ -365,6 +365,7 @@ do
 end
 
 function mod:OrbOfCorruption(args)
+	if phase > 1 then return end
 	orbCount = orbCount + 1
 	local type = orbCount % 2 == 0 and L.melee or L.ranged
 	self:Bar(229119, self:Mythic() and 24.2 or 28, L.orb:format(args.spellName, type)) -- Orb of Corruption
@@ -432,7 +433,7 @@ do
 		-- Message is in RAID_BOSS_EMOTE
 		self:Bar(args.spellId, 6, CL.count:format(args.spellName, getMobNumber(114881, args.sourceGUID)))
 		local t = GetTime()
-		if t-prev > 10 then
+		if t-prev > 10 and phase == 1 then
 			prev = t
 			strikeCount = strikeCount + 1
 			self:Bar(args.spellId, self:Mythic() and 35 or 42, L.tentacle:format(strikeCount, strikeWave[strikeCount] or "DUNNO"))
