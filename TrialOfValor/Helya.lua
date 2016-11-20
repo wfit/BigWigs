@@ -44,8 +44,8 @@ local orbCount = 1
 local lastOrbTime = 0
 local lastOrbTargets = {}
 local mistCount = 3
-local orbTimer = { 7, 13, 13, 27.3, 10.7, 13, 25, 13, 13, 25, 13 }
--- ["228056-Orb of Corrosion"] = "pull:429.8, 13.0, 13.0, 27.4, 10.6, 13.0, 25.0, 13.0, 13.0, 25.0, 13.0",
+local orbTimer = { 7, 13, 13, 27.3, 10.7, 13, 25, 13, 13, 25, 13, 17.6, 20.4, 13 }
+-- ["228056-Orb of Corrosion"] = "pull:426.6, 13.0, 13.0, 27.1, 10.9, 13.0, 25.0, 13.0, 13.0, 25.0, 13.0, 17.6, 20.4, 13.0",
 
 --------------------------------------------------------------------------------
 -- Localization
@@ -645,7 +645,7 @@ function mod:CorruptedBreath(args)
 		self:ScheduleTimer("CallAxionsSoakers", 3, breathCount)
 	end
 	breathCount = breathCount + 1
-	self:Bar(args.spellId, self:Mythic() and 43.2 or 47.4, CL.count:format(args.spellName, breathCount))
+	self:Bar(args.spellId, self:Mythic() and 43 or 47.4, CL.count:format(args.spellName, breathCount))
 	self:Bar(232450, 9.5) -- Corrupted Axion
 end
 
