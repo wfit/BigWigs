@@ -429,13 +429,24 @@ function mod:BilewaterRedox(args)
 end
 
 do
-	local list = mod:NewTargetList()
+	local scheduled = false
+	local isOnMe = false
+
+	local function warn(self, spellId, spellName)
+		self:Message(spellId, "Attention", (self:Dispeller("magic") or isOnMe) and "Alert", CL.count:format(spellName, taintCount))
+		scheduled = false
+	end
+
 	function mod:TaintOfTheSea(args)
-		list[#list+1] = args.destName
-		if #list == 1 then
-			self:ScheduleTimer("TargetMessage", 0.1, args.spellId, list, "Attention", "Alert", CL.count:format(args.spellName, taintCount), nil, self:Dispeller("magic"))
+		if not scheduled then
+			self:ScheduleTimer(warn, 0.1, self, args.spellId, args.spellName, taintCount)
 			taintCount = taintCount + 1
 			self:CDBar(args.spellId, phase == 1 and 12.1 or (self:Mythic() and 20 or 28), CL.count:format(args.spellName, taintCount))
+			scheduled = true
+		end
+
+		if self:Me(args.destGUID) then
+			isOnMe = true
 		end
 
 		if self:GetOption(taintMarker) then
