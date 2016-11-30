@@ -220,18 +220,12 @@ function mod:HeadlongCharge(args)
 	if self:Mythic() then
 		self:Bar(-14535, 29.1, CL.count:format(self:SpellName(-14535), foamCount), 228810) -- Volatile Foam
 	end
-	self:Bar(228187, 30, CL.count:format(self:SpellName(228187), breathCounter+1)) -- Correct Guardian's Breath timer
 end
 
 function mod:RoaringLeap(args)
 	leapCounter = leapCounter + 1
 	self:Message(args.spellId, "Urgent", "Info")
-	if leapCounter % 2 == 0 then
-		self:CDBar(227514, 11.2) -- Adjust Flashing Fangs timer
-		self:Bar(args.spellId, 53.5)
-	else
-		self:Bar(args.spellId, 21.8)
-	end
+	self:Bar(args.spellId, (leapCounter % 2 == 0 and 53.5) or 21.8)
 end
 
 function mod:BreathDamage(args)
