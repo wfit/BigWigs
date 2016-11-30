@@ -20,7 +20,6 @@ mod.instanceId = 1648
 local breathCounter = 0
 local fangCounter = 0
 local leapCounter = 0
-local foamCount = 1
 local phaseStartTime = 0
 local lickCount = 1
 local lickTimer = {14.1, 22.7, 26.3, 33.7, 43.3, 95.8, 99.4, 106.8, 116.5, 171.9, 175.4, 182.6, 192.6}
@@ -67,7 +66,6 @@ function mod:GetOptions()
 
 		--[[ Mythic ]]--
 		"lick", -- Lick
-		-14535, -- Volatile Foam
 		foams_pulse,
 	},{
 		["berserk"] = "general",
@@ -91,7 +89,6 @@ function mod:OnBossEnable()
 	self:Log("SPELL_DAMAGE", "BreathDamage", 232777, 232798, 232800)
 	self:Log("SPELL_MISSED", "BreathDamage", 232777, 232798, 232800)
 
-	self:Log("SPELL_CAST_SUCCESS", "VolatileFoam", 228824)
 	self:Log("SPELL_AURA_APPLIED", "VolatileFoamApplied", 228744, 228810, 228818, 228794, 228811, 228819) -- Flaming, Briney, Shadowy + echoes
 
 	self:RegisterUnitEvent("UNIT_SPELLCAST_SUCCEEDED", nil, "boss1")
@@ -101,17 +98,12 @@ function mod:OnEngage()
 	breathCounter = 0
 	fangCounter = 0
 	leapCounter = 0
-	foamCount = 1
 	phaseStartTime = GetTime()
 	self:Berserk(self:Mythic() and 244 or self:LFR() and 420 or 300)
 	self:Bar(227514, 6) -- Flashing Fangs
 	self:Bar(228187, 14.5) -- Guardian's Breath
 	self:Bar(227883, 48.5) -- Roaring Leap
 	self:Bar(227816, 57) -- Headlong Charge
-	if self:Mythic() then
-		self:Bar(-14535, 10.9, CL.count:format(self:SpellName(-14535), foamCount), 228810)
-		self:StartLickTimer(1)
-	end
 	self:SmartProximity()
 end
 
@@ -157,9 +149,6 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(_, spellName, _, _, spellId)
 		self:ScheduleTimer("CheckBreathSoakers", 6)
 		wipe(breathSoaked)
 	elseif spellId == 228201 then -- Off the leash 30sec
-		if self:Mythic() then
-			self:Bar(-14535, 29.1, CL.count:format(self:SpellName(-14535), foamCount), 228810) -- Volatile Foam
-		end
 		self:Bar(227514, 34) -- Flashing Fangs
 		self:Bar(228187, 41.3) -- Guardian's Breath
 		self:CloseProximity()
@@ -278,13 +267,6 @@ do
 			self:Message("foams_pulse", "Important", "Long", "Volatile Foam", 228744)
 		end
 	end
-end
-
-
-function mod:VolatileFoam(args)
-	foamCount = foamCount + 1
-	local t = foamCount == 2 and 19.4 or foamCount % 3 == 1 and 17 or foamCount % 3 == 2 and 15 or 42
-	self:Bar(-14535, t, CL.count:format(self:SpellName(-14535), foamCount), 228810)
 end
 
 function mod:StartLickTimer(count)
