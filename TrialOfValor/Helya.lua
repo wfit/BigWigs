@@ -288,7 +288,7 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 		self:StopBar(CL.cast:format(self:SpellName(228300))) -- Cast: Fury of the Maw
 		self:StopBar(CL.adds)
 		self:StopBar(L.mist:format(1))
-		self:Bar("orb_ranged", self:Mythic() and 6 or 15.5, CL.count:format(L.orb_ranged_bar, orbCount), 230267) -- Orb of Corrosion
+		self:Bar("orb_ranged", self:Mythic() and orbTimer[orbCount] or 15.5, CL.count:format(L.orb_ranged_bar, orbCount), 230267) -- Orb of Corrosion
 		self:Bar(228565, self:Mythic() and 10 or 19.5, CL.count:format(self:SpellName(228565), breathCount)) -- Corrupted Breath
 		if not self:Mythic() then -- Taint comes instant in mythic, no need for timer.
 			self:Bar(228054, 24.5) -- Taint of the Sea
