@@ -157,6 +157,9 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(_, spellName, _, _, spellId)
 		self:ScheduleTimer("CheckBreathSoakers", 6)
 		wipe(breathSoaked)
 	elseif spellId == 228201 then -- Off the leash 30sec
+		if self:Mythic() then
+			self:Bar(-14535, 29.1, CL.count:format(self:SpellName(-14535), foamCount), 228810) -- Volatile Foam
+		end
 		self:Bar(227514, 34) -- Flashing Fangs
 		self:Bar(228187, 41.3) -- Guardian's Breath
 		self:CloseProximity()
@@ -217,9 +220,6 @@ function mod:HeadlongCharge(args)
 	self:Message(args.spellId, "Important", "Long")
 	self:Bar(args.spellId, 75.2)
 	self:Bar(args.spellId, 7, CL.cast:format(args.spellName))
-	if self:Mythic() then
-		self:Bar(-14535, 29.1, CL.count:format(self:SpellName(-14535), foamCount), 228810) -- Volatile Foam
-	end
 end
 
 function mod:RoaringLeap(args)
