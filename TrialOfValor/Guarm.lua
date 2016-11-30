@@ -20,10 +20,10 @@ mod.instanceId = 1648
 local breathCounter = 0
 local fangCounter = 0
 local leapCounter = 0
+local foamCount = 1
 local phaseStartTime = 0
 local lickCount = 1
 local lickTimer = {14.1, 22.7, 26.3, 33.7, 43.3, 95.8, 99.4, 106.8, 116.5, 171.9, 175.4, 182.6, 192.6}
-
 local breathSoaked = {}
 
 --------------------------------------------------------------------------------
@@ -42,13 +42,9 @@ end
 -- Initialization
 --
 
-local foams_pulse = mod:AddCustomOption {
-	key = "foams",
-	title = "Pulse Volatile Foams",
-	desc = "Display a Pulse warning when affected by one kind of Volatile Foam"
-}
-
+local foams_emph = mod:AddCustomOption { "foams", "Display Emphasized soaking indications" }
 local soak_fails = mod:AddTokenOption { "fails", "Announce Guardian's Breath soaking fails.", promote = false }
+local marks = mod:AddTokenOption { "marks", "Automatically set raid target icons", promote = true }
 
 function mod:GetOptions()
 	return {
@@ -63,10 +59,12 @@ function mod:GetOptions()
 		227816, -- Headlong Charge
 		227883, -- Roaring Leap
 		soak_fails,
+		marks,
 
 		--[[ Mythic ]]--
 		"lick", -- Lick
-		foams_pulse,
+		{-14535, "FLASH", "PULSE"}, -- Volatile Foam
+		foams_emph,
 	},{
 		["berserk"] = "general",
 		["lick"] = "mythic",
@@ -89,6 +87,7 @@ function mod:OnBossEnable()
 	self:Log("SPELL_DAMAGE", "BreathDamage", 232777, 232798, 232800)
 	self:Log("SPELL_MISSED", "BreathDamage", 232777, 232798, 232800)
 
+	self:Log("SPELL_CAST_SUCCESS", "VolatileFoam", 228824)
 	self:Log("SPELL_AURA_APPLIED", "VolatileFoamApplied", 228744, 228810, 228818, 228794, 228811, 228819) -- Flaming, Briney, Shadowy + echoes
 
 	self:RegisterUnitEvent("UNIT_SPELLCAST_SUCCEEDED", nil, "boss1")
@@ -98,13 +97,47 @@ function mod:OnEngage()
 	breathCounter = 0
 	fangCounter = 0
 	leapCounter = 0
+	foamCount = 1
 	phaseStartTime = GetTime()
 	self:Berserk(self:Mythic() and 244 or self:LFR() and 420 or 300)
 	self:Bar(227514, 6) -- Flashing Fangs
 	self:Bar(228187, 14.5) -- Guardian's Breath
 	self:Bar(227883, 48.5) -- Roaring Leap
 	self:Bar(227816, 57) -- Headlong Charge
+	if self:Mythic() then
+		self:Bar(-14535, 10.9, CL.count:format(self:SpellName(-14535), foamCount), 228810)
+		self:StartLickTimer(1)
+	end
 	self:SmartProximity()
+
+	if self:GetOption(marks) then
+		local tank = false
+		local marks = { 1, 2, 4, 3 }
+		local i = 1
+		for unit in self:IterateGroup() do
+			if self:Tank(unit) and not tank then
+				-- Skull then Moon
+				SetRaidTarget(unit, tank and 5 or 8)
+				tank = true
+			elseif self:Healer(unit) then
+				-- Star, Circle, Triangle, Diamond
+				SetRaidTarget(unit, marks[i] or 3)
+				i = i + 1
+			elseif GetRaidTargetIndex(unit) then
+				SetRaidTarget(unit, 0)
+			end
+		end
+	end
+end
+
+function mod:OnBossDisable()
+	if self:GetOption(marks) then
+		for unit in self:IterateGroup() do
+			if GetRaidTargetIndex(unit) then
+				SetRaidTarget(unit, 0)
+			end
+		end
+	end
 end
 
 function mod:SmartProximity()
@@ -209,6 +242,10 @@ function mod:HeadlongCharge(args)
 	self:Message(args.spellId, "Important", "Long")
 	self:Bar(args.spellId, 75.2)
 	self:Bar(args.spellId, 7, CL.cast:format(args.spellName))
+
+	if self:Mythic() then
+		self:Bar(-14535, 29.1, CL.count:format(self:SpellName(-14535), foamCount), 228810) -- Volatile Foam
+	end
 end
 
 function mod:RoaringLeap(args)
@@ -231,12 +268,18 @@ function mod:CheckBreathSoakers()
 	end
 end
 
+function mod:VolatileFoam(args)
+	foamCount = foamCount + 1
+	local t = foamCount == 2 and 19.4 or foamCount % 3 == 1 and 17 or foamCount % 3 == 2 and 15 or 42
+	self:Bar(-14535, t, CL.count:format(self:SpellName(-14535), foamCount), 228810)
+end
+
 do
 	local foamSoakers = {
 		[228744] = "MELEES",
 		[228794] = "MELEES",
-		[228810] = "TANKS",
-		[228811] = "TANKS",
+		[228810] = "HEALERS",
+		[228811] = "HEALERS",
 		[228818] = "RANGED",
 		[228819] = "RANGED",
 	}
@@ -251,20 +294,35 @@ do
 		[228819] = Shadow,
 	}
 
-	local prev = 0
-	function mod:VolatileFoamApplied(args)
-		if self:Me(args.destGUID) and self:GetOption(foams_pulse) then
-			if UnitDebuff("player", self:SpellName(foamColor[args.spellId])) then
-				return
-			end
-			self:Pulse(false, args.spellId)
-			self:PlaySound(false, "Warning")
-			self:Emphasized(false, "Soak on " .. foamSoakers[args.spellId])
+	local colorSay = {
+		[Shadow] = "{rt3}",
+		[Fire] = "{rt7}",
+		[Frost] = "{rt6}",
+	}
+
+	local hasColor = {}
+
+	local function spam(self, spellname, color)
+		if UnitDebuff("player", spellname) then
+			self:Say(false, colorSay[color], true)
+			self:ScheduleTimer(spam, 2, self, spellname, color)
+		else
+			hasColor[color] = nil
 		end
-		local t = GetTime()
-		if t - prev > 15 then
-			prev = t
-			self:Message("foams_pulse", "Important", "Long", "Volatile Foam", 228744)
+	end
+
+	function mod:VolatileFoamApplied(args)
+		local color = foamColor[args.spellId]
+		if self:Me(args.destGUID) and not UnitDebuff("player", self:SpellName(foamColor[args.spellId])) then
+			if not hasColor[color] then
+				self:ScheduleTimer(spam, 0.3, self, args.spellName, color)
+				hasColor[color] = true
+			end
+			self:Message(-14535, "Attention", "Warning", CL.you:format(args.spellName))
+			self:Flash(-14535)
+			if self:GetOption(foams_emph) then
+				self:Emphasized(false, "Soak on " .. foamSoakers[args.spellId])
+			end
 		end
 	end
 end
