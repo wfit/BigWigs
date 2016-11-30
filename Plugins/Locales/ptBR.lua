@@ -248,3 +248,11 @@ L.wrongTime = "Tempo especificado inválido. <time> pode ser tanto um número em
 --
 
 --L.infoBox = "InfoBox"
+
+-----------------------------------------------------------------------
+-- Statistics.lua
+--
+
+--L.printHealthOption = "Boss Health"
+--L.healthPrint = "Health: %s."
+--L.healthFormat = "%s (%.1f%%)"

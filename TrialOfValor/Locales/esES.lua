@@ -9,6 +9,12 @@ if L then
 	--L[227500] = "|cFF008000Top|r (|T1323036:15:15:0:0:64:64:4:60:4:60|t)" -- Boss_OdunRunes_Green
 end
 
+L = BigWigs:NewBossLocale("Guarm-TrialOfValor", "esES")
+if L then
+	--L.lick = "Lick" -- For translators: common name of 228248, 228253, 228228
+	--L.lick_desc = "Show bars for the different licks."
+end
+
 L = BigWigs:NewBossLocale("Helya-TrialOfValor", "esES") or BigWigs:NewBossLocale("Helya-TrialOfValor", "esMX")
 if L then
 	--L.nearTrigger = "near" -- |TInterface\\Icons\\inv_misc_monsterhorn_03.blp:20|t A %s emerges near Helya! -- Translate this comment with the emote
@@ -17,4 +23,12 @@ if L then
 	--L.tentacle_near_desc = "This option can be used to emphasize or hide the messages when a Striking Tentacle spawns near Helya."
 	--L.tentacle_far = "Tentacle FAR from Helya"
 	--L.tentacle_far_desc = "This option can be used to emphasize or hide the messages when a Striking Tentacle spawns far from Helya."
+
+	--L.orb_melee = "Orb: Melee timer"
+	--L.orb_melee_desc = "Show the timer for the Orbs that spawn on Melee."
+	--L.orb_melee_bar = "Melee Orb"
+
+	--L.orb_ranged = "Orb: Ranged timer"
+	--L.orb_ranged_desc = "Show the timer for the Orbs that spawn on Ranged."
+	--L.orb_ranged_bar = "Ranged Orb"
 end

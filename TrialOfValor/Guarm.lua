@@ -1,7 +1,7 @@
 
 --------------------------------------------------------------------------------
 -- TODO List:
--- - Figure out how timers work - Breath and Charge could be on some shared cd?
+-- - Lick timers for lfr, normal, hc
 
 --------------------------------------------------------------------------------
 -- Module Declaration
@@ -20,6 +20,11 @@ mod.instanceId = 1648
 local breathCounter = 0
 local fangCounter = 0
 local leapCounter = 0
+local foamCount = 1
+local phaseStartTime = 0
+local lickCount = 1
+local lickTimer = {14.1, 22.7, 26.3, 33.7, 43.3, 95.8, 99.4, 106.8, 116.5, 171.9, 175.4, 182.6, 192.6}
+
 local breathSoaked = {}
 
 --------------------------------------------------------------------------------
@@ -29,6 +34,9 @@ local breathSoaked = {}
 local L = mod:GetLocale()
 if L then
 	L.soak_fail = "[FAIL] %s failed to soak Guardian's Breath!"
+
+	L.lick = "Lick"
+	L.lick_desc = "Show bars for the different licks." -- For translators: short names of 228248, 228253, 228228
 end
 
 --------------------------------------------------------------------------------
@@ -45,7 +53,9 @@ local soak_fails = mod:AddTokenOption { "fails", "Announce Guardian's Breath soa
 
 function mod:GetOptions()
 	return {
+		--[[ General ]]--
 		"proximity",
+		"berserk",
 		{228248, "SAY", "FLASH"}, -- Frost Lick
 		{228253, "SAY", "FLASH"}, -- Shadow Lick
 		{228228, "SAY", "FLASH"}, -- Flame Lick
@@ -53,9 +63,15 @@ function mod:GetOptions()
 		227514, -- Flashing Fangs
 		227816, -- Headlong Charge
 		227883, -- Roaring Leap
-		foams_pulse,
 		soak_fails,
-		"berserk",
+
+		--[[ Mythic ]]--
+		"lick", -- Lick
+		-14535, -- Volatile Foam
+		foams_pulse,
+	},{
+		["berserk"] = "general",
+		["lick"] = "mythic",
 	}
 end
 
@@ -75,8 +91,8 @@ function mod:OnBossEnable()
 	self:Log("SPELL_DAMAGE", "BreathDamage", 232777, 232798, 232800)
 	self:Log("SPELL_MISSED", "BreathDamage", 232777, 232798, 232800)
 
-	-- Flaming, Briney, Shadowy + echoes
-	self:Log("SPELL_AURA_APPLIED", "VolatileFoamApplied", 228744, 228810, 228818, 228794, 228811, 228819)
+	self:Log("SPELL_CAST_SUCCESS", "VolatileFoam", 228824)
+	self:Log("SPELL_AURA_APPLIED", "VolatileFoamApplied", 228744, 228810, 228818, 228794, 228811, 228819) -- Flaming, Briney, Shadowy + echoes
 
 	self:RegisterUnitEvent("UNIT_SPELLCAST_SUCCEEDED", nil, "boss1")
 end
@@ -84,13 +100,18 @@ end
 function mod:OnEngage()
 	breathCounter = 0
 	fangCounter = 0
-	if not self:LFR() then -- Probably longer on LFR
-		self:Berserk(self:Mythic() and 240 or 300)
-	end
-	self:Bar(227514, 5) -- Flashing Fangs
+	leapCounter = 0
+	foamCount = 1
+	phaseStartTime = GetTime()
+	self:Berserk(self:Mythic() and 244 or self:LFR() and 420 or 300)
+	self:Bar(227514, 6) -- Flashing Fangs
 	self:Bar(228187, 14.5) -- Guardian's Breath
-	self:Bar(227816, 58) -- Headlong Charge
-	self:Bar(227883, 48) -- Roaring Leap
+	self:Bar(227883, 48.5) -- Roaring Leap
+	self:Bar(227816, 57) -- Headlong Charge
+	if self:Mythic() then
+		self:Bar(-14535, 10.9, CL.count:format(self:SpellName(-14535), foamCount), 228810)
+		self:StartLickTimer(1)
+	end
 	self:SmartProximity()
 end
 
@@ -126,7 +147,8 @@ end
 function mod:UNIT_SPELLCAST_SUCCEEDED(_, spellName, _, _, spellId)
 	if spellId == 228187 then -- Guardian's Breath (starts casting)
 		breathCounter = breathCounter + 1
-		self:Bar(spellId, (breathCounter % 2 == 0 and 54) or 20.7)
+		-- Upstream BigWigs says: (breathCounter % 2 == 0 and 51) or 20.7
+		self:Bar(spellId, (breathCounter % 2 == 0 and 54) or 20.7, CL.count:format(spellName, breathCounter+1))
 		self:Message(spellId, "Attention", "Warning")
 		self:Bar(spellId, 5, CL.cast:format(spellName))
 		self:Flash(spellId)
@@ -187,19 +209,29 @@ end
 function mod:FlashingFangs(args)
 	fangCounter = fangCounter + 1
 	self:Message(args.spellId, "Attention", nil, CL.casting:format(args.spellName))
-	self:CDBar(args.spellId, (fangCounter % 2 == 0 and 54) or (fangCounter == 1 and 23.1) or 20.7)
+	-- Upstream BigWigs says: fangCounter == 1 and 23 or fangCounter % 2 == 0 and 52 or 20
+	self:CDBar(args.spellId, fangCounter == 1 and 23.1 or fangCounter % 2 == 0 and 54 or 20.7)
 end
 
 function mod:HeadlongCharge(args)
 	self:Message(args.spellId, "Important", "Long")
 	self:Bar(args.spellId, 75.2)
 	self:Bar(args.spellId, 7, CL.cast:format(args.spellName))
+	if self:Mythic() then
+		self:Bar(-14535, 29.1, CL.count:format(self:SpellName(-14535), foamCount), 228810) -- Volatile Foam
+	end
+	self:Bar(228187, 30, CL.count:format(self:SpellName(228187), breathCounter+1)) -- Correct Guardian's Breath timer
 end
 
 function mod:RoaringLeap(args)
 	leapCounter = leapCounter + 1
 	self:Message(args.spellId, "Urgent", "Info")
-	self:Bar(args.spellId, (leapCounter % 2 == 0 and 53.5) or 21.8)
+	if leapCounter % 2 == 0 then
+		self:CDBar(227514, 11.2) -- Adjust Flashing Fangs timer
+		self:Bar(args.spellId, 53.5)
+	else
+		self:Bar(args.spellId, 21.8)
+	end
 end
 
 function mod:BreathDamage(args)
@@ -252,4 +284,26 @@ do
 			self:Message("foams_pulse", "Important", "Long", "Volatile Foam", 228744)
 		end
 	end
+end
+
+
+function mod:VolatileFoam(args)
+	foamCount = foamCount + 1
+	local t = foamCount == 2 and 19.4 or foamCount % 3 == 1 and 17 or foamCount % 3 == 2 and 15 or 42
+	self:Bar(-14535, t, CL.count:format(self:SpellName(-14535), foamCount), 228810)
+end
+
+function mod:StartLickTimer(count)
+	local data = self:Mythic() and lickTimer
+	local info = data and data[count]
+	if not info then
+		-- all out of lick data
+		return
+	end
+
+	local length = floor(info - (GetTime() - phaseStartTime))
+
+	self:CDBar("lick", length, CL.count:format(L.lick, count), 228253)
+
+	self:ScheduleTimer("StartLickTimer", length, count + 1)
 end

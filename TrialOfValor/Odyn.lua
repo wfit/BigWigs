@@ -42,7 +42,7 @@ local proxLists = {
 local timers = { -- Mythic P1 is timed
 	[228012] = {8, 22, 20, 35, 53}, -- Horn of Valor
 	[228162] = {20, 20, 33, 22, 20, 35}, -- Shield of Light
-	[228029] = {20, 15, 30, 20, 15}, -- ExpelLight
+	[228029] = {25, 20, 15, 30, 20, 15}, -- ExpelLight
 }
 
 --------------------------------------------------------------------------------
@@ -176,11 +176,11 @@ function mod:OnEngage()
 		wipe(t)
 	end
 
-	self:Bar(228012, 8, CL.count:format(self:SpellName(228012), hornCount)) -- Horn of Valor
-	self:Bar(228162, self:Mythic() and 20 or 24, CL.count:format(self:SpellName(228162), shieldCount)) -- Shield of Light
-	self:Bar(228029, self:Mythic() and 25 or 32) -- Expel Light
-	self:Bar(227503, self:Mythic() and 35 or 40) -- Draw Power
-	self:Bar(227629, self:Mythic() and 68 or 73) -- Unerring Blast
+	self:Bar(228012, self:Easy() and 10 or 8, CL.count:format(self:SpellName(228012), hornCount)) -- Horn of Valor
+	self:Bar(228162, self:Easy() and 30 or self:Mythic() and 20 or 24, CL.count:format(self:SpellName(228162), shieldCount)) -- Shield of Light
+	self:Bar(228029, self:Easy() and 40 or self:Mythic() and 25 or 32) -- Expel Light
+	self:Bar(227503, self:Easy() and 45 or self:Mythic() and 35 or 40) -- Draw Power
+	self:Bar(227629, self:Easy() and 78 or self:Mythic() and 68 or 73) -- Unerring Blast
 end
 
 --------------------------------------------------------------------------------
@@ -202,8 +202,10 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 		isHymdallFighting = nil
 		isHyrjaFighting = nil
 	elseif spellId == 227882 then -- Leap into Battle (Phase 2 start)
-		self:RegisterEvent("INSTANCE_ENCOUNTER_ENGAGE_UNIT")
-		self:Bar(-14404, 16, L.hyrja, L.hyrja_icon)
+		if not self:Easy() then
+			self:RegisterEvent("INSTANCE_ENCOUNTER_ENGAGE_UNIT")
+			self:Bar(-14404, 16, L.hyrja, L.hyrja_icon)
+		end
 		self:Bar(227503, self:Mythic() and 37.5 or 43) -- Draw Power
 		self:Bar(227629, self:Mythic() and 70 or 73) -- Unerring Blast
 	elseif spellId == 228740 then
@@ -274,31 +276,39 @@ do
 	function mod:UnerringBlast(args)
 		self:Message(args.spellId, "Urgent", "Alert", CL.casting:format(args.spellName))
 		self:Bar(args.spellId, 3, CL.cast:format(args.spellName))
-		self:Bar(227503, 35) -- Draw Power
-		self:Bar(args.spellId, self:Mythic() and 65 or 68)
+		self:Bar(227503, self:Easy() and 45 or 35) -- Draw Power
+		self:Bar(args.spellId, self:Easy() and 78 or (self:Mythic() and (phase == 2 and 69 or 68)) or 73)
 
 		if self:Mythic() and not UnitDebuff("player", protected) then
-			self:Message(args.spellId, "Personal", nil, CL.no:format(protected))
+			self:Message(229584, "Personal", nil, CL.no:format(protected))
 		end
 	end
 end
 
 do
 	local function printTarget(self, player, guid)
+		local t = self:Easy() and 5 or 4
 		if self:Me(guid) then
 			self:Say(228162)
-			self:ScheduleTimer("Say", 2, 228162)
-			self:ScheduleTimer("Say", 4, 228162)
+			self:ScheduleTimer("Say", t-3, 228162, 3, true)
+			self:ScheduleTimer("Say", t-2, 228162, 2, true)
+			self:ScheduleTimer("Say", t-1, 228162, 1, true)
 		end
 		self:PrimaryIcon(228162, player)
 		self:TargetMessage(228162, player, "Important", "Alarm", nil, nil, true)
-		self:TargetBar(228162, 4, player)
+		self:TargetBar(228162, t, player)
 	end
 
 	function mod:ShieldOfLight(args)
 		self:GetBossTarget(printTarget, 0.4, args.sourceGUID)
 		shieldCount = shieldCount + 1
-		local t = (self:Mythic() and (timers[args.spellId][shieldCount] or 20)) or phase == 2 and 25.5 or shieldCount % 2 == 0 and 32 or 38
+
+		local t = 0
+		if self:Easy() then
+			t = 75
+		else
+			t = (self:Mythic() and (timers[args.spellId][shieldCount] or 20)) or phase == 2 and 25.5 or shieldCount % 2 == 0 and 32 or 38
+		end
 		self:Bar(args.spellId, t, CL.count:format(args.spellName, shieldCount))
 	end
 
@@ -311,7 +321,13 @@ function mod:HornOfValor(args)
 	self:Message(args.spellId, "Urgent", "Alert", CL.casting:format(args.spellName))
 	self:Bar(args.spellId, 4.5, CL.cast:format(CL.count:format(args.spellName, hornCount)))
 	hornCount = hornCount + 1
-	local t = (self:Mythic() and (timers[args.spellId][hornCount] or 20)) or hornCount % 2 == 0 and 27 or 43 -- TODO phase 2 CD
+
+	local t = 0
+	if self:Easy() then
+		t = 75
+	else
+		t = (self:Mythic() and (timers[args.spellId][hornCount] or 20)) or hornCount % 2 == 0 and 27 or 43 -- TODO phase 2 CD
+	end
 	self:Bar(args.spellId, t, CL.count:format(args.spellName, hornCount))
 	self:OpenProximity(args.spellId, 5)
 end
@@ -330,8 +346,8 @@ function mod:StormOfJustice(args)
 end
 
 function mod:StormOfJusticeSuccess(args)
-	stormCount = stormCount + 1
 	self:Bar(args.spellId, stormCount % 3 == 0 and 13.5 or 11)
+	stormCount = stormCount + 1
 end
 
 function mod:ValarjarsBond(args)
@@ -357,17 +373,23 @@ end
 
 function mod:StormforgedSpear(args)
 	self:TargetMessage(args.spellId, args.destName, "Important", "Alarm")
-	spearCount = spearCount + 1
 	self:TargetBar(args.spellId, 6, args.destName)
 	self:Bar(args.spellId, spearCount % 3 == 0 and 13.5 or 11)
 	if self:Me(args.destGUID) then
 		self:Say(args.spellId)
 	end
+	spearCount = spearCount + 1
 end
 
 function mod:ExpelLightSuccess(args)
 	expelCount = expelCount + 1
-	local t = (self:Mythic() and (timers[228029][expelCount] or 20)) or phase == 2 and 18 or expelCount % 2 == 0 and 32 or 38
+
+	local t = 0
+	if self:Easy() then
+		t = expelCount % 2 == 0 and 20 or 55
+	else
+		t = (self:Mythic() and (timers[228029][expelCount] or 20)) or phase == 2 and 18 or expelCount % 2 == 0 and 32 or 38
+	end
 	self:Bar(228029, t)
 end
 
@@ -393,7 +415,7 @@ function mod:Revivify(args)
 	self:TargetMessage(args.spellId, args.sourceName, "Positive", "Long")
 	local text = CL.other:format(args.sourceName, args.spellName)
 	revivifyBarTexts[#revivifyBarTexts+1] = text
-	self:Bar(args.spellId, 10, text)
+	self:Bar(args.spellId, self:Easy() and 15 or 10, text)
 end
 
 local function updateInfoBox()
