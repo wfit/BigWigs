@@ -556,7 +556,7 @@ do
 				local unit = args.destUnit
 				marked[symbol] = unit
 				marked[args.destGUID] = symbol
-				SetRaidTarget(unit, synbol)
+				SetRaidTarget(unit, symbol)
 			end
 		end
 	end
