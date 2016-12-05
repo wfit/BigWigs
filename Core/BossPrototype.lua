@@ -1928,7 +1928,7 @@ end
 
 function boss:BW_NET_MSG(_, msg, channel, source)
 	local event = msg and msg.event
-	if event and self.netmsgs and self.netmsgs[event] then
+	if event and self.netmsgs and self.netmsgs[event] and self[self.netmsgs[event]] then
 		self[self.netmsgs[event]](self, msg.data, channel, source)
 	end
 end
