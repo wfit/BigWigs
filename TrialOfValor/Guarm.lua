@@ -183,7 +183,7 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(_, spellName, _, _, spellId)
 		wipe(breathSoaked)
 	elseif spellId == 228201 then -- Off the leash 30sec
 		self:Bar(227514, 34) -- Flashing Fangs
-		self:Bar(228187, 41.3) -- Guardian's Breath
+		self:Bar(228187, 41.3, CL.count:format(self:SpellName(228187), breathCounter+1)) -- Guardian's Breath
 		self:CloseProximity()
 		self:ScheduleTimer("SmartProximity", 30)
 	end
