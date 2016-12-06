@@ -197,6 +197,7 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 		self:StopBar(CL.count:format(self:SpellName(228162), shieldCount)) -- Shield of Light
 		self:StopBar(228029) -- Expel Light
 		self:StopBar(CL.count:format(self:SpellName(228012), hornCount)) -- Horn of Valor
+		self:CloseProximity(228012)
 		self:StopBar(227503) -- Draw Power
 		self:CDBar("stages", 8, self:SpellName(L.odyn), L.odyn_icon)
 		isHymdallFighting = nil
