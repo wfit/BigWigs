@@ -369,7 +369,7 @@ function mod:OdynsTestApplied(args)
 end
 
 function mod:OdynsTestRemoved(args)
-	self:Bar(227626, 40)
+	self:Bar(227626, 35)
 end
 
 function mod:StormforgedSpear(args)
