@@ -115,7 +115,7 @@ function mod:OnEngage()
 		local marks = { 1, 2, 4, 3 }
 		local i = 1
 		for unit in self:IterateGroup() do
-			if self:Tank(unit) and not tank then
+			if self:Tank(unit) then
 				-- Skull then Moon
 				SetRaidTarget(unit, tank and 5 or 8)
 				tank = true
