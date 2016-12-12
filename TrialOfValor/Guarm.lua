@@ -99,7 +99,7 @@ function mod:OnEngage()
 	leapCounter = 0
 	foamCount = 1
 	phaseStartTime = GetTime()
-	self:Berserk(self:Mythic() and 244 or self:LFR() and 420 or 300)
+	self:Berserk(self:Mythic() and 244 or self:Normal() and 360 or self:LFR() and 420 or 300)
 	self:Bar(227514, 6) -- Flashing Fangs
 	self:Bar(228187, 14.5) -- Guardian's Breath
 	self:Bar(227883, 48.5) -- Roaring Leap

@@ -351,7 +351,7 @@ function mod:UNIT_HEALTH_FREQUENT(unit)
 end
 
 do
-	local list, isOnMe, scheduled = mod:NewTargetList(), nil, nil
+	local list, isOnMe = mod:NewTargetList(), nil
 
 	local function warn(self, spellId, spellName)
 		if not isOnMe then
@@ -359,14 +359,13 @@ do
 		else
 			wipe(list)
 		end
-		scheduled = nil
 		isOnMe = nil
 	end
 
 	function mod:OrbApplied(args)
 		list[#list+1] = args.destName
 		if #list == 1 then
-			scheduled = self:ScheduleTimer(warn, 0.1, self, args.spellId, args.spellName)
+			self:ScheduleTimer(warn, 0.1, self, args.spellId, args.spellName)
 			lastOrbTime = GetTime()
 			wipe(lastOrbTargets)
 		end
@@ -866,7 +865,7 @@ function mod:DarkHatred(args)
 end
 
 do
-	local list, isOnMe, scheduled = mod:NewTargetList(), nil, nil
+	local list, isOnMe = mod:NewTargetList(), nil
 
 	local function warn(self, spellId)
 		if not isOnMe then
@@ -876,14 +875,13 @@ do
 				self:Message(spellId, "Attention", "Long")
 			end
 		end
-		scheduled = nil
 		isOnMe = nil
 	end
 
 	function mod:CorruptedAxion(args)
 		list[#list+1] = args.destName
 		if #list == 1 then
-			scheduled = self:ScheduleTimer(warn, 0.1, self, args.spellId)
+			self:ScheduleTimer(warn, 0.1, self, args.spellId)
 		end
 
 		if self:Me(args.destGUID) then
