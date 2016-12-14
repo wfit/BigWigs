@@ -80,6 +80,7 @@ end
 --
 
 local brand_marks = mod:AddTokenOption { "brands", "Automatically set raid icons for each brand group.", promote = true }
+local left_right_brands = mod:AddCustomOption { "left_right_brands", "Use Left/Right instead of Hymdal/Hyrja for brand placement indication", default = false }
 
 function mod:GetOptions()
 	return {
@@ -112,6 +113,7 @@ function mod:GetOptions()
 		{227807, "SAY", "FLASH"}, -- Storm of Justice
 		227475, -- Cleansing Flame
 		{197961, "PROXIMITY", "SAY", "PULSE"}, -- Runic Brand
+		left_right_brands,
 		brand_marks,
 		231350, -- Radiant Smite
 	},{
@@ -530,10 +532,10 @@ end
 
 do
 	local directions = {
-		[231311] = "HYMDAL / LEFT",
+		[231311] = "HYMDAL",
 		[231342] = "CENTER",
 		[231344] = "THRONE",
-		[231345] = "HYRJA / RIGHT",
+		[231345] = "HYRJA",
 		[231346] = "ENTRANCE"
 	}
 
@@ -563,7 +565,12 @@ do
 			myBrand = args.spellId
 			self:Pulse(false, "Interface\\TargetingFrame\\UI-RaidTargetingIcon_" .. symbols[args.spellId])
 			self:PlaySound(false, "Warning")
-			self:Emphasized(false, directions[args.spellId])
+			local direction = directions[args.spellId]
+			if self:GetOption(left_right_brands) then
+				if direction == "HYMDAL" then direction = "LEFT" end
+				if direction == "HYRJA" then direction = "RIGHT" end
+			end
+			self:Emphasized(false, direction)
 			self:TargetBar(197961, 10, args.destName, nil, args.spellId)
 		else
 			brands[args.destName] = args.spellId
