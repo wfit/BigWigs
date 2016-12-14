@@ -530,10 +530,10 @@ end
 
 do
 	local directions = {
-		[231311] = "HYMDAL",
+		[231311] = "HYMDAL / LEFT",
 		[231342] = "CENTER",
 		[231344] = "THRONE",
-		[231345] = "HYRJA",
+		[231345] = "HYRJA / RIGHT",
 		[231346] = "ENTRANCE"
 	}
 
