@@ -92,7 +92,7 @@ end
 --
 
 local orbMarker = mod:AddMarkerOption(false, "player", 1, 229119, 1, 2, 3) -- Orb of Corruption
-local taintMarker = mod:AddMarkerOption(false, "player", 4, 228054, 4, 5, 6) -- Taint of the Sea
+local taintMarker = mod:AddMarkerOption(false, "player", 4, 228054, 4, 5, 6, 7, 8) -- Taint of the Sea
 
 local rot_fails = mod:AddTokenOption { "rot_fails", "Announce Fetid Rot fails", promote = false }
 local axion_soak = mod:AddCustomOption { "axion_soak", "Announce Corrupted Axions soakers" }
@@ -236,10 +236,13 @@ function mod:OnEngage()
 	breathCount = 1
 	orbCount = 1
 	taintCount = 1
+
 	self:CDBar(227967, self:Mythic() and 10.5 or self:Heroic() and 12 or 13.3, CL.count:format(self:SpellName(227967), breathCount)) -- Bilewater Breath
-	self:CDBar(228054, self:Mythic() and 15.5 or self:Heroic() and 19.5 or 12, CL.count:format(self:SpellName(228054), taintCount)) -- Taint of the Sea
-	self:CDBar("orb_ranged", self:Mythic() and 14 or self:Heroic() and 31 or 18, CL.count:format(L.orb_ranged_bar, orbCount), 229119) -- Orb of Corruption
-	self:CDBar(228730, self:Mythic() and 35.3 or self:Heroic() and 36.7 or 53.3, L.tentacle:format(strikeCount, strikeWave[strikeCount] or "DUNNO")) -- Tentacle Strike
+	self:CDBar(228054, self:Mythic() and 15.5 or self:Heroic() and 19.5 or self:Normal() and 12 or 21.8, CL.count:format(self:SpellName(228054), taintCount)) -- Taint of the Sea
+	self:CDBar("orb_ranged", self:Mythic() and 14 or self:Heroic() and 31 or self:Normal() and 18 or 34, CL.count:format(L.orb_ranged_bar, orbCount), 229119) -- Orb of Corruption
+	if not self:LFR() then
+		self:CDBar(228730, self:Mythic() and 35.3 or self:Heroic() and 36.7 or 53.3, L.tentacle:format(strikeCount, strikeWave[strikeCount] or "DUNNO")) -- Tentacle Strike
+	end
 	if self:Mythic() then
 		self:Berserk(660)
 	end
@@ -299,7 +302,7 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 		self:Bar(228300, self:Mythic() and 35 or 30.4) -- Fury of the Maw
 		-- self:Bar(167910, self:Mythic() and 44 or 38, self:SpellName(L.mariner)) -- Kvaldir Longboat
 	elseif spellId == 228838 then -- Fetid Rot (Grimelord)
-		self:Bar(193367, 12.2) -- Fetid Rot
+		self:Bar(193367, self:Easy() and 15.8 or 12.2) -- Fetid Rot
 	elseif spellId == 201126 then -- Bleak Eruption (Helarjar Mistwatcher)
 		if mistCount < 3 then
 			self:Message(228854, "Attention", "Warning", L.mist:format(mistCount))
@@ -351,7 +354,7 @@ function mod:UNIT_HEALTH_FREQUENT(unit)
 end
 
 do
-	local list, isOnMe = mod:NewTargetList(), nil
+	local list, orbMarked, isOnMe, timer = mod:NewTargetList(), false, false, nil
 
 	local function warn(self, spellId, spellName)
 		if not isOnMe then
@@ -359,15 +362,19 @@ do
 		else
 			wipe(list)
 		end
-		isOnMe = nil
 	end
 
 	function mod:OrbApplied(args)
 		list[#list+1] = args.destName
 		if #list == 1 then
-			self:ScheduleTimer(warn, 0.1, self, args.spellId, args.spellName)
+			orbMarked, isOnMe = false, false
+			timer = self:ScheduleTimer(warn, 0.1, self, args.spellId, args.spellName)
 			lastOrbTime = GetTime()
 			wipe(lastOrbTargets)
+		elseif #list == 3 or (#list == 2 and self:Easy()) then -- Max
+			self:CancelTimer(timer)
+			timer = nil
+			warn(self, args.spellId, args.spellName)
 		end
 
 		lastOrbTargets[args.destUnit] = true
@@ -375,9 +382,10 @@ do
 		if self:GetOption(orbMarker) then
 			if self:Healer(args.destName) then
 				SetRaidTarget(args.destName, 1)
-			elseif self:Tank(args.destName) then
+			elseif self:Tank(args.destName) or (phase == 3 and orbMarked) then
 				SetRaidTarget(args.destName, 2)
 			else -- Damager
+				orbMarked = true
 				SetRaidTarget(args.destName, 3)
 			end
 		end
@@ -397,10 +405,11 @@ end
 function mod:OrbOfCorruption(args)
 	if phase > 1 then return end
 	orbCount = orbCount + 1
+	local timer = self:Mythic() and 24.3 or self:Heroic() and 28 or self:Normal() and 31.5 or 32.8
 	if orbCount % 2 == 0 then
-		self:Bar("orb_melee", self:Mythic() and 24.3 or self:Heroic() and 28 or 31.5, CL.count:format(L.orb_melee_bar, orbCount), 229119) -- Orb of Corruption
+		self:Bar("orb_melee", timer, CL.count:format(L.orb_melee_bar, orbCount), 229119) -- Orb of Corruption
 	else
-		self:Bar("orb_ranged", self:Mythic() and 24.3 or self:Heroic() and 28 or 31.5, CL.count:format(L.orb_ranged_bar, orbCount), 229119) -- Orb of Corruption
+		self:Bar("orb_ranged", timer, CL.count:format(L.orb_ranged_bar, orbCount), 229119) -- Orb of Corruption
 	end
 end
 
@@ -418,9 +427,9 @@ end
 function mod:BilewaterBreath(args)
 	self:Message(args.spellId, "Important", "Alarm", CL.count:format(args.spellName, breathCount))
 	self:Bar(args.spellId, 3, CL.cast:format(args.spellName))
-	self:Bar(227992, self:Normal() and 25.5 or 20.5, CL.cast:format(self:SpellName(227992))) -- Bilewater Liquefaction
+	self:Bar(227992, self:Easy() and 25.5 or 20.5, CL.cast:format(self:SpellName(227992))) -- Bilewater Liquefaction
 	breathCount = breathCount + 1
-	self:Bar(args.spellId, self:Mythic() and 43.5 or self:Heroic() and 52 or 55.9, CL.count:format(args.spellName, breathCount))
+	self:CDBar(args.spellId, self:Mythic() and 43.5 or self:Heroic() and 52 or self:Normal() and 55.9 or 60.8, CL.count:format(args.spellName, breathCount))
 end
 
 function mod:BilewaterRedox(args)
@@ -431,30 +440,36 @@ function mod:BilewaterRedox(args)
 end
 
 do
-	local scheduled = false
+	local list, timer = mod:NewTargetList(), nil
 	local isOnMe = false
 
 	local function warn(self, spellId, spellName)
 		self:Message(spellId, "Attention", (self:Dispeller("magic") or isOnMe) and "Alert", CL.count:format(spellName, taintCount))
-		scheduled = false
+		wipe(list)
+		timer = nil
 	end
 
 	function mod:TaintOfTheSea(args)
-		if not scheduled then
-			self:ScheduleTimer(warn, 0.1, self, args.spellId, args.spellName, taintCount)
-			taintCount = taintCount + 1
-			self:CDBar(args.spellId, phase == 1 and 12.1 or (self:Mythic() and 20 or 28), CL.count:format(args.spellName, taintCount))
-			scheduled = true
-		end
-
+		list[#list + 1] = args.destName
 		if self:Me(args.destGUID) then
 			isOnMe = true
+		end
+
+		if #list == 1 then
+			taintMarkerCount = 4
+			timer = self:ScheduleTimer(warn, 0.1, self, args.spellId, args.spellName)
+			taintCount = taintCount + 1
+			self:CDBar(args.spellId, phase == 1 and (self:LFR() and 17 or 12.1) or (self:Mythic() and 20 or 28), CL.count:format(args.spellName, taintCount))
+		elseif #list == 5 or (#list == 3 and not self:Mythic()) then
+			self:CancelTimer(timer)
+			timer = nil
+			warn(self, args.spellId, args.spellName)
 		end
 
 		if self:GetOption(taintMarker) then
 			SetRaidTarget(args.destName, taintMarkerCount)
 			taintMarkerCount = taintMarkerCount + 1
-			if taintMarkerCount > 6 then taintMarkerCount = 4 end
+			if taintMarkerCount > 8 then taintMarkerCount = 4 end
 		end
 	end
 
@@ -551,12 +566,16 @@ do
 
 		if self:MobId(args.destGUID) == 114809 then -- Mariner
 			self:Bar(228633, 7) -- Give No Quarter
-			self:Bar(228611, 11) -- Ghostly Rage
-			self:Bar(228619, self:Mythic() and 25 or phase == 2 and 30 or 35) -- Lantern of Darkness
+			self:Bar(228611, 10) -- Ghostly Rage
+			if not self:Easy() then
+				self:Bar(228619, self:Mythic() and 25 or phase == 2 and 30 or 35) -- Lantern of Darkness
+			end
 		elseif self:MobId(args.destGUID) == 114709 then -- Grimelord
 			self:Bar(193367, 7) -- Fetid Rot
-			self:Bar(228519, 12) -- Anchor Slam
-			self:Bar(228390, 14.5) -- Sludge Nova
+			if not self:LFR() then
+				self:Bar(228519, 12) -- Anchor Slam
+			end
+			self:Bar(228390, self:Easy() and 17 or 14) -- Sludge Nova
 		end
 	end
 end
@@ -632,12 +651,13 @@ end
 
 function mod:AnchorSlam(args)
 	self:Message(args.spellId, "Urgent", "Alarm", CL.casting:format(args.spellName))
-	-- Upstream BigWigs says: self:Easy() and 14.6 or 12
-	self:Bar(args.spellId, self:Easy() and 14.6 or 12.2)
+	self:Bar(args.spellId, self:Normal() and 14.6 or 12)
 end
 
 function mod:GrimelordDeath(args)
-	self:StopBar(228519) -- Anchor Slam
+	if not self:LFR() then
+		self:StopBar(228519) -- Anchor Slam
+	end
 	self:StopBar(228390) -- Sludge Nova
 	self:StopBar(CL.cast:format(self:SpellName(228390))) -- Sludge Nova
 	self:StopBar(193367) -- Fetid Rot
@@ -664,8 +684,10 @@ end
 
 function mod:MarinerDeath(args)
 	self:StopBar(228633) -- Give No Quarter
-	self:StopBar(228619) -- Lantern of Darkness
-	self:StopBar(CL.cast:format(self:SpellName(228619))) -- Lantern of Darkness
+	if not self:Easy() then
+		self:StopBar(228619) -- Lantern of Darkness
+		self:StopBar(CL.cast:format(self:SpellName(228619))) -- Lantern of Darkness
+	end
 	self:StopBar(228611) -- Ghostly Rage
 end
 
