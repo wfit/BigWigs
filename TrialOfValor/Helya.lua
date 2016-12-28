@@ -93,9 +93,7 @@ end
 
 local orbMarker = mod:AddMarkerOption(false, "player", 1, 229119, 1, 2, 3) -- Orb of Corruption
 local taintMarker = mod:AddMarkerOption(false, "player", 4, 228054, 4, 5, 6, 7, 8) -- Taint of the Sea
-
 local rot_fails = mod:AddTokenOption { "rot_fails", "Announce Fetid Rot fails", promote = false }
-local axion_soak = mod:AddCustomOption { "axion_soak", "Announce Corrupted Axions soakers" }
 
 function mod:GetOptions()
 	return {
@@ -144,7 +142,6 @@ function mod:GetOptions()
 		228565, -- Corrupted Breath
 		{232488, "TANK"}, -- Dark Hatred
 		{232450, "INFOBOX"}, -- Corrupted Axion
-		axion_soak,
 		"berserk"
 	},{
 		["stages"] = -14213, -- Helya
@@ -473,12 +470,29 @@ do
 		end
 	end
 
+	local prev, wasOnMe, scheduled = 0, nil, nil
+
+	local function warn(self, spellId, spellName)
+		self:Message(spellId, "Positive", "Warning", wasOnMe and CL.underyou:format(spellName) or CL.near:format(spellName))
+		wasOnMe = nil
+		scheduled = nil
+	end
+
 	function mod:TaintOfTheSeaRemoved(args)
-		SetRaidTarget(args.destName, 0)
-		if self:Me(args.destGUID) then
-			self:Message(args.spellId, "Personal", "Warning", CL.underyou:format(args.spellName))
+		local t = GetTime()
+		if self:Me(args.destGUID) then -- warn always if it got dispelled from us
+			prev = t
+			wasOnMe = true
 			if not self:Mythic() then
 				self:Say(args.spellId, L.taint_say)
+			end
+			if not scheduled then
+				scheduled = self:ScheduleTimer(warn, 0.1, self, args.spellId, args.spellName)
+			end
+		elseif IsItemInRange(33278, args.destName) and t-prev > 2 then -- warn if dispelled in ~8yd range
+			prev = t
+			if not scheduled then
+				scheduled = self:ScheduleTimer(warn, 0.1, self, args.spellId, args.spellName)
 			end
 		end
 		if self:GetOption(taintMarker) then
@@ -540,7 +554,7 @@ function mod:FuryOfTheMaw(args)
 	self:Bar(args.spellId, self:Mythic() and 24 or 32, CL.cast:format(args.spellName))
 	if self:Mythic() then
 		self:Bar(167910, 7, CL.adds)
-        	mistCount = 2
+		mistCount = 2
 	end
 end
 
@@ -556,8 +570,11 @@ do
 
 	function mod:KvaldirLongboat(args)
 		local t = GetTime()
-		self:Message(args.spellId, "Neutral", t-prev > 1 and "Long", args.destName) -- destName = name of the spawning add
-		prev = t
+		if t-prev > 1 then
+			prev = t
+			self:Message(args.spellId, "Neutral", "Long", phase == 2 and CL.adds or args.destName) -- destName = name of the spawning add
+		end
+
 		if phase == 2 then
 			self:Bar(args.spellId, 76, CL.adds)
 		else
@@ -692,7 +709,6 @@ function mod:MarinerDeath(args)
 end
 
 --[[ Decaying Minion ]]--
-
 do
 	local prev = 0
 	function mod:DecayDamage(args)
@@ -705,9 +721,14 @@ do
 end
 
 --[[ Helarjer Mistcaller ]]--
-function mod:MistInfusion(args) -- untested
-	if self:Interrupter() then
-		self:Message(args.spellId, "Attention", nil, CL.count:format(args.spellName, mistCount))
+do
+	local prev = 0
+	function mod:MistInfusion(args)
+		local t = GetTime()
+		if t-prev > 1 then
+			prev = t
+			self:Message(args.spellId, "Positive", self:Interrupter(args.sourceGUID) and "Info")
+		end
 	end
 end
 
@@ -725,158 +746,9 @@ end
 function mod:CorruptedBreath(args)
 	self:Message(args.spellId, "Important", "Alarm", CL.count:format(args.spellName, breathCount))
 	self:Bar(args.spellId, 4.5, CL.cast:format(args.spellName))
-	if self:Mythic() then
-		self:ScheduleTimer("CallAxionsSoakers", 3, breathCount)
-	end
 	breathCount = breathCount + 1
 	self:Bar(args.spellId, self:Mythic() and 43 or self:Heroic() and 47 or 51, CL.count:format(args.spellName, breathCount))
 	self:Bar(232450, 9.5) -- Corrupted Axion
-end
-
-do
-	-- List of eligible soakers
-	local soakers = {}
-
-	-- Mapping of units to raid index and role
-	local unitIndex = {}
-	local unitRole = {}
-	local unitClassPriority = {}
-
-	-- Token for mutex of raid announce
-	local announce = mod:CreateToken("axions")
-	local announce_icon = mod:CreateToken("axions_icon", true)
-
-	local healerAvailability = {
-		[1] = true
-	}
-
-	local classPriority = {
-		["melee"] = {
-			[1] = 5, -- Warrior
-			[4] = 4, -- Rogue
-			[11] = 3, -- Druid
-			[2] = 2, -- Paladin
-		},
-		["ranged"] = {
-			[8] = 5, -- Mage
-			[3] = 4, -- Hunter
-		}
-	}
-
-	-- Sort the list of soakers based on suitableness
-	local function sortSoakers(nextOrbType)
-		local rolePriority = {
-			["healer"] = 2,
-			["melee"] = (nextOrbType == "melee" and 1 or 3),
-			["ranged"] = (nextOrbType == "ranged" and 1 or 3),
-		}
-		return function(a, b)
-			local aRole = unitRole[a]
-			local bRole = unitRole[b]
-			if aRole ~= bRole then
-				-- Units of a different type than the next orb before units of the same type
-				return rolePriority[aRole] > rolePriority[bRole]
-			else
-				local aPriority = unitClassPriority[a]
-				local bPriority = unitClassPriority[b]
-				if aPriority ~= bPriority then
-					-- Units of the higher priority
-					return aPriority > bPriority
-				else
-					-- Last units in the group
-					return unitIndex[a] > unitIndex[b]
-				end
-			end
-		end
-	end
-
-	-- Default attribution handler
-	local function defaultHandler(breathId)
-		wipe(soakers)
-		wipe(unitIndex)
-		wipe(unitRole)
-		wipe(unitClassPriority)
-
-		local healerAvailable = healerAvailability[breathId]
-		local delta = GetTime() - lastOrbTime
-		local nextOrbType = (orbCount % 2 == 0) and "melee" or "ranged"
-
-		local function unitSuitable(unit)
-			if not UnitExists(unit) or UnitIsDeadOrGhost(unit) then
-				return false
-			elseif mod:Damager(unit) then
-				return not lastOrbTargets[unit] or delta > 12
-			elseif mod:Healer(unit) then
-				--return lastOrbTargets[unit] and healerAvailable
-				return false
-			else
-				return false
-			end
-		end
-
-		for i = 1, 20 do
-			local unit = "raid" .. i
-			if unitSuitable(unit) then
-				soakers[#soakers + 1] = unit
-				unitIndex[unit] = #soakers
-				local role = mod:Role(unit)
-				unitRole[unit] = role
-				unitClassPriority[unit] = classPriority[role][select(3, UnitClass(unit))] or 1
-			end
-		end
-
-		table.sort(soakers, sortSoakers(nextOrbType))
-		return soakers
-	end
-
-	-- Override handler for specific breath
-	local handlers = {}
-	local soakerName = " %s(%s)"
-
-	function mod:CallAxionsSoakers(breathId)
-		if announce:IsMine() then
-			local soakers = (handlers[breathId] or defaultHandler)(breathId)
-			mod:Send("AxionSoakers", soakers, "RAID")
-		end
-	end
-
-	function mod:AxionSoakers(soakers)
-		local msg = "Axions soakers:" .. (soakerName:format("tank", 1))
-		local soakersList = {}
-		self:OpenInfo(232450)
-		self:ScheduleTimer("CloseInfo", 10, 232450)
-		self:SetInfo(232450, 1, "1")
-		self:SetInfo(232450, 2, "tank")
-		for i = 5, 2, -1 do
-			local soaker = soakers[i - 1]
-			local position = 7 - i
-			self:SetInfo(232450, (position - 1) * 2 - 1, position)
-			if soaker then
-				msg = msg .. (soakerName:format(UnitName(soaker), position))
-				soakersList[UnitName(soaker)] = position
-				if UnitIsUnit("player", soaker) and self:GetOption(axion_soak) then
-					self:Pulse(false, 232450)
-					self:PlaySound(false, "Warning")
-					self:Emphasized(false, "Soak: " .. position)
-					self:Emit("HELYA_AXION_SOAK", position)
-				end
-				self:SetInfo(232450, (position - 1) * 2, UnitName(soaker))
-				if announce_icon:IsMine() then
-					SetRaidTarget(soaker, position + 2)
-					self:ScheduleTimer(function()
-						SetRaidTarget(soaker, 0)
-					end, 10)
-				end
-			else
-				msg = msg .. (soakerName:format("?", position))
-				self:SetInfo(232450, (position - 1) * 2, "?")
-			end
-		end
-		self:Emit("HELYA_AXION_SOAKERS", soakersList)
-		if announce:IsMine() then
-			SendChatMessage(msg, "RAID")
-		end
-	end
 end
 
 function mod:DarkHatred(args)
