@@ -159,7 +159,7 @@ do
 		end
 
 		if self:Me(args.destGUID) then
-			self:Say(args.spellId)
+			self:Say(args.spellId, CL.on:format(args.spellName, args.destName) .. " >>" .. (#list) .. "<<")
 		end
 	end
 end

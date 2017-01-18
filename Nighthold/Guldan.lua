@@ -59,14 +59,14 @@ function mod:GetOptions()
 
 		--[[ Stage Two ]]--
 		{209011, "SAY", "FLASH"}, -- Bonds of Fel
-		209270, -- Eye of Gul'dan
+		{209270, "SAY", "PROXIMITY"}, -- Eye of Gul'dan
 		208672, -- Carrion Wave
 
 		--[[ Stage Three ]]--  XXX untested
 		{221891, "SAY"}, -- Soul Siphon   XXX untested
 		167935, -- Storm of the Destroyer   XXX untested
 		206744, -- Black Harvest   XXX untested
-		221606, -- Flames of Sargeras   XXX untested
+		{221606, "SAY", "FLASH", "PROXIMITY"}, -- Flames of Sargeras Soon   XXX untested
 		212686, -- Flames of Sargeras   XXX untested
 		211132, -- Empowered Eye of Gul'dan   XXX untested
 		221781, -- Desolate Ground   XXX untested
@@ -117,6 +117,8 @@ function mod:OnBossEnable()
 	self:Log("SPELL_CAST_START", "BondsOfFelCast", 206222)
 	self:Log("SPELL_AURA_APPLIED", "BondsOfFel", 209011)
 	self:Log("SPELL_CAST_START", "EyeOfGuldan", 209270)
+	self:Log("SPELL_AURA_APPLIED", "EyeOfGuldanApplied", 209454)
+	self:Log("SPELL_AURA_REMOVED", "EyeOfGuldanRemoved", 209454)
 	self:Log("SPELL_CAST_START", "CarrionWave", 208672)
 
 	--[[ Stage Three ]]--
@@ -128,6 +130,7 @@ function mod:OnBossEnable()
 	self:Log("SPELL_CAST_START", "BlackHarvest", 206744) -- XXX untested
 	self:Log("SPELL_AURA_APPLIED", "FlamesOfSargerasSoon", 221606) -- XXX untested
 	self:Log("SPELL_AURA_APPLIED", "FlamesOfSargeras", 212686) -- XXX untested
+	self:Log("SPELL_AURA_REMOVED", "FlamesOfSargerasRemoved", 212686) -- XXX untested
 
 	self:Log("SPELL_AURA_APPLIED", "Damage", 206515, 209518, 211132, 221781) -- Fel Efflux, Eye of Gul'dan, Empowered Eye of Gul'dan, Desolate Ground
 	self:Log("SPELL_PERIODIC_DAMAGE", "Damage", 206515, 209518, 211132, 221781)
@@ -282,6 +285,19 @@ function mod:EyeOfGuldan(args)
 	self:Bar(args.spellId, 60)
 end
 
+function mod:EyeOfGuldanApplied(args)
+	if self:Me(args.destGUID) then
+		self:Say(209270, args.spellId)
+		self:OpenProximity(209270, 8)
+	end
+end
+
+function mod:EyeOfGuldanRemoved(args)
+	if self:Me(args.destGUID) then
+		self:CloseProximity(209270)
+	end
+end
+
 function mod:CarrionWave(args)
 	if self:Interrupter(args.sourceGUID) then
 		self:Message(args.spellId, "Attention", "Long")
@@ -339,6 +355,7 @@ function mod:FlamesOfSargerasSoon(args)
 		self:Say(args.spellId)
 		self:Flash(args.spellId)
 		self:TargetBar(args.spellId, 7, args.destName)
+		self:OpenProximity(args.spellId, 8)
 	end
 end
 
@@ -348,5 +365,11 @@ function mod:FlamesOfSargeras(args)
 		self:Say(args.spellId)
 		self:Flash(args.spellId)
 		self:TargetBar(args.spellId, 4, args.destName)
+	end
+end
+
+function mod:FlamesOfSargerasRemoved(args)
+	if self:Me(args.destGUID) then
+		self:CloseProximity(221606)
 	end
 end
