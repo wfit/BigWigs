@@ -33,6 +33,7 @@ options.SendMessage = loader.SendMessage
 local colorModule
 local soundModule
 local translateZoneID
+local isOpen
 
 local showToggleOptions, getAdvancedToggleOption = nil, nil
 
@@ -249,7 +250,11 @@ function options:OnEnable()
 end
 
 function options:Open()
-	options:OpenConfig()
+	if isOpen then
+		isOpen:Hide()
+	else
+		options:OpenConfig()
+	end
 end
 
 -------------------------------------------------------------------------------
@@ -1000,6 +1005,7 @@ do
 		playerName = UnitName("player")
 
 		local bw = AceGUI:Create("Frame")
+		isOpen = bw
 		bw:SetTitle("BigWigs")
 		bw:SetStatusText(" You are running the From Scratch fork of BigWigs.")
 		bw:SetWidth(858)
@@ -1009,6 +1015,7 @@ do
 		bw:SetCallback("OnClose", function(widget)
 			AceGUI:Release(widget)
 			wipe(statusTable)
+			isOpen = nil
 		end)
 
 		local introduction = AceGUI:Create("Label")
