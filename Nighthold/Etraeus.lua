@@ -53,7 +53,7 @@ function mod:GetOptions()
 		{214167, "SAY"}, -- Gravitational Pull
 		{206388, "TANK"}, -- Felburst
 		206517, -- Fel Nova
-		{205649, "SAY"}, -- Fel Ejection
+		{205649, "SAY", "FLASH"}, -- Fel Ejection
 		206398, -- Felflame
 
 		--[[ Stage Four ]]--
@@ -215,6 +215,7 @@ do
 
 		if self:Me(args.destGUID) then
 			self:Say(args.spellId)
+			self:Flash(args.spellId)
 			self:OpenProximity(args.spellId, 8)
 			self:TargetBar(args.spellId, 10, args.destName)
 			self:ScheduleTimer("Say", 7, args.spellId, 3, true)
@@ -294,6 +295,7 @@ do
 
 		if self:Me(args.destGUID) then
 			self:Say(args.spellId)
+			self:Flash(args.spellId)
 			self:TargetBar(args.spellId, 8, args.destName)
 			self:ScheduleTimer("Say", 5, args.spellId, 3, true)
 			self:ScheduleTimer("Say", 6, args.spellId, 2, true)
