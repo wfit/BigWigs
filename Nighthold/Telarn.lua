@@ -53,7 +53,7 @@ function mod:GetOptions()
 		218927, -- Grace of Nature
 		{218304, "SAY"}, -- Parasitic Fetter
 		fetterMarker,
-		{218342, "FLASH"}, -- Parasitic Fixate
+		{218342, "FLASH", "SAY"}, -- Parasitic Fixate
 	}, {
 		["stages"] = "general",
 		[218809] = -13694, -- Arcanist Tel'arn
@@ -269,5 +269,6 @@ function mod:Fixate(args)
 	if self:Me(args.destGUID) then
 		self:TargetMessage(args.spellId, args.destName, "Personal", "Info", self:SpellName(177643)) -- Fixate
 		self:Flash(args.spellId)
+		self:Say(args.spellId)
 	end
 end
