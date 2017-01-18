@@ -190,7 +190,7 @@ do
 
 		if self:GetOption(callOfTheNightMarker) then
 			local icon = GetRaidTargetIndex(args.destName)
-			if icon > 0 and icon < 7 and not tContains(iconsUnused, icon) then
+			if icon and icon > 0 and icon < 7 and not tContains(iconsUnused, icon) then
 				table.insert(iconsUnused, icon)
 				SetRaidTarget(args.destName, 0)
 			end
