@@ -11,6 +11,7 @@ if not mod then return end
 mod:RegisterEnableMob(104528)
 mod.engageId = 1886
 mod.respawnTime = 7 -- fix me
+mod.instanceId = 1530
 
 --------------------------------------------------------------------------------
 -- Locals

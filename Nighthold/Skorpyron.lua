@@ -12,6 +12,7 @@ if not mod then return end
 mod:RegisterEnableMob(102263)
 mod.engageId = 1849
 mod.respawnTime = 30 -- moves into room at 30, ~35 till he is in position
+mod.instanceId = 1530
 
 --------------------------------------------------------------------------------
 -- Locals
