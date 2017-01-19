@@ -35,7 +35,7 @@ local iconsUsed = {}
 local function resetIcons()
 	wipe(iconsPool)
 	wipe(iconsUsed)
-	for i = 1, 8 do
+	for i = 1, 6 do
 		iconsPool[#iconsPool + 1] = i
 	end
 end
@@ -44,6 +44,7 @@ end
 -- Initialization
 --
 
+local tank_marks = mod:AddTokenOption { "tank_marks", "Automatically set markers on tanks on pull", promote = true }
 local frost_marks = mod:AddTokenOption { "frost_marks", "Set markers on Players affected by Mark of Frost", promote = true }
 
 function mod:GetOptions()
@@ -51,6 +52,7 @@ function mod:GetOptions()
 		--[[ General ]]--
 		{212492, "TANK_HEALER"}, -- Annihilate
 		"stages",
+		tank_marks,
 		"berserk",
 
 		--[[ Master of Frost ]]--
@@ -129,6 +131,17 @@ function mod:OnEngage()
 	annihilateCount = 1
 	self:Bar(212492, timers[212492][annihilateCount]) -- Annihilate
 	-- other bars are in mod:Stages()
+
+	if self:GetOption(tank_marks) then
+		local marked = 0
+		for unit in self:IterateGroup() do
+			if self:Tank(unit) then
+				SetRaidTarget(unit, 8 - marked)
+				marked = marked + 1
+				if marked == 2 then break end
+			end
+		end
+	end
 end
 
 --------------------------------------------------------------------------------
