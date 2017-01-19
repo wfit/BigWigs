@@ -1760,12 +1760,13 @@ end
 -- @param key the option key
 -- @param msg the message to say (if nil, key is used)
 -- @param[opt] directPrint if true, skip formatting the message and print the string directly to chat.
-function boss:Say(key, msg, directPrint)
+function boss:Say(key, msg, directPrint, channel)
 	if not checkFlag(self, key, C.SAY) then return end
+	if not channel then channel = "SAY" end
 	if directPrint then
-		SendChatMessage(msg, "SAY")
+		SendChatMessage(msg, channel)
 	else
-		SendChatMessage(format(L.on, msg and (type(msg) == "number" and spells[msg] or msg) or spells[key], pName), "SAY")
+		SendChatMessage(format(L.on, msg and (type(msg) == "number" and spells[msg] or msg) or spells[key], pName), channel)
 	end
 end
 
