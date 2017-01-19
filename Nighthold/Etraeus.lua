@@ -34,10 +34,13 @@ local L = mod:GetLocale()
 -- Initialization
 --
 
+local marks = mod:AddTokenOption { "marks", "Automatically set raid target icons", promote = true }
+
 function mod:GetOptions()
 	return {
 		--[[ General ]]--
 		"stages",
+		marks,
 		221875, -- Nether Traversal
 
 		--[[ Stage One ]]--
@@ -116,6 +119,16 @@ function mod:OnEngage()
 	wipe(mobCollector)
 	self:Bar(206464, 12.5) -- Coronal Ejection
 	self:Bar(221875, 20) -- Nether Traversal
+
+	if self:GetOption(marks) then
+		local icon = 8
+		for unit in self:IterateGroup() do
+			if self:Tank(unit) then
+				SetRaidTarget(unit, icon)
+				icon = icon - 1
+			end
+		end
+	end
 end
 
 function mod:OnBossDisable()
