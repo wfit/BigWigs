@@ -29,9 +29,22 @@ local annihilateCount = 1
 
 local L = mod:GetLocale()
 
+local iconsPool = {}
+local iconsUsed = {}
+
+local function resetIcons()
+	wipe(iconsPool)
+	wipe(iconsUsed)
+	for i = 1, 8 do
+		iconsPool[#iconsPool + 1] = i
+	end
+end
+
 --------------------------------------------------------------------------------
 -- Initialization
 --
+
+local frost_marks = mod:AddTokenOption { "frost_marks", "Set markers on Players affected by Mark of Frost", promote = true }
 
 function mod:GetOptions()
 	return {
@@ -43,6 +56,7 @@ function mod:GetOptions()
 		--[[ Master of Frost ]]--
 		{212531, "SAY", "FLASH"}, -- Pre Mark of Frost
 		{212587, "SAY", "FLASH"}, -- Mark of Frost
+		frost_marks,
 		212647, -- Frostbitten
 		212530, -- Replicate: Mark of Frost
 		212735, -- Detonate: Mark of Frost
@@ -84,6 +98,7 @@ function mod:OnBossEnable()
 	--[[ Master of Frost ]]--
 	self:Log("SPELL_AURA_APPLIED", "PreMarkOfFrostApplied", 212531)
 	self:Log("SPELL_AURA_APPLIED", "MarkOfFrostApplied", 212587)
+	self:Log("SPELL_AURA_REMOVED", "MarkOfFrostRemoved", 212587)
 	self:Log("SPELL_AURA_APPLIED", "Frostbitten", 212647)
 	self:Log("SPELL_AURA_APPLIED_DOSE", "Frostbitten", 212647)
 	self:Log("SPELL_CAST_START", "ReplicateMarkOfFrost", 212530)
@@ -154,6 +169,7 @@ do
 			self:Bar(212735, 71) -- Detonate: Mark of Frost
 			self:Bar(213853, 75, nil, 31687) -- Animate: Mark of Frost, Water Elemental icon
 			self:Bar("stages", 85, self:SpellName(213867), 213867) -- Next: Fiery
+			resetIcons()
 		elseif args.spellId == 213867 then -- Fiery
 			self:Bar(213166, 18) -- Searing Brand (timer is the "pre" mark of frost aura applied)
 			self:Bar(213275, 48) -- Detonate: Searing Brand
@@ -187,12 +203,26 @@ do
 			self:ScheduleTimer("TargetMessage", 0.5, args.spellId, list, "Urgent")
 		end
 
+		if self:Token(frost_marks) and #iconsPool > 0 then
+			local icon = table.remove(iconsPool, 1)
+			iconsUsed[args.destGUID] = icon
+			SetRaidTarget(args.destUnit, icon)
+		end
+
 		local t = GetTime()
 		if self:Me(args.destGUID) and t-preDebuffApplied > 5.5 then
 			self:TargetMessage(args.spellId, args.destName, "Attention", "Alert")
 			self:Say(args.spellId)
 			self:Flash(args.spellId)
 		end
+	end
+end
+
+function mod:MarkOfFrostRemoved(args)
+	if iconsUsed[args.destGUID] then
+		table.insert(iconsPool, iconsUsed[args.destGUID])
+		iconsUsed[args.destGUID] = nil
+		SetRaidTarget(args.destUnit, 0)
 	end
 end
 
