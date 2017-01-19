@@ -47,7 +47,7 @@ function mod:GetOptions()
 		206820, -- Cleansing Rage
 
 		-- Maniac
-		208910, -- Arcing Bonds
+		{208910, "SAY"}, -- Arcing Bonds
 		207630, -- Annihilation
 
 		-- Caretaker
@@ -205,6 +205,8 @@ do
 			self:Bar(208910, remaining, L.yourLinkShort:format(self:ColorName(myPartner)))
 			myPartner = nil
 			myPartnerIsNext = nil
+			self:Emit("TRILLIAX_ARCINGBONDS_NAME", myPartner)
+			self:Say(208910, myPartner, true)
 		end
 	end
 end
