@@ -144,6 +144,16 @@ function mod:OnEngage()
 	end
 end
 
+function mod:OnBossDisable()
+	if self:GetOption(tank_marks) then
+		for unit in self:IterateGroup() do
+			if self:Tank(unit) then
+				SetRaidTarget(unit, 0)
+			end
+		end
+	end
+end
+
 --------------------------------------------------------------------------------
 -- Event Handlers
 --

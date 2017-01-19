@@ -139,6 +139,14 @@ end
 
 function mod:OnBossDisable()
 	wipe(mobCollector)
+
+	if self:GetOption(marks) then
+		for unit in self:IterateGroup() do
+			if self:Tank(unit) then
+				SetRaidTarget(unit, 0)
+			end
+		end
+	end
 end
 
 --------------------------------------------------------------------------------
