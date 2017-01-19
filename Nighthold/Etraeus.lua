@@ -341,9 +341,7 @@ do
 			self:Say(args.spellId)
 			self:Flash(args.spellId)
 			self:TargetBar(args.spellId, 8, args.destName)
-			self:ScheduleTimer("Say", 5, args.spellId, 3, true)
-			self:ScheduleTimer("Say", 6, args.spellId, 2, true)
-			self:ScheduleTimer("Say", 7, args.spellId, 1, true)
+			self:ScheduleTimer("Message", 8, args.spellId, "Positive", "Info", CL.removed:format(args.spellName))
 		end
 	end
 end
