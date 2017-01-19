@@ -62,6 +62,7 @@ function mod:GetOptions()
 		--[[ Stage Four ]]--
 		{214335, "SAY"}, -- Gravitational Pull
 		207439, -- Void Nova
+		{206965, "FLASH"},
 
 		--[[ Thing That Should Not Be ]]--
 		207720, -- Witness the Void
@@ -107,6 +108,9 @@ function mod:OnBossEnable()
 	self:Log("SPELL_AURA_APPLIED", "GravitationalPullP4", 214335)
 	self:Log("SPELL_CAST_SUCCESS", "GravitationalPullP4Success", 214335)
 	self:Log("SPELL_CAST_START", "VoidNova", 207439)
+	self:Log("SPELL_AURA_APPLIED", "VoidburstApplied", 206965)
+	self:Log("SPELL_AURA_APPLIED_DOSE", "VoidburstApplied", 206965)
+	self:Log("SPELL_AURA_REMOVED", "VoidburstRemoved", 206965)
 
 	--[[ Thing That Should Not Be ]]--
 	self:Log("SPELL_CAST_START", "WitnessTheVoid", 207720)
@@ -345,6 +349,24 @@ function mod:VoidNova(args)
 	self:CDBar(args.spellId, 75)
 end
 
+do
+	local onMe = false
+
+	function mod:VoidburstApplied(args)
+		local amount = args.amount or 1
+		if self:Me(args.destGUID) and not onMe and amount >= 15 then
+			self:StackMessage(args.spellId, args.destName, amount, "Important", "Warning")
+			self:Flash(args.spellId)
+			onMe = true
+		end
+	end
+
+	function mod:VoidburstRemoved(args)
+		if self:Me(args.destGUID) then
+			onMe = false
+		end
+	end
+end
 
 --[[ Thing That Should Not Be ]]--
 function mod:INSTANCE_ENCOUNTER_ENGAGE_UNIT()
