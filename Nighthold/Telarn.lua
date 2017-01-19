@@ -213,7 +213,7 @@ do
 
 	local function isSoaked()
 		for unit in mod:IterateGroup() do
-			if mod:Range(unit) <= 5 then
+			if not UnitIsUnit(unit, "player") and mod:Range(unit) <= 5 then
 				return true
 			end
 		end
