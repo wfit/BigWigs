@@ -159,7 +159,7 @@ do
 		end
 
 		if self:Me(args.destGUID) then
-			self:Say(args.spellId, ">>" .. (#list) .. "<<", true)
+			self:Say(args.spellId, ">>" .. (#list) .. "<<")
 		end
 	end
 end
