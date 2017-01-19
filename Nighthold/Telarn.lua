@@ -19,6 +19,8 @@ mod.respawnTime = 7 -- fix me
 local nextPhaseSoon = 80
 local phase = 1
 
+local callOfNightCheck
+
 --------------------------------------------------------------------------------
 -- Localization
 --
@@ -94,6 +96,10 @@ function mod:OnEngage()
 	self:Bar(218304, 21.5) -- Parasitic Fetter, to _success
 	self:Bar(218438, 35) -- Controlled Chaos, to_start
 	self:RegisterUnitEvent("UNIT_HEALTH_FREQUENT", nil, "boss1")
+	if callOfNightCheck then
+		self:CancelTimer(callOfNightCheck)
+		callOfNightCheck = nil
+	end
 end
 
 --------------------------------------------------------------------------------
@@ -151,6 +157,9 @@ do
 			self:Say(args.spellId)
 			self:OpenProximity(args.spellId, 8, proxList) -- don't stand near others with the debuff
 			self:TargetBar(args.spellId, 45, args.destName)
+			if not callOfNightCheck then
+				callOfNightCheck = self:ScheduleRepeatingTimer("CallOfNightCheck", 1.5)
+			end
 		end
 
 		if not isOnMe then
@@ -177,6 +186,10 @@ do
 			isOnMe = nil
 			self:CloseProximity(args.spellId)
 			self:StopBar(args.spellId, args.destName)
+			if callOfNightCheck then
+				self:CancelTimer(callOfNightCheck)
+				callOfNightCheck = nil
+			end
 		end
 
 		tDeleteItem(proxList, args.destName)
@@ -194,6 +207,21 @@ do
 				table.insert(iconsUnused, icon)
 				SetRaidTarget(args.destName, 0)
 			end
+		end
+	end
+
+	local function isSoaked()
+		for unit in mod:IterateGroup() do
+			if mod:Range(unit) <= 5 then
+				return true
+			end
+		end
+		return false
+	end
+
+	function mod:CallOfNightCheck()
+		if not isSoaked() then
+			self:Say(false, "SOAK", false, "YELL")
 		end
 	end
 end
