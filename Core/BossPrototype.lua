@@ -684,6 +684,30 @@ do
 	-- @return unit id if found, nil otherwise
 	function boss:GetUnitIdByGUID(id) return findTargetByGUID(id) end
 
+	do
+		local sharedSeen = {}
+		function boss:IterateUnits(safe)
+			local i, max = 0, #unitTable
+			local function next(seen)
+				if i > max then
+					return nil
+				else
+					i = i + 1
+					local unit = unitTable[i]
+					local guid = UnitGUID(unit)
+					if guid and not UnitIsPlayer(unit) and not seen[guid] then
+						seen[guid] = true
+						return unit, guid, boss:MobId(guid)
+					else
+						return next(seen)
+					end
+				end
+			end
+			if not safe then wipe(sharedSeen) end
+			return next, safe and {} or sharedSeen
+		end
+	end
+
 	local function unitScanner(self, func, tankCheckExpiry, guid)
 		local elapsed = self.scheduledScansCounter[guid] + 0.05
 
