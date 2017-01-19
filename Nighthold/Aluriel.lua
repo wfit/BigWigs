@@ -60,7 +60,7 @@ function mod:GetOptions()
 		{212531, "SAY", "FLASH"}, -- Pre Mark of Frost
 		{212587, "SAY", "FLASH"}, -- Mark of Frost
 		frost_marks,
-		212647, -- Frostbitten
+		{212647, "SAY"}, -- Frostbitten
 		212530, -- Replicate: Mark of Frost
 		212735, -- Detonate: Mark of Frost
 		213853, -- Animate: Mark of Frost"
@@ -254,6 +254,7 @@ function mod:Frostbitten(args)
 	local amount = args.amount or 1
 	if self:Me(args.destGUID) and amount % 2 == 0 then
 		self:StackMessage(args.spellId, args.destName, amount, "Important", amount > 7 and "Warning")
+		self:Say(args.spellId, tostring(amount))
 	end
 end
 
