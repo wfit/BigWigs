@@ -51,7 +51,7 @@ function mod:GetOptions()
 		212736, -- Pool of Frost
 
 		--[[ Master of Fire ]]--
-		{213148, "SAY"}, -- Pre Searing Brand
+		{213148, "SAY", "FLASH"}, -- Pre Searing Brand
 		213166, -- Searing Brand
 		213275, -- Detonate: Searing Brand
 		213567, -- Animate: Searing Brand
@@ -231,6 +231,7 @@ do
 
 		if self:Me(args.destGUID) then
 			self:Say(args.spellId)
+			self:Flash(args.spellId)
 		end
 	end
 end
