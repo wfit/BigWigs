@@ -20,6 +20,26 @@ mod.respawnTime = 30 -- might be wrong
 local phase = 1 -- 1 = Cleaner, 2 = Maniac, 3 = Caretaker
 local bondTable = {}
 
+local scrubbersTimer
+local scrubbersAlive = 0
+local scrubbers = {}
+local iconsPool = {}
+local iconsUsed = {}
+
+local function resetScrubbers()
+	if scrubbersTimer then
+		mod:CancelTimer(scrubbersTimer)
+		scrubbersTimer = nil
+	end
+	wipe(scrubbers)
+	wipe(iconsPool)
+	wipe(iconsUsed)
+	scrubbersAlive = 0
+	for i = 1, 8 do
+		iconsPool[#iconsPool + 1] = i
+	end
+end
+
 --------------------------------------------------------------------------------
 -- Localization
 --
@@ -33,6 +53,8 @@ end
 --------------------------------------------------------------------------------
 -- Initialization
 --
+
+local scrubbers_marks = mod:AddTokenOption { "scrubbers_marks", "Set markers on Scrubbers having more than 60% energy", promote = true }
 
 function mod:GetOptions()
 	return {
@@ -52,6 +74,7 @@ function mod:GetOptions()
 
 		-- Caretaker
 		207502, -- Succulent Feast
+		scrubbers_marks,
 	}, {
 		["stages"] = "general",
 		[206788] = -13285, -- Cleaner
@@ -78,6 +101,7 @@ function mod:OnBossEnable()
 	self:Log("SPELL_CAST_START", "SucculentFeastCast", 207502)
 	self:Log("SPELL_AURA_APPLIED", "SucculentFeastApplied", 206838)
 	self:Log("SPELL_AURA_REMOVED", "SucculentFeastRemoved", 206838)
+	self:Death("ScrubberDeath", 104596)
 end
 
 function mod:OnEngage()
@@ -86,6 +110,7 @@ function mod:OnEngage()
 	self:Bar(206641, 7.5) -- Arcane Slash
 	self:Bar(206788, 11) -- Toxic Slice
 	self:Bar("stages", 45, 206557, 206557) -- The Maniac
+	resetScrubbers()
 end
 
 --------------------------------------------------------------------------------
@@ -116,6 +141,10 @@ function mod:Phase(args)
 		phase = 3
 		self:Bar("stages", 13, 206560, 206560) -- The Cleaner
 		self:StopBar(self:SpellName(206641)) -- Arcane Slash
+		if self:Token(scrubbers_marks) then
+			resetScrubbers()
+			scrubbersTimer = self:ScheduleRepeatingTimer("ScrubbersScan", 1)
+		end
 	end
 end
 
@@ -228,5 +257,50 @@ end
 function mod:SucculentFeastRemoved(args)
 	if self:Me(args.destGUID) then
 		self:Message(207502, "Personal", "Info", CL.removed:format(args.spellName))
+	end
+end
+
+function mod:ScrubbersScan()
+	-- Stop when no more scrubbers are alive
+	if scrubbersAlive == 0 and phase ~= 3 then
+		resetScrubbers()
+		return
+	end
+
+	for unit, guid, mob in self:IterateUnits() do
+		if mob == 104596 then
+			if not scrubbers[guid] then
+				scrubbers[guid] = true
+				scrubbersAlive = scrubbersAlive + 1
+			end
+
+			if UnitPower(unit) > 60 then
+				if not GetRaidTargetIndex(unit) and #iconsPool > 0 then
+					local icon = table.remove(iconsPool, 1)
+					SetRaidTarget(unit, icon)
+					iconsUsed[guid] = icon
+				end
+			else
+				local icon = iconsUsed[guid]
+				if icon then
+					SetRaidTarget(unit, 0)
+					table.insert(iconsPool, icon)
+					iconsUsed[guid] = nil
+				end
+			end
+		end
+	end
+end
+
+function mod:ScrubberDeath(args)
+	local guid = args.destGUID
+	local icon = iconsUsed[guid]
+	if icon then
+		table.insert(iconsPool, iconsUsed[guid])
+		iconsUsed[guid] = nil
+	end
+	if scrubbers[guid] then
+		scrubbers[guid] = nil
+		scrubbersAlive = scrubbersAlive - 1
 	end
 end
