@@ -7,10 +7,11 @@ local mod, CL = BigWigs:NewBoss("Nighthold Trash", 1088)
 if not mod then return end
 mod.displayName = CL.trash
 mod:RegisterEnableMob(
-	--[[ Skorpyron to Chronomatic Anomaly ]]--
+	--[[ Skorpyron to Trilliax ]]--
 	115914, -- Torm the Brute
 	111081, -- Fulminant
 	111072, -- Pulsauron
+	112255, -- Sludgerax
 
 	--[[ Trilliax to Aluriel ]]--
 	112671, -- Duskwatch Battle-Magus
@@ -28,9 +29,11 @@ mod:RegisterEnableMob(
 
 local L = mod:GetLocale()
 if L then
+	--[[ Skorpyron to Trilliax ]]--
 	L.torm = "Torm the Brute"
 	L.fulminant = "Fulminant"
 	L.pulsauron = "Pulsauron"
+	L.sludgerax = "Sludgerax"
 
 	--[[ Trilliax to Aluriel ]]--
 	L.battle_magus = "Duskwatch Battle-Magus"
@@ -39,7 +42,7 @@ if L then
 	L.protector = "Nighthold Protector"
 
 	--[[ Aluriel to Krosos ]]--
-	L.infernal =  "Searing Infernal"
+	L.infernal = "Searing Infernal"
 end
 
 --------------------------------------------------------------------------------
@@ -47,13 +50,14 @@ end
 --
 function mod:GetOptions()
 	return {
-		--[[ Skorpyron to Chronomatic Anomaly ]]--
+		--[[ Skorpyron to Trilliax ]]--
 		230438, -- Devastating Strike (Torm)
-		231086, -- Bolder Strike (Torm)
+		{231086, "SAY", "FLASH"}, -- Bolder Strike (Torm)
 		230482, -- Rumbling Blow (Torm)
 		230488, -- Rumbling Ground (Torm)
 		221164, -- Fulminate (Fulminant)
 		221160, -- Compress the Void (Pulsauron)
+		{223655, "SAY", "FLASH", "ICON"}, -- Oozing Rush (Sludgerax)
 
 		--[[ Trilliax to Aluriel ]]--
 		224510, -- Crackling Slice (Duskwatch Battle-Magus)
@@ -63,11 +67,12 @@ function mod:GetOptions()
 		224572, -- Disrupting Energy (Nighthold Protector)
 
 		--[[ Aluriel to Krosos ]]--
-		{221344, "SAY", "FLASH"}, -- Searing Infernal
+		{221344, "SAY", "FLASH"}, -- Annihilating Orb (Searing Infernal)
 	}, {
 		[230438] = L.torm,
 		[221164] = L.fulminant,
 		[221160] = L.pulsauron,
+		[223655] = L.sludgerax,
 		[224510] = L.battle_magus,
 		[225389] = L.sentinel,
 		[225412] = L.chronowraith,
@@ -88,13 +93,15 @@ function mod:OnBossEnable()
 	--self:Log("SPELL_DAMAGE", "GroundEffectDamage", ) -- SpellName, ...
 	--self:Log("SPELL_MISSED", "GroundEffectDamage", )
 
-	--[[ Skorpyron to Chronomatic Anomaly ]]--
+	--[[ Skorpyron to Trilliax ]]--
 	self:Log("SPELL_CAST_START", "DevastatingStrike", 230438)
 	self:Log("SPELL_CAST_START", "BolderStrike", 231086)
 	self:Log("SPELL_CAST_START", "RumblingBlow", 230482)
 	self:Death("TormDeath", 115914)
 	self:Log("SPELL_CAST_START", "Fulminate", 221164)
 	self:Log("SPELL_CAST_SUCCESS", "CompressTheVoid", 221160)
+	self:Log("SPELL_AURA_APPLIED", "OozingRush", 223655)
+	self:Log("SPELL_AURA_REMOVED", "OozingRushRemoved", 223655)
 
 	--[[ Trilliax to Aluriel ]]--
 	self:Log("SPELL_CAST_START", "CracklingSlice", 224510)
@@ -125,14 +132,23 @@ do
 	end
 end
 
---[[ Skorpyron to Chronomatic Anomaly ]]--
+--[[ Skorpyron to Trilliax ]]--
 function mod:DevastatingStrike(args)
 	self:Message(args.spellId, "Important", "Alarm")
 	self:CDBar(args.spellId, 7.5)
 end
 
-function mod:BolderStrike(args)
-	self:Message(args.spellId, "Urgent", "Long")
+do
+	local function printTarget(self, player, guid)
+		self:TargetMessage(231086, player, "Urgent", "Long", nil, nil, true)
+		if self:Me(guid) then
+			self:Say(231086)
+			self:Flash(231086)
+		end
+	end
+	function mod:BolderStrike(args)
+		self:GetUnitTarget(printTarget, 0.3, args.sourceGUID)
+	end
 end
 
 function mod:RumblingBlow(args)
@@ -167,6 +183,22 @@ do
 	end
 end
 
+function mod:OozingRush(args)
+	self:TargetMessage(args.spellId, args.destName, "Important", "Warning")
+	self:TargetBar(args.spellId, 10, args.destName)
+	self:PrimaryIcon(args.spellId, args.destName)
+	if self:Me(args.destGUID) then
+		self:Say(args.spellId)
+		self:Flash(args.spellId)
+	end
+end
+
+function mod:OozingRushRemoved(args)
+	self:StopBar(args.spellId, args.destName)
+	self:PrimaryIcon(args.spellId)
+end
+
+--[[ Trilliax to Aluriel ]]--
 do
 	local prev = 0
 	function mod:CracklingSlice(args)
@@ -198,6 +230,7 @@ end
 --[[ Aluriel to Krosos ]]--
 function mod:AnnihilatingOrb(args)
 	self:TargetMessage(args.spellId, args.destName, "Important", "Warning")
+	self:Bar(args.spellId, 5, args.destName)
 	self:Bar(args.spellId, 35)
 	if self:Me(args.destGUID) then
 		self:Say(args.spellId)
@@ -210,5 +243,5 @@ function mod:AnnihilatingOrbRemoved(args)
 end
 
 function mod:InfernalDeath(args)
-	self:StopBar(221344)
+	self:StopBar(221344) -- Annihilating Orb
 end
