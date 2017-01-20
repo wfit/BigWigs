@@ -76,7 +76,6 @@ end
 
 local Token = FS.Token
 local Roster = FS.Roster
-local Tracker = FS.Tracker
 
 -------------------------------------------------------------------------------
 -- Debug
@@ -687,13 +686,13 @@ do
 	do
 		local sharedSeen = {}
 		function boss:IterateUnits(safe)
-			local i, max = 0, #unitTable
+			local i, max = 1, #unitTable
 			local function next(seen)
 				if i > max then
 					return nil
 				else
-					i = i + 1
 					local unit = unitTable[i]
+					i = i + 1
 					local guid = UnitGUID(unit)
 					if guid and not UnitIsPlayer(unit) and not seen[guid] then
 						seen[guid] = true
@@ -2030,7 +2029,7 @@ function boss:UnitId(guid)
 	elseif guid:sub(1, 6) == "Player" then
 		return Roster:GetUnit(guid)
 	else
-		return Tracker:GetUnit(guid) or self:GetUnitIdByGUID(guid)
+		return self:GetUnitIdByGUID(guid)
 	end
 end
 
