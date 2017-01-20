@@ -12,8 +12,8 @@ local mod, CL = BigWigs:NewBoss("Grand Magistrix Elisande", 1088, 1743)
 if not mod then return end
 mod:RegisterEnableMob(106643)
 mod.engageId = 1872
---mod.respawnTime = 0
 mod.instanceId = 1530
+mod.respawnTime = 30
 
 --------------------------------------------------------------------------------
 -- Locals
@@ -114,8 +114,10 @@ end
 
 --[[ General ]]--
 function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
-	if spellId == 208887 then -- Summon Time Elementals
-		self:Message(spellId, "Neutral", "Info")
+	if spellId == 211616 then -- Summon Time Elemental - Fast
+		self:Message(208887, "Neutral", "Info", spellName)
+	elseif spellId == 209005 then -- Summon Time Elemental - Slow
+		self:Message(208887, "Neutral", "Info", spellName)
 	elseif spellId == 209030 or spellId == 208944 or spellId == 209123 or spellId == 209136 then -- XXX Saw 209030 and 208944 during testing, confirm on live
 		self:Message("stages", "Neutral", "Info", spellName, spellId)
 	end
