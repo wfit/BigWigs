@@ -27,10 +27,12 @@ local timers = {
 
         -- Summon Time Elemental - Slow , UNIT_SPELLCAST_SUCCEEDED
         [209005] = {5.0, 49.0, 52.0, 60.0},
-	
+
         -- Summon Time Elemental - Fast , UNIT_SPELLCAST_SUCCEEDED
         [211616] = {8.0, 88.0, 95.0, 20.0},
 }
+
+local elementalsAlive = {}
 
 --------------------------------------------------------------------------------
 -- Localization
@@ -46,12 +48,15 @@ end
 -- Initialization
 --
 
+local zones_despawn = mod:AddCustomOption { "zones_despawn", "Time Zone Despawn" }
+
 function mod:GetOptions()
 	return {
 		--[[ General ]]--
 		208887, -- Summon Time Elementals
 		"stages",
 		"berserk",
+		zones_despawn,
 
 		--[[ Recursive Elemental ]]--
 		221863, -- Shield
@@ -127,6 +132,13 @@ function mod:OnEngage()
 	fastAddCount = 1
 
 	self:Bar(209168, timers[209168][singularityCount], CL.count:format(self:SpellName(209168), singularityCount))
+	self:Bar(209005, timers[209005][slowAddCount], CL.count:format(self:SpellName(209005), slowAddCount))
+	self:Bar(211616, timers[211616][fastAddCount], CL.count:format(self:SpellName(211616), fastAddCount))
+
+	if self:GetOption(zones_despawn) then
+		wipe(elementalsAlive)
+		self:RegisterEvent("INSTANCE_ENCOUNTER_ENGAGE_UNIT")
+	end
 	self:Bar(208887, timers[209005][slowAddCount], CL.count:format(L.slowAdd, slowAddCount))
 	self:Bar(208887, timers[211616][fastAddCount], CL.count:format(L.fastAdd, fastAddCount))
 end
@@ -149,8 +161,43 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 		self:Message("stages", "Neutral", "Info", spellName, spellId)
 	elseif spellId == 209168 then -- Spanning Singularity
 		self:Message(209168, "Important", "Alert", CL.count:format(self:SpellName(209168), singularityCount))
-		singularityCount = singularityCount + 1	
+		singularityCount = singularityCount + 1
 		self:Bar(spellId, timers[209168][singularityCount] or 30, CL.count:format(self:SpellName(209168), singularityCount))
+	end
+end
+
+do
+	local SLOW_ELEMENTAL = 105299
+	local FAST_ELEMENTAL = 105301
+	local elementalsSeen = {}
+
+	function mod:INSTANCE_ENCOUNTER_ENGAGE_UNIT()
+		wipe(elementalsSeen)
+		for i = 1, 5 do
+			local unit = ("boss%d"):format(i)
+			if UnitExists(unit) then
+				local guid = UnitGUID(unit)
+				local mob = self:MobId(unit)
+				if mob == SLOW_ELEMENTAL then
+					elementalsSeen[guid] = true
+					elementalsAlive[guid] = mob
+				elseif mob == FAST_ELEMENTAL then
+					elementalsSeen[guid] = true
+					elementalsAlive[guid] = mob
+				end
+			end
+		end
+
+		for guid, mob in pairs(elementalsAlive) do
+			if not elementalsSeen[guid] then
+				elementalsAlive[guid] = nil
+				if mob == SLOW_ELEMENTAL then
+					self:Bar(false, 40, "Slow Time Zone", 207013)
+				elseif mob == FAST_ELEMENTAL then
+					self:Bar(false, 20, "Fast Time Zone", 207011)
+				end
+			end
+		end
 	end
 end
 
