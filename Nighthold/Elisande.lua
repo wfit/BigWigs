@@ -62,7 +62,6 @@ function mod:GetOptions()
 	return {
 		--[[ General ]]--
 		208887, -- Summon Time Elementals
-		208863, -- Leave the Nightwell
 		"stages",
 		"berserk",
 
