@@ -67,7 +67,7 @@ function mod:GetOptions()
 		208672, -- Carrion Wave
 
 		--[[ Stage Three ]]--  XXX untested
-		{221891, "SAY"}, -- Soul Siphon   XXX untested
+		221891, -- Soul Siphon   XXX untested
 		167935, -- Storm of the Destroyer   XXX untested
 		206744, -- Black Harvest   XXX untested
 		{221606, "SAY", "FLASH", "PROXIMITY"}, -- Flames of Sargeras Soon   XXX untested
@@ -352,9 +352,6 @@ do
 		list[#list+1] = args.destName
 		if #list == 1 then
 			self:ScheduleTimer("TargetMessage", 1, args.spellId, list, "Important", "Warning", nil, nil, true)
-		end
-		if self:Me(args.destGUID) then
-			self:Say(args.spellId)
 		end
 	end
 end
