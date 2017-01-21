@@ -355,6 +355,7 @@ do
 			--self:Flash(209597)
 			--self:Say(209597)
 			self:Say(209597, messages[#playerList])
+			self:Emit("ELISANDE_CONFLEXIVE_ATTRIBUTION", messages[#playerList])
 			if #playerList == 1 then
 				self:Flash(false, 207011)
 			elseif #playerList == 3 then
