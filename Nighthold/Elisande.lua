@@ -104,8 +104,8 @@ end
 function mod:OnBossEnable()
 	--[[ General ]]--
 	self:RegisterUnitEvent("UNIT_SPELLCAST_SUCCEEDED", nil, "boss1")
-	self:Log("SPELL_CAST_SUCCESS", "Nightwell", 208863)
 	self:RegisterEvent("INSTANCE_ENCOUNTER_ENGAGE_UNIT")
+	self:Log("SPELL_CAST_SUCCESS", "Nightwell", 208863)
 
 	--[[ Recursive Elemental ]]--
 	self:Log("SPELL_AURA_APPLIED", "ShieldApplied", 221863)
@@ -172,8 +172,11 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 		self:StopBar(CL.count:format(self:SpellName(209168), singularityCount))
 		self:StopBar(CL.count:format(L.fastAdd, fastAddCount))
 		self:StopBar(CL.count:format(L.slowAdd, slowAddCount))
-		self:Message("stages", "Neutral", "Info", spellName, spellId)
+		self:StopBar(CL.count:format(L.slowZoneDespawn, slowZoneCount))
+		self:StopBar(CL.count:format(L.slowZoneDespawn, slowZoneCount - 1))
+		self:StopBar(CL.count:format(L.fastZoneDespawn, fastZoneCount))
 		phase = phase + 1
+		self:Message("stages", "Neutral", "Info", spellName, spellId)
 	elseif spellId == 209168 then -- Spanning Singularity
 		self:Message(209168, "Important", "Alert", CL.count:format(self:SpellName(209168), singularityCount))
 		singularityCount = singularityCount + 1
@@ -182,7 +185,6 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 end
 
 function mod:Nightwell(args)
-	self:Message(args.spellId, "Attention", "Info")
 	singularityCount = 1
 	slowAddCount = 1
 	fastAddCount = 1
