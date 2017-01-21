@@ -37,6 +37,10 @@ local timers = {
 --
 
 local L = mod:GetLocale()
+if L then
+        L.fastAdd = "Add Slow"
+        L.slowAdd = "Add Fast"
+end
 
 --------------------------------------------------------------------------------
 -- Initialization
@@ -123,8 +127,8 @@ function mod:OnEngage()
 	fastAddCount = 1
 
 	self:Bar(209168, timers[209168][singularityCount], CL.count:format(self:SpellName(209168), singularityCount))
-	self:Bar(209005, timers[209005][slowAddCount], CL.count:format(self:SpellName(209005), slowAddCount))
-	self:Bar(211616, timers[211616][fastAddCount], CL.count:format(self:SpellName(211616), fastAddCount))
+	self:Bar(208887, timers[209005][slowAddCount], CL.count:format(L.slowAdd, slowAddCount))
+	self:Bar(208887, timers[211616][fastAddCount], CL.count:format(L.fastAdd, fastAddCount))
 end
 
 --------------------------------------------------------------------------------
@@ -136,11 +140,11 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 	if spellId == 211616 then -- Summon Time Elemental - Fast
 		self:Message(208887, "Neutral", "Info", CL.count:format(self:SpellName(211616), fastAddCount))
 		fastAddCount = fastAddCount + 1
-		self:Bar(211616, timers[211616][fastAddCount] or 30, CL.count:format(self:SpellName(211616), fastAddCount))
+		self:Bar(208887, timers[211616][fastAddCount] or 30, CL.count:format(L.fastAdd, fastAddCount))
 	elseif spellId == 209005 then -- Summon Time Elemental - Slow
 		self:Message(208887, "Neutral", "Info", CL.count:format(self:SpellName(209005), slowAddCount))
 		slowAddCount = slowAddCount + 1
-		self:Bar(209005, timers[209005][slowAddCount] or 30, CL.count:format(self:SpellName(209005), slowAddCount))
+		self:Bar(208887, timers[209005][slowAddCount] or 30, CL.count:format(L.slowAdd, slowAddCount))
 	elseif spellId == 209030 or spellId == 208944 or spellId == 209123 or spellId == 209136 then -- XXX Saw 209030 and 208944 during testing, confirm on live
 		self:Message("stages", "Neutral", "Info", spellName, spellId)
 	elseif spellId == 209168 then -- Spanning Singularity
