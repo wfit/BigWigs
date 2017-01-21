@@ -138,19 +138,7 @@ function mod:OnBossEnable()
 end
 
 function mod:OnEngage()
-
 	local phase = 1
-	--[[singularityCount = 1
-	slowAddCount = 1
-	fastAddCount = 1
-
-	self:Bar(209168, timers[209168][singularityCount], CL.count:format(self:SpellName(209168), singularityCount))
-	self:Bar(208887, timers[209005][slowAddCount], CL.count:format(L.slowAdd, slowAddCount))
-	self:Bar(208887, timers[211616][fastAddCount], CL.count:format(L.fastAdd, fastAddCount))
-	]]--
-	wipe(elementalsAlive)
-	slowZoneCount = 0
-	fastZoneCount = 0
 end
 
 --------------------------------------------------------------------------------
@@ -187,6 +175,10 @@ function mod:Nightwell(args)
 	singularityCount = 1
 	slowAddCount = 1
 	fastAddCount = 1
+
+	wipe(elementalsAlive)
+	slowZoneCount = 0
+	fastZoneCount = 0
 
 	self:Bar(209168, timers[209168][singularityCount], CL.count:format(self:SpellName(209168), singularityCount))
 	self:Bar(208887, timers[209005][slowAddCount], CL.count:format(L.slowAdd, slowAddCount))
