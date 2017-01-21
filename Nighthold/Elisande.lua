@@ -176,7 +176,7 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 		self:StopBar(CL.count:format(L.slowZoneDespawn, slowZoneCount - 1))
 		self:StopBar(CL.count:format(L.fastZoneDespawn, fastZoneCount))
 		phase = phase + 1
-		self:Message("stages", "Neutral", "Info", spellName, spellId)
+		self:Message("stages", "Neutral", "Info", CL.phase:format(phase), spellId)
 	elseif spellId == 209168 then -- Spanning Singularity
 		self:Message(209168, "Important", "Alert", CL.count:format(self:SpellName(209168), singularityCount))
 		singularityCount = singularityCount + 1
