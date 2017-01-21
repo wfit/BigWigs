@@ -36,6 +36,8 @@ local timers = {
 }
 
 local elementalsAlive = {}
+local slowZoneCount = 0
+local fastZoneCount = 0
 
 --------------------------------------------------------------------------------
 -- Localization
@@ -45,14 +47,16 @@ local L = mod:GetLocale()
 if L then
 	L.fastAdd = "Add Fast"
 	L.slowAdd = "Add Slow"
+	L.slowZoneDespawn = "Slow Zone Despawn"
+	L.fastZoneDespawn = "Fast Zone Despawn"
 end
 
 --------------------------------------------------------------------------------
 -- Initialization
 --
 
-local slow_zone_despawn = mod:AddCustomBarOption { "szd", "Slow Zone Despawn", icon = 207013 }
-local fast_zone_despawn = mod:AddCustomBarOption { "fzd", "Fast Zone Despawn", icon = 207011 }
+local slow_zone_despawn = mod:AddCustomBarOption { "szd", L.slowZoneDespawn, icon = 207013 }
+local fast_zone_despawn = mod:AddCustomBarOption { "fzd", L.fastZoneDespawn, icon = 207011 }
 
 function mod:GetOptions()
 	return {
@@ -146,6 +150,8 @@ function mod:OnEngage()
 	self:Bar(208887, timers[211616][fastAddCount], CL.count:format(L.fastAdd, fastAddCount))
 	]]--
 	wipe(elementalsAlive)
+	slowZoneCount = 0
+	fastZoneCount = 0
 end
 
 --------------------------------------------------------------------------------
@@ -180,10 +186,10 @@ function mod:Nightwell(args)
 	singularityCount = 1
 	slowAddCount = 1
 	fastAddCount = 1
-	
+
 	self:Bar(209168, timers[209168][singularityCount], CL.count:format(self:SpellName(209168), singularityCount))
 	self:Bar(208887, timers[209005][slowAddCount], CL.count:format(L.slowAdd, slowAddCount))
-	self:Bar(208887, timers[211616][fastAddCount], CL.count:format(L.fastAdd, fastAddCount))	
+	self:Bar(208887, timers[211616][fastAddCount], CL.count:format(L.fastAdd, fastAddCount))
 end
 
 do
@@ -209,9 +215,11 @@ do
 			if not elementalsSeen[guid] then
 				elementalsAlive[guid] = nil
 				if mob == SLOW_ELEMENTAL then
-					self:Bar(slow_zone_despawn, 60, "Slow Zone Despawn", 207013)
+					slowZoneCount = slowZoneCount + 1
+					self:Bar(slow_zone_despawn, 60, CL.count:format(L.slowZoneDespawn, slowZoneCount), 207013)
 				elseif mob == FAST_ELEMENTAL then
-					self:Bar(fast_zone_despawn, 30, "Fast Zone Despawn", 207011)
+					fastZoneCount = fastZoneCount + 1
+					self:Bar(fast_zone_despawn, 30, CL.count:format(L.fastZoneDespawn, fastZoneCount), 207011)
 				end
 			end
 		end
