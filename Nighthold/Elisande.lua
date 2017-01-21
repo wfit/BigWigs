@@ -25,6 +25,9 @@ local timers = {
 	-- Spanning Singularity, UNIT_SPELLCAST_SUCCEEDED
 	[209168] = { 23.0, 36.0, 57.0, 65.0 },
 
+	-- Arcanetic Ring , UNIT_SPELLCSAT_SUCCEEDED
+	[208807] = { 34.0, 41.0, 10.0, 62.0, 10.0, 45.0, 10.0 },
+
 	-- Summon Time Elemental - Slow , UNIT_SPELLCAST_SUCCEEDED
 	[209005] = { 5.0, 49.0, 52.0, 60.0 },
 
@@ -34,6 +37,8 @@ local timers = {
 
 local singularityCount = 1
 local singularityMax = 0
+local ringCount = 1
+local ringMax = 1
 
 local slowAddCount = 1
 local fastAddCount = 1
@@ -108,6 +113,7 @@ function mod:OnBossEnable()
 	self:RegisterUnitEvent("UNIT_SPELLCAST_SUCCEEDED", nil, "boss1")
 	self:RegisterEvent("INSTANCE_ENCOUNTER_ENGAGE_UNIT")
 	self:Log("SPELL_CAST_SUCCESS", "Nightwell", 208863)
+	self:RegisterEvent("RAID_BOSS_EMOTE")
 
 	--[[ Recursive Elemental ]]--
 	self:Log("SPELL_AURA_APPLIED", "ShieldApplied", 221863)
@@ -120,7 +126,7 @@ function mod:OnBossEnable()
 	self:Log("SPELL_AURA_APPLIED", "FastTime", 209166)
 
 	--[[ Time Layer 1 ]]--
-	self:Log("SPELL_CAST_START", "ArcaneticRing", 208807)
+	--self:Log("SPELL_CAST_START", "ArcaneticRing", 208807)
 	--self:Log("SPELL_CAST_SUCCESS", "SpanningSingularity", 209170, 233011, 233012)
 	--self:Log("SPELL_AURA_APPLIED", "SingularityDamage", 209433)
 	--self:Log("SPELL_PERIODIC_DAMAGE", "SingularityDamage", 209433)
@@ -149,28 +155,29 @@ end
 --
 
 --[[ General ]]--
-function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
-	if spellId == 211616 then -- Summon Time Elemental - Fast
-		self:Message(208887, "Neutral", "Info", CL.count:format(L.fastAdd, fastAddCount))
-		fastAddCount = fastAddCount + 1
-		self:Bar(208887, timers[211616][fastAddCount] or 30, CL.count:format(L.fastAdd, fastAddCount))
-	elseif spellId == 209005 then -- Summon Time Elemental - Slow
-		self:Message(208887, "Neutral", "Info", CL.count:format(L.slowAdd, slowAddCount))
-		slowAddCount = slowAddCount + 1
-		self:Bar(208887, timers[209005][slowAddCount] or 30, CL.count:format(L.slowAdd, slowAddCount))
-	elseif spellId == 211647 then  -- Time Stop
-		self:Transition()
-	elseif spellId == 209168 then -- Spanning Singularity
-		self:Message(209168, "Important", "Alert", CL.count:format(self:SpellName(209168), singularityCount))
-		singularityCount = singularityCount + 1
-		if phase == 1 or singularityCount < singularityMax then
-			self:Bar(spellId, timers[209168][singularityCount] or 30, CL.count:format(self:SpellName(209168), singularityCount))
+do
+	local prevSingularity = 0
+	function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
+		local t = GetTime()
+		if spellId == 211616 then -- Summon Time Elemental - Fast
+			self:Message(208887, "Neutral", "Info", CL.count:format(L.fastAdd, fastAddCount))
+			fastAddCount = fastAddCount + 1
+			self:Bar(208887, timers[211616][fastAddCount] or 30, CL.count:format(L.fastAdd, fastAddCount))
+		elseif spellId == 209005 then -- Summon Time Elemental - Slow
+			self:Message(208887, "Neutral", "Info", CL.count:format(L.slowAdd, slowAddCount))
+			slowAddCount = slowAddCount + 1
+			self:Bar(208887, timers[209005][slowAddCount] or 30, CL.count:format(L.slowAdd, slowAddCount))
+		elseif spellId == 211647 then  -- Time Stop
+			self:Transition()
+		elseif spellId == 209168 or spellId == 233012 or spellId == 233011 and t - prevSingularity > 1 then -- Spanning Singularity
+			self:SpanningSingularity()
 		end
 	end
 end
 
 function mod:Nightwell(args)
 	singularityCount = 1
+	ringCount = 1
 	slowAddCount = 1
 	fastAddCount = 1
 
@@ -179,12 +186,14 @@ function mod:Nightwell(args)
 	fastZoneCount = 0
 
 	self:Bar(209168, timers[209168][singularityCount], CL.count:format(self:SpellName(209168), singularityCount))
+	self:Bar(208807, timers[208807][ringCount], CL.count:format(self:SpellName(208807), ringCount))
 	self:Bar(208887, timers[209005][slowAddCount], CL.count:format(L.slowAdd, slowAddCount))
 	self:Bar(208887, timers[211616][fastAddCount], CL.count:format(L.fastAdd, fastAddCount))
 end
 
 function mod:Transition()
 	self:StopBar(CL.count:format(self:SpellName(209168), singularityCount))
+	self:StopBar(CL.count:format(self:SpellName(208807), ringCount))
 	self:StopBar(CL.count:format(L.fastAdd, fastAddCount))
 	self:StopBar(CL.count:format(L.slowAdd, slowAddCount))
 	self:StopBar(CL.count:format(L.slowZoneDespawn, slowZoneCount))
@@ -192,6 +201,7 @@ function mod:Transition()
 	self:StopBar(CL.count:format(L.fastZoneDespawn, fastZoneCount))
 	if phase == 1 then
 		singularityMax = singularityCount - 1
+		ringMax = ringCount - 1
 	end
 	phase = phase + 1
 	self:Message("stages", "Neutral", "Info", CL.phase:format(phase), spellId)
@@ -228,6 +238,12 @@ do
 				end
 			end
 		end
+	end
+end
+
+function mod:RAID_BOSS_EMOTE(event, msg, npcname)
+	if msg:find("spell:228877") then -- Arcanetic Ring
+		self:ArcaneticRing()
 	end
 end
 
@@ -270,13 +286,20 @@ function mod:FastTime(args)
 end
 
 --[[ Time Layer 1 ]]--
-function mod:ArcaneticRing(args)
-	self:Message(args.spellId, "Urgent", "Alert")
-	self:CDBar(args.spellId, 30)
+function mod:ArcaneticRing()
+	self:Message(208807, "Urgent", "Alert")
+	ringCount = ringCount + 1
+	if phase == 1 or ringCount < ringMax then
+		self:Bar(208807, timers[209168][ringCount] or 30, CL.count:format(self:SpellName(208807), ringCount))
+	end
 end
 
 function mod:SpanningSingularity(args)
-	self:Message(209170, "Attention", "Info")
+	self:Message(209168, "Important", "Info")
+	singularityCount = singularityCount + 1
+	if phase == 1 or singularityCount < singularityMax then
+		self:Bar(209168, timers[209168][singularityCount] or 30, CL.count:format(self:SpellName(209168), singularityCount))
+	end
 end
 
 --[[
