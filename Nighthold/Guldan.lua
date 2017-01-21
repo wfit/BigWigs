@@ -224,7 +224,7 @@ end
 
 function mod:Drain(args)
 	if self:Dispeller("magic") or self:Me(args.destGUID) then
-		self:TargetMessage("TargetMessage", args.destName, "Urgent", "Alarm")
+		self:TargetMessage(args.spellId, args.destName, "Urgent", "Alarm")
 	end
 end
 
