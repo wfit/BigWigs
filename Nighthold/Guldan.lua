@@ -35,9 +35,9 @@ local L = mod:GetLocale()
 function mod:GetOptions()
 	return {
 		--[[ Essence of Aman'Thul ]]--
-		210339, -- Time Dilation
+		--210339, -- Time Dilation
 		--{217830, "SAY"}, -- Scattering Field
-		{210296, "TANK"}, -- Resonant Barrier
+		--{210296, "TANK"}, -- Resonant Barrier
 
 		--[[ Stage One ]]--
 		{206219, "SAY", "FLASH"}, -- Liquid Hellfire
@@ -73,7 +73,7 @@ function mod:GetOptions()
 		221781, -- Desolate Ground   XXX untested
 		{227556, "TANK"}, -- Fury of the Fel   XXX untested
 	}, {
-		[210339] = -14886, -- Essence of Aman'Thul
+		--[210339] = -14886, -- Essence of Aman'Thul
 		[206219] = -14885, -- Stage One
 		[207938] = -14897, -- Inquisitor Vethriz
 		[206675] = -14894, -- Fel Lord Kuraz'mal
@@ -87,9 +87,9 @@ function mod:OnBossEnable()
 	self:RegisterUnitEvent("UNIT_SPELLCAST_SUCCEEDED", nil, "boss1", "boss2", "boss3", "boss4", "boss5")
 
 	--[[ Essence of Aman'Thul ]]--
-	self:Log("SPELL_AURA_APPLIED", "TimeDilation", 210339)
+	--self:Log("SPELL_AURA_APPLIED", "TimeDilation", 210339)
 	--self:Log("SPELL_AURA_APPLIED", "ScatteringField", 217830)
-	self:Log("SPELL_AURA_APPLIED", "ResonantBarrier", 210296)
+	--self:Log("SPELL_AURA_APPLIED", "ResonantBarrier", 210296)
 
 	self:Log("SPELL_AURA_APPLIED", "EyeOfAmanThul", 206516)
 	self:Log("SPELL_AURA_REMOVED", "EyeOfAmanThulRemoved", 206516)
