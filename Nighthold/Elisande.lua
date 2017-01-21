@@ -19,10 +19,17 @@ mod.respawnTime = 30
 -- Locals
 --
 local singularityCount = 1
+local slowAddCount = 1
+local fastAddCount = 1
 local timers = {
         -- Spanning Singularity, UNIT_SPELLCAST_SUCCEEDED
         [209168] = {23.0, 36.0, 57.0, 65.0},
 
+        -- Summon Time Elemental - Slow , UNIT_SPELLCAST_SUCCEEDED
+        [209005] = {5.0, 49.0, 52.0, 60.0},
+	
+        -- Summon Time Elemental - Fast , UNIT_SPELLCAST_SUCCEEDED
+        [211616] = {8.0, 88.0, 95.0, 20.0},
 }
 
 --------------------------------------------------------------------------------
@@ -112,7 +119,12 @@ end
 
 function mod:OnEngage()
 	singularityCount = 1
+	slowAddCount = 1
+	fastAddCount = 1
+
 	self:Bar(209168, timers[209168][singularityCount], CL.count:format(self:SpellName(209168), singularityCount))
+	self:Bar(209005, timers[209005][slowAddCount], CL.count:format(self:SpellName(209005), slowAddCount))
+	self:Bar(211616, timers[211616][fastAddCount], CL.count:format(self:SpellName(211616), fastAddCount))
 end
 
 --------------------------------------------------------------------------------
@@ -122,13 +134,17 @@ end
 --[[ General ]]--
 function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 	if spellId == 211616 then -- Summon Time Elemental - Fast
-		self:Message(208887, "Neutral", "Info", spellName)
+		self:Message(208887, "Neutral", "Info", CL.count:format(self:SpellName(211616), fastAddCount))
+		fastAddCount = fastAddCount + 1
+		self:Bar(211616, timers[211616][fastAddCount] or 30, CL.count:format(self:SpellName(211616), fastAddCount))
 	elseif spellId == 209005 then -- Summon Time Elemental - Slow
-		self:Message(208887, "Neutral", "Info", spellName)
+		self:Message(208887, "Neutral", "Info", CL.count:format(self:SpellName(209005), slowAddCount))
+		slowAddCount = slowAddCount + 1
+		self:Bar(209005, timers[209005][slowAddCount] or 30, CL.count:format(self:SpellName(209005), slowAddCount))
 	elseif spellId == 209030 or spellId == 208944 or spellId == 209123 or spellId == 209136 then -- XXX Saw 209030 and 208944 during testing, confirm on live
 		self:Message("stages", "Neutral", "Info", spellName, spellId)
 	elseif spellId == 209168 then -- Spanning Singularity
-		self:Message(209168, "Important", "Alert", spellName)
+		self:Message(209168, "Important", "Alert", CL.count:format(self:SpellName(209168), singularityCount))
 		singularityCount = singularityCount + 1	
 		self:Bar(spellId, timers[209168][singularityCount] or 30, CL.count:format(self:SpellName(209168), singularityCount))
 	end
