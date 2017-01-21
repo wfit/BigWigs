@@ -18,6 +18,12 @@ mod.respawnTime = 30
 --------------------------------------------------------------------------------
 -- Locals
 --
+local singularityCount = 1
+local timers = {
+        -- Spanning Singularity, UNIT_SPELLCAST_SUCCEEDED
+        [209168] = {23.0, 36.0, 57.0, 65.0},
+
+}
 
 --------------------------------------------------------------------------------
 -- Localization
@@ -47,7 +53,7 @@ function mod:GetOptions()
 
 		--[[ Time Layer 1 ]]--
 		208807, -- Arcanetic Ring
-		209170, -- Spanning Singularity
+		209168, -- Spanning Singularity
 
 		--[[ Time Layer 2 ]]--
 		{209244, "SAY", "FLASH"}, -- Delphuric Beam
@@ -85,7 +91,7 @@ function mod:OnBossEnable()
 
 	--[[ Time Layer 1 ]]--
 	self:Log("SPELL_CAST_START", "ArcaneticRing", 208807)
-	self:Log("SPELL_CAST_SUCCESS", "SpanningSingularity", 209170, 233011, 233012)
+	--self:Log("SPELL_CAST_SUCCESS", "SpanningSingularity", 209170, 233011, 233012)
 	--self:Log("SPELL_AURA_APPLIED", "SingularityDamage", 209433)
 	--self:Log("SPELL_PERIODIC_DAMAGE", "SingularityDamage", 209433)
 	--self:Log("SPELL_PERIODIC_MISSED", "SingularityDamage", 209433)
@@ -105,7 +111,8 @@ function mod:OnBossEnable()
 end
 
 function mod:OnEngage()
-
+	singularityCount = 1
+	self:Bar(209168, timers[209168][singularityCount], CL.count:format(self:SpellName(209168), singularityCount))
 end
 
 --------------------------------------------------------------------------------
@@ -120,6 +127,10 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 		self:Message(208887, "Neutral", "Info", spellName)
 	elseif spellId == 209030 or spellId == 208944 or spellId == 209123 or spellId == 209136 then -- XXX Saw 209030 and 208944 during testing, confirm on live
 		self:Message("stages", "Neutral", "Info", spellName, spellId)
+	elseif spellId == 209168 then -- Spanning Singularity
+		self:Message(209168, "Important", "Alert", spellName)
+		singularityCount = singularityCount + 1	
+		self:Bar(spellId, timers[209168][singularityCount] or 30, CL.count:format(self:SpellName(209168), singularityCount))
 	end
 end
 
