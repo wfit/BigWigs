@@ -240,18 +240,26 @@ function mod:ConflexiveBurst(args)
 end
 
 do
+	local messages = {"SLOW", "FAST", "NORMAL"}
+
 	local playerList = mod:NewTargetList()
 	function mod:ConflexiveBurstApplied(args)
+		playerList[#playerList + 1] = args.destName
+
 		if self:Me(args.destGUID) then
 			self:Flash(209597)
-			self:Say(209597)
+			--self:Say(209597)
+			self:Say(209597, messages[#playerList])
+			if #playerList == 1 then
+				self:Pulse(false, 207013)
+			elseif #playerList == 2 then
+				self:Pulse(false, 207011)
+			end
 			-- Need to constantly update because of fast/slow time
 			--local _, _, _, _, _, _, expires = UnitDebuff("player", args.spellName)
 			--local t = expires - GetTime()
 			--self:TargetBar(209597, t, args.destName)
 		end
-
-		playerList[#playerList+1] = args.destName
 
 		if #playerList == 1 then
 			self:ScheduleTimer("TargetMessage", 0.3, 209597, playerList, "Important", "Alarm")
