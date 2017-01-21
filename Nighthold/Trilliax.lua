@@ -234,7 +234,9 @@ do
 			local remaining = expires-GetTime()
 			self:Bar(208910, remaining, L.yourLinkShort:format(self:ColorName(myPartner)))
 			self:Emit("TRILLIAX_ARCINGBONDS_NAME", myPartner)
-			self:Say(208910, myPartner, true)
+			if not self:Tank() then
+				self:Say(208910, myPartner, true)
+			end
 			myPartner = nil
 			myPartnerIsNext = nil
 		end
