@@ -187,9 +187,9 @@ do
 			if not elementalsSeen[guid] then
 				elementalsAlive[guid] = nil
 				if mob == SLOW_ELEMENTAL then
-					self:Bar(slow_zone_despawn, 40, "Slow Zone Despawn", 207013)
+					self:Bar(slow_zone_despawn, 60, "Slow Zone Despawn", 207013)
 				elseif mob == FAST_ELEMENTAL then
-					self:Bar(fast_zone_despawn, 20, "Fast Zone Despawn", 207011)
+					self:Bar(fast_zone_despawn, 30, "Fast Zone Despawn", 207011)
 				end
 			end
 		end
