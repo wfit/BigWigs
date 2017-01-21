@@ -348,6 +348,15 @@ function boss:AddCustomOption(settings)
 	return option
 end
 
+function boss:AddCustomBarOption(settings)
+	local l = self:GetLocale()
+	local key = settings.key or settings[1]
+	l[key] = settings.title or settings[2]
+	if settings.desc then l[key .. "_desc"] = settings.desc end
+	if settings.icon then l[key .. "_icon"] = settings.icon end
+	return key
+end
+
 function boss:AddTokenOption(settings)
 	local option = self:AddCustomOption(settings)
 	local token = self:CreateToken(settings.key or settings[1], settings.promote or false, option)
