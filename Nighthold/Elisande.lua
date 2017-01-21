@@ -31,6 +31,9 @@ local timers = {
 	-- Epocheric Orb, RAID_BOSS_EMOTE
 	[210022] = { 27.0, 76.0, 37.0, 70.0 },
 
+	-- Delphuric Beam, SPELL_CAST_START
+	[209244] = { 72.0, 57.0, 60.0 },
+
 	-- Summon Time Elemental - Slow, UNIT_SPELLCAST_SUCCEEDED
 	[209005] = { 5.0, 49.0, 52.0, 60.0 },
 
@@ -44,6 +47,8 @@ local ringCount = 1
 local ringMax = 0
 local orbsCount = 1
 local orbsMax = 0
+local beamsCount = 1
+local beamsMax = 0
 
 local slowAddCount = 1
 local fastAddCount = 1
@@ -138,7 +143,8 @@ function mod:OnBossEnable()
 	--self:Log("SPELL_PERIODIC_MISSED", "SingularityDamage", 209433)
 
 	--[[ Time Layer 2 ]]--
-	self:Log("SPELL_AURA_APPLIED", "DelphuricBeam", 209244)
+	self:Log("SPELL_CAST_START", "DelphuricBeam", 214278, 214295) -- Boss: 214278, Echo: 214295
+	self:Log("SPELL_AURA_APPLIED", "DelphuricBeamApplied", 209244)
 	--self:Log("SPELL_CAST_SUCCESS", "EpochericOrb", 210022)
 	self:Log("SPELL_AURA_APPLIED", "AblatingExplosion", 209973)
 
@@ -184,6 +190,7 @@ function mod:Nightwell(args)
 	singularityCount = 1
 	ringCount = 1
 	orbsCount = 1
+	beamsCount = 1
 	slowAddCount = 1
 	fastAddCount = 1
 
@@ -195,9 +202,11 @@ function mod:Nightwell(args)
 	self:Bar(208807, timers[208807][ringCount], CL.count:format(self:SpellName(208807), ringCount))
 	self:Bar(208887, timers[209005][slowAddCount], CL.count:format(L.slowAdd, slowAddCount))
 	self:Bar(208887, timers[211616][fastAddCount], CL.count:format(L.fastAdd, fastAddCount))
-
 	if phase >= 2 then
 		self:Bar(210022, timers[210022][orbsCount] or 30, CL.count:format(self:SpellName(210022), orbsCount))
+	end
+	if phase == 2 or (phase == 3 and self:Mythic()) then
+		self:Bar(209244, timers[209244][beamsCount] or 30, CL.count:format(self:SpellName(209244), beamsCount))
 	end
 end
 
@@ -205,6 +214,7 @@ function mod:TimeStop()
 	self:StopBar(CL.count:format(self:SpellName(209168), singularityCount))
 	self:StopBar(CL.count:format(self:SpellName(208807), ringCount))
 	self:StopBar(CL.count:format(self:SpellName(210022), orbsCount))
+	self:StopBar(CL.count:format(self:SpellName(209244), beamsCount))
 	self:StopBar(CL.count:format(L.fastAdd, fastAddCount))
 	self:StopBar(CL.count:format(L.slowAdd, slowAddCount))
 	self:StopBar(CL.count:format(L.slowZoneDespawn, slowZoneCount))
@@ -215,6 +225,7 @@ function mod:TimeStop()
 		ringMax = ringCount - 1
 	elseif phase == 2 then
 		orbsMax = orbsCount - 1
+		beamsMax = beamsCount - 1
 	end
 	phase = phase + 1
 	self:Message("stages", "Neutral", "Info", CL.phase:format(phase), spellId)
@@ -331,9 +342,18 @@ end
 ]]
 
 --[[ Time Layer 2 ]]--
+function mod:DelphuricBeam(args)
+	self:Message(209244, "Urgent", "Alert", CL.incoming:format(self:SpellName(209244)))
+	self:Bar(209244, 8, CL.cast:format(self:SpellName(209244)))
+	beamsCount = beamsCount + 1
+	if phase == 2 or (self:Mythic() and beamsCount < beamsMax) then
+		self:Bar(209244, timers[209244][beamsCount] or 30, CL.count:format(self:SpellName(209244), beamsCount))
+	end
+end
+
 do
 	local playerList = mod:NewTargetList()
-	function mod:DelphuricBeam(args)
+	function mod:DelphuricBeamApplied(args)
 		if self:Me(args.destGUID) then
 			self:Flash(args.spellId)
 			self:Say(args.spellId)
