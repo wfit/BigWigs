@@ -25,20 +25,25 @@ local timers = {
 	-- Spanning Singularity, UNIT_SPELLCAST_SUCCEEDED
 	[209168] = { 23.0, 36.0, 57.0, 65.0 },
 
-	-- Arcanetic Ring , UNIT_SPELLCSAT_SUCCEEDED
+	-- Arcanetic Ring, RAID_BOSS_EMOTE
 	[208807] = { 34.0, 41.0, 10.0, 62.0, 10.0, 45.0, 10.0 },
 
-	-- Summon Time Elemental - Slow , UNIT_SPELLCAST_SUCCEEDED
+	-- Epocheric Orb, RAID_BOSS_EMOTE
+	[210022] = { 27.0, 76.0, 37.0, 70.0 },
+
+	-- Summon Time Elemental - Slow, UNIT_SPELLCAST_SUCCEEDED
 	[209005] = { 5.0, 49.0, 52.0, 60.0 },
 
-	-- Summon Time Elemental - Fast , UNIT_SPELLCAST_SUCCEEDED
+	-- Summon Time Elemental - Fast, UNIT_SPELLCAST_SUCCEEDED
 	[211616] = { 8.0, 88.0, 95.0, 20.0 },
 }
 
 local singularityCount = 1
 local singularityMax = 0
 local ringCount = 1
-local ringMax = 1
+local ringMax = 0
+local orbsCount = 1
+local orbsMax = 0
 
 local slowAddCount = 1
 local fastAddCount = 1
@@ -134,7 +139,7 @@ function mod:OnBossEnable()
 
 	--[[ Time Layer 2 ]]--
 	self:Log("SPELL_AURA_APPLIED", "DelphuricBeam", 209244)
-	self:Log("SPELL_CAST_START", "EpochericOrb", 210022)
+	--self:Log("SPELL_CAST_SUCCESS", "EpochericOrb", 210022)
 	self:Log("SPELL_AURA_APPLIED", "AblatingExplosion", 209973)
 
 	--[[ Time Layer 3 ]]--
@@ -168,7 +173,7 @@ do
 			slowAddCount = slowAddCount + 1
 			self:Bar(208887, timers[209005][slowAddCount] or 30, CL.count:format(L.slowAdd, slowAddCount))
 		elseif spellId == 211647 then  -- Time Stop
-			self:Transition()
+			self:TimeStop()
 		elseif spellId == 209168 or spellId == 233012 or spellId == 233011 and t - prevSingularity > 1 then -- Spanning Singularity
 			self:SpanningSingularity()
 		end
@@ -178,6 +183,7 @@ end
 function mod:Nightwell(args)
 	singularityCount = 1
 	ringCount = 1
+	orbsCount = 1
 	slowAddCount = 1
 	fastAddCount = 1
 
@@ -189,11 +195,16 @@ function mod:Nightwell(args)
 	self:Bar(208807, timers[208807][ringCount], CL.count:format(self:SpellName(208807), ringCount))
 	self:Bar(208887, timers[209005][slowAddCount], CL.count:format(L.slowAdd, slowAddCount))
 	self:Bar(208887, timers[211616][fastAddCount], CL.count:format(L.fastAdd, fastAddCount))
+
+	if phase >= 2 then
+		self:Bar(210022, timers[210022][orbsCount] or 30, CL.count:format(self:SpellName(210022), orbsCount))
+	end
 end
 
-function mod:Transition()
+function mod:TimeStop()
 	self:StopBar(CL.count:format(self:SpellName(209168), singularityCount))
 	self:StopBar(CL.count:format(self:SpellName(208807), ringCount))
+	self:StopBar(CL.count:format(self:SpellName(210022), orbsCount))
 	self:StopBar(CL.count:format(L.fastAdd, fastAddCount))
 	self:StopBar(CL.count:format(L.slowAdd, slowAddCount))
 	self:StopBar(CL.count:format(L.slowZoneDespawn, slowZoneCount))
@@ -202,6 +213,8 @@ function mod:Transition()
 	if phase == 1 then
 		singularityMax = singularityCount - 1
 		ringMax = ringCount - 1
+	elseif phase == 2 then
+		orbsMax = orbsCount - 1
 	end
 	phase = phase + 1
 	self:Message("stages", "Neutral", "Info", CL.phase:format(phase), spellId)
@@ -244,6 +257,8 @@ end
 function mod:RAID_BOSS_EMOTE(event, msg, npcname)
 	if msg:find("spell:228877") then -- Arcanetic Ring
 		self:ArcaneticRing()
+	elseif msg:find("spell:210022") then -- Epocheric Orbs
+		self:EpochericOrb()
 	end
 end
 
@@ -335,8 +350,12 @@ do
 	end
 end
 
-function mod:EpochericOrb(args)
-	self:Message(args.spellId, "Urgent", "Alert", CL.incoming:format(args.spellName))
+function mod:EpochericOrb()
+	self:Message(210022, "Urgent", "Alert", CL.incoming:format(self:SpellName(210022)))
+	orbsCount = orbsCount + 1
+	if phase == 2 or orbsCount < orbsMax then
+		self:Bar(210022, timers[210022][orbsCount] or 30, CL.count:format(self:SpellName(210022), orbsCount))
+	end
 end
 
 function mod:AblatingExplosion(args)
