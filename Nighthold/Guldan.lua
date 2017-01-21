@@ -36,7 +36,7 @@ function mod:GetOptions()
 	return {
 		--[[ Essence of Aman'Thul ]]--
 		210339, -- Time Dilation
-		{217830, "SAY"}, -- Scattering Field
+		--{217830, "SAY"}, -- Scattering Field
 		{210296, "TANK"}, -- Resonant Barrier
 
 		--[[ Stage One ]]--
@@ -88,7 +88,7 @@ function mod:OnBossEnable()
 
 	--[[ Essence of Aman'Thul ]]--
 	self:Log("SPELL_AURA_APPLIED", "TimeDilation", 210339)
-	self:Log("SPELL_AURA_APPLIED", "ScatteringField", 217830)
+	--self:Log("SPELL_AURA_APPLIED", "ScatteringField", 217830)
 	self:Log("SPELL_AURA_APPLIED", "ResonantBarrier", 210296)
 
 	self:Log("SPELL_AURA_APPLIED", "EyeOfAmanThul", 206516)
