@@ -18,6 +18,9 @@ mod.respawnTime = 30
 --------------------------------------------------------------------------------
 -- Locals
 --
+
+local phase = 1
+
 local singularityCount = 1
 local slowAddCount = 1
 local fastAddCount = 1
@@ -40,8 +43,8 @@ local elementalsAlive = {}
 
 local L = mod:GetLocale()
 if L then
-        L.fastAdd = "Add Slow"
-        L.slowAdd = "Add Fast"
+	L.fastAdd = "Add Fast"
+	L.slowAdd = "Add Slow"
 end
 
 --------------------------------------------------------------------------------
@@ -55,6 +58,7 @@ function mod:GetOptions()
 	return {
 		--[[ General ]]--
 		208887, -- Summon Time Elementals
+		208863, -- Leave the Nightwell
 		"stages",
 		"berserk",
 
@@ -96,6 +100,7 @@ end
 function mod:OnBossEnable()
 	--[[ General ]]--
 	self:RegisterUnitEvent("UNIT_SPELLCAST_SUCCEEDED", nil, "boss1")
+	self:Log("SPELL_CAST_SUCCESS", "Nightwell", 208863)
 	self:RegisterEvent("INSTANCE_ENCOUNTER_ENGAGE_UNIT")
 
 	--[[ Recursive Elemental ]]--
@@ -130,14 +135,16 @@ function mod:OnBossEnable()
 end
 
 function mod:OnEngage()
-	singularityCount = 1
+
+	local phase = 1
+	--[[singularityCount = 1
 	slowAddCount = 1
 	fastAddCount = 1
 
 	self:Bar(209168, timers[209168][singularityCount], CL.count:format(self:SpellName(209168), singularityCount))
 	self:Bar(208887, timers[209005][slowAddCount], CL.count:format(L.slowAdd, slowAddCount))
 	self:Bar(208887, timers[211616][fastAddCount], CL.count:format(L.fastAdd, fastAddCount))
-
+	]]--
 	wipe(elementalsAlive)
 end
 
@@ -148,20 +155,35 @@ end
 --[[ General ]]--
 function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 	if spellId == 211616 then -- Summon Time Elemental - Fast
-		self:Message(208887, "Neutral", "Info", CL.count:format(self:SpellName(211616), fastAddCount))
+		self:Message(208887, "Neutral", "Info", CL.count:format(L.fastAdd, fastAddCount))
 		fastAddCount = fastAddCount + 1
 		self:Bar(208887, timers[211616][fastAddCount] or 30, CL.count:format(L.fastAdd, fastAddCount))
 	elseif spellId == 209005 then -- Summon Time Elemental - Slow
-		self:Message(208887, "Neutral", "Info", CL.count:format(self:SpellName(209005), slowAddCount))
+		self:Message(208887, "Neutral", "Info", CL.count:format(L.slowAdd, slowAddCount))
 		slowAddCount = slowAddCount + 1
 		self:Bar(208887, timers[209005][slowAddCount] or 30, CL.count:format(L.slowAdd, slowAddCount))
-	elseif spellId == 209030 or spellId == 208944 or spellId == 209123 or spellId == 209136 then -- XXX Saw 209030 and 208944 during testing, confirm on live
+	elseif spellId == 211647 then  -- Time Stop
+		self:StopBar(CL.count:format(self:SpellName(209168), singularityCount))
+		self:StopBar(CL.count:format(L.fastAdd, fastAddCount))
+		self:StopBar(CL.count:format(L.slowAdd, slowAddCount))
 		self:Message("stages", "Neutral", "Info", spellName, spellId)
+		phase = phase + 1
 	elseif spellId == 209168 then -- Spanning Singularity
 		self:Message(209168, "Important", "Alert", CL.count:format(self:SpellName(209168), singularityCount))
 		singularityCount = singularityCount + 1
 		self:Bar(spellId, timers[209168][singularityCount] or 30, CL.count:format(self:SpellName(209168), singularityCount))
 	end
+end
+
+function mod:Nightwell(args)
+	self:Message(args.spellId, "Attention", "Info")
+	singularityCount = 1
+	slowAddCount = 1
+	fastAddCount = 1
+	
+	self:Bar(209168, timers[209168][singularityCount], CL.count:format(self:SpellName(209168), singularityCount))
+	self:Bar(208887, timers[209005][slowAddCount], CL.count:format(L.slowAdd, slowAddCount))
+	self:Bar(208887, timers[211616][fastAddCount], CL.count:format(L.fastAdd, fastAddCount))	
 end
 
 do
