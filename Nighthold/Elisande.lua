@@ -34,6 +34,9 @@ local timers = {
 	-- Delphuric Beam, SPELL_CAST_START
 	[209244] = { 72.0, 57.0, 60.0 },
 
+	-- Conflexive Burst,
+	[209597] = { 58, 52.0, 56.0, 65.0 },
+
 	-- Summon Time Elemental - Slow, UNIT_SPELLCAST_SUCCEEDED
 	[209005] = { 5.0, 49.0, 52.0, 60.0 },
 
@@ -49,6 +52,7 @@ local orbsCount = 1
 local orbsMax = 0
 local beamsCount = 1
 local beamsMax = 0
+local burstsCount = 1
 
 local slowAddCount = 1
 local fastAddCount = 1
@@ -150,7 +154,7 @@ function mod:OnBossEnable()
 
 	--[[ Time Layer 3 ]]--
 	self:Log("SPELL_AURA_APPLIED", "PermeliativeTorment", 211261)
-	self:Log("SPELL_CAST_START", "ConflexiveBurst", 209597)
+	self:Log("SPELL_CAST_SUCCESS", "ConflexiveBurst", 209597)
 	self:Log("SPELL_AURA_APPLIED", "ConflexiveBurstApplied", 209598)
 	self:Log("SPELL_CAST_START", "AblativePulse", 209971)
 	self:Log("SPELL_AURA_APPLIED", "Ablated", 211887)
@@ -191,6 +195,7 @@ function mod:Nightwell(args)
 	ringCount = 1
 	orbsCount = 1
 	beamsCount = 1
+	burstsCount = 1
 	slowAddCount = 1
 	fastAddCount = 1
 
@@ -203,10 +208,13 @@ function mod:Nightwell(args)
 	self:Bar(208887, timers[209005][slowAddCount], CL.count:format(L.slowAdd, slowAddCount))
 	self:Bar(208887, timers[211616][fastAddCount], CL.count:format(L.fastAdd, fastAddCount))
 	if phase >= 2 then
-		self:Bar(210022, timers[210022][orbsCount] or 30, CL.count:format(self:SpellName(210022), orbsCount))
+		self:Bar(210022, timers[210022][orbsCount], CL.count:format(self:SpellName(210022), orbsCount))
 	end
 	if phase == 2 or (phase == 3 and self:Mythic()) then
-		self:Bar(209244, timers[209244][beamsCount] or 30, CL.count:format(self:SpellName(209244), beamsCount))
+		self:Bar(209244, timers[209244][beamsCount], CL.count:format(self:SpellName(209244), beamsCount))
+	end
+	if phase == 3 then
+		self:Bar(209597, timers[209597][burstsCount], CL.count:format(self:SpellName(209597), burstsCount))
 	end
 end
 
@@ -407,7 +415,8 @@ end
 
 
 function mod:ConflexiveBurst(args)
-	--self:Bar(args.spellId, ???)
+	burstsCount = burstsCount + 1
+	self:Bar(209597, timers[209597][burstsCount] or 10, CL.count:format(self:SpellName(209597), burstsCount))
 end
 
 do
