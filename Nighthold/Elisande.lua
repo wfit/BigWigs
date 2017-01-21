@@ -48,7 +48,8 @@ end
 -- Initialization
 --
 
-local zones_despawn = mod:AddCustomOption { "zones_despawn", "Time Zone Despawn" }
+local slow_zone_despawn = mod:AddCustomBarOption { "szd", "Slow Zone Despawn", icon = 207013 }
+local fast_zone_despawn = mod:AddCustomBarOption { "fzd", "Fast Zone Despawn", icon = 207011 }
 
 function mod:GetOptions()
 	return {
@@ -56,16 +57,17 @@ function mod:GetOptions()
 		208887, -- Summon Time Elementals
 		"stages",
 		"berserk",
-		zones_despawn,
 
 		--[[ Recursive Elemental ]]--
 		221863, -- Shield
 		221864, -- Blast
 		209165, -- Slow Time
+		slow_zone_despawn,
 
 		--[[ Expedient Elemental ]]--
 		209568, -- Exothermic Release
 		209166, -- Fast Time
+		fast_zone_despawn,
 
 		--[[ Time Layer 1 ]]--
 		208807, -- Arcanetic Ring
@@ -94,6 +96,7 @@ end
 function mod:OnBossEnable()
 	--[[ General ]]--
 	self:RegisterUnitEvent("UNIT_SPELLCAST_SUCCEEDED", nil, "boss1")
+	self:RegisterEvent("INSTANCE_ENCOUNTER_ENGAGE_UNIT")
 
 	--[[ Recursive Elemental ]]--
 	self:Log("SPELL_AURA_APPLIED", "ShieldApplied", 221863)
@@ -135,10 +138,7 @@ function mod:OnEngage()
 	self:Bar(208887, timers[209005][slowAddCount], CL.count:format(L.slowAdd, slowAddCount))
 	self:Bar(208887, timers[211616][fastAddCount], CL.count:format(L.fastAdd, fastAddCount))
 
-	if self:GetOption(zones_despawn) then
-		wipe(elementalsAlive)
-		self:RegisterEvent("INSTANCE_ENCOUNTER_ENGAGE_UNIT")
-	end
+	wipe(elementalsAlive)
 end
 
 --------------------------------------------------------------------------------
@@ -175,11 +175,8 @@ do
 			local unit = ("boss%d"):format(i)
 			if UnitExists(unit) then
 				local guid = UnitGUID(unit)
-				local mob = self:MobId(unit)
-				if mob == SLOW_ELEMENTAL then
-					elementalsSeen[guid] = true
-					elementalsAlive[guid] = mob
-				elseif mob == FAST_ELEMENTAL then
+				local mob = self:MobId(guid)
+				if mob == SLOW_ELEMENTAL or mob == FAST_ELEMENTAL then
 					elementalsSeen[guid] = true
 					elementalsAlive[guid] = mob
 				end
@@ -190,9 +187,9 @@ do
 			if not elementalsSeen[guid] then
 				elementalsAlive[guid] = nil
 				if mob == SLOW_ELEMENTAL then
-					self:Bar(false, 40, "Slow Time Zone", 207013)
+					self:Bar(slow_zone_despawn, 40, "Slow Zone Despawn", 207013)
 				elseif mob == FAST_ELEMENTAL then
-					self:Bar(false, 20, "Fast Time Zone", 207011)
+					self:Bar(fast_zone_despawn, 20, "Fast Zone Despawn", 207011)
 				end
 			end
 		end
