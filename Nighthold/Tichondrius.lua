@@ -55,7 +55,7 @@ function mod:GetOptions()
 	return {
 		--[[ Stage One ]]--
 		{206480, "SAY"}, -- Carrion Plague
-		213238, -- Seeker Swarm
+		{213238, "SAY"}, -- Seeker Swarm
 		{212794, "SAY"}, -- Brand of Argus
 		208230, -- Feast of Blood
 		213531, -- Echoes of the Void
@@ -112,6 +112,7 @@ function mod:OnEngage()
 	illusionaryNightCount = 1
 	self:Bar(206480, timers[206480][carrionPlagueCount], CL.count:format(self:SpellName(206480), carrionPlagueCount))
 	self:Bar(213238, timers[213238][seekerSwarmCount], CL.count:format(self:SpellName(213238), seekerSwarmCount))
+	self:ScheduleTimer("SeekerSwarmWarning", timers[213238][seekerSwarmCount] - 8)
 	self:Bar(212794, timers[212794][brandOfArgusCount], CL.count:format(self:SpellName(212794), brandOfArgusCount))
 	self:Bar(208230, timers[208230][feastOfBloodCount], CL.count:format(self:SpellName(208230), feastOfBloodCount))
 	self:Bar(213531, timers[213531][echoesOfTheVoidCount], CL.count:format(self:SpellName(213531), echoesOfTheVoidCount))
@@ -148,7 +149,15 @@ end
 function mod:SeekerSwarm(args)
 	self:Message(args.spellId, "Urgent", "Info", CL.count:format(args.spellName, carrionPlagueCount))
 	seekerSwarmCount = seekerSwarmCount + 1
-	self:Bar(args.spellId, timers[args.spellId][seekerSwarmCount] or 22, CL.count:format(args.spellName, seekerSwarmCount))
+	local time = timers[args.spellId][seekerSwarmCount] or 22
+	self:Bar(args.spellId, time, CL.count:format(args.spellName, seekerSwarmCount))
+	self:ScheduleTimer("SeekerSwarmWarning", time - 8)
+end
+
+function mod:SeekerSwarmWarning()
+	if UnitDebuff("player", self:SpellName(206480)) then
+		self:Say(213238, "{rt8}")
+	end
 end
 
 do
