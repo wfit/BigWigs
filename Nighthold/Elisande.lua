@@ -21,19 +21,22 @@ mod.respawnTime = 30
 
 local phase = 1
 
-local singularityCount = 1
-local slowAddCount = 1
-local fastAddCount = 1
 local timers = {
 	-- Spanning Singularity, UNIT_SPELLCAST_SUCCEEDED
-	[209168] = {23.0, 36.0, 57.0, 65.0},
+	[209168] = { 23.0, 36.0, 57.0, 65.0 },
 
 	-- Summon Time Elemental - Slow , UNIT_SPELLCAST_SUCCEEDED
-	[209005] = {5.0, 49.0, 52.0, 60.0},
+	[209005] = { 5.0, 49.0, 52.0, 60.0 },
 
 	-- Summon Time Elemental - Fast , UNIT_SPELLCAST_SUCCEEDED
-	[211616] = {8.0, 88.0, 95.0, 20.0},
+	[211616] = { 8.0, 88.0, 95.0, 20.0 },
 }
+
+local singularityCount = 1
+local singularityMax = 0
+
+local slowAddCount = 1
+local fastAddCount = 1
 
 local elementalsAlive = {}
 local slowZoneCount = 0
@@ -160,7 +163,9 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 	elseif spellId == 209168 then -- Spanning Singularity
 		self:Message(209168, "Important", "Alert", CL.count:format(self:SpellName(209168), singularityCount))
 		singularityCount = singularityCount + 1
-		self:Bar(spellId, timers[209168][singularityCount] or 30, CL.count:format(self:SpellName(209168), singularityCount))
+		if phase == 1 or singularityCount < singularityMax then
+			self:Bar(spellId, timers[209168][singularityCount] or 30, CL.count:format(self:SpellName(209168), singularityCount))
+		end
 	end
 end
 
@@ -185,6 +190,9 @@ function mod:Transition()
 	self:StopBar(CL.count:format(L.slowZoneDespawn, slowZoneCount))
 	self:StopBar(CL.count:format(L.slowZoneDespawn, slowZoneCount - 1))
 	self:StopBar(CL.count:format(L.fastZoneDespawn, fastZoneCount))
+	if phase == 1 then
+		singularityMax = singularityCount - 1
+	end
 	phase = phase + 1
 	self:Message("stages", "Neutral", "Info", CL.phase:format(phase), spellId)
 end
