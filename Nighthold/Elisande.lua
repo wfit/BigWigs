@@ -108,7 +108,7 @@ function mod:GetOptions()
 		209973, -- Ablating Explosion
 
 		--[[ Time Layer 3 ]]--
-		{211261, "SAY", "FLASH"}, -- Permeliative Torment
+		{211261, "FLASH"}, -- Permeliative Torment
 		{209597, "SAY", "FLASH"}, -- Conflexive Burst
 		209971, -- Ablative Pulse
 		{211887, "TANK"}, -- Ablated
@@ -399,7 +399,6 @@ do
 	function mod:PermeliativeTorment(args)
 		if self:Me(args.destGUID) then
 			self:Flash(args.spellId)
-			self:Say(args.spellId)
 			local _, _, _, _, _, _, expires = UnitDebuff("player", args.spellName)
 			local t = expires - GetTime()
 			self:TargetBar(args.spellId, t, args.destName)
