@@ -32,12 +32,15 @@ local L = mod:GetLocale()
 -- Initialization
 --
 
+local tank_marker = mod:AddMarkerOption(true, "player", 1, 71038, 6, 7)
+
 function mod:GetOptions()
 	return {
 		--[[ Essence of Aman'Thul ]]--
 		--210339, -- Time Dilation
 		--{217830, "SAY"}, -- Scattering Field
 		--{210296, "TANK"}, -- Resonant Barrier
+		tank_marker,
 
 		--[[ Stage One ]]--
 		{206219, "SAY", "FLASH"}, -- Liquid Hellfire
@@ -146,6 +149,27 @@ function mod:OnEngage()
 	handOfGuldanCount = 1
 	self:Bar(212258, 7) -- Hand of Gul'dan
 	self:Bar(206515, 11) -- Fel Efflux
+
+	if self:GetOption(tank_marker) then
+		local marked = 0
+		for unit in self:IterateGroup() do
+			if self:Tank(unit) then
+				SetRaidTarget(unit, 7 - marked)
+				marked = marked + 1
+				if marked == 2 then break end
+			end
+		end
+	end
+end
+
+function mod:OnBossDisable()
+	if self:GetOption(tank_marker) then
+		for unit in self:IterateGroup() do
+			if self:Tank(unit) then
+				SetRaidTarget(unit, 0)
+			end
+		end
+	end
 end
 
 --------------------------------------------------------------------------------
