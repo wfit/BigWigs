@@ -32,12 +32,14 @@ local L = mod:GetLocale()
 -- Initialization
 --
 
-local callOfTheNightMarker = mod:AddMarkerOption(false, "player", 1, 218809, 1, 2, 3, 4, 5, 6)
+local bossMarker = mod:AddMarkerOption(false, "npc", 3, -13694, 1, 3, 4)
+local callOfTheNightMarker = mod:AddMarkerOption(false, "player", 1, 218809, 2, 5, 6, 7)
 local fetterMarker = mod:AddMarkerOption(false, "player", 8, 218304, 8)
 function mod:GetOptions()
 	return {
 		--[[ General ]]--
 		"stages",
+		bossMarker,
 
 		--[[ Arcanist Tel'arn ]]--
 		{218809, "SAY", "FLASH", "PROXIMITY"}, -- Call of Night
@@ -97,6 +99,7 @@ function mod:OnEngage()
 	self:Bar(218304, 21.5) -- Parasitic Fetter, to _success
 	self:Bar(218438, 35) -- Controlled Chaos, to_start
 	self:RegisterUnitEvent("UNIT_HEALTH_FREQUENT", nil, "boss1")
+	self:RegisterEvent("INSTANCE_ENCOUNTER_ENGAGE_UNIT")
 	if callOfNightCheck then
 		self:CancelTimer(callOfNightCheck)
 		callOfNightCheck = nil
@@ -145,9 +148,23 @@ do
 	end
 end
 
+function mod:INSTANCE_ENCOUNTER_ENGAGE_UNIT()
+	for i = 1, 5 do
+		local unit = ("boss%d"):format(i)
+		local mob = self:MobId(unit)
+		if mob == 104528 then -- Arcanist
+			self:SetIcon(bossMarker, unit, 3)
+		elseif mob == 109038 then -- Solarist
+			self:SetIcon(bossMarker, unit, 1)
+		elseif mob == 109041 then -- Naturalist
+			self:SetIcon(bossMarker, unit, 4)
+		end
+	end
+end
+
 --[[ Arcanist Tel'arn ]]--
 do
-	local playerList, proxList, isOnMe, iconsUnused = mod:NewTargetList(), {}, nil, {1,2,3,4,5,6}
+	local playerList, proxList, isOnMe, iconsUnused = mod:NewTargetList(), {}, nil, {2,5,6,7}
 
 	function mod:CallOfNight(args)
 		proxList[#proxList+1] = args.destName
