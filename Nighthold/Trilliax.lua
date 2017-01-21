@@ -43,7 +43,7 @@ end
 -- Initialization
 --
 
-local scrubbers_marker = mod:AddMarkerOption(false, "npc", 1, 211907, 1, 2, 3, 4, 5, 6, 7, 8)
+local scrubbers_marker = mod:AddMarkerOption(true, "npc", 1, 211907, 1, 2, 3, 4, 5, 6, 7, 8)
 
 function mod:GetOptions()
 	return {
