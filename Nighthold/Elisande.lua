@@ -132,15 +132,13 @@ function mod:OnEngage()
 	fastAddCount = 1
 
 	self:Bar(209168, timers[209168][singularityCount], CL.count:format(self:SpellName(209168), singularityCount))
-	self:Bar(209005, timers[209005][slowAddCount], CL.count:format(self:SpellName(209005), slowAddCount))
-	self:Bar(211616, timers[211616][fastAddCount], CL.count:format(self:SpellName(211616), fastAddCount))
+	self:Bar(208887, timers[209005][slowAddCount], CL.count:format(L.slowAdd, slowAddCount))
+	self:Bar(208887, timers[211616][fastAddCount], CL.count:format(L.fastAdd, fastAddCount))
 
 	if self:GetOption(zones_despawn) then
 		wipe(elementalsAlive)
 		self:RegisterEvent("INSTANCE_ENCOUNTER_ENGAGE_UNIT")
 	end
-	self:Bar(208887, timers[209005][slowAddCount], CL.count:format(L.slowAdd, slowAddCount))
-	self:Bar(208887, timers[211616][fastAddCount], CL.count:format(L.fastAdd, fastAddCount))
 end
 
 --------------------------------------------------------------------------------
