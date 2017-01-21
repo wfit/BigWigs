@@ -352,6 +352,7 @@ end
 
 function mod:EpochericOrb()
 	self:Message(210022, "Urgent", "Alert", CL.incoming:format(self:SpellName(210022)))
+	self:Bar(210022, 9, CL.cast:format(self:SpellName(210022)))
 	orbsCount = orbsCount + 1
 	if phase == 2 or orbsCount < orbsMax then
 		self:Bar(210022, timers[210022][orbsCount] or 30, CL.count:format(self:SpellName(210022), orbsCount))
