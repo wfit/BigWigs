@@ -156,14 +156,7 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 		slowAddCount = slowAddCount + 1
 		self:Bar(208887, timers[209005][slowAddCount] or 30, CL.count:format(L.slowAdd, slowAddCount))
 	elseif spellId == 211647 then  -- Time Stop
-		self:StopBar(CL.count:format(self:SpellName(209168), singularityCount))
-		self:StopBar(CL.count:format(L.fastAdd, fastAddCount))
-		self:StopBar(CL.count:format(L.slowAdd, slowAddCount))
-		self:StopBar(CL.count:format(L.slowZoneDespawn, slowZoneCount))
-		self:StopBar(CL.count:format(L.slowZoneDespawn, slowZoneCount - 1))
-		self:StopBar(CL.count:format(L.fastZoneDespawn, fastZoneCount))
-		phase = phase + 1
-		self:Message("stages", "Neutral", "Info", CL.phase:format(phase), spellId)
+		mod:Transition()
 	elseif spellId == 209168 then -- Spanning Singularity
 		self:Message(209168, "Important", "Alert", CL.count:format(self:SpellName(209168), singularityCount))
 		singularityCount = singularityCount + 1
@@ -183,6 +176,17 @@ function mod:Nightwell(args)
 	self:Bar(209168, timers[209168][singularityCount], CL.count:format(self:SpellName(209168), singularityCount))
 	self:Bar(208887, timers[209005][slowAddCount], CL.count:format(L.slowAdd, slowAddCount))
 	self:Bar(208887, timers[211616][fastAddCount], CL.count:format(L.fastAdd, fastAddCount))
+end
+
+function mod:Transition()
+	self:StopBar(CL.count:format(self:SpellName(209168), singularityCount))
+	self:StopBar(CL.count:format(L.fastAdd, fastAddCount))
+	self:StopBar(CL.count:format(L.slowAdd, slowAddCount))
+	self:StopBar(CL.count:format(L.slowZoneDespawn, slowZoneCount))
+	self:StopBar(CL.count:format(L.slowZoneDespawn, slowZoneCount - 1))
+	self:StopBar(CL.count:format(L.fastZoneDespawn, fastZoneCount))
+	phase = phase + 1
+	self:Message("stages", "Neutral", "Info", CL.phase:format(phase), spellId)
 end
 
 do
