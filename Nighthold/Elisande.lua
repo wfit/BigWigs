@@ -25,14 +25,14 @@ local singularityCount = 1
 local slowAddCount = 1
 local fastAddCount = 1
 local timers = {
-        -- Spanning Singularity, UNIT_SPELLCAST_SUCCEEDED
-        [209168] = {23.0, 36.0, 57.0, 65.0},
+	-- Spanning Singularity, UNIT_SPELLCAST_SUCCEEDED
+	[209168] = {23.0, 36.0, 57.0, 65.0},
 
-        -- Summon Time Elemental - Slow , UNIT_SPELLCAST_SUCCEEDED
-        [209005] = {5.0, 49.0, 52.0, 60.0},
+	-- Summon Time Elemental - Slow , UNIT_SPELLCAST_SUCCEEDED
+	[209005] = {5.0, 49.0, 52.0, 60.0},
 
-        -- Summon Time Elemental - Fast , UNIT_SPELLCAST_SUCCEEDED
-        [211616] = {8.0, 88.0, 95.0, 20.0},
+	-- Summon Time Elemental - Fast , UNIT_SPELLCAST_SUCCEEDED
+	[211616] = {8.0, 88.0, 95.0, 20.0},
 }
 
 local elementalsAlive = {}
