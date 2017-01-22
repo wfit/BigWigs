@@ -352,11 +352,11 @@ do
 	function mod:BondsOfFel(args)
 		list[#list+1] = args.destName
 		if #list == 1 then
-			self:ScheduleTimer("TargetMessage", 0.1, args.spellId, list, "Important", "Warning", nil, nil, true)
+			self:ScheduleTimer("TargetMessage", 0.1, 206222, list, "Important", "Warning", nil, nil, true)
 		end
 		if self:Me(args.destGUID) then
-			self:Say(args.spellId, CL.count:format(args.spellName, #list))
-			self:Flash(args.spellId)
+			self:Say(206222, CL.count:format(args.spellName, #list))
+			self:Flash(206222)
 		end
 	end
 end
