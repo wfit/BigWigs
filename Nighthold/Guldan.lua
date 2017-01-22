@@ -388,14 +388,15 @@ end
 
 function mod:EyeOfGuldanApplied(args)
 	if self:Me(args.destGUID) then
-		self:Say(args.spellId)
-		self:OpenProximity(args.spellId, 8)
+		local key = (args.spellId == 209454) and 209270 or 211152
+		self:Say(key)
+		self:OpenProximity(key, 8)
 	end
 end
 
 function mod:EyeOfGuldanRemoved(args)
 	if self:Me(args.destGUID) then
-		self:CloseProximity(args.spellId)
+		self:CloseProximity((args.spellId == 209454) and 209270 or 211152)
 	end
 end
 
