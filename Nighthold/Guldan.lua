@@ -429,9 +429,7 @@ function mod:StormOfTheDestroyer(args)
 end
 
 do
-	local prev = 0
 	local list = mod:NewTargetList()
-        
 	local function warn(self, spellId, spellName)
 		self:Message(spellId, "Important", "Warning", ("Soul Siphon +%d"):format(#list))
 		wipe(list)
@@ -439,15 +437,12 @@ do
 
 	function mod:SoulSiphon(args)
 		local t = GetTime()
-		if t - prev > 1.5 then -- First from batch
-			soulSiphonCount = soulSiphonCount + 1
-			self:Bar(args.spellId, timers[phase][args.spellId][soulSiphonCount] or 10.2)
-		end
 
 		list[#list+1] = args.destName
 		if #list == 1 then
-			--self:ScheduleTimer("TargetMessage", 1, args.spellId, list, "Important", "Warning", nil, nil, true)
 			self:ScheduleTimer(warn, 1, self, args.spellId, args.spellName)
+			soulSiphonCount = soulSiphonCount + 1
+			self:Bar(args.spellId, timers[phase][args.spellId][soulSiphonCount] or 10.2)
 		end
 	end
 end
