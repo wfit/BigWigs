@@ -493,6 +493,7 @@ do
 	local mapping = {
 		[206515] = 206514, -- Fel Efflux
 		[209518] = 209270, -- Eye of Guldan
+		[211132] = 211152, -- Empowered Eye of Gul'dan
 	}
 	local prev = 0
 	function mod:Damage(args)
