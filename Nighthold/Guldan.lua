@@ -382,7 +382,7 @@ function mod:EyeOfGuldan(args)
 		self:Bar(args.spellId, 53.3)
 	else
 		eyeOfGuldanCount = eyeOfGuldanCount + 1
-		self:Bar(args.spellId, timers[phase][args.spellId][eyeOfGuldanCount])
+		self:Bar(args.spellId, timers[phase][args.spellId][eyeOfGuldanCount] or 25)
 	end
 end
 
