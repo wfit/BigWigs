@@ -162,7 +162,7 @@ function mod:OnBossEnable()
 	--[[ Stage Two ]]--
 	self:Log("SPELL_AURA_REMOVED", "Phase2", 206516) -- Eye of Aman'Thu
 	self:Log("SPELL_CAST_START", "BondsOfFelCast", 206222, 206221)
-	self:Log("SPELL_AURA_APPLIED", "BondsOfFel", 209011)
+	self:Log("SPELL_AURA_APPLIED", "BondsOfFel", 209011, 206366)
 	self:Log("SPELL_CAST_START", "EyeOfGuldan", 209270, 211152)
 	self:Log("SPELL_AURA_APPLIED", "EyeOfGuldanApplied", 209454, 206384)
 	self:Log("SPELL_AURA_REMOVED", "EyeOfGuldanRemoved", 209454, 206384)
@@ -358,13 +358,14 @@ end
 do
 	local list = mod:NewTargetList()
 	function mod:BondsOfFel(args)
+		local key = (args.destId == 209011) and 206222 or 206221
 		list[#list+1] = args.destName
 		if #list == 1 then
-			self:ScheduleTimer("TargetMessage", 0.1, 206222, list, "Important", "Warning", nil, nil, true)
+			self:ScheduleTimer("TargetMessage", 0.5, key, list, "Important", "Warning", nil, nil, true)
 		end
 		if self:Me(args.destGUID) then
-			self:Say(206222, CL.count:format(args.spellName, #list))
-			self:Flash(206222)
+			self:Say(key, CL.count:format(args.spellName, #list))
+			self:Flash(key)
 		end
 	end
 end
@@ -414,7 +415,7 @@ end
 
 --[[ Stage Three ]]--
 function mod:SecondTransition(args)
-	self:StopBar(206220)
+	self:StopBar(206220) -- Empowered Liquid Hellfire
 	self:StopBar(206221)
 	self:StopBar(211152)
 	self:Message("stages", "Neutral", "Long", "Second Transition")
