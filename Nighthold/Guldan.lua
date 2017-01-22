@@ -121,7 +121,7 @@ function mod:GetOptions()
 
 		--[[ Stage Three ]]--
 		167819, -- Storm of the Destroyer
-		{221891, "HEALER"}, -- Soul Siphon
+		221891, -- Soul Siphon
 		206744, -- Black Harvest
 		{221783, "SAY", "FLASH", "PROXIMITY"}, -- Flames of Sargeras
 		221781, -- Desolate Ground
