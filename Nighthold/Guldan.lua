@@ -162,7 +162,7 @@ function mod:OnBossEnable()
 	--[[ Stage Two ]]--
 	self:Log("SPELL_AURA_REMOVED", "Phase2", 206516) -- Eye of Aman'Thu
 	self:Log("SPELL_CAST_START", "BondsOfFelCast", 206222, 206221)
-	self:Log("SPELL_AURA_APPLIED", "BondsOfFel", 209011)
+	self:Log("SPELL_AURA_APPLIED", "BondsOfFel", 209011, 206221)
 	self:Log("SPELL_CAST_START", "EyeOfGuldan", 209270, 211152)
 	self:Log("SPELL_AURA_APPLIED", "EyeOfGuldanApplied", 209454, 206384)
 	self:Log("SPELL_AURA_REMOVED", "EyeOfGuldanRemoved", 209454, 206384)
