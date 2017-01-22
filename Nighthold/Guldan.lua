@@ -162,7 +162,7 @@ function mod:OnBossEnable()
 	--[[ Stage Two ]]--
 	self:Log("SPELL_AURA_REMOVED", "Phase2", 206516) -- Eye of Aman'Thu
 	self:Log("SPELL_CAST_START", "BondsOfFelCast", 206222, 206221)
-	self:Log("SPELL_AURA_APPLIED", "BondsOfFel", 209011, 206221)
+	self:Log("SPELL_AURA_APPLIED", "BondsOfFel", 209011)
 	self:Log("SPELL_CAST_START", "EyeOfGuldan", 209270, 211152)
 	self:Log("SPELL_AURA_APPLIED", "EyeOfGuldanApplied", 209454, 206384)
 	self:Log("SPELL_AURA_REMOVED", "EyeOfGuldanRemoved", 209454, 206384)
@@ -433,7 +433,7 @@ end
 
 function mod:StormOfTheDestroyer(args)
 	self:Message(args.spellId, "Important", "Long", CL.casting:format(CL.count:format(args.spellName, stormCount)))
-	self:Bar(args.spellId, 10, L.cast:format(args.spellName))
+	self:Bar(args.spellId, 10, CL.cast:format(args.spellName))
 	stormCount = stormCount + 1
 	self:Bar(167819, timers[phase][167819][stormCount] or 60, CL.count:format(args.spellName, stormCount))
 end
