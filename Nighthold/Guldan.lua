@@ -181,11 +181,11 @@ function mod:OnBossEnable()
 	self:Log("SPELL_AURA_APPLIED", "FlamesOfSargerasSoon", 221606)
 	self:Log("SPELL_AURA_REMOVED", "FlamesOfSargerasRemoved", 221603)
 
-	self:Log("SPELL_AURA_APPLIED", "Damage", 206515, 211132, 221781) -- Fel Efflux, Eye of Gul'dan, Empowered Eye of Gul'dan, Desolate Ground
-	self:Log("SPELL_PERIODIC_DAMAGE", "Damage", 206515, 211132, 221781)
-	self:Log("SPELL_PERIODIC_MISSED", "Damage", 206515, 211132, 221781)
-	self:Log("SPELL_DAMAGE", "Damage", 217770, 211132, 221781) -- Gaze of Vethriz, Eye of Gul'dan, Empowered Eye of Gul'dan, Desolate Ground
-	self:Log("SPELL_MISSED", "Damage", 217770, 211132, 221781)
+	self:Log("SPELL_AURA_APPLIED", "Damage", 206515, 209518, 211132, 221781) -- Fel Efflux, Eye of Gul'dan, Empowered Eye of Gul'dan, Desolate Ground
+	self:Log("SPELL_PERIODIC_DAMAGE", "Damage", 206515, 209518, 211132, 221781)
+	self:Log("SPELL_PERIODIC_MISSED", "Damage", 206515, 209518, 211132, 221781)
+	self:Log("SPELL_DAMAGE", "Damage", 217770, 209518, 211132, 221781) -- Gaze of Vethriz, Eye of Gul'dan, Empowered Eye of Gul'dan, Desolate Ground
+	self:Log("SPELL_MISSED", "Damage", 217770, 209518, 211132, 221781)
 end
 
 function mod:OnEngage()
@@ -490,12 +490,17 @@ function mod:FlamesOfSargerasRemoved(args)
 end
 
 do
+	local mapping = {
+		[206515] = 206514, -- Fel Efflux
+		[209518] = 209270, -- Eye of Guldan
+	}
 	local prev = 0
 	function mod:Damage(args)
 		local t = GetTime()
 		if self:Me(args.destGUID) and t - prev > 1.5 then
 			prev = t
-			self:Message(args.spellId, "Personal", "Alarm", CL.underyou:format(args.spellName))
+			local id = mapping[args.spellId] or args.spellId
+			self:Message(id, "Personal", "Alarm", CL.underyou:format(args.spellName))
 		end
 	end
 end
