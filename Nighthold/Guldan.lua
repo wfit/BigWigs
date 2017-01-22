@@ -28,7 +28,6 @@ local stormCount = 1
 local soulSiphonCount = 1
 local harvestCount = 1
 local carrionCount = 1
-local addKilled = 0
 local soulsRemaining = 0
 local bondsEmpowered = false
 local hellfireEmpowered = false
@@ -76,6 +75,7 @@ local timers = {
 local L = mod:GetLocale()
 if L then
 	L.remaining = "Remaining"
+	L.firstTransi = "indulge"
 end
 
 --------------------------------------------------------------------------------
@@ -139,6 +139,7 @@ end
 function mod:OnBossEnable()
 	self:RegisterUnitEvent("UNIT_SPELLCAST_SUCCEEDED", nil, "boss1", "boss2", "boss3", "boss4", "boss5")
 	self:RegisterEvent("RAID_BOSS_EMOTE")
+	self:RegisterEvent("CHAT_MSG_MONSTER_YELL")
 
 	--[[ Stage One ]]--
 	self:Log("SPELL_CAST_START", "LiquidHellfire", 206219, 206220)
@@ -197,7 +198,6 @@ function mod:OnEngage()
 	liquidHellfireCount = 1
 	felEffluxCount = 1
 	handOfGuldanCount = 1
-	addKilled = 0
 
 	self:Bar(206219, timers[phase][206219][liquidHellfireCount], CL.count:format(self:SpellName(206219), liquidHellfireCount)) -- Liquid Hellfire
 	self:Bar(206514, timers[phase][206514][felEffluxCount]) -- Fel Efflux
@@ -257,6 +257,12 @@ function mod:RAID_BOSS_EMOTE(event, msg, npcname)
 		local time = self:BarTimeLeft(mod:SpellName(209270))
 		self:StopBar(mod:SpellName(209270))
 		self:Bar(211152, time)
+	end
+end
+
+function mod:CHAT_MSG_MONSTER_YELL(event, msg)
+	if msg:find(L.firstTransi) then
+		self:FirstTransition()
 	end
 end
 
@@ -331,13 +337,10 @@ end
 
 --[[ Stage Two ]]--
 function mod:FirstTransition(args)
-	addKilled = addKilled + 1
-	if addKilled == 3 then
-		self:StopBar(206514) -- Fel Efflux
-		self:StopBar(212258) -- Hand of Gul'dan
-		self:Message("stages", "Neutral", "Long", "First Transition")
-		self:Bar("stages", 19, CL.phase:format(2), 206516)
-	end
+	self:StopBar(206514) -- Fel Efflux
+	self:StopBar(CL.count:format(self:SpellName(212258), handOfGuldanCount)) -- Hand of Gul'dan
+	self:Message("stages", "Neutral", "Long", "First Transition", false)
+	self:Bar("stages", 19, CL.phase:format(2), 206516)
 end
 
 function mod:Phase2(args)
