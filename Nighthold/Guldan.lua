@@ -90,7 +90,7 @@ function mod:GetOptions()
 
 		--[[ Stage One ]]--
 		206219, -- Liquid Hellfire
-		206515, -- Fel Efflux
+		206514, -- Fel Efflux
 		212258, -- Hand of Gul'dan
 
 		--[[ Inquisitor Vethriz ]]--
@@ -108,7 +108,7 @@ function mod:GetOptions()
 		{206896, "TANK"}, -- Torn Soul
 
 		--[[ Stage Two ]]--
-		{209011, "SAY", "FLASH"}, -- Bonds of Fel
+		{206222, "SAY", "FLASH"}, -- Bonds of Fel
 		{206221, "SAY", "FLASH"}, -- Empowered Bonds of Fel
 		206220, -- Empowered Liquid Hellfire
 		{209270, "SAY", "PROXIMITY"}, -- Eye of Gul'dan
@@ -181,11 +181,11 @@ function mod:OnBossEnable()
 	self:Log("SPELL_AURA_APPLIED", "FlamesOfSargerasSoon", 221606)
 	self:Log("SPELL_AURA_REMOVED", "FlamesOfSargerasRemoved", 221603)
 
-	self:Log("SPELL_AURA_APPLIED", "Damage", 206515, 209518, 211132, 221781) -- Fel Efflux, Eye of Gul'dan, Empowered Eye of Gul'dan, Desolate Ground
-	self:Log("SPELL_PERIODIC_DAMAGE", "Damage", 206515, 209518, 211132, 221781)
-	self:Log("SPELL_PERIODIC_MISSED", "Damage", 206515, 209518, 211132, 221781)
-	self:Log("SPELL_DAMAGE", "Damage", 217770, 209518, 211132, 221781) -- Gaze of Vethriz, Eye of Gul'dan, Empowered Eye of Gul'dan, Desolate Ground
-	self:Log("SPELL_MISSED", "Damage", 217770, 209518, 211132, 221781)
+	self:Log("SPELL_AURA_APPLIED", "Damage", 206515, 211132, 221781) -- Fel Efflux, Eye of Gul'dan, Empowered Eye of Gul'dan, Desolate Ground
+	self:Log("SPELL_PERIODIC_DAMAGE", "Damage", 206515, 211132, 221781)
+	self:Log("SPELL_PERIODIC_MISSED", "Damage", 206515, 211132, 221781)
+	self:Log("SPELL_DAMAGE", "Damage", 217770, 211132, 221781) -- Gaze of Vethriz, Eye of Gul'dan, Empowered Eye of Gul'dan, Desolate Ground
+	self:Log("SPELL_MISSED", "Damage", 217770, 211132, 221781)
 end
 
 function mod:OnEngage()
