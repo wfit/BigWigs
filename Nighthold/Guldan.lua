@@ -488,13 +488,20 @@ function mod:FlamesOfSargeras(args)
 	self:Bar(args.spellId, 51.3) -- Flames of Sargeras
 end
 
-function mod:FlamesOfSargerasSoon(args)
-	if self:Me(args.destGUID) then
-		self:TargetMessage(221783, args.destName, "Personal", "Warning", CL.soon:format(args.spellName))
-		self:Say(221783)
-		self:Flash(221783)
-		self:TargetBar(221783, 7, args.destName)
-		self:OpenProximity(221783, 8)
+do
+	local list = mod:NewTargetList()
+	function mod:FlamesOfSargerasSoon(args)
+		list[#list + 1] = args.destName
+		if #list == 1 then
+			self:ScheduleTimer("TargetMessage", 0.2, 221783, list, "Important", "Warning", nil, nil, true)
+		end
+		if self:Me(args.destGUID) then
+			self:TargetMessage(221783, args.destName, "Personal", "Warning", CL.soon:format(args.spellName))
+			self:Say(221783)
+			self:Flash(221783)
+			self:TargetBar(221783, 7, args.destName)
+			self:OpenProximity(221783, 8)
+		end
 	end
 end
 
