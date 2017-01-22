@@ -234,6 +234,9 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 end
 
 function mod:RAID_BOSS_EMOTE(event, msg, npcname)
+	if not msg:find("gains") then
+		return
+	end
 	if msg:find("spell:206221") then -- 85%: Empowered Bonds of Fel
 		self:Message("stages", "Neutral", "Info", CL.other:format("85%", mod:SpellName(206221)), false)
 		local unempowered = CL.count:format(self:SpellName(206222), bondsOfFelCount)
