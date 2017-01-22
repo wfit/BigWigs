@@ -29,6 +29,7 @@ local soulSiphonCount = 1
 local harvestCount = 1
 local carrionCount = 1
 local addKilled = 0
+local soulsRemaining = 0
 
 local timers = {
 	-- Phase 1
@@ -70,6 +71,9 @@ local timers = {
 --
 
 local L = mod:GetLocale()
+if L then
+	L.remaining = "Remaining"
+end
 
 --------------------------------------------------------------------------------
 -- Initialization
@@ -112,6 +116,7 @@ function mod:GetOptions()
 		208672, -- Carrion Wave
 
 		--[[ Stage Three ]]--
+		"infobox",
 		167819, -- Storm of the Destroyer
 		{221891, "HEALER"}, -- Soul Siphon
 		206744, -- Black Harvest
@@ -170,6 +175,7 @@ function mod:OnBossEnable()
 	self:Log("SPELL_AURA_REMOVED", "Phase3", 227427) -- Eye of Aman'Thul
 	self:Log("SPELL_CAST_START", "StormOfTheDestroyer", 167819)
 	self:Log("SPELL_AURA_APPLIED", "SoulSiphon", 221891)
+	self:Log("SPELL_AURA_REMOVED", "SoulSiphonRemoved", 221891)
 	self:Log("SPELL_CAST_START", "BlackHarvest", 206744)
 	self:Log("SPELL_CAST_START", "FlamesOfSargeras", 221783)
 	self:Log("SPELL_AURA_APPLIED", "FlamesOfSargerasSoon", 221606)
@@ -414,11 +420,15 @@ function mod:Phase3(args)
 	stormCount = 1
 	soulSiphonCount = 1
 	harvestCount = 1
+	soulsRemaining = 0
 	self:Bar(211152, timers[phase][211152][eyeOfGuldanCount]) -- Empowered Eye of Gul'dan
 	self:Bar(167819, timers[phase][167819][stormCount], CL.count:format(self:SpellName(167819), stormCount)) -- Storm of the Destroyer
 	self:Bar(221891, timers[phase][221891][soulSiphonCount]) -- Soul Siphon
 	self:Bar(206744, timers[phase][206744][harvestCount], CL.count:format(self:SpellName(206744), harvestCount)) -- Black Harvest
 	self:Bar(221783, 13.8) -- Flames of Sargeras
+	self:OpenInfo("infobox", self:SpellName(221891))
+	self:SetInfo("infobox", 1, L.remaining)
+	self:SetInfo("infobox", 2, soulsRemaining)
 end
 
 function mod:StormOfTheDestroyer(args)
@@ -442,6 +452,13 @@ do
 			soulSiphonCount = soulSiphonCount + 1
 			self:Bar(args.spellId, timers[phase][args.spellId][soulSiphonCount] or 10.2)
 		end
+		soulsRemaining = soulsRemaining + 1
+		self:SetInfo("infobox", 2, soulsRemaining)
+	end
+
+	function mod:SoulSiphonRemoved(args)
+		soulsRemaining = soulsRemaining - 1
+		self:SetInfo("infobox", 2, soulsRemaining)
 	end
 end
 
