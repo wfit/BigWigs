@@ -225,8 +225,8 @@ end
 function mod:RAID_BOSS_EMOTE(event, msg, npcname)
 	if msg:find("spell:206221") then -- 85%: Empowered Bonds of Fel
 		self:Message("stages", "Neutral", "Info", CL.other:format("85%", mod:SpellName(206221)), false)
-		local time = self:BarTimeLeft(mod:SpellName(206222))
-		self:Bar(206221, time)
+		local time = self:BarTimeLeft(CL.count:format(self:SpellName(206222), bondsOfFelCount))
+		self:Bar(206221, time, CL.count:format(self:SpellName(206221), bondsOfFelCount))
 	elseif msg:find("spell:206220") then -- 70%: Empowered Liquid Hellfire
 		self:Message("stages", "Neutral", "Info", CL.other:format("70%", mod:SpellName(206220)), false)
 		local time = self:BarTimeLeft(CL.count:format(self:SpellName(206219), liquidHellfireCount))
