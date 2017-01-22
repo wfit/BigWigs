@@ -27,6 +27,7 @@ local eyeOfGuldanCount = 1
 local stormCount = 1
 local soulSiphonCount = 1
 local harvestCount = 1
+local carrionCount = 1
 
 local timers = {
 	-- Phase 1
@@ -257,6 +258,10 @@ function mod:HandOfGuldan(args)
 	if handOfGuldanCount < 4 then
 		self:Bar(args.spellId, timers[phase][args.spellId][handOfGuldanCount], CL.count:format(args.spellName, handOfGuldanCount))
 	end
+	if phase == 2 and not self:Mythic() then
+		carrionCount = 1
+		self:CDBar(208672, 9, CL.count:format(self:SpellName(208672), carrionCount))
+	end
 end
 
 --[[ Inquisitor Vethriz ]]--
@@ -374,8 +379,10 @@ end
 
 function mod:CarrionWave(args)
 	if self:Interrupter(args.sourceGUID) then
-		self:Message(args.spellId, "Attention", "Long")
-		self:Bar(args.spellId, 6.1)
+		self:StopBar(CL.count:format(args.spellName, carrionCount))
+		self:Message(args.spellId, "Attention", "Long", CL.count:format(args.spellName, carrionCount))
+		carrionCount = carrionCount + 1
+		self:Bar(args.spellId, 6.1, CL.count:format(args.spellName, carrionCount))
 	end
 end
 
