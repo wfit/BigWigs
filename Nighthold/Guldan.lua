@@ -90,6 +90,7 @@ function mod:GetOptions()
 		"stages",
 		tank_marker,
 		"infobox",
+		"berserk",
 
 		--[[ Stage One ]]--
 		206219, -- Liquid Hellfire
@@ -213,6 +214,8 @@ function mod:OnEngage()
 			end
 		end
 	end
+
+	self:Berserk(720)
 end
 
 function mod:OnBossDisable()
