@@ -405,7 +405,7 @@ do
 end
 
 function mod:CarrionWave(args)
-	if self:Interrupter(args.sourceGUID) then
+	if self:Interrupter() then
 		self:StopBar(CL.count:format(args.spellName, carrionCount))
 		self:Message(args.spellId, "Attention", "Long", CL.count:format(args.spellName, carrionCount))
 		carrionCount = carrionCount + 1
