@@ -86,6 +86,7 @@ function mod:GetOptions()
 		--[[ General ]] --
 		"stages",
 		tank_marker,
+		"infobox",
 
 		--[[ Stage One ]]--
 		206219, -- Liquid Hellfire
@@ -116,7 +117,6 @@ function mod:GetOptions()
 		208672, -- Carrion Wave
 
 		--[[ Stage Three ]]--
-		"infobox",
 		167819, -- Storm of the Destroyer
 		{221891, "HEALER"}, -- Soul Siphon
 		206744, -- Black Harvest
