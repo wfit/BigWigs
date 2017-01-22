@@ -28,6 +28,7 @@ local stormCount = 1
 local soulSiphonCount = 1
 local harvestCount = 1
 local carrionCount = 1
+local addKilled = 0
 
 local timers = {
 	-- Phase 1
@@ -151,6 +152,8 @@ function mod:OnBossEnable()
 	self:Log("SPELL_AURA_APPLIED_DOSE", "TornSoul", 206896)
 	self:Log("SPELL_AURA_REMOVED", "TornSoulRemoved", 206896)
 
+	self:Death("FirstTransition", 104534, 104536, 104537)
+
 	--[[ Stage Two ]]--
 	self:Log("SPELL_AURA_REMOVED", "Phase2", 206516) -- Eye of Aman'Thu
 	self:Log("SPELL_CAST_START", "BondsOfFelCast", 206222, 206221)
@@ -185,6 +188,7 @@ function mod:OnEngage()
 	liquidHellfireCount = 1
 	felEffluxCount = 1
 	handOfGuldanCount = 1
+	addKilled = 0
 
 	self:Bar(206219, timers[phase][206219][liquidHellfireCount], CL.count:format(self:SpellName(206219), liquidHellfireCount)) -- Liquid Hellfire
 	self:Bar(206515, timers[phase][206515][felEffluxCount]) -- Fel Efflux
@@ -309,9 +313,17 @@ function mod:TornSoulRemoved(args)
 end
 
 --[[ Stage Two ]]--
+function mod:FirstTransition(args)
+	addKilled = addKilled + 1
+	if addKilled == 3 then
+		self:StopBar(206514) -- Fel Efflux
+		self:StopBar(212258) -- Hand of Gul'dan
+		self:Message("stages", "Neutral", "Long", "First Transition")
+        	self:Bar("stages", 19, CL.phase:format(2), 206516)
+	end
+end
+
 function mod:Phase2(args)
-	self:StopBar(206514) -- Fel Efflux
-	self:StopBar(212258) -- Hand of Gul'dan
 	phase = 2
 	self:Message("stages", "Neutral", "Long", CL.phase:format(phase))
 	liquidHellfireCount = 1
@@ -391,6 +403,8 @@ function mod:SecondTransition(args)
 	self:StopBar(206220)
 	self:StopBar(206221)
 	self:StopBar(211152)
+	self:Message("stages", "Neutral", "Long", "Second Transition")
+	self:Bar("stages", 8, CL.phase:format(3), 227427)
 end
 
 function mod:Phase3(args)
