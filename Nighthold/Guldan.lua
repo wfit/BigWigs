@@ -319,7 +319,7 @@ function mod:FirstTransition(args)
 		self:StopBar(206514) -- Fel Efflux
 		self:StopBar(212258) -- Hand of Gul'dan
 		self:Message("stages", "Neutral", "Long", "First Transition")
-        	self:Bar("stages", 19, CL.phase:format(2), 206516)
+		self:Bar("stages", 19, CL.phase:format(2), 206516)
 	end
 end
 
@@ -433,11 +433,9 @@ do
 	local function warn(self, spellId, spellName)
 		self:Message(spellId, "Important", "Warning", ("Soul Siphon +%d"):format(#list))
 		wipe(list)
-        end
+	end
 
 	function mod:SoulSiphon(args)
-		local t = GetTime()
-
 		list[#list+1] = args.destName
 		if #list == 1 then
 			self:ScheduleTimer(warn, 1, self, args.spellId, args.spellName)
