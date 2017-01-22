@@ -30,6 +30,9 @@ local harvestCount = 1
 local carrionCount = 1
 local addKilled = 0
 local soulsRemaining = 0
+local bondsEmpowered = false
+local hellfireEmpowered = false
+local eyesEmpowered = false
 
 local timers = {
 	-- Phase 1
@@ -234,22 +237,22 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 end
 
 function mod:RAID_BOSS_EMOTE(event, msg, npcname)
-	if not msg:find("gains") then
-		return
-	end
-	if msg:find("spell:206221") then -- 85%: Empowered Bonds of Fel
+	if msg:find("spell:206221") and not bondsEmpowered then -- 85%: Empowered Bonds of Fel
+		bondsEmpowered = true
 		self:Message("stages", "Neutral", "Info", CL.other:format("85%", mod:SpellName(206221)), false)
 		local unempowered = CL.count:format(self:SpellName(206222), bondsOfFelCount)
 		local time = self:BarTimeLeft(unempowered)
 		self:StopBar(unempowered)
 		self:Bar(206221, time, CL.count:format(self:SpellName(206221), bondsOfFelCount))
-	elseif msg:find("spell:206220") then -- 70%: Empowered Liquid Hellfire
+	elseif msg:find("spell:206220") and not hellfireEmpowered then -- 70%: Empowered Liquid Hellfire
+		hellfireEmpowered = true
 		self:Message("stages", "Neutral", "Info", CL.other:format("70%", mod:SpellName(206220)), false)
 		local unempowered = CL.count:format(self:SpellName(206219), liquidHellfireCount)
 		local time = self:BarTimeLeft(unempowered)
 		self:StopBar(unempowered)
 		self:Bar(206220, time, CL.count:format(self:SpellName(206220), liquidHellfireCount))
-	elseif msg:find("spell:211152") then -- 55%: Empowered Eye of Gul'dan
+	elseif msg:find("spell:211152") and not eyesEmpowered then -- 55%: Empowered Eye of Gul'dan
+		eyesEmpowered = true
 		self:Message("stages", "Neutral", "Info", CL.other:format("55%", mod:SpellName(211152)), false)
 		local time = self:BarTimeLeft(mod:SpellName(209270))
 		self:StopBar(mod:SpellName(209270))
@@ -343,6 +346,9 @@ function mod:Phase2(args)
 	liquidHellfireCount = 1
 	handOfGuldanCount = 1
 	bondsOfFelCount = 1
+	bondsEmpowered = false
+	hellfireEmpowered = false
+	eyesEmpowered = false
 	self:Bar(206219, timers[phase][206219][liquidHellfireCount], CL.count:format(self:SpellName(206219), liquidHellfireCount)) -- Liquid Hellfire
 	self:Bar(212258, timers[phase][212258][handOfGuldanCount], CL.count:format(self:SpellName(212258), handOfGuldanCount)) -- Hand of Gul'dan
 	self:Bar(206222, timers[phase][206222][bondsOfFelCount], CL.count:format(self:SpellName(206222), bondsOfFelCount)) -- Bonds of Fel
