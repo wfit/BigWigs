@@ -197,7 +197,7 @@ function mod:OnEngage()
 	addKilled = 0
 
 	self:Bar(206219, timers[phase][206219][liquidHellfireCount], CL.count:format(self:SpellName(206219), liquidHellfireCount)) -- Liquid Hellfire
-	self:Bar(206515, timers[phase][206515][felEffluxCount]) -- Fel Efflux
+	self:Bar(206514, timers[phase][206514][felEffluxCount]) -- Fel Efflux
 	self:Bar(212258, timers[phase][206515][handOfGuldanCount], CL.count:format(self:SpellName(206515), handOfGuldanCount)) -- Hand of Gul'dan
 
 	if self:GetOption(tank_marker) then
