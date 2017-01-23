@@ -123,6 +123,7 @@ function mod:GetOptions()
 		--[[ Stage Three ]]--
 		167819, -- Storm of the Destroyer
 		221891, -- Soul Siphon
+		208802, -- Soul Corrosion
 		206744, -- Black Harvest
 		{221783, "SAY", "FLASH", "PROXIMITY"}, -- Flames of Sargeras
 		221781, -- Desolate Ground
@@ -180,8 +181,10 @@ function mod:OnBossEnable()
 	self:Log("SPELL_AURA_REMOVED", "Phase3", 227427) -- Eye of Aman'Thul
 	self:Log("SPELL_CAST_START", "StormOfTheDestroyer", 167819)
 	self:Log("SPELL_AURA_APPLIED", "SoulSiphon", 221891)
-	self:Log("SPELL_AURA_REMOVED", "SoulSiphonRemoved", 221891)
+	self:Log("SPELL_AURA_APPLIED", "SoulCorrosion", 208802)
+	self:Log("SPELL_AURA_APPLIED_DOSE", "SoulCorrosion", 208802)
 	self:Log("SPELL_CAST_START", "BlackHarvest", 206744)
+	self:Log("SPELL_CAST_SUCCESS", "BlackHarvestSuccess", 206744)
 	self:Log("SPELL_CAST_START", "FlamesOfSargeras", 221783)
 	self:Log("SPELL_AURA_APPLIED", "FlamesOfSargerasSoon", 221606)
 	self:Log("SPELL_AURA_REMOVED", "FlamesOfSargerasRemoved", 221603)
@@ -478,9 +481,13 @@ do
 		self:SetInfo("infobox", 2, soulsRemaining)
 	end
 
-	function mod:SoulSiphonRemoved(args)
+	function mod:SoulCorrosion(args)
+		local amount = args.amount or 1
 		soulsRemaining = soulsRemaining - 1
 		self:SetInfo("infobox", 2, soulsRemaining)
+		if self:Me(args.destGUID) and amount == 9 then
+			self:Message(args.spellId, "Personal", "Warning", "You cant soak anymore!!")
+		end
 	end
 end
 
@@ -488,6 +495,11 @@ function mod:BlackHarvest(args)
 	self:Message(args.spellId, "Urgent", "Alert", CL.incoming:format(args.spellName))
 	harvestCount = harvestCount + 1
 	self:Bar(206744, timers[phase][206744][harvestCount] or 70, CL.count:format(args.spellName, harvestCount)) -- Black Harvest
+end
+
+function mod:BlackHarvestSuccess(args)
+	soulsRemaining = 0
+	self:SetInfo("infobox", 2, soulsRemaining)
 end
 
 function mod:FlamesOfSargeras(args)
