@@ -252,38 +252,6 @@ function mod:SucculentFeastRemoved(args)
 	end
 end
 
-function mod:ScrubbersScan()
-	-- Stop when no more scrubbers are alive
-	if scrubbersAlive == 0 and phase ~= 3 then
-		resetScrubbers()
-		return
-	end
-
-	for unit, guid, mob in self:IterateUnits() do
-		if mob == 104596 then
-			if not scrubbers[guid] then
-				scrubbers[guid] = true
-				scrubbersAlive = scrubbersAlive + 1
-			end
-
-			if UnitPower(unit) > 60 then
-				if not GetRaidTargetIndex(unit) and #iconsPool > 0 then
-					local icon = table.remove(iconsPool, 1)
-					SetRaidTarget(unit, icon)
-					iconsUsed[guid] = icon
-				end
-			else
-				local icon = iconsUsed[guid]
-				if icon then
-					SetRaidTarget(unit, 0)
-					table.insert(iconsPool, icon)
-					iconsUsed[guid] = nil
-				end
-			end
-		end
-	end
-end
-
 function mod:Scrubbing(args)
 	if not scrubbers[args.destGUID] then
 		scrubbers[args.destGUID] = scrubberMark + 1
@@ -291,12 +259,11 @@ function mod:Scrubbing(args)
 	end
 end
 
-function mod:IchorMark(event, unit)
-	local guid = UnitGUID(unit)
-	local mark = scrubbers[guid]
+function mod:ScrubberMark(event, unit)
+	local mark = scrubbers[UnitGUID(unit)]
 	if mark then
 		if GetRaidTargetIndex(unit) ~= mark then
-			SetRaidTarget(unit, mark)
+			self:SetIcon(scrubbers_marker, unit, mark)
 		end
 	end
 end
