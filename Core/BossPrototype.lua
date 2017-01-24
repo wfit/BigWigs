@@ -1741,8 +1741,10 @@ end
 function boss:SetIcon(key, target, icon)
 	if not key or self:GetOption(key) then
 		local unit = self:UnitId(target)
-		if not unit then return end
-		SetRaidTarget(unit, icon)
+		if not unit or not UnitExists(unit) then return end
+		if GetRaidTargetIndex(unit) ~= icon then
+			SetRaidTarget(unit, icon)
+		end
 	end
 end
 
