@@ -983,6 +983,7 @@ end
 -- @param guid GUID of a mob/npc
 -- @return mob id
 function boss:MobId(guid)
+	if UnitExists(guid) then guid = UnitGUID(guid) end
 	if not guid then return 1 end
 	local _, _, _, _, _, id = strsplit("-", guid)
 	return tonumber(id) or 1
