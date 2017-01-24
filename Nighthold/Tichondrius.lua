@@ -113,11 +113,13 @@ function mod:OnEngage()
 	self:Bar(206480, timers[206480][carrionPlagueCount], CL.count:format(self:SpellName(206480), carrionPlagueCount))
 	self:Bar(213238, timers[213238][seekerSwarmCount], CL.count:format(self:SpellName(213238), seekerSwarmCount))
 	self:ScheduleTimer("SeekerSwarmWarning", timers[213238][seekerSwarmCount] - 8)
-	self:Bar(212794, timers[212794][brandOfArgusCount], CL.count:format(self:SpellName(212794), brandOfArgusCount))
+	if not self:Easy() then
+		self:Bar(212794, timers[212794][brandOfArgusCount], CL.count:format(self:SpellName(212794), brandOfArgusCount))
+	end
 	self:Bar(208230, timers[208230][feastOfBloodCount], CL.count:format(self:SpellName(208230), feastOfBloodCount))
 	self:Bar(213531, timers[213531][echoesOfTheVoidCount], CL.count:format(self:SpellName(213531), echoesOfTheVoidCount))
 	self:Bar(206365, 130, CL.count:format(self:SpellName(206365), illusionaryNightCount))
-	if self:Heroic() then
+	if self:Normal() or self:Heroic() then
 		self:Berserk(463)
 	end
 end
@@ -208,7 +210,7 @@ end
 
 function mod:EssenceOfNight(args)
 	if self:Me(args.destGUID) then
-		self:Message(args.spellId, "Positive", "Info", CL.you:format(args.spellName))
+		self:Message(args.spellId, "Personal", "Info", CL.you:format(args.spellName))
 	end
 end
 

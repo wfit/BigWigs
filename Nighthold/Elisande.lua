@@ -13,7 +13,7 @@ if not mod then return end
 mod:RegisterEnableMob(106643)
 mod.engageId = 1872
 mod.instanceId = 1530
-mod.respawnTime = 30
+--mod.respawnTime = 0
 
 --------------------------------------------------------------------------------
 -- Locals
@@ -388,6 +388,7 @@ function mod:EpochericOrb()
 end
 
 function mod:AblatingExplosion(args)
+	self:Bar(args.spellId, 20.7)
 	self:TargetMessage(args.spellId, args.destName, "Attention", "Long")
 	self:TargetBar(args.spellId, 8, args.destName)
 	self:ScheduleTimer("Bar", 8, args.spellId, 7)

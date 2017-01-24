@@ -1,7 +1,7 @@
 
 --------------------------------------------------------------------------------
 -- TODO List:
--- - Mod is untested, probably needs a lot of updates
+-- - Ugliest module in BigWigs so far. Clean me up please!
 
 --------------------------------------------------------------------------------
 -- Module Declaration
@@ -11,7 +11,7 @@ local mod, CL = BigWigs:NewBoss("Gul'dan", 1088, 1737)
 if not mod then return end
 mod:RegisterEnableMob(104154)
 mod.engageId = 1866
---mod.respawnTime = 0
+mod.respawnTime = 30
 mod.instanceId = 1530
 
 --------------------------------------------------------------------------------
@@ -128,7 +128,7 @@ function mod:GetOptions()
 		{221783, "SAY", "FLASH", "PROXIMITY"}, -- Flames of Sargeras
 		221781, -- Desolate Ground
 	}, {
-		--[210339] = -14886, -- Essence of Aman'Thul
+		["stages"] = "general",
 		[206219] = -14885, -- Stage One
 		[207938] = -14897, -- Inquisitor Vethriz
 		[206675] = -14894, -- Fel Lord Kuraz'mal
@@ -189,11 +189,11 @@ function mod:OnBossEnable()
 	self:Log("SPELL_AURA_APPLIED", "FlamesOfSargerasSoon", 221606)
 	self:Log("SPELL_AURA_REMOVED", "FlamesOfSargerasRemoved", 221603)
 
-	self:Log("SPELL_AURA_APPLIED", "Damage", 206515, 209518, 211132, 221781) -- Fel Efflux, Eye of Gul'dan, Empowered Eye of Gul'dan, Desolate Ground
-	self:Log("SPELL_PERIODIC_DAMAGE", "Damage", 206515, 209518, 211132, 221781)
-	self:Log("SPELL_PERIODIC_MISSED", "Damage", 206515, 209518, 211132, 221781)
-	self:Log("SPELL_DAMAGE", "Damage", 217770, 209518, 211132, 221781) -- Gaze of Vethriz, Eye of Gul'dan, Empowered Eye of Gul'dan, Desolate Ground
-	self:Log("SPELL_MISSED", "Damage", 217770, 209518, 211132, 221781)
+	self:Log("SPELL_AURA_APPLIED", "Damage", 206515, 221781) -- Fel Efflux, Desolate Ground
+	self:Log("SPELL_PERIODIC_DAMAGE", "Damage", 206515, 221781)
+	self:Log("SPELL_PERIODIC_MISSED", "Damage", 206515, 221781)
+	self:Log("SPELL_DAMAGE", "Damage", 217770, 221781) -- Gaze of Vethriz, Desolate Ground
+	self:Log("SPELL_MISSED", "Damage", 217770, 221781)
 end
 
 function mod:OnEngage()
@@ -282,7 +282,7 @@ end
 function mod:FelEfflux(args)
 	self:Message(args.spellId, "Important", "Alert")
 	felEffluxCount = felEffluxCount + 1
-	self:Bar(args.spellId, timers[phase][args.spellId][felEffluxCount] or 15.1)
+	self:CDBar(args.spellId, timers[phase][args.spellId][felEffluxCount] or 15.1)
 end
 
 function mod:HandOfGuldan(args)
@@ -494,7 +494,7 @@ end
 function mod:BlackHarvest(args)
 	self:Message(args.spellId, "Urgent", "Alert", CL.incoming:format(args.spellName))
 	harvestCount = harvestCount + 1
-	self:Bar(206744, timers[phase][206744][harvestCount] or 70, CL.count:format(args.spellName, harvestCount)) -- Black Harvest
+	self:CDBar(206744, timers[phase][206744][harvestCount] or 70, CL.count:format(args.spellName, harvestCount)) -- Black Harvest
 end
 
 function mod:BlackHarvestSuccess(args)
