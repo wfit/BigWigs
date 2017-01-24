@@ -1595,13 +1595,15 @@ end
 -- @section bars
 --
 
+local nilLengthError = "Module %s started a bar for %s using nil length."
+
 --- Display a bar.
 -- @param key the option key
 -- @param length the bar duration in seconds
 -- @param[opt] text the bar text (if nil, key is used)
 -- @param[opt] icon the bar icon (spell id or texture name)
 function boss:Bar(key, length, text, icon)
-	if not length then return end
+	if not length then core:Print(format(nilLengthError, self.moduleName, key)) return end
 	local textType = type(text)
 	if checkFlag(self, key, C.BAR) then
 		self:SendMessage("BigWigs_StartBar", self, key, textType == "string" and text or spells[text or key], length, icons[icon or textType == "number" and text or key])
@@ -1618,7 +1620,7 @@ end
 -- @param[opt] text the bar text (if nil, key is used)
 -- @param[opt] icon the bar icon (spell id or texture name)
 function boss:CDBar(key, length, text, icon)
-	if not length then return end
+	if not length then core:Print(format(nilLengthError, self.moduleName, key)) return end
 	local textType = type(text)
 	if checkFlag(self, key, C.BAR) then
 		self:SendMessage("BigWigs_StartBar", self, key, textType == "string" and text or spells[text or key], length, icons[icon or textType == "number" and text or key], true)
@@ -1635,7 +1637,7 @@ end
 -- @param[opt] text the bar text (if nil, key is used)
 -- @param[opt] icon the bar icon (spell id or texture name)
 function boss:TargetBar(key, length, player, text, icon)
-	if not length then return end
+	if not length then core:Print(format(nilLengthError, self.moduleName, key)) return end
 	local textType = type(text)
 	if not player and checkFlag(self, key, C.BAR) then
 		self:SendMessage("BigWigs_StartBar", self, key, format(L.other, textType == "string" and text or spells[text or key], "???"), length, icons[icon or textType == "number" and text or key])
