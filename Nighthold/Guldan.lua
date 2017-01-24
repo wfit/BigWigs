@@ -82,13 +82,14 @@ end
 -- Initialization
 --
 
-local tank_marker = mod:AddMarkerOption(true, "player", 1, 71038, 6, 7)
+local tanks_marker = mod:AddMarkerOption(true, "player", 6, 71038, 6, 7)
+local bonds_marker = mod:AddMarkerOption(true, "player", 1, 206222, 1, 2, 3)
 
 function mod:GetOptions()
 	return {
 		--[[ General ]] --
 		"stages",
-		tank_marker,
+		tanks_marker,
 		"infobox",
 		"berserk",
 
@@ -114,6 +115,7 @@ function mod:GetOptions()
 		--[[ Stage Two ]]--
 		{206222, "SAY", "FLASH"}, -- Bonds of Fel
 		{206221, "SAY", "FLASH"}, -- Empowered Bonds of Fel
+		bonds_marker,
 		206220, -- Empowered Liquid Hellfire
 		{209270, "SAY", "FLASH", "PROXIMITY"}, -- Eye of Gul'dan
 		{211152, "SAY", "FLASH", "PROXIMITY"}, -- Empowered Eye of Gul'dan
@@ -169,6 +171,7 @@ function mod:OnBossEnable()
 	self:Log("SPELL_AURA_REMOVED", "Phase2", 206516) -- Eye of Aman'Thu
 	self:Log("SPELL_CAST_START", "BondsOfFelCast", 206222, 206221)
 	self:Log("SPELL_AURA_APPLIED", "BondsOfFel", 209011, 206366)
+	self:Log("SPELL_AURA_REMOVED", "BondsOfFelRemoved", 209011, 206366)
 	self:Log("SPELL_CAST_START", "EyeOfGuldan", 209270, 211152)
 	self:Log("SPELL_AURA_APPLIED", "EyeOfGuldanApplied", 209454, 206384)
 	self:Log("SPELL_AURA_REMOVED", "EyeOfGuldanRemoved", 209454, 206384)
@@ -207,11 +210,11 @@ function mod:OnEngage()
 	self:Bar(206514, timers[phase][206514][felEffluxCount]) -- Fel Efflux
 	self:Bar(212258, timers[phase][212258][handOfGuldanCount], CL.count:format(self:SpellName(212258), handOfGuldanCount)) -- Hand of Gul'dan
 
-	if self:GetOption(tank_marker) then
+	if self:GetOption(tanks_marker) then
 		local marked = 0
 		for unit in self:IterateGroup() do
 			if self:Tank(unit) then
-				SetRaidTarget(unit, 7 - marked)
+				self:SetIcon(tanks_marker, unit, 7 - marked)
 				marked = marked + 1
 				if marked == 2 then break end
 			end
@@ -222,10 +225,10 @@ function mod:OnEngage()
 end
 
 function mod:OnBossDisable()
-	if self:GetOption(tank_marker) then
+	if self:GetOption(tanks_marker) then
 		for unit in self:IterateGroup() do
 			if self:Tank(unit) then
-				SetRaidTarget(unit, 0)
+				self:SetIcon(tanks_marker, unit, 0)
 			end
 		end
 	end
@@ -364,13 +367,16 @@ function mod:Phase2(args)
 	self:Bar(209270, 29.1) -- Eye of Gul'dan
 end
 
-function mod:BondsOfFelCast(args)
-	self:Message(args.spellId, "Attention", "Info", CL.casting:format(args.spellName))
-	bondsOfFelCount = bondsOfFelCount + 1
-	self:Bar(args.spellId, timers[phase][206222][bondsOfFelCount] or 21.2, CL.count:format(args.spellName, bondsOfFelCount))
-end
-
 do
+	local felBondsDebuffCount = 0
+
+	function mod:BondsOfFelCast(args)
+		self:Message(args.spellId, "Attention", "Info", CL.casting:format(args.spellName))
+		bondsOfFelCount = bondsOfFelCount + 1
+		self:Bar(args.spellId, timers[phase][206222][bondsOfFelCount] or 21.2, CL.count:format(args.spellName, bondsOfFelCount))
+		felBondsDebuffCount = 0
+	end
+
 	local list = mod:NewTargetList()
 	function mod:BondsOfFel(args)
 		local key = (args.destId == 209011) and 206222 or 206221
@@ -381,6 +387,17 @@ do
 		if self:Me(args.destGUID) then
 			self:Say(key, CL.count:format(args.spellName, #list))
 			self:Flash(key)
+		end
+		felBondsDebuffCount = felBondsDebuffCount + 1
+		if not GetRaidTargetIndex(args.destUnit) then
+			self:SetIcon(bonds_marker, args.destUnit, felBondsDebuffCount)
+		end
+	end
+
+	function mod:BondsOfFelRemoved(args)
+		local icon = GetRaidTargetIndex(args.destUnit)
+		if icon and icon < felBondsDebuffCount then
+			self:SetIcon(bonds_marker, args.destUnit, 0)
 		end
 	end
 end
