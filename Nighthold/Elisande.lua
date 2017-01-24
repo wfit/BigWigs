@@ -233,11 +233,11 @@ function mod:TimeStop()
 	self:StopBar(CL.count:format(L.slowZoneDespawn, slowZoneCount - 1))
 	self:StopBar(CL.count:format(L.fastZoneDespawn, fastZoneCount))
 	if phase == 1 then
-		singularityMax = singularityCount - 1
-		ringMax = ringCount - 1
+		singularityMax = singularityCount
+		ringMax = ringCount
 	elseif phase == 2 then
-		orbsMax = orbsCount - 1
-		beamsMax = beamsCount - 1
+		orbsMax = orbsCount
+		beamsMax = beamsCount
 	end
 	phase = phase + 1
 	self:Message("stages", "Neutral", "Info", CL.phase:format(phase), false)
