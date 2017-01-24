@@ -240,7 +240,7 @@ function mod:TimeStop()
 		beamsMax = beamsCount - 1
 	end
 	phase = phase + 1
-	self:Message("stages", "Neutral", "Info", CL.phase:format(phase), spellId)
+	self:Message("stages", "Neutral", "Info", CL.phase:format(phase), false)
 end
 
 do
