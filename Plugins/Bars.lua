@@ -1100,17 +1100,7 @@ end
 
 function plugin:OnPluginEnable()
 	colors = BigWigs:GetPlugin("Colors")
-
-	if not media:Fetch("statusbar", db.texture, true) then db.texture = "BantoBar" end
-	if currentBarStyler and currentBarStyler.GetStyleName then
-		for k, v in next, barStyleRegister do
-			if currentBarStyler.GetStyleName() == v then
-				self:SetBarStyle(k)
-			end
-		end
-	else
-		self:SetBarStyle(db.barStyle)
-	end
+	updateProfile()
 
 	self:RegisterMessage("BigWigs_StartBar")
 	self:RegisterMessage("BigWigs_PauseBar", "PauseBar")
@@ -1437,9 +1427,6 @@ end
 --
 
 function plugin:BigWigs_StartBar(_, module, key, text, time, icon, isApprox)
-	if not db.alignText then -- XXX temp
-		print("BigWigs bar ERROR:", db == self.db.profile, self.db.profile.alignText)
-	end
 	if createAnchors then createAnchors() end
 	if not text then text = "" end
 	self:StopSpecificBar(nil, module, text)
