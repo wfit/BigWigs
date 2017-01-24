@@ -1052,6 +1052,14 @@ do
 		end
 		return iter, IsInRaid() and raidList or partyList
 	end
+
+	function boss:GetPlayerUnitIdByGUID(guid)
+		for unit in self:IterateGroup() do
+			if UnitGUID(unit) == guid then
+				return unit
+			end
+		end
+	end
 end
 
 -------------------------------------------------------------------------------
@@ -2041,7 +2049,7 @@ function boss:UnitId(guid)
 	elseif UnitExists(guid) then
 		return guid
 	elseif guid:sub(1, 6) == "Player" then
-		return Roster:GetUnit(guid)
+		return Roster:GetUnit(guid) or self:GetPlayerUnitIdByGUID(guid)
 	else
 		return self:GetUnitIdByGUID(guid)
 	end
