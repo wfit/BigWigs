@@ -367,7 +367,7 @@ end
 function mod:BondsOfFelCast(args)
 	self:Message(args.spellId, "Attention", "Info", CL.casting:format(args.spellName))
 	bondsOfFelCount = bondsOfFelCount + 1
-	self:Bar(args.spellId, timers[phase][206222][handOfGuldanCount] or 21.2, CL.count:format(args.spellName, bondsOfFelCount))
+	self:Bar(args.spellId, timers[phase][206222][bondsOfFelCount] or 21.2, CL.count:format(args.spellName, bondsOfFelCount))
 end
 
 do
