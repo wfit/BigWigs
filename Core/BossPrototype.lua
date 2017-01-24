@@ -1601,6 +1601,7 @@ end
 -- @param[opt] text the bar text (if nil, key is used)
 -- @param[opt] icon the bar icon (spell id or texture name)
 function boss:Bar(key, length, text, icon)
+	if not length then return end
 	local textType = type(text)
 	if checkFlag(self, key, C.BAR) then
 		self:SendMessage("BigWigs_StartBar", self, key, textType == "string" and text or spells[text or key], length, icons[icon or textType == "number" and text or key])
@@ -1617,6 +1618,7 @@ end
 -- @param[opt] text the bar text (if nil, key is used)
 -- @param[opt] icon the bar icon (spell id or texture name)
 function boss:CDBar(key, length, text, icon)
+	if not length then return end
 	local textType = type(text)
 	if checkFlag(self, key, C.BAR) then
 		self:SendMessage("BigWigs_StartBar", self, key, textType == "string" and text or spells[text or key], length, icons[icon or textType == "number" and text or key], true)
@@ -1633,6 +1635,7 @@ end
 -- @param[opt] text the bar text (if nil, key is used)
 -- @param[opt] icon the bar icon (spell id or texture name)
 function boss:TargetBar(key, length, player, text, icon)
+	if not length then return end
 	local textType = type(text)
 	if not player and checkFlag(self, key, C.BAR) then
 		self:SendMessage("BigWigs_StartBar", self, key, format(L.other, textType == "string" and text or spells[text or key], "???"), length, icons[icon or textType == "number" and text or key])
