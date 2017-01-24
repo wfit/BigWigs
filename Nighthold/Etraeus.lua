@@ -44,6 +44,7 @@ function mod:GetOptions()
 		"stages",
 		marks,
 		221875, -- Nether Traversal
+		205408, -- Grand Conjunction
 
 		--[[ Stage One ]]--
 		206464, -- Coronal Ejection
@@ -83,6 +84,7 @@ function mod:OnBossEnable()
 	--[[ General ]]--
 	self:RegisterUnitEvent("UNIT_SPELLCAST_SUCCEEDED", nil, "boss1")
 	self:Log("SPELL_CAST_START", "NetherTraversal", 221875)
+	self:Log("SPELL_CAST_START", "GrandConjunction", 205408)
 	self:Log("SPELL_AURA_APPLIED", "GroundEffectDamage", 206398) -- Felflame
 	self:Log("SPELL_AURA_APPLIED_DOSE", "GroundEffectDamage", 206398) -- Felflame
 
@@ -127,7 +129,9 @@ function mod:OnEngage()
 	wipe(gravPullSayTimers)
 	self:Bar(206464, 12.5) -- Coronal Ejection
 	self:Bar(221875, 20) -- Nether Traversal
-
+	if self:Mythic() then
+		self:Bar(205408, 15) -- Grand Conjunction
+	end
 	if self:GetOption(marks) then
 		local icon = 8
 		for unit in self:IterateGroup() do
@@ -159,6 +163,7 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 	if spellId == 222130 then -- Phase 2 Conversation
 		phase = 2
 		self:Message("stages", "Neutral", "Long", CL.stage:format(2), false)
+		self:StopBar(205408) -- Grand Conjunction
 		ejectionCount = 1
 		self:CDBar(206936, timers[206936][ejectionCount], CL.count:format(self:SpellName(206936), ejectionCount))
 		self:Bar(205984, 30) -- Gravitational Pull
@@ -174,6 +179,7 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 		self:Message("stages", "Neutral", "Long", CL.stage:format(3), false)
 		self:StopBar(CL.count:format(self:SpellName(206936, ejectionCount)))
 		self:StopBar(206949) -- Frigid Nova
+		self:StopBar(205408) -- Grand Conjunction
 		ejectionCount = 1
 		self:CDBar(205649, timers[205649][ejectionCount], CL.count:format(self:SpellName(205649), ejectionCount))
 		self:CDBar(214167, 28) -- Gravitational Pull
@@ -190,6 +196,7 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 		self:RegisterEvent("INSTANCE_ENCOUNTER_ENGAGE_UNIT")
 		self:StopBar(CL.count:format(self:SpellName(205649, ejectionCount)))
 		self:StopBar(206517) -- Fel Nova
+		self:StopBar(205408) -- Grand Conjunction
 		ejectionCount = 1
 		self:CDBar(214335, 20) -- Gravitational Pull
 		self:CDBar(207439, 42) -- Fel Nova
@@ -205,6 +212,13 @@ end
 
 function mod:NetherTraversal(args)
 	self:Bar(args.spellId, 8.5, CL.cast:format(args.spellName))
+end
+
+function mod:GrandConjunction(args)
+	self:Message(args.spellId, "Attention", "Long", CL.casting:format(args.spellName))
+	if phase == 1 then
+		self:Bar(args.spellId, 14)
+	end
 end
 
 do
