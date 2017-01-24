@@ -61,6 +61,8 @@ local elementalsAlive = {}
 local slowZoneCount = 0
 local fastZoneCount = 0
 
+local timeStopped = false
+
 --------------------------------------------------------------------------------
 -- Localization
 --
@@ -198,6 +200,7 @@ function mod:Nightwell(args)
 	burstsCount = 1
 	slowAddCount = 1
 	fastAddCount = 1
+	timeStopped = false
 
 	wipe(elementalsAlive)
 	slowZoneCount = 0
@@ -219,6 +222,7 @@ function mod:Nightwell(args)
 end
 
 function mod:TimeStop()
+	timeStopped = true
 	self:StopBar(CL.count:format(self:SpellName(209168), singularityCount))
 	self:StopBar(CL.count:format(self:SpellName(208807), ringCount))
 	self:StopBar(CL.count:format(self:SpellName(210022), orbsCount))
@@ -245,6 +249,11 @@ do
 	local elementalsSeen = {}
 
 	function mod:INSTANCE_ENCOUNTER_ENGAGE_UNIT()
+		if timeStopped then
+			wipe(elementalsAlive)
+			return
+		end
+
 		wipe(elementalsSeen)
 		for i = 1, 5 do
 			local unit = ("boss%d"):format(i)
