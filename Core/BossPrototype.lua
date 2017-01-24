@@ -998,7 +998,7 @@ end
 -- @param guid player GUID
 -- @return boolean
 function boss:Me(guid)
-	return myGUID == guid or (UnitExists(guid) and UnitIsUnit(guid, player))
+	return myGUID == guid or (UnitExists(guid) and UnitIsUnit(guid, "player"))
 end
 
 do
