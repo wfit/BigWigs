@@ -115,8 +115,8 @@ function mod:GetOptions()
 		{206222, "SAY", "FLASH"}, -- Bonds of Fel
 		{206221, "SAY", "FLASH"}, -- Empowered Bonds of Fel
 		206220, -- Empowered Liquid Hellfire
-		{209270, "SAY", "PROXIMITY"}, -- Eye of Gul'dan
-		{211152, "SAY", "PROXIMITY"}, -- Empowered Eye of Gul'dan
+		{209270, "SAY", "FLASH", "PROXIMITY"}, -- Eye of Gul'dan
+		{211152, "SAY", "FLASH", "PROXIMITY"}, -- Empowered Eye of Gul'dan
 		{227556, "TANK"}, -- Fury of the Fel
 		208672, -- Carrion Wave
 
@@ -399,6 +399,7 @@ function mod:EyeOfGuldanApplied(args)
 	if self:Me(args.destGUID) then
 		local key = (args.spellId == 209454) and 209270 or 211152
 		self:Say(key)
+		self:Flash(key)
 		self:OpenProximity(key, 8)
 	end
 end
