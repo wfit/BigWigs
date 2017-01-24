@@ -101,7 +101,12 @@ function mod:OnEngage()
 	if not self:Mythic() then
 		self:RegisterUnitEvent("UNIT_HEALTH_FREQUENT", nil, "boss1")
 	end
-	self:RegisterEvent("INSTANCE_ENCOUNTER_ENGAGE_UNIT")
+	if self:GetOption(bossMarker) then
+		self:RegisterEvent("INSTANCE_ENCOUNTER_ENGAGE_UNIT")
+	end
+end
+
+function mod:OnBossDisable()
 	if callOfNightCheck then
 		self:CancelTimer(callOfNightCheck)
 		callOfNightCheck = nil
@@ -148,7 +153,6 @@ function mod:INSTANCE_ENCOUNTER_ENGAGE_UNIT()
 	for i = 1, 5 do
 		local unit = ("boss%d"):format(i)
 		local mob = self:MobId(unit)
-		print(("Unit '%s' (%s) has mobID %d"):format(unit, UnitName(unit), mob))
 		if mob == 104528 then -- Arcanist
 			self:SetIcon(bossMarker, unit, 3)
 		elseif mob == 109038 then -- Solarist
