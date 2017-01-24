@@ -346,12 +346,12 @@ function mod:FirstTransition(args)
 	self:StopBar(206514) -- Fel Efflux
 	self:StopBar(CL.count:format(self:SpellName(212258), handOfGuldanCount)) -- Hand of Gul'dan
 	self:Message("stages", "Neutral", "Long", "First Transition", false)
-	self:Bar("stages", 19, CL.phase:format(2), 206516)
+	self:Bar("stages", 19, CL.stage:format(phase + 1), 206516)
 end
 
 function mod:Phase2(args)
 	phase = 2
-	self:Message("stages", "Neutral", "Long", CL.phase:format(phase))
+	self:Message("stages", "Neutral", "Long", CL.stage:format(phase), false)
 	liquidHellfireCount = 1
 	handOfGuldanCount = 1
 	bondsOfFelCount = 1
@@ -435,13 +435,13 @@ function mod:SecondTransition(args)
 	self:StopBar(CL.count:format(self:SpellName(206220), liquidHellfireCount)) -- Emp. Hellfire
 	self:StopBar(CL.count:format(self:SpellName(206221), bondsOfFelCount)) -- Emp. Bonds
 	self:StopBar(211152) -- Emp. Eyes
-	self:Message("stages", "Neutral", "Long", "Second Transition")
-	self:Bar("stages", 8, CL.phase:format(3), 227427)
+	self:Message("stages", "Neutral", "Long", "Second Transition", false)
+	self:Bar("stages", 8, CL.stage:format(phase + 1), 227427)
 end
 
 function mod:Phase3(args)
 	phase = 3
-	self:Message("stages", "Neutral", "Long", CL.phase:format(phase))
+	self:Message("stages", "Neutral", "Long", CL.stage:format(phase), false)
 	eyeOfGuldanCount = 1
 	stormCount = 1
 	soulSiphonCount = 1
