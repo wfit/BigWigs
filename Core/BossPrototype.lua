@@ -97,9 +97,6 @@ local icons = setmetatable({}, {__index =
 		if type(key) == "number" then
 			if key > 8 then
 				value = GetSpellTexture(key)
-				if not value then
-					core:Print(format("An invalid spell id (%d) is being used in a boss module.", key))
-				end
 			elseif key > 0 then
 				-- Texture id list for raid icons 1-8 is 137001-137008. Base texture path is Interface\\TARGETINGFRAME\\UI-RaidTargetingIcon_%d
 				value = key + 137000
@@ -112,6 +109,9 @@ local icons = setmetatable({}, {__index =
 		else
 			value = key
 		end
+		if not value then
+			core:Print(format("An invalid spell id (%d) is being used in a boss module.", key))
+		end
 		self[key] = value
 		return value
 	end
@@ -123,6 +123,9 @@ local spells = setmetatable({}, {__index =
 			value = GetSpellInfo(key)
 		else
 			value = EJ_GetSectionInfo(-key)
+		end
+		if not value then
+			core:Print(format("An invalid spell id (%d) is being used in a boss module.", key))
 		end
 		self[key] = value
 		return value
