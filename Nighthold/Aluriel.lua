@@ -23,6 +23,7 @@ local timers = {
 	[212492] = {8.0, 45.0, 40.0, 44.0, 38.0, 37.0, 33.0, 47.0, 41.0, 44.0, 38.0, 37.0},
 }
 local annihilateCount = 1
+local rotation = false
 
 --------------------------------------------------------------------------------
 -- Localization
@@ -143,6 +144,7 @@ end
 
 function mod:OnEngage()
 	annihilateCount = 1
+	rotation = false
 	self:Bar(212492, timers[212492][annihilateCount]) -- Annihilate
 	-- other bars are in mod:Stages()
 
@@ -208,22 +210,30 @@ do
 
 		if args.spellId == 216389 or args.spellId == 213864 then -- Icy
 			phase = 1
-			self:Bar(230951, 15) -- Severed Soul
-			self:Bar(212587, 18) -- Mark of Frost (timer is the "pre" mark of frost aura applied)
-			self:Bar(212530, self:Mythic() and 31 or 41) -- Replicate: Mark of Frost
-			self:Bar(212735, self:Mythic() and 51 or 71) -- Detonate: Mark of Frost
-			self:Bar(213853, self:Mythic() and 65 or 75, nil, 31687) -- Animate: Mark of Frost, Water Elemental icon
+			if args.spellId == 213864 then rotation = true end
+			if self:Mythic() then
+				self:Bar(230951, rotation and 12 or 15) -- Severed Soul
+			end
+			self:Bar(212587, self:Mythic() and rotation and 1.5 or 18) -- Mark of Frost (timer is the "pre" mark of frost aura applied)  1.5
+			self:Bar(212530, self:Mythic() and rotation and 15 or self:Mythic() and 31 or 41) -- Replicate: Mark of Frost  15
+			self:Bar(212735, self:Mythic() and rotation and 35 or self:Mythic() and 51 or 71) -- Detonate: Mark of Frost   35
+			self:Bar(213853, self:Mythic() and rotation and 52 or self:Mythic() and 65 or 75, nil, 31687) -- Animate: Mark of Frost, Water Elemental icon  52
 			self:Bar("stages", self:Mythic() and 75 or 85, self:SpellName(213867), 213867) -- Next: Fiery
 			resetIcons()
 		elseif args.spellId == 213867 then -- Fiery
 			phase = 2
-			self:Bar(230951, 15) -- Severed Soul
+			if self:Mythic() then
+				self:Bar(230951, 15) -- Severed Soul
+			end
 			self:Bar(213166, 18) -- Searing Brand (timer is the "pre" mark of frost aura applied)
 			self:Bar(213275, self:Mythic() and 43 or 48) -- Detonate: Searing Brand
 			self:Bar(213567, self:Mythic() and 55 or 65) -- Animate: Searing Brand
 			self:Bar("stages", self:Mythic() and 75 or 85, self:SpellName(213869), 213869) -- Next: Magic
 		else -- Magic
 			phase = 3
+			if self:Mythic() then
+				self:Bar(230951, 12) -- Severed Soul
+			end
 			self:Bar(213852, 16) -- Replicate: Arcane Orb
 			self:Bar(213390, 38) -- Detonate: Arcane Orb
 			self:Bar(213564, 55) -- Animate: Arcane Orb
