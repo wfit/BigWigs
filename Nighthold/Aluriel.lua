@@ -55,6 +55,7 @@ function mod:GetOptions()
 		"stages",
 		tank_marks,
 		"berserk",
+		230951, -- Severed Soul
 
 		--[[ Master of Frost ]]--
 		{212531, "SAY", "FLASH"}, -- Pre Mark of Frost
@@ -97,6 +98,7 @@ function mod:OnBossEnable()
 	self:Log("SPELL_AURA_APPLIED", "AnnihilateApplied", 215458)
 	self:Log("SPELL_AURA_APPLIED_DOSE", "AnnihilateApplied", 215458)
 	self:Log("SPELL_AURA_APPLIED", "Stages", 216389, 213867, 213869, 213864) -- Icy / Fiery / Magic / Icy² Enchantment
+	self:Log("SPELL_CAST_START", "SeveredSoul", 230951)
 
 	--[[ Master of Frost ]]--
 	self:Log("SPELL_AURA_APPLIED", "PreMarkOfFrostApplied", 212531)
@@ -188,17 +190,19 @@ do
 		self:Message("stages", "Neutral", "Long", args.spellName, args.spellId)
 
 		if args.spellId == 216389 or args.spellId == 213864 then -- Icy
+			self:Bar(230951, 15) -- Severed Soul
 			self:Bar(212587, 18) -- Mark of Frost (timer is the "pre" mark of frost aura applied)
-			self:Bar(212530, 41) -- Replicate: Mark of Frost
-			self:Bar(212735, 71) -- Detonate: Mark of Frost
-			self:Bar(213853, 75, nil, 31687) -- Animate: Mark of Frost, Water Elemental icon
-			self:Bar("stages", 85, self:SpellName(213867), 213867) -- Next: Fiery
+			self:Bar(212530, self:Mythic() and 31 or 41) -- Replicate: Mark of Frost
+			self:Bar(212735, self:Mythic() and 51 or 71) -- Detonate: Mark of Frost
+			self:Bar(213853, self:Mythic() and 65 or 75, nil, 31687) -- Animate: Mark of Frost, Water Elemental icon
+			self:Bar("stages", self:Mythic() and 75 or 85, self:SpellName(213867), 213867) -- Next: Fiery
 			resetIcons()
 		elseif args.spellId == 213867 then -- Fiery
+			self:Bar(230951, 15) -- Severed Soul
 			self:Bar(213166, 18) -- Searing Brand (timer is the "pre" mark of frost aura applied)
-			self:Bar(213275, 48) -- Detonate: Searing Brand
-			self:Bar(213567, 65) -- Animate: Searing Brand
-			self:Bar("stages", 85, self:SpellName(213869), 213869) -- Next: Magic
+			self:Bar(213275, self:Mythic() and 40 and 48) -- Detonate: Searing Brand
+			self:Bar(213567, self:Mythic() and 55 or 65) -- Animate: Searing Brand
+			self:Bar("stages", self:Mythic() and 75 or 85, self:SpellName(213869), 213869) -- Next: Magic
 		else -- Magic
 			self:Bar(213852, 16) -- Replicate: Arcane Orb
 			self:Bar(213390, 38) -- Detonate: Arcane Orb
@@ -267,6 +271,10 @@ function mod:ReplicateMarkOfFrost(args)
 end
 
 function mod:DetonateMarkOfFrost(args)
+	self:Message(args.spellId, "Important", "Alarm")
+end
+
+function mod:SeveredSoul(args)
 	self:Message(args.spellId, "Important", "Alarm")
 end
 
