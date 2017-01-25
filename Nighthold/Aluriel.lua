@@ -30,6 +30,7 @@ local annihilateCount = 1
 
 local L = mod:GetLocale()
 
+local phase = 1
 local iconsPool = {}
 local iconsUsed = {}
 
@@ -84,6 +85,9 @@ function mod:GetOptions()
 		213564, -- Animate: Arcane Orb
 		213569, -- Armageddon
 		213504, -- Arcane Fog
+
+		--[[ Fel Soul ]] --
+		230504, -- Decimate
 	}, {
 		[212492] = "general",
 		[212531] = -13376, -- Master of Frost
@@ -124,6 +128,9 @@ function mod:OnBossEnable()
 	self:Log("SPELL_CAST_START", "ReplicateArcaneOrb", 213852)
 	self:Log("SPELL_CAST_START", "AnimateArcaneOrb", 213564)
 	self:Log("SPELL_AURA_APPLIED", "Armageddon", 213569)
+
+	--[[ Fel Soul ]] --
+	self:Log("SPELL_CAST_START", "Decimate", 230504)
 
 	--[[ Many ground effects, handle it! ]]--
 	self:Log("SPELL_AURA_APPLIED", "GroundEffectDamage", 212736, 213278, 213504) -- Pool of Frost / Burning Ground / Arcane Fog
@@ -173,6 +180,8 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 		self:Message(213520, "Important")
 	elseif spellId == 213390 then -- Detonate: Arcane Orb
 		self:Message(spellId, "Important", "Alarm")
+	elseif spellId == 230901 then -- Fel Soul (spawn)
+		self:Bar(230504, phase == 1 and 20 or 13) -- Decimate
 	end
 end
 
@@ -197,6 +206,7 @@ do
 		self:Message("stages", "Neutral", "Long", args.spellName, args.spellId)
 
 		if args.spellId == 216389 or args.spellId == 213864 then -- Icy
+			phase = 1
 			self:Bar(230951, 15) -- Severed Soul
 			self:Bar(212587, 18) -- Mark of Frost (timer is the "pre" mark of frost aura applied)
 			self:Bar(212530, self:Mythic() and 31 or 41) -- Replicate: Mark of Frost
@@ -205,12 +215,14 @@ do
 			self:Bar("stages", self:Mythic() and 75 or 85, self:SpellName(213867), 213867) -- Next: Fiery
 			resetIcons()
 		elseif args.spellId == 213867 then -- Fiery
+			phase = 2
 			self:Bar(230951, 15) -- Severed Soul
 			self:Bar(213166, 18) -- Searing Brand (timer is the "pre" mark of frost aura applied)
 			self:Bar(213275, self:Mythic() and 43 or 48) -- Detonate: Searing Brand
 			self:Bar(213567, self:Mythic() and 55 or 65) -- Animate: Searing Brand
 			self:Bar("stages", self:Mythic() and 75 or 85, self:SpellName(213869), 213869) -- Next: Magic
 		else -- Magic
+			phase = 3
 			self:Bar(213852, 16) -- Replicate: Arcane Orb
 			self:Bar(213390, 38) -- Detonate: Arcane Orb
 			self:Bar(213564, 55) -- Animate: Arcane Orb
@@ -366,6 +378,12 @@ do
 			self:Bar(args.spellId, 30, CL.cast:format(args.spellName))
 		end
 	end
+end
+
+--[[ Fel Soul ]] --
+function mod:Decimate(args)
+	self:Message(args.spellId, "Important", "Alarm")
+	self:Bar(args.spellId, phase == 1 and 20 or 17) -- Decimate
 end
 
 --[[ Many ground effects, handle it! ]]--
