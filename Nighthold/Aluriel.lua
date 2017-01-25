@@ -131,7 +131,7 @@ function mod:OnBossEnable()
 
 	--[[ Fel Soul ]] --
 	self:Log("SPELL_CAST_START", "Decimate", 230504)
-	self:Log("UNIT_TARGETABLE_CHANGED")
+	--self:Log("UNIT_TARGETABLE_CHANGED")
 
 	--[[ Many ground effects, handle it! ]]--
 	self:Log("SPELL_AURA_APPLIED", "GroundEffectDamage", 212736, 213278, 213504) -- Pool of Frost / Burning Ground / Arcane Fog
