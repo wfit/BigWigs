@@ -131,6 +131,7 @@ function mod:OnBossEnable()
 
 	--[[ Fel Soul ]] --
 	self:Log("SPELL_CAST_START", "Decimate", 230504)
+	self:Log("UNIT_TARGETABLE_CHANGED")
 
 	--[[ Many ground effects, handle it! ]]--
 	self:Log("SPELL_AURA_APPLIED", "GroundEffectDamage", 212736, 213278, 213504) -- Pool of Frost / Burning Ground / Arcane Fog
@@ -384,6 +385,12 @@ end
 function mod:Decimate(args)
 	self:Message(args.spellId, "Important", "Alarm")
 	self:Bar(args.spellId, phase == 1 and 20 or 17) -- Decimate
+end
+
+function mod:UNIT_TARGETABLE_CHANGED(unit)
+	if not UnitCanAttack("player", unit) and self:MobId(unit) == 115905 then
+		self:StopBar(230504) -- Decimate
+	end
 end
 
 --[[ Many ground effects, handle it! ]]--
