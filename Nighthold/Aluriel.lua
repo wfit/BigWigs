@@ -61,7 +61,7 @@ function mod:GetOptions()
 
 		--[[ Master of Frost ]]--
 		{212531, "SAY", "FLASH"}, -- Pre Mark of Frost
-		{212587, "SAY", "FLASH"}, -- Mark of Frost
+		{212587, "SAY", "FLASH", "PROXIMITY"}, -- Mark of Frost
 		frost_marks,
 		{212647, "SAY"}, -- Frostbitten
 		212530, -- Replicate: Mark of Frost
@@ -240,6 +240,7 @@ do
 			self:TargetMessage(args.spellId, args.destName, "Attention", "Alert")
 			self:Say(args.spellId)
 			self:Flash(args.spellId)
+			self:OpenProximity(212587, 8)
 			preDebuffApplied = GetTime()
 		end
 	end
@@ -262,6 +263,7 @@ do
 			self:TargetMessage(args.spellId, args.destName, "Attention", "Alert")
 			self:Say(args.spellId)
 			self:Flash(args.spellId)
+			self:OpenProximity(212587, 8)
 		end
 	end
 end
@@ -271,6 +273,9 @@ function mod:MarkOfFrostRemoved(args)
 		table.insert(iconsPool, iconsUsed[args.destGUID])
 		iconsUsed[args.destGUID] = nil
 		SetRaidTarget(args.destUnit, 0)
+	end
+	if self:Me(args.destGUID) then
+		self:CloseProximity(212587)
 	end
 end
 
