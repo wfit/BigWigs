@@ -207,7 +207,7 @@ do
 		elseif args.spellId == 213867 then -- Fiery
 			self:Bar(230951, 15) -- Severed Soul
 			self:Bar(213166, 18) -- Searing Brand (timer is the "pre" mark of frost aura applied)
-			self:Bar(213275, self:Mythic() and 40 and 48) -- Detonate: Searing Brand
+			self:Bar(213275, self:Mythic() and 43 or 48) -- Detonate: Searing Brand
 			self:Bar(213567, self:Mythic() and 55 or 65) -- Animate: Searing Brand
 			self:Bar("stages", self:Mythic() and 75 or 85, self:SpellName(213869), 213869) -- Next: Magic
 		else -- Magic
@@ -312,6 +312,12 @@ function mod:SearingBrandApplied(args)
 		if expires and expires > 0 then
 			local timeLeft = expires - GetTime()
 			self:TargetBar(args.spellId, timeLeft, args.destName)
+			local remaining = self:BarTimeLeft(213275)
+			for i = 1, 5 do
+				if remaining-i > 0 then
+					self:ScheduleTimer("Say", remaining-i, 213148, i, true)
+				end
+			end
 		end
 	end
 end
@@ -373,3 +379,5 @@ do
 		end
 	end
 end
+
+
