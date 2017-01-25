@@ -35,10 +35,11 @@ local timers = {
 	[212794] = {15, 25, 35, 25, 75, 25.5, 32.5, 30, 75, 25.5, 36, 22.5, 56, 25.5},
 
 	-- Feast of Blood, SPELL_AURA_APPLIED
-	[208230] = {20, 25, 35, 25, 75, 25.5, 37.5, 25, 75, 25.5, 36, 22.5, 56, 25.5},
+	[208230] = {20.0, 25.0, 35.0, 25.0, 75.0, 25.5, 37.5, 25.0, 75.0, 25.6, 36.1, 22.5},
 
 	-- Echoes of the Void, SPELL_CAST_SUCCESS
-	[213531] = {57.5, 65, 95.5, 67.5, 100.5, 59.5},
+	[213531] = {55, 65, 95.5, 67.5, 100.5, 59.5},
+
 }
 
 --------------------------------------------------------------------------------
@@ -87,6 +88,7 @@ function mod:OnBossEnable()
 	self:Log("SPELL_AURA_APPLIED", "BrandOfArgus", 212794)
 	self:Log("SPELL_CAST_SUCCESS", "BrandOfArgusSuccess", 212794)
 	self:Log("SPELL_AURA_APPLIED", "FeastOfBlood", 208230)
+	self:Log("SPELL_AURA_APPLIED_DOSE", "FeastOfBlood", 208230)
 	self:Log("SPELL_CAST_START", "EchoesOfTheVoid", 213531)
 
 	--[[ Stage Two ]]--
@@ -145,14 +147,14 @@ end
 
 function mod:CarrionPlagueSuccess(args)
 	carrionPlagueCount = carrionPlagueCount + 1
-	self:Bar(206480, timers[206480][carrionPlagueCount] or 20, CL.count:format(args.spellName, carrionPlagueCount))
+	self:Bar(206480, timers[206480][carrionPlagueCount] or 20, CL.count:format(args.spellName, carrionPlagueCount % 4 == 0 and 4 or carrionPlagueCount % 4))
 end
 
 function mod:SeekerSwarm(args)
-	self:Message(args.spellId, "Urgent", "Info", CL.count:format(args.spellName, carrionPlagueCount))
+	self:Message(args.spellId, "Urgent", "Info", CL.count:format(args.spellName, seekerSwarmCount % 4 == 0 and 4 or seekerSwarmCount % 4))
 	seekerSwarmCount = seekerSwarmCount + 1
 	local time = timers[args.spellId][seekerSwarmCount] or 22
-	self:Bar(args.spellId, time, CL.count:format(args.spellName, seekerSwarmCount))
+	self:Bar(args.spellId, time, CL.count:format(args.spellName, seekerSwarmCount % 4 == 0 and 4 or seekerSwarmCount % 4))
 	self:ScheduleTimer("SeekerSwarmWarning", time - 8)
 end
 
@@ -167,7 +169,7 @@ do
 	function mod:BrandOfArgus(args)
 		list[#list+1] = args.destName
 		if #list == 1 then
-			self:ScheduleTimer("TargetMessage", 0.1, args.spellId, list, "Positive", "Alarm", CL.count:format(args.spellName, brandOfArgusCount-1))
+			self:ScheduleTimer("TargetMessage", 0.1, args.spellId, list, "Positive", "Alarm", CL.count:format(args.spellName, (brandOfArgusCount-1) % 4 == 0 and 4 or (brandOfArgusCount-1) % 4 ))
 		end
 
 		if self:Me(args.destGUID) then
@@ -178,21 +180,21 @@ end
 
 function mod:BrandOfArgusSuccess(args)
 	brandOfArgusCount = brandOfArgusCount + 1
-	self:Bar(args.spellId, timers[args.spellId][brandOfArgusCount] or 22, CL.count:format(args.spellName, brandOfArgusCount))
+	self:Bar(args.spellId, timers[args.spellId][brandOfArgusCount] or 22, CL.count:format(args.spellName, brandOfArgusCount % 4 == 0 and 4 or brandOfArgusCount % 4))
 end
 
 function mod:FeastOfBlood(args)
-	self:TargetMessage(args.spellId, args.destName, "Urgent", "Long", CL.count:format(args.spellName, feastOfBloodCount), nil, true)
+	self:TargetMessage(args.spellId, args.destName, "Urgent", "Long", CL.count:format(args.spellName, feastOfBloodCount % 4 == 0 and 4 or feastOfBloodCount % 4), nil, true)
 	feastOfBloodCount = feastOfBloodCount + 1
-	self:Bar(args.spellId, timers[args.spellId][feastOfBloodCount] or 22, CL.count:format(args.spellName, feastOfBloodCount))
+	self:Bar(args.spellId, timers[args.spellId][feastOfBloodCount] or 22, CL.count:format(args.spellName, feastOfBloodCount % 4 == 0 and 4 or feastOfBloodCount % 4))
 end
 
 function mod:EchoesOfTheVoid(args)
-	self:Message(args.spellId, "Important", "Long", CL.count:format(args.spellName, echoesOfTheVoidCount))
+	self:Message(args.spellId, "Important", "Long", CL.count:format(args.spellName, echoesOfTheVoidCount % 2 == 0 and 2 or echoesOfTheVoidCount % 2))
 	self:StopBar(CL.count:format(args.spellName, echoesOfTheVoidCount))
 	self:Bar(args.spellId, 10, CL.count:format(args.spellName, echoesOfTheVoidCount))
 	echoesOfTheVoidCount = echoesOfTheVoidCount + 1
-	self:Bar(args.spellId, timers[args.spellId][echoesOfTheVoidCount] or 60, CL.count:format(args.spellName, echoesOfTheVoidCount))
+	self:Bar(args.spellId, timers[args.spellId][echoesOfTheVoidCount] or 60, CL.count:format(args.spellName, echoesOfTheVoidCount % 2 == 0 and 2 or echoesOfTheVoidCount % 2))
 end
 
 --[[ Stage Two ]]--
