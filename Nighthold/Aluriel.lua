@@ -47,6 +47,7 @@ end
 
 local tank_marks = mod:AddTokenOption { "tank_marks", "Automatically set markers on tanks on pull", promote = true }
 local frost_marks = mod:AddTokenOption { "frost_marks", "Set markers on Players affected by Mark of Frost", promote = true }
+local fireadd_marks = mod:AddTokenOption { "fireadd_marks", "Set markers fire adds", promote = true }
 
 function mod:GetOptions()
 	return {
@@ -74,6 +75,7 @@ function mod:GetOptions()
 		213275, -- Detonate: Searing Brand
 		213567, -- Animate: Searing Brand
 		213278, -- Burning Ground
+		fireadd_marks,
 
 		--[[ Master of the Arcane ]]--
 		213520, -- Arcane Orb
@@ -116,6 +118,7 @@ function mod:OnBossEnable()
 	self:Log("SPELL_AURA_APPLIED", "SearingBrandApplied", 213166)
 	self:Log("SPELL_CAST_START", "DetonateSearingBrand", 213275)
 	self:Log("SPELL_CAST_START", "AnimateSearingBrand", 213567)
+	self:Death("FireAddDeath", 107285)
 
 	--[[ Master of the Arcane ]]--
 	self:Log("SPELL_CAST_START", "ReplicateArcaneOrb", 213852)
@@ -134,6 +137,10 @@ function mod:OnEngage()
 	annihilateCount = 1
 	self:Bar(212492, timers[212492][annihilateCount]) -- Annihilate
 	-- other bars are in mod:Stages()
+
+	if self:GetOption(fireadd_marks) then
+		self:RegisterTargetEvents("FireAddMark")
+	end
 
 	if self:GetOption(tank_marks) then
 		local marked = 0
@@ -315,6 +322,23 @@ end
 
 function mod:AnimateSearingBrand(args)
 	self:Message(args.spellId, "Important", "Info")
+	resetIcons()
+end
+
+function mod:FireAddMark(event, unit)
+	local guid = UnitGUID(unit)
+	if self:MobId(guid) == 107285 and not iconsUsed[guid] and self:Token(fireadd_marks) then
+		local icon = table.remove(iconsPool, 1)
+		iconsUsed[guid] = icon
+		SetRaidTarget(unit, icon)
+	end
+end
+
+function mod:FireAddDeath(args)
+	if iconsUsed[args.destGUID] then -- Did we mark the Ichor?
+		table.insert(iconsPool, iconsUsed[args.destGUID])
+		iconsUsed[args.destGUID] = nil
+	end
 end
 
 --[[ Master of the Arcane ]]--
