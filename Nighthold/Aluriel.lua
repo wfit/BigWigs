@@ -182,7 +182,7 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 	elseif spellId == 213390 then -- Detonate: Arcane Orb
 		self:Message(spellId, "Important", "Alarm")
 	elseif spellId == 230901 then -- Fel Soul (spawn)
-		self:Bar(230504, phase == 1 and 20 or 13) -- Decimate
+		self:CDBar(230504, phase == 1 and 20 or 13) -- Decimate
 	end
 end
 
@@ -384,7 +384,7 @@ end
 --[[ Fel Soul ]] --
 function mod:Decimate(args)
 	self:Message(args.spellId, "Important", "Alarm")
-	self:Bar(args.spellId, phase == 1 and 20 or 17) -- Decimate
+	self:CDBar(args.spellId, phase == 1 and 20 or 17) -- Decimate
 end
 
 function mod:UNIT_TARGETABLE_CHANGED(unit)
