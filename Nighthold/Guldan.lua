@@ -33,6 +33,7 @@ local soulsRemaining = 0
 local bondsEmpowered = false
 local hellfireEmpowered = false
 local eyesEmpowered = false
+local inTransition = false
 
 local timers = {
 	-- Phase 1
@@ -166,7 +167,7 @@ function mod:OnBossEnable()
 	self:Log("SPELL_AURA_APPLIED_DOSE", "TornSoul", 206896)
 	self:Log("SPELL_AURA_REMOVED", "TornSoulRemoved", 206896)
 
-	self:Death("FirstTransition", 104534, 104536, 104537)
+	--self:Death("FirstTransition", 104534, 104536, 104537)
 
 	--[[ Stage Two ]]--
 	self:Log("SPELL_AURA_REMOVED", "Phase2", 206516) -- Eye of Aman'Thu
@@ -206,6 +207,7 @@ function mod:OnEngage()
 	liquidHellfireCount = 1
 	felEffluxCount = 1
 	handOfGuldanCount = 1
+	inTransition = false
 
 	self:Bar(206219, timers[phase][206219][liquidHellfireCount], CL.count:format(self:SpellName(206219), liquidHellfireCount)) -- Liquid Hellfire
 	self:Bar(206514, timers[phase][206514][felEffluxCount]) -- Fel Efflux
@@ -275,18 +277,21 @@ end
 
 --[[ Stage One ]]--
 function mod:LiquidHellfire(args)
+	if inTransition then return end
 	self:Message(args.spellId, "Urgent", "Alarm", CL.incoming:format(CL.count:format(args.spellName, liquidHellfireCount)))
 	liquidHellfireCount = liquidHellfireCount + 1
 	self:Bar(args.spellId, timers[phase][206219][liquidHellfireCount] or 36.7, CL.count:format(args.spellName, liquidHellfireCount), args.spellId)
 end
 
 function mod:FelEfflux(args)
+	if inTransition then return end
 	self:Message(args.spellId, "Important", "Alert")
 	felEffluxCount = felEffluxCount + 1
 	self:CDBar(args.spellId, timers[phase][args.spellId][felEffluxCount] or 15.1)
 end
 
 function mod:HandOfGuldan(args)
+	if inTransition then return end
 	self:Message(args.spellId, "Attention", "Info")
 	handOfGuldanCount = handOfGuldanCount + 1
 	if handOfGuldanCount < 4 then
@@ -333,17 +338,22 @@ function mod:SoulVortex(args)
 end
 
 function mod:TornSoul(args)
-	local amount = args.amount or 1
-	self:StackMessage(args.spellId, args.destName, amount, "Urgent", amount > 1 and "Warning") -- check sound amount
-	self:TargetBar(args.spellId, 30, args.destName)
+	if self:Me(args.destGUID) then
+		local amount = args.amount or 1
+		self:StackMessage(args.spellId, args.destName, amount, "Urgent", amount > 1 and "Warning") -- check sound amount
+		self:TargetBar(args.spellId, 30, args.destName)
+	end
 end
 
 function mod:TornSoulRemoved(args)
-	self:StopBar(args.spellId, args.destName)
+	if self:Me(args.destGUID) then
+		self:StopBar(args.spellId, args.destName)
+	end
 end
 
 --[[ Stage Two ]]--
 function mod:FirstTransition(args)
+	inTransition = true
 	self:StopBar(206514) -- Fel Efflux
 	self:StopBar(CL.count:format(self:SpellName(212258), handOfGuldanCount)) -- Hand of Gul'dan
 	self:Message("stages", "Neutral", "Long", "First Transition", false)
@@ -351,6 +361,7 @@ function mod:FirstTransition(args)
 end
 
 function mod:Phase2(args)
+	inTransition = false
 	phase = 2
 	self:Message("stages", "Neutral", "Long", CL.stage:format(phase), false)
 	liquidHellfireCount = 1
