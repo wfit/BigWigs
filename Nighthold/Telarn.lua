@@ -19,6 +19,7 @@ mod.instanceId = 1530
 
 local nextPhaseSoon = 80
 local phase = 1
+local mTimer = 65
 
 local callOfNightCheck
 
@@ -57,6 +58,9 @@ function mod:GetOptions()
 		{218304, "SAY"}, -- Parasitic Fetter
 		fetterMarker,
 		{218342, "FLASH", "SAY"}, -- Parasitic Fixate
+
+		-- Mythic
+		223437, -- Collapse of Night
 	}, {
 		["stages"] = "general",
 		[218809] = -13694, -- Arcanist Tel'arn
@@ -76,6 +80,8 @@ function mod:OnBossEnable()
 	self:Log("SPELL_AURA_APPLIED", "RecursiveStrikes", 218503)
 	self:Log("SPELL_AURA_APPLIED_DOSE", "RecursiveStrikes", 218503)
 	self:Log("SPELL_CAST_START", "ControlledChaos", 218438)
+	self:Log("SPELL_CAST_START", "CallOfNightStart", 218807)
+	
 
 	--[[ Solarist Tel'arn ]]--
 	self:Log("SPELL_CAST_START", "SolarCollapse", 218148)
@@ -89,21 +95,34 @@ function mod:OnBossEnable()
 	self:Log("SPELL_CAST_SUCCESS", "ParasiticFetterSuccess", 218424)
 	self:Log("SPELL_AURA_APPLIED", "ParasiticFetter", 218304)
 	self:Log("SPELL_AURA_REMOVED", "ParasiticFetterRemoved", 218304)
-	self:Log("SPELL_AURA_APPLIED", "Fixate", 218342) -- Parasitic Fixate
+	self:Log("SPELL_AURA_APPLIED", "Fixate", 223437) -- Parasitic Fixate
+
+	-- Mythic
+	self:Log("SPELL_CAST_SUCCESS", "NatureInfusion", 222020)
+	self:Log("SPELL_CAST_SUCCESS", "ArcaneInfusion", 222021)  
+	self:Log("SPELL_CAST_START", "CollapseOfNight", 223437)
 end
 
 function mod:OnEngage()
-	nextPhaseSoon = 80
 	phase = 1
-	self:Bar(218148, 10) -- Solar Collapse, to _start
-	self:Bar(218304, 21.5) -- Parasitic Fetter, to _success
-	self:Bar(218438, 35) -- Controlled Chaos, to_start
 	if not self:Mythic() then
+		nextPhaseSoon = 80
+		self:Bar(218148, 10) -- Solar Collapse, to _start
+		self:Bar(218304, 21.5) -- Parasitic Fetter, to _success
+		self:Bar(218438, 35) -- Controlled Chaos, to_start
 		self:RegisterUnitEvent("UNIT_HEALTH_FREQUENT", nil, "boss1")
+	else
+		mTimer = 65
+		self:Bar(218148, 5) -- Solar Collapse, to _start
+		self:Bar(218774, 45) -- Summon Plasma Spheres, to _start
+		self:Bar(218304, 18) -- Parasitic Fetter, to _success
+		self:Bar(218927, 65) -- Grace of Nature, to _start
+		self:Bar(218438, 30) -- Controlled Chaos, to_start
+		self:Bar(218807, 55) -- Controlled Chaos, to_start
 	end
 	if self:GetOption(bossMarker) then
 		self:RegisterEvent("INSTANCE_ENCOUNTER_ENGAGE_UNIT")
-		self:INSTANCE_ENCOUNTER_ENGAGE_UNIT()
+		--self:INSTANCE_ENCOUNTER_ENGAGE_UNIT()
 	end
 end
 
@@ -198,7 +217,7 @@ do
 		playerList[#playerList+1] = args.destName
 		if #playerList == 1 then
 			self:ScheduleTimer("TargetMessage", 0.1, args.spellId, playerList, "Important", "Alert")
-			self:Bar(args.spellId, 50)
+			--self:Bar(args.spellId, 50)
 		end
 
 		if self:GetOption(callOfTheNightMarker) then
@@ -254,6 +273,11 @@ do
 	end
 end
 
+function mod:CallOfNightStart(args)
+	self:Message(218809, "Important", "Alert", CL.incoming:format(args.spellName))
+	self:Bar(218809, self:Mythic() and mTimer or 50)
+end
+
 function mod:RecursiveStrikes(args)
 	local amount = args.amount or 1
 	if amount > 5 and amount % 2 == 0 then
@@ -263,18 +287,18 @@ end
 
 function mod:ControlledChaos(args)
 	self:Message(args.spellId, "Important", "Alert", CL.incoming:format(args.spellName))
-	self:Bar(args.spellId, phase == 2 and 40 or phase == 3 and 50 or 35)
+	self:Bar(args.spellId, self:Mythic() and mTimer or phase == 2 and 40 or phase == 3 and 50 or 35)
 end
 
 --[[ Solarist Tel'arn ]]--
 function mod:SolarCollapse(args)
 	self:Message(args.spellId, "Important", "Long", CL.incoming:format(args.spellName))
-	self:Bar(args.spellId, phase == 2 and 40 or phase == 3 and 50 or 35)
+	self:Bar(args.spellId, self:Mythic() and mTimer or phase == 2 and 40 or phase == 3 and 50 or 35)
 end
 
 function mod:SummonPlasmaSpheres(args)
 	self:Message(args.spellId, "Urgent", "Alert")
-	self:Bar(args.spellId, phase == 2 and 40 or 50)
+	self:Bar(args.spellId, self:Mythic() and mTimer or phase == 2 and 40 or 50)
 end
 
 --[[ Naturalist Tel'arn ]]--
@@ -293,7 +317,7 @@ end
 
 function mod:GraceOfNature(args)
 	self:Message(args.spellId, "Important", "Long", CL.casting:format(args.spellName))
-	self:Bar(args.spellId, 50)
+	self:Bar(args.spellId, self:Mythic() and mTimer or 50)
 end
 
 do
@@ -308,7 +332,7 @@ do
 end
 
 function mod:ParasiticFetterSuccess(args)
-	self:Bar(218304, phase == 2 and 40 or phase == 3 and 50 or 35)
+	self:Bar(218304, self:Mythic() and mTimer or phase == 2 and 40 or phase == 3 and 50 or 35)
 end
 
 do
@@ -348,4 +372,44 @@ function mod:Fixate(args)
 		self:Flash(args.spellId)
 		self:Say(args.spellId)
 	end
+end
+
+--[[ Mythic ]]--
+
+function mod:CancelAllBars()
+	self:StopBar(218927) -- Grace of Nature, to _start
+	self:StopBar(218809) -- Call of Night, to _start
+	self:StopBar(218774) -- Summon Plasma Spheres, to _start
+	self:StopBar(218304) -- Parasitic Fetter, to _success
+	self:StopBar(218148) -- Solar Collapse, to _start
+	self:StopBar(218438) -- Controlled Chaos, to _start
+end
+
+function mod:NatureInfusion(args)
+	self:Message("stages", "Neutral", "Info", args.spellName, args.spellId) 
+	phase = phase + 1
+	self:CancelAllBars()
+	mTimer = phase == 2 and 55 or 35
+	if phase == 2 then
+		self:Bar(218774, 25) -- Summon Plasma Spheres, to _start
+		self:Bar(218304, 40) -- Call of Night, to _start
+		self:Bar(218148, 15) -- Solar Collapse, to _start
+		self:Bar(218438, 55) -- Controlled Chaos, to _start
+	end
+end
+
+function mod:ArcaneInfusion(args)
+	self:Message("stages", "Neutral", "Info", args.spellName, args.spellId) 
+	phase = phase + 1
+	self:CancelAllBars()
+	mTimer = phase == 2 and 55 or 35
+	if phase == 3 then
+		self:Bar(218774, 35) -- Summon Plasma Spheres, to _start
+		self:Bar(223437, 20) -- Collapse of Night, to _start
+	end
+end
+
+function mod:CollapseOfNight(args)
+	self:Message(args.spellId, "Important", "Long", CL.casting:format(args.spellName))
+	self:Bar(args.spellId, 35)
 end
