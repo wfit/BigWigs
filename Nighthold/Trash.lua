@@ -21,6 +21,9 @@ mod:RegisterEnableMob(
 
 	--[[ Aluriel to Krosos ]]--
 	111210 -- Searing Infernal
+
+	--[[ Etraeus to Telarn ]]--
+	112595, -- Shal'dorei Archmage
 )
 
 --------------------------------------------------------------------------------
@@ -43,6 +46,9 @@ if L then
 
 	--[[ Aluriel to Krosos ]]--
 	L.infernal = "Searing Infernal"
+
+	--[[ Etraeus to Telarn ]]--
+	L.archmage = "Shal'dorei Archmage"
 end
 
 --------------------------------------------------------------------------------
@@ -68,6 +74,10 @@ function mod:GetOptions()
 
 		--[[ Aluriel to Krosos ]]--
 		{221344, "SAY", "FLASH"}, -- Annihilating Orb (Searing Infernal)
+
+		--[[ Etraeus to Telarn ]]--
+		{225105, "SAY", "FLASH"}, -- Arcanic Release (Shal'dorei Archmage)
+
 	}, {
 		[230438] = L.torm,
 		[221164] = L.fulminant,
@@ -78,6 +88,7 @@ function mod:GetOptions()
 		[225412] = L.chronowraith,
 		[224568] = L.protector,
 		[221344] = L.infernal,
+		[225105] = L.archmage,
 	}
 end
 
@@ -114,6 +125,9 @@ function mod:OnBossEnable()
 	self:Log("SPELL_AURA_APPLIED", "AnnihilatingOrb", 221344)
 	self:Log("SPELL_AURA_REMOVED", "AnnihilatingOrbRemoved", 221344)
 	self:Death("InfernalDeath", 111210)
+
+	--[[ Etraeus to Telarn ]]--
+	self:Log("SPELL_AURA_APPLIED", "ArcanicRelease", 225105)
 end
 
 --------------------------------------------------------------------------------
@@ -244,4 +258,16 @@ end
 
 function mod:InfernalDeath(args)
 	self:StopBar(221344) -- Annihilating Orb
+end
+
+
+--[[ Etraeus to Telarn ]]--
+function mod:ArcanicRelease(args)
+	self:TargetMessage(args.spellId, args.destName, "Important", "Warning")
+	self:TargetBar(args.spellId, 10, args.destName)
+	self:PrimaryIcon(args.spellId, args.destName)
+	if self:Me(args.destGUID) then
+		self:Say(args.spellId)
+		self:Flash(args.spellId)
+	end
 end

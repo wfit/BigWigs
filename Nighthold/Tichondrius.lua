@@ -11,7 +11,7 @@ local mod, CL = BigWigs:NewBoss("Tichondrius", 1088, 1762)
 if not mod then return end
 mod:RegisterEnableMob(103685)
 mod.engageId = 1862
---mod.respawnTime = 0
+mod.respawnTime = 15
 mod.instanceId = 1530
 
 --------------------------------------------------------------------------------
@@ -259,7 +259,7 @@ do
 			end
 		end
 	end
-	
+
 	function mod:VolatileWoundRemoved(args)
 		if self:Me(args.destGUID) then
 			for _,timer in pairs(volaSayTimer) do
