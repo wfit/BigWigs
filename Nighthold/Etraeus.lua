@@ -279,8 +279,60 @@ do
 		self:ScheduleTimer("GrandConjunctionAI", 0.5)
 	end
 
-	local function pairings(units)
+	local Unsuitable = 100000
+	local IcyEjection = mod:SpellName(206936)
+	local FelEjection = mod:SpellName(205649)
+	local Debuffs = { IcyEjection, FelEjection }
 
+	local function generatePairings(units, trail, used, pairings)
+		if #units == #trail then
+			local pairing = {}
+			for i = 1, #units, 2 do
+				pairing[units[trail[i]]] = units[trail[i + 1]]
+			end
+			pairings[#pairings + 1] = pairing
+		else
+			for i = 1, #units do
+				if not used[i] then
+					used[i] = true
+					table.insert(trail, i)
+					generatePairings(units, trail, used, pairings)
+					table.remove(trail)
+					used[i] = false
+				end
+			end
+		end
+	end
+
+	local function pairings(units)
+		-- Ensure we have an even number of units
+		if #units % 2 == 1 then
+			table.remove(units)
+		end
+
+		-- Init accumulators
+		local trail = {}
+		local used = {}
+		local pairings = {}
+
+		generatePairings(units, trail, used, pairings)
+		return pairings
+	end
+
+	local function score(pairings)
+		local score = 0
+		for a, b in pairs(pairings) do
+			score = score + distance(a, b)
+			for _, debuff in ipairs(Debuffs) do
+				if UnitDebuff(a, debuff) then
+					score = score + Unsuitable
+					if UnitDebuff(b, debuff) then
+						score = score + Unsuitable
+					end
+				end
+			end
+		end
+		return score;
 	end
 
 	local signs = {
