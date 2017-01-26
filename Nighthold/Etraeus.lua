@@ -84,9 +84,11 @@ function mod:OnBossEnable()
 	--[[ General ]]--
 	self:RegisterUnitEvent("UNIT_SPELLCAST_SUCCEEDED", nil, "boss1")
 	self:Log("SPELL_CAST_START", "NetherTraversal", 221875)
-	self:Log("SPELL_CAST_START", "GrandConjunction", 205408)
 	self:Log("SPELL_AURA_APPLIED", "GroundEffectDamage", 206398) -- Felflame
 	self:Log("SPELL_AURA_APPLIED_DOSE", "GroundEffectDamage", 206398) -- Felflame
+	self:Log("SPELL_CAST_START", "GrandConjunctionStart", 205408)
+	self:Log("SPELL_CAST_SUCCESS", "GrandConjunction", 205408)
+	self:RegisterNetMessage("GCDistances")
 
 	--[[ Stage One ]]--
 	self:Log("SPELL_CAST_SUCCESS", "CoronalEjection", 206464)
@@ -214,10 +216,99 @@ function mod:NetherTraversal(args)
 	self:Bar(args.spellId, 8.5, CL.cast:format(args.spellName))
 end
 
-function mod:GrandConjunction(args)
-	self:Message(args.spellId, "Attention", "Long", CL.casting:format(args.spellName))
-	if phase == 1 then
-		self:Bar(args.spellId, 14)
+--[[ Grand Conjunction ]] --
+do
+	-- Distances database
+	local distances = {}
+
+	local function insertDistance(a, b, distance)
+		if a > b then
+			insertDistance(b, a, distances)
+		else
+			if not distances[a] then
+				distances[a] = { [b] = distance }
+			elseif distances[a][b] then
+				distances[a][b] = (distances[a][b] + distance) / 2
+			else
+				distances[a][b] = distance
+			end
+		end
+	end
+
+	local function distance(a, b)
+		if a > b then
+			return distance(b, a)
+		else
+			return distances[a] and distances[a][b] or 25
+		end
+	end
+
+	-- Cast start, snapshot distances
+	function mod:GrandConjunctionStart(args)
+		self:Message(args.spellId, "Attention", "Long", CL.casting:format(args.spellName))
+		wipe(distances)
+		self:ScheduleTimer("SnapshotGrandConjunction", 3)
+		if phase == 1 then
+			self:Bar(args.spellId, 14)
+		end
+	end
+
+	local myDistances = {}
+	local myUnitId
+	function mod:SnapshotGrandConjunction()
+		wipe(myDistances)
+		for unit in self:IterateGroup() do
+			if UnitIsUnit(unit, "player") then
+				myUnitId = unit
+			else
+				myDistances[unit] = self:Range(unit)
+			end
+		end
+		mod:Send("GCDistances", { player = myUnitId, distances = myDistances }, "RAID")
+	end
+
+	function mod:GCDistances(data)
+		local player = data.player
+		for unit, range in pairs(data.distances) do
+			insertDistance(player, unit, range)
+		end
+	end
+
+	-- Cast success, perform attribution
+	function mod:GrandConjunction(args)
+		self:ScheduleTimer("GrandConjunctionAI", 0.5)
+	end
+
+	local function pairings(units)
+
+	end
+
+	local signs = {
+		[205429] = mod:SpellName(205429), -- Crab
+		[205445] = mod:SpellName(205445), -- Wolf
+		[216345] = mod:SpellName(216345), -- Hunter
+		[216344] = mod:SpellName(216344), -- Dragon
+	}
+
+	function mod:GrandConjunctionAI()
+		-- Collect signs
+		local signs = {}
+		for unit in self:IterateGroup(20, true) do
+			for sign, name in pairs(signs) do
+				if UnitDebuff(unit, name) then
+					if not signs[sign] then
+						signs[sign] = {}
+					end
+					table.insert(signs[sign], unit)
+					break
+				end
+			end
+		end
+
+		-- Perform attribution
+		for sign, units in pairs(signs) do
+
+		end
 	end
 end
 
