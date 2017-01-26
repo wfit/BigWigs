@@ -289,9 +289,10 @@ do
 	-- Cast success, perform attribution
 	function mod:GrandConjunction(args)
 		if self:GetOption(gcai) then
-			self:ScheduleTimer("GrandConjunctionAI", 0.5)
+			self:ScheduleTimer("GrandConjunctionAI", 0.2)
+			print("scheduling")
 		end
-		self:ScheduleTimer("RemarkTanks", 12)
+		self:ScheduleTimer("RemarkTanks", 10)
 	end
 
 	-- Computes permutations from list of players
@@ -354,7 +355,7 @@ do
 		return score;
 	end
 
-	local signs = {
+	local StarSigns = {
 		[205429] = mod:SpellName(205429), -- Crab
 		[205445] = mod:SpellName(205445), -- Wolf
 		[216345] = mod:SpellName(216345), -- Hunter
@@ -364,8 +365,8 @@ do
 	function mod:GrandConjunctionAI()
 		-- Collect signs
 		local signs = {}
-		for unit in self:IterateGroup(20, true) do
-			for sign, name in pairs(signs) do
+		for unit in self:IterateGroup() do
+			for sign, name in pairs(StarSigns) do
 				if UnitDebuff(unit, name) then
 					if not signs[sign] then
 						signs[sign] = {}
@@ -407,7 +408,7 @@ do
 					print("Missing icon for ", UnitName(b))
 				end
 				if UnitIsUnit(a, "player") then
-					local msg = icon and ("%d %s %d"):format(icon, UnitName(a), icon) or UnitName(a)
+					local msg = icon and ("{rt%d} %s {rt%d}"):format(icon, UnitName(b), icon) or UnitName(a)
 					self:Say(false, msg, true)
 					if icon then
 						self:Pulse(205408, "Interface\\TargetingFrame\\UI-RaidTargetingIcon_" .. icon)
