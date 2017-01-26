@@ -10,7 +10,7 @@ local mod, CL = BigWigs:NewBoss("High Botanist Tel'arn", 1088, 1761)
 if not mod then return end
 mod:RegisterEnableMob(104528)
 mod.engageId = 1886
-mod.respawnTime = 7 -- fix me
+mod.respawnTime = 30
 mod.instanceId = 1530
 
 --------------------------------------------------------------------------------
@@ -151,14 +151,15 @@ function mod:UNIT_HEALTH_FREQUENT(unit)
 end
 
 function mod:INSTANCE_ENCOUNTER_ENGAGE_UNIT()
+	print("IEEU")
 	for i = 1, 5 do
 		local unit = ("boss%d"):format(i)
 		local mob = self:MobId(unit)
-		if mob == 104528 or mob == 109040 then -- Arcanist
+		if mob == 104528 or mob == 109040 then -- Arcanist / Diamond
 			self:SetIcon(bossMarker, unit, 3)
-		elseif mob == 109038 then -- Solarist
+		elseif mob == 109038 then -- Solarist / Star
 			self:SetIcon(bossMarker, unit, 1)
-		elseif mob == 109041 then -- Naturalist
+		elseif mob == 109041 then -- Naturalist / Triangle
 			self:SetIcon(bossMarker, unit, 4)
 		end
 	end
@@ -174,7 +175,13 @@ do
 		if self:Me(args.destGUID) then
 			isOnMe = true
 			self:Flash(args.spellId)
-			self:Say(args.spellId)
+			if self:Mythic() then
+				local side = #proxList == 1 and "Gauche" or "Droite"
+				self:Say(args.spellId, side, true)
+				self:Emphasized(false, side)
+			else
+				self:Say(args.spellId)
+			end
 			self:OpenProximity(args.spellId, 8, proxList) -- don't stand near others with the debuff
 			self:TargetBar(args.spellId, 45, args.destName)
 			if not callOfNightCheck then
@@ -193,10 +200,9 @@ do
 		end
 
 		if self:GetOption(callOfTheNightMarker) then
-			local icon = iconsUnused[1]
+			local icon = table.remove(iconsUnused, 1)
 			if icon then -- At least one icon unused
-				SetRaidTarget(args.destName, icon)
-				tDeleteItem(iconsUnused, icon)
+				SetRaidTarget(args.destUnit, icon)
 			end
 		end
 	end
@@ -222,10 +228,10 @@ do
 		end
 
 		if self:GetOption(callOfTheNightMarker) then
-			local icon = GetRaidTargetIndex(args.destName)
+			local icon = GetRaidTargetIndex(args.destUnit)
 			if icon and icon > 0 and icon < 7 and not tContains(iconsUnused, icon) then
 				table.insert(iconsUnused, icon)
-				SetRaidTarget(args.destName, 0)
+				SetRaidTarget(args.destUnit, 0)
 			end
 		end
 	end
