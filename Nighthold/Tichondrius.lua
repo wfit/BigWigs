@@ -35,12 +35,13 @@ local timers = {
 	[212794] = {15, 25, 35, 25, 75, 25.5, 32.5, 30, 75, 25.5, 36, 22.5, 56, 25.5},
 
 	-- Feast of Blood, SPELL_AURA_APPLIED
-	[208230] = {20.0, 25.0, 35.0, 25.0, 75.0, 25.5, 37.5, 25.0, 75.0, 25.6, 36.1, 22.5},
+	[208230] = {20, 25, 35, 25, 75, 25.5, 37.5, 25, 75, 25.6, 36.1, 22.5},
 
-	-- Echoes of the Void, SPELL_CAST_SUCCESS
+	-- Echoes of the Void, SPELL_CAST_START
 	[213531] = {55, 65, 95.5, 67.5, 100.5, 59.5},
 
 }
+local volaSayTimer = {}
 
 --------------------------------------------------------------------------------
 -- Localization
@@ -60,6 +61,7 @@ function mod:GetOptions()
 		{212794, "SAY"}, -- Brand of Argus
 		208230, -- Feast of Blood
 		213531, -- Echoes of the Void
+		213534,
 		"berserk",
 
 		--[[ Stage Two ]]--
@@ -90,6 +92,8 @@ function mod:OnBossEnable()
 	self:Log("SPELL_AURA_APPLIED", "FeastOfBlood", 208230)
 	self:Log("SPELL_AURA_APPLIED_DOSE", "FeastOfBlood", 208230)
 	self:Log("SPELL_CAST_START", "EchoesOfTheVoid", 213531)
+	self:Log("SPELL_DAMAGE", "EchoesOfTheVoidDamage", 213534)
+	self:Log("SPELL_MISSED", "EchoesOfTheVoidDamage", 213534)
 
 	--[[ Stage Two ]]--
 	self:Log("SPELL_CAST_START", "IllusionaryNight", 206365)
@@ -103,6 +107,8 @@ function mod:OnBossEnable()
 
 	--[[ Sightless Watcher ]]--
 	self:Log("SPELL_AURA_APPLIED", "VolatileWound", 216024)
+	self:Log("SPELL_AURA_APPLIED_DOSE", "VolatileWound", 216024)
+	self:Log("SPELL_AURA_REMOVED", "VolatileWoundRemoved", 216024)
 end
 
 function mod:OnEngage()
@@ -112,6 +118,7 @@ function mod:OnEngage()
 	feastOfBloodCount = 1
 	echoesOfTheVoidCount = 1
 	illusionaryNightCount = 1
+	wipe(volaSayTimer)
 	self:Bar(206480, timers[206480][carrionPlagueCount], CL.count:format(self:SpellName(206480), carrionPlagueCount))
 	self:Bar(213238, timers[213238][seekerSwarmCount], CL.count:format(self:SpellName(213238), seekerSwarmCount))
 	self:ScheduleTimer("SeekerSwarmWarning", timers[213238][seekerSwarmCount] - 8)
@@ -121,9 +128,7 @@ function mod:OnEngage()
 	self:Bar(208230, timers[208230][feastOfBloodCount], CL.count:format(self:SpellName(208230), feastOfBloodCount))
 	self:Bar(213531, timers[213531][echoesOfTheVoidCount], CL.count:format(self:SpellName(213531), echoesOfTheVoidCount))
 	self:Bar(206365, 130, CL.count:format(self:SpellName(206365), illusionaryNightCount))
-	if self:Normal() or self:Heroic() then
-		self:Berserk(463)
-	end
+	self:Berserk(463)
 end
 
 --------------------------------------------------------------------------------
@@ -230,15 +235,49 @@ end
 
 --[[ Sightless Watcher ]]--
 do
-	local list = mod:NewTargetList()
+	--local list = mod:NewTargetList()
+	local remaining = 8
 	function mod:VolatileWound(args)
-		list[#list+1] = args.destName
+		local stacks = args.amount or 1
+		--[[list[#list+1] = args.destName
 		if #list == 1 then
 			self:ScheduleTimer("TargetMessage", 0.5, args.spellId, list, "Urgent", "Alarm", nil, nil, self:Dispeller("magic"))
 		end
-
+		]]--
 		if self:Me(args.destGUID) then
-			self:Say(args.spellId)
+			if stacks == 1 then
+				self:Say(args.spellId)
+			end
+			for _,timer in pairs(volaSayTimer) do
+				self:CancelTimer(timer)
+			end
+			wipe(volaSayTimer)
+			for i = 1, 3 do
+				if remaining-i > 0 then
+					volaSayTimer[#volaSayTimer+1] = self:ScheduleTimer("Say", remaining-i, args.spellId, i, true)
+				end
+			end
+		end
+	end
+	
+	function mod:VolatileWoundRemoved(args)
+		if self:Me(args.destGUID) then
+			for _,timer in pairs(volaSayTimer) do
+				self:CancelTimer(timer)
+			end
+			wipe(volaSayTimer)
+		end
+	end
+end
+
+--[[ Echoes of the Void ]]--
+do
+	local prev = 0
+	function mod:EchoesOfTheVoidDamage(args)
+		local t = GetTime()
+		if self:Me(args.destGUID) and t-prev > 1.5 then
+			prev = t
+			self:Message(args.spellId, "Personal", "Alert", CL.underyou:format(args.spellName))
 		end
 	end
 end
