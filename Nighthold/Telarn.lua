@@ -178,7 +178,6 @@ do
 			self:Flash(args.spellId)
 			if self:Mythic() then
 				local side = GetTime() - t > 2 and "Gauche" or "Droite"
-				t = GetTime()
 				self:Say(args.spellId, side, true)
 				self:Emphasized(false, side)
 			else
@@ -190,6 +189,7 @@ do
 				callOfNightCheck = self:ScheduleRepeatingTimer("CallOfNightCheck", 1.5)
 			end
 		end
+		t = GetTime()
 
 		if not isOnMe then
 			self:OpenProximity(args.spellId, 8, proxList, true) -- stand near debuffed players
