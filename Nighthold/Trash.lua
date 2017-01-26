@@ -20,7 +20,7 @@ mod:RegisterEnableMob(
 	112665, -- Nighthold Protector
 
 	--[[ Aluriel to Krosos ]]--
-	111210 -- Searing Infernal
+	111210, -- Searing Infernal
 
 	--[[ Etraeus to Telarn ]]--
 	112595, -- Shal'dorei Archmage
