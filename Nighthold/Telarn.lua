@@ -154,7 +154,7 @@ function mod:INSTANCE_ENCOUNTER_ENGAGE_UNIT()
 	for i = 1, 5 do
 		local unit = ("boss%d"):format(i)
 		local mob = self:MobId(unit)
-		if mob == 104528 then -- Arcanist
+		if mob == 104528 or mob == 109040 then -- Arcanist
 			self:SetIcon(bossMarker, unit, 3)
 		elseif mob == 109038 then -- Solarist
 			self:SetIcon(bossMarker, unit, 1)
