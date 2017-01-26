@@ -23,7 +23,7 @@ mod:RegisterEnableMob(
 	111210, -- Searing Infernal
 
 	--[[ Etraeus to Telarn ]]--
-	112595, -- Shal'dorei Archmage
+	112595 -- Shal'dorei Archmage
 )
 
 --------------------------------------------------------------------------------
