@@ -407,12 +407,9 @@ do
 				else
 					print("Missing icon for ", UnitName(b))
 				end
-				if UnitIsUnit(a, "player") then
-					local msg = icon and ("{rt%d} %s {rt%d}"):format(icon, UnitName(b), icon) or UnitName(a)
-					self:Say(false, msg, true)
-					if icon then
-						self:Pulse(205408, "Interface\\TargetingFrame\\UI-RaidTargetingIcon_" .. icon)
-					end
+				if icon and (UnitIsUnit(a, "player") or UnitIsUnit(b, "player")) then
+					self:Say(false, ("{rt%d}"):format(icon), true)
+					self:Pulse(205408, "Interface\\TargetingFrame\\UI-RaidTargetingIcon_" .. icon)
 				end
 			end
 		end
