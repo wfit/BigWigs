@@ -37,6 +37,7 @@ local L = mod:GetLocale()
 --
 
 local marks = mod:AddTokenOption { "marks", "Automatically set raid target icons", promote = true }
+local gcai = mod:AddTokenOption { "gcai", "Perform Grand Conjunction attributions", promote = true, default = false }
 
 function mod:GetOptions()
 	return {
@@ -44,7 +45,8 @@ function mod:GetOptions()
 		"stages",
 		marks,
 		221875, -- Nether Traversal
-		{205408, "SAY", "FLASH", "PULSE"}, -- Grand Conjunction
+		{205408, "FLASH", "PULSE"}, -- Grand Conjunction
+		gcai,
 
 		--[[ Stage One ]]--
 		206464, -- Coronal Ejection
@@ -86,8 +88,12 @@ function mod:OnBossEnable()
 	self:Log("SPELL_CAST_START", "NetherTraversal", 221875)
 	self:Log("SPELL_AURA_APPLIED", "GroundEffectDamage", 206398) -- Felflame
 	self:Log("SPELL_AURA_APPLIED_DOSE", "GroundEffectDamage", 206398) -- Felflame
+
+	--[[ Grand Conjunction ]] --
 	self:Log("SPELL_CAST_START", "GrandConjunctionStart", 205408)
 	self:Log("SPELL_CAST_SUCCESS", "GrandConjunction", 205408)
+	self:Log("SPELL_AURA_APPLIED", "StarSignApplied", 205429, 205445, 216345, 216344) -- Crab, Wolf, Hunter, Dragon
+	self:Log("SPELL_AURA_REMOVED", "StarSignRemoved", 205429, 205445, 216345, 216344)
 	self:RegisterNetMessage("GCDistances")
 	self:RegisterNetMessage("GCPairings")
 
@@ -135,12 +141,18 @@ function mod:OnEngage()
 	if self:Mythic() then
 		self:Bar(205408, 15) -- Grand Conjunction
 	end
+	self:RemarkTanks()
+end
+
+function mod:RemarkTanks()
 	if self:GetOption(marks) then
 		local icon = 8
 		for unit in self:IterateGroup() do
 			if self:Tank(unit) then
 				SetRaidTarget(unit, icon)
 				icon = icon - 1
+			else
+				SetRaidTarget(unit, 0)
 			end
 		end
 	end
@@ -151,9 +163,7 @@ function mod:OnBossDisable()
 
 	if self:GetOption(marks) then
 		for unit in self:IterateGroup() do
-			if self:Tank(unit) then
-				SetRaidTarget(unit, 0)
-			end
+			SetRaidTarget(unit, 0)
 		end
 	end
 end
@@ -248,7 +258,7 @@ do
 	function mod:GrandConjunctionStart(args)
 		self:Message(args.spellId, "Attention", "Long", CL.casting:format(args.spellName))
 		wipe(distances)
-		self:ScheduleTimer("SnapshotGrandConjunction", 3)
+		self:ScheduleTimer("SnapshotGrandConjunction", 3.5)
 		if phase == 1 then
 			self:Bar(args.spellId, 14)
 		end
@@ -278,7 +288,10 @@ do
 
 	-- Cast success, perform attribution
 	function mod:GrandConjunction(args)
-		self:ScheduleTimer("GrandConjunctionAI", 0.5)
+		if self:GetOption(gcai) then
+			self:ScheduleTimer("GrandConjunctionAI", 0.5)
+		end
+		self:ScheduleTimer("RemarkTanks", 12)
 	end
 
 	-- Computes permutations from list of players
@@ -383,11 +396,32 @@ do
 
 	-- Receive pairings distance
 	function mod:GCPairings(data)
+		local nextIcon = 1
 		for sign, pairings in pairs(data) do
 			for a, b in pairs(pairings) do
-
+				local icon = nextIcon < 9 and nextIcon
+				nextIcon = nextIcon + 1
+				if icon then
+					self:SetIcon(marks, b, nextIcon)
+				else
+					print("Missing icon for ", UnitName(b))
+				end
+				if UnitIsUnit(a, "player") then
+					local msg = icon and ("%d %s %d"):format(icon, UnitName(a), icon) or UnitName(a)
+					self:Say(false, msg, true)
+					if icon then
+						self:Pulse(205408, "Interface\\TargetingFrame\\UI-RaidTargetingIcon_" .. icon)
+					end
+				end
 			end
 		end
+	end
+
+	function mod:StarSignApplied(args)
+	end
+
+	function mod:StarSignRemoved(args)
+		self:SetIcon(marks, args.destUnit, 0)
 	end
 end
 
