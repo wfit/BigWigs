@@ -19,7 +19,9 @@ mod.instanceId = 1530
 --
 
 local phase = 1 -- 1 = Cleaner, 2 = Maniac, 3 = Caretaker
+local imprintCount = 1
 local bondTable = {}
+local mobCollector = {}
 
 local scrubberMark = 0
 local scrubbers = {}
@@ -37,6 +39,7 @@ local L = mod:GetLocale()
 if L then
 	L.yourLink = "You are linked with %s"
 	L.yourLinkShort = "Linked with %s"
+	L.imprint = "Imprint"
 end
 
 --------------------------------------------------------------------------------
@@ -64,11 +67,17 @@ function mod:GetOptions()
 		-- Caretaker
 		207502, -- Succulent Feast
 		scrubbers_marker,
+
+		-- Mythic
+		215066, -- Dual Personalities
+		214670, -- Energized
+		215062, -- Toxic Slice
 	}, {
 		["stages"] = "general",
 		[206788] = -13285, -- Cleaner
 		[208910] = -13281, -- Maniac
 		[207502] = -13282, -- Caretaker
+		[215066] = "mythic",
 	}
 end
 
@@ -80,7 +89,7 @@ function mod:OnBossEnable()
 	self:Log("SPELL_PERIODIC_MISSED", "ArcaneSeepageDamage", 206488)
 	self:Log("SPELL_AURA_APPLIED", "ArcaneSlash", 206641)
 	self:Log("SPELL_AURA_APPLIED_DOSE", "ArcaneSlash", 206641)
-	self:Log("SPELL_CAST_START", "ToxicSlice", 206788)
+	self:Log("SPELL_CAST_START", "ToxicSlice", 206788) -- normal/heroic
 	self:Log("SPELL_AURA_APPLIED", "Sterilize", 211615)
 	self:Log("SPELL_AURA_REMOVED", "SterilizeRemoved", 211615)
 	self:Log("SPELL_CAST_START", "CleansingRage", 206820)
@@ -90,20 +99,30 @@ function mod:OnBossEnable()
 	self:Log("SPELL_CAST_START", "SucculentFeastCast", 207502)
 	self:Log("SPELL_AURA_APPLIED", "SucculentFeastApplied", 206838)
 	self:Log("SPELL_AURA_REMOVED", "SucculentFeastRemoved", 206838)
-	self:Log("SPELL_AURA_REMOVED", "SucculentFeastRemoved", 206838)
 	self:Log("SPELL_CAST_START", "Scrubbing", 211907)
+	self:Log("SPELL_AURA_APPLIED", "Energized", 214670)
+	self:Log("SPELL_CAST_START", "ToxicSliceImprint", 215062) -- mythic imprint
+	self:Death("ImprintDeath", 108303)
 end
 
 function mod:OnEngage()
 	phase = 1
+	imprintCount = 1
 	wipe(bondTable)
+	wipe(mobCollector)
 	self:Bar(206641, 7.5) -- Arcane Slash
 	self:Bar(206788, 11) -- Toxic Slice
 	self:Bar("stages", 45, 206557, 206557) -- The Maniac
+	self:RegisterEvent("INSTANCE_ENCOUNTER_ENGAGE_UNIT")
 	if self:GetOption(scrubbers_marker) then
 		self:RegisterTargetEvents("ScrubberMark")
 	end
 	resetScrubbers()
+end
+
+function mod:OnBossDisable()
+	wipe(bondTable)
+	wipe(mobCollector)
 end
 
 --------------------------------------------------------------------------------
@@ -113,6 +132,25 @@ end
 function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 	if spellId == 207620 then -- Annihilation
 		self:Message(207630, "Important", "Long")
+	end
+end
+
+function mod:INSTANCE_ENCOUNTER_ENGAGE_UNIT()
+	for i = 1, 5 do
+		local unit = ("boss%d"):format(i)
+		local guid = UnitGUID(unit)
+		if guid and not mobCollector[guid] then
+			mobCollector[guid] = true
+			local id = self:MobId(guid)
+			if id == 108303 then -- Imprint
+				self:Message(215066, "Neutral", "Long", UnitName(unit), false)
+				self:Bar(214670, 2.5, CL.other:format(L.imprint, self:SpellName(214670))) -- Energized
+				if imprintCount == 1 then
+					self:Bar(215062, 15.8, CL.other:format(L.imprint, self:SpellName(215062))) -- Toxic Slice
+				end
+				imprintCount = imprintCount + 1
+			end
+		end
 	end
 end
 
@@ -266,4 +304,19 @@ function mod:ScrubberMark(event, unit)
 			self:SetIcon(scrubbers_marker, unit, mark)
 		end
 	end
+end
+
+function mod:Energized(args)
+	self:Message(args.spellId, "Important", self:Dispeller("magic", true) and "Alert", CL.on:format(args.spellName, args.destName))
+	self:Bar(args.spellId, 20.5, CL.other:format(L.imprint, self:SpellName(214670))) -- Energized
+end
+
+function mod:ToxicSliceImprint(args)
+	self:Message(args.spellId, "Urgent", "Alarm", CL.incoming:format(args.spellName))
+	self:Bar(args.spellId, 17, CL.other:format(L.imprint, args.spellName)) -- Toxic Slice
+end
+
+function mod:ImprintDeath(args)
+	self:StopBar(CL.other:format(L.imprint, self:SpellName(214670))) -- Energized
+	self:StopBar(CL.other:format(L.imprint, self:SpellName(215062))) -- Toxic Slice
 end

@@ -166,7 +166,7 @@ do
 			[206609] = {5, 15}, -- Time Release
 			[206617] = {36.5}, -- Time Bomb
 			[219815] = {48}, -- Temporal Orb
-			[-13022] = {38}, -- Add
+			[-13022] = {28}, -- Add
 		},
 		["normal2"] = {
 			[206609] = {5, 16}, -- Time Release
@@ -245,9 +245,9 @@ end
 
 function mod:OnEngage()
 	-- Timers are in UNIT_SPELLCAST_SUCCEEDED
-	normalPhase = 1
-	fastPhase = 1
-	slowPhase = 1
+	normalPhase = 0
+	fastPhase = 0
+	slowPhase = 0
 	bombCount = 1
 	releaseCount = 1
 	temporalCount = 1

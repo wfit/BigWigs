@@ -147,6 +147,11 @@ function mod:OnEngage()
 	rotation = false
 	self:Bar(212492, timers[212492][annihilateCount]) -- Annihilate
 	-- other bars are in mod:Stages()
+	if self:Normal() then
+		self:Berserk(645)
+	elseif self:Heroic() then
+		self:Berserk(490)
+	end
 
 	if self:GetOption(fireadd_marks) then
 		self:RegisterTargetEvents("FireAddMark")
@@ -259,7 +264,7 @@ do
 	function mod:MarkOfFrostApplied(args)
 		list[#list+1] = args.destName
 		if #list == 1 then
-			self:ScheduleTimer("TargetMessage", 0.5, args.spellId, list, "Urgent")
+			self:ScheduleTimer("TargetMessage", 1, args.spellId, list, "Urgent")
 		end
 
 		if self:Token(frost_marks) and #iconsPool > 0 then
