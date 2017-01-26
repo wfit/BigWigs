@@ -169,6 +169,7 @@ end
 do
 	local playerList, proxList, isOnMe, iconsUnused = mod:NewTargetList(), {}, nil, {2,5,6,7}
 
+	local t = 0
 	function mod:CallOfNight(args)
 		proxList[#proxList+1] = args.destName
 
@@ -176,7 +177,8 @@ do
 			isOnMe = true
 			self:Flash(args.spellId)
 			if self:Mythic() then
-				local side = #proxList == 1 and "Gauche" or "Droite"
+				local side = GetTime() - t > 2 and "Gauche" or "Droite"
+				t = GetTime()
 				self:Say(args.spellId, side, true)
 				self:Emphasized(false, side)
 			else
