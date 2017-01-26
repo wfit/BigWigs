@@ -103,6 +103,7 @@ function mod:OnEngage()
 	end
 	if self:GetOption(bossMarker) then
 		self:RegisterEvent("INSTANCE_ENCOUNTER_ENGAGE_UNIT")
+		self:INSTANCE_ENCOUNTER_ENGAGE_UNIT()
 	end
 end
 
