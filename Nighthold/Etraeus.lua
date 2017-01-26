@@ -234,7 +234,7 @@ do
 
 	local function insertDistance(a, b, distance)
 		if a > b then
-			insertDistance(b, a, distances)
+			insertDistance(b, a, distance)
 		else
 			if not distances[a] then
 				distances[a] = { [b] = distance }
