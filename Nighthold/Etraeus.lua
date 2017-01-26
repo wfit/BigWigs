@@ -44,7 +44,7 @@ function mod:GetOptions()
 		"stages",
 		marks,
 		221875, -- Nether Traversal
-		205408, -- Grand Conjunction
+		{205408, "SAY", "FLASH", "PULSE"}, -- Grand Conjunction
 
 		--[[ Stage One ]]--
 		206464, -- Coronal Ejection
@@ -89,6 +89,7 @@ function mod:OnBossEnable()
 	self:Log("SPELL_CAST_START", "GrandConjunctionStart", 205408)
 	self:Log("SPELL_CAST_SUCCESS", "GrandConjunction", 205408)
 	self:RegisterNetMessage("GCDistances")
+	self:RegisterNetMessage("GCPairings")
 
 	--[[ Stage One ]]--
 	self:Log("SPELL_CAST_SUCCESS", "CoronalEjection", 206464)
@@ -267,6 +268,7 @@ do
 		mod:Send("GCDistances", { player = myUnitId, distances = myDistances }, "RAID")
 	end
 
+	-- Receive distance data from players
 	function mod:GCDistances(data)
 		local player = data.player
 		for unit, range in pairs(data.distances) do
@@ -279,12 +281,8 @@ do
 		self:ScheduleTimer("GrandConjunctionAI", 0.5)
 	end
 
-	local Unsuitable = 100000
-	local IcyEjection = mod:SpellName(206936)
-	local FelEjection = mod:SpellName(205649)
-	local Debuffs = { IcyEjection, FelEjection }
-
-	local function generatePairings(units, trail, used, pairings)
+	-- Computes permutations from list of players
+	local function permutations(units, trail, used, pairings)
 		if #units == #trail then
 			local pairing = {}
 			for i = 1, #units, 2 do
@@ -296,7 +294,7 @@ do
 				if not used[i] then
 					used[i] = true
 					table.insert(trail, i)
-					generatePairings(units, trail, used, pairings)
+					permutations(units, trail, used, pairings)
 					table.remove(trail)
 					used[i] = false
 				end
@@ -304,7 +302,8 @@ do
 		end
 	end
 
-	local function pairings(units)
+	-- Computes players pairings
+	local function iteratePairings(units)
 		-- Ensure we have an even number of units
 		if #units % 2 == 1 then
 			table.remove(units)
@@ -315,11 +314,18 @@ do
 		local used = {}
 		local pairings = {}
 
-		generatePairings(units, trail, used, pairings)
-		return pairings
+		permutations(units, trail, used, pairings)
+		return ipairs(pairings)
 	end
 
-	local function score(pairings)
+	local Unsuitable = 1e5 -- Added to distance total for unsuitable pairings
+	local Debuffs = { -- Debuffs to avoid during pairing evaluation
+		mod:SpellName(206936), -- Icy Ejection
+		mod:SpellName(205649), -- Fel Ejection
+	}
+
+	-- Score a specific set pairings
+	local function computeScore(pairings)
 		local score = 0
 		for a, b in pairs(pairings) do
 			score = score + distance(a, b)
@@ -357,9 +363,30 @@ do
 			end
 		end
 
-		-- Perform attribution
+		-- Perform pairings
+		local results = {}
 		for sign, units in pairs(signs) do
+			local bestScore = 1e9
+			local bestPairings
+			for _, pairings in iteratePairings(units) do
+				local score = computeScore(pairings)
+				if score < bestScore then
+					bestScore = score
+					bestPairings = pairings
+				end
+			end
+			results[sign] = bestPairings
+		end
 
+		mod:Send("GCPairings", results, "RAID")
+	end
+
+	-- Receive pairings distance
+	function mod:GCPairings(data)
+		for sign, pairings in pairs(data) do
+			for a, b in pairs(pairings) do
+
+			end
 		end
 	end
 end
