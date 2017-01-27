@@ -313,7 +313,6 @@ do
 	function mod:GrandConjunction(args)
 		if self:GetOption(gcai) then
 			self:ScheduleTimer("GrandConjunctionAI", 0.1)
-			print("scheduling")
 		end
 		self:ScheduleTimer("RemarkTanks", 10)
 	end
