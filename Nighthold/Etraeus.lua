@@ -156,30 +156,10 @@ function mod:OnEngage()
 	if self:Mythic() then
 		self:Bar(205408, timers[205408][phase][grandConjunctionCount]) -- Grand Conjunction
 	end
-	self:RemarkTanks()
-end
-
-function mod:RemarkTanks()
-	do return end
-	if self:GetOption(marks) then
-		local icon = 8
-		for unit in self:IterateGroup() do
-			if self:Tank(unit) then
-				SetRaidTarget(unit, icon)
-				icon = icon - 1
-			end
-		end
-	end
 end
 
 function mod:OnBossDisable()
 	wipe(mobCollector)
-
-	if self:GetOption(marks) then
-		for unit in self:IterateGroup() do
-			SetRaidTarget(unit, 0)
-		end
-	end
 end
 
 --------------------------------------------------------------------------------
@@ -316,11 +296,8 @@ do
 
 	-- Cast success, perform attribution
 	function mod:GrandConjunction(args)
-		if phase > 1 then
-			if self:GetOption(gcai) then
-				self:ScheduleTimer("GrandConjunctionAI", 0.1)
-			end
-			self:ScheduleTimer("RemarkTanks", 10)
+		if phase > 1 and self:GetOption(gcai) then
+			self:ScheduleTimer("GrandConjunctionAI", 0.1)
 		end
 	end
 
