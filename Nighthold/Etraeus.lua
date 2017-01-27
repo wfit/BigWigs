@@ -488,13 +488,21 @@ do
 		end
 
 		if self:Me(args.destGUID) then
-			self:Say(args.spellId)
+			if not self:Mythic() then
+				self:Say(args.spellId)
+			end
 			self:Flash(args.spellId)
 			self:OpenProximity(args.spellId, 8)
 			self:TargetBar(args.spellId, 10, args.destName)
-			self:ScheduleTimer("Say", 7, args.spellId, 3, true)
-			self:ScheduleTimer("Say", 8, args.spellId, 2, true)
-			self:ScheduleTimer("Say", 9, args.spellId, 1, true)
+			self:ScheduleTimer("WarnIcyEjection", 7, args.spellName, args.spellId, 3)
+			self:ScheduleTimer("WarnIcyEjection", 8, args.spellName, args.spellId, 2)
+			self:ScheduleTimer("WarnIcyEjection", 9, args.spellName, args.spellId, 1)
+		end
+	end
+
+	function mod:WarnIcyEjection(spellName, spellId, count)
+		if UnitDebuff("player", spellName) then
+			self:Say(spellId, count, true)
 		end
 	end
 end
