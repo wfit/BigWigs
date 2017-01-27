@@ -212,7 +212,7 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 		grandConjunctionCount = 1
 		self:CDBar(205649, timers[205649][ejectionCount], CL.count:format(self:SpellName(205649), ejectionCount))
 		self:CDBar(214167, 28) -- Gravitational Pull
-		self:CDBar(206517, 62) -- Fel Nova
+		self:CDBar(206517, self:Mythic() and 51.4 or 62) -- Fel Nova
 		self:Bar(221875, 180) -- Nether Traversal
 		if self:Mythic() then
 			self:CDBar(205408, timers[205408][phase][grandConjunctionCount]) -- Grand Conjunction
@@ -563,7 +563,7 @@ end
 function mod:FelNova(args)
 	self:Message(args.spellId, "Important", "Alarm")
 	self:Bar(args.spellId, 4, CL.cast:format(args.spellName))
-	self:CDBar(args.spellId, 45)
+	self:CDBar(args.spellId, self:Mythic() and 48 or 45)
 end
 
 
