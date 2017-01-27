@@ -19,6 +19,7 @@ local mobCollector = {}
 local gravPullSayTimers = {}
 local ejectionCount = 1
 local grandConjunctionCount = 1
+local felNovaCount = 1
 local timers = {
 	-- Icy Ejection, SPELL_CAST_SUCCESS, timers vary a lot (+-2s)
 	[206936] = {25, 35, 6, 6, 48, 2, 2},
@@ -32,7 +33,10 @@ local timers = {
 		[2] = { 27.0, 44.8, 57.7 },
 		[3] = { 60.0, 44.5 },
 		[4] = {},
-	}
+	},
+
+	-- Fel Nova, SPELL_CAST_START
+	[206517] = { 51.4, 48, 51 },
 }
 
 --------------------------------------------------------------------------------
@@ -110,6 +114,7 @@ function mod:OnBossEnable()
 	self:Log("SPELL_CAST_SUCCESS", "CoronalEjection", 206464)
 
 	--[[ Stage Two ]]--
+	self:Log("SPELL_CAST_SUCCESS", "Iceburst", 206921)
 	self:Log("SPELL_AURA_APPLIED", "GravitationalPullP2", 205984)
 	self:Log("SPELL_CAST_SUCCESS", "GravitationalPullP2Success", 205984)
 	self:Log("SPELL_AURA_APPLIED", "Chilled", 206589)
@@ -155,6 +160,7 @@ function mod:OnEngage()
 end
 
 function mod:RemarkTanks()
+	do return end
 	if self:GetOption(marks) then
 		local icon = 8
 		for unit in self:IterateGroup() do
@@ -210,9 +216,10 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 		self:StopBar(205408) -- Grand Conjunction
 		ejectionCount = 1
 		grandConjunctionCount = 1
+		felNovaCount = 1
 		self:CDBar(205649, timers[205649][ejectionCount], CL.count:format(self:SpellName(205649), ejectionCount))
 		self:CDBar(214167, 28) -- Gravitational Pull
-		self:CDBar(206517, self:Mythic() and 51.4 or 62) -- Fel Nova
+		self:CDBar(206517, self:Mythic() and timers[206517][felNovaCount] or 62) -- Fel Nova
 		self:Bar(221875, 180) -- Nether Traversal
 		if self:Mythic() then
 			self:CDBar(205408, timers[205408][phase][grandConjunctionCount]) -- Grand Conjunction
@@ -464,6 +471,10 @@ function mod:CoronalEjection(args)
 end
 
 --[[ Stage Two ]]--
+function mod:Iceburst(args)
+	self:SetIcon(marks, args.destUnit, 8)
+end
+
 function mod:GravitationalPullP2Success(args)
 	self:TargetMessage(args.spellId, args.destName, "Urgent", "Warning", nil, nil, self:Tank())
 	self:CDBar(args.spellId, 30)
@@ -563,7 +574,8 @@ end
 function mod:FelNova(args)
 	self:Message(args.spellId, "Important", "Alarm")
 	self:Bar(args.spellId, 4, CL.cast:format(args.spellName))
-	self:CDBar(args.spellId, self:Mythic() and 48 or 45)
+	felNovaCount = felNovaCount + 1
+	self:CDBar(args.spellId, self:Mythic() and timers[args.spellId][felNovaCount] or 45)
 end
 
 
