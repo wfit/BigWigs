@@ -31,7 +31,7 @@ local timers = {
 	[205408] = {
 		[1] = { 15.0, 14.0, 14.0, 14.0, 14.0 },
 		[2] = { 27.0, 44.8, 57.7 },
-		[3] = { 60.0, 44.5 },
+		[3] = { 60.0, 44.0, 40.0 },
 		[4] = {},
 	},
 
@@ -167,8 +167,6 @@ function mod:RemarkTanks()
 			if self:Tank(unit) then
 				SetRaidTarget(unit, icon)
 				icon = icon - 1
-			else
-				SetRaidTarget(unit, 0)
 			end
 		end
 	end
