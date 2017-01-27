@@ -432,7 +432,7 @@ do
 					print("Missing icon for ", UnitName(b))
 				end
 				if icon and (UnitIsUnit(a, "player") or UnitIsUnit(b, "player")) then
-					self:Say(false, ("{rt%d}"):format(icon), true)
+					self:Say(false, ("{rt%d}"):format(icon), true, "YELL")
 					self:Pulse(205408, "Interface\\TargetingFrame\\UI-RaidTargetingIcon_" .. icon)
 				end
 			end
