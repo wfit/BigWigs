@@ -32,7 +32,7 @@ local timers = {
 		[1] = { 15.0, 14.0, 14.0, 14.0, 14.0 },
 		[2] = { 27.0, 44.8, 57.7 },
 		[3] = { 60.0, 44.0, 40.0 },
-		[4] = {},
+		[4] = { 50.0 },
 	},
 
 	-- Fel Nova, SPELL_CAST_START
@@ -85,6 +85,8 @@ function mod:GetOptions()
 
 		--[[ Thing That Should Not Be ]]--
 		207720, -- Witness the Void
+		216909, -- World Devouring Force
+		{217046, "SAY", "FLASH"}
 	}, {
 		["stages"] = "general",
 		[206464] = -13033, -- Stage One
@@ -139,6 +141,10 @@ function mod:OnBossEnable()
 	--[[ Thing That Should Not Be ]]--
 	self:Log("SPELL_CAST_START", "WitnessTheVoid", 207720)
 	self:Death("ThingDeath", 104880) -- Thing That Should Not Be
+
+	--[ Mythic ]]--
+	self:Log("SPELL_CAST_START", "WorldDevouringForce", 216909)
+	self:Log("SPELL_AURA_APPLIED", "DevouringRemnant", 217046)
 end
 
 function mod:OnEngage()
@@ -216,6 +222,7 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 		self:CDBar(214335, 20) -- Gravitational Pull
 		self:CDBar(207439, 42) -- Fel Nova
 		if self:Mythic() then
+			self:CDBar(216909, 21) -- World-Devouring Force
 			self:CDBar(205408, timers[205408][phase][grandConjunctionCount]) -- Grand Conjunction
 		end
 		self:Berserk(201.5, true, nil, 222761, 222761) -- Big Bang (end of cast)
@@ -494,4 +501,19 @@ end
 
 function mod:ThingDeath(args)
 	self:StopBar(207720) -- Witness the Void
+end
+
+function mod:WorldDevouringForce(args)
+	self:Message(args.spellId, "Attention", "Warning", CL.casting:format(args.spellName))
+	--self:Bar(args.spellId, 4, CL.cast:format(args.spellName))
+	self:Bar(args.spellId, 43)
+end
+
+function mod:DevouringRemnant(args)
+	self:TargetMessage(args.spellId, args.destName, "Urgent", "Warning")
+	if self:Me(args.destGUID) then
+		self:TargetBar(args.spellId, 6, args.destName)
+		self:Flash(args.spellId)
+		self:Say(args.spellId)
+	end
 end
