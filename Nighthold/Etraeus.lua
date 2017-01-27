@@ -238,190 +238,38 @@ end
 
 --[[ Grand Conjunction ]] --
 do
-	-- Distances database
-	local distances = {}
-
-	local function insertDistance(a, b, distance)
-		if a > b then
-			insertDistance(b, a, distance)
-		else
-			if not distances[a] then
-				distances[a] = { [b] = distance }
-			elseif distances[a][b] then
-				distances[a][b] = (distances[a][b] + distance) / 2
-			else
-				distances[a][b] = distance
-			end
-		end
-	end
-
-	local function distance(a, b)
-		if a > b then
-			return distance(b, a)
-		else
-			return distances[a] and distances[a][b] or 25
-		end
-	end
-
-	-- Cast start, snapshot distances
+	-- Cast start
 	function mod:GrandConjunctionStart(args)
 		self:Message(args.spellId, "Attention", "Long", CL.casting:format(args.spellName))
 		grandConjunctionCount = grandConjunctionCount + 1
-		wipe(distances)
-		self:ScheduleTimer("SnapshotGrandConjunction", 3.5)
 		self:Bar(args.spellId, timers[args.spellId][phase][grandConjunctionCount])
 	end
 
-	local myDistances = {}
-	local myUnitId
-	function mod:SnapshotGrandConjunction()
-		wipe(myDistances)
-		for unit in self:IterateGroup() do
-			if UnitIsUnit(unit, "player") then
-				myUnitId = unit
-			else
-				myDistances[unit] = self:Range(unit)
-			end
-		end
-		mod:Send("GCDistances", { player = myUnitId, distances = myDistances }, "RAID")
-	end
-
-	-- Receive distance data from players
-	function mod:GCDistances(data)
-		local player = data.player
-		for unit, range in pairs(data.distances) do
-			insertDistance(player, unit, range)
-		end
-	end
-
-	-- Cast success, perform attribution
+	-- Cast success
 	function mod:GrandConjunction(args)
-		if phase > 1 and self:GetOption(gcai) then
-			self:ScheduleTimer("GrandConjunctionAI", 0.1)
-		end
-	end
 
-	-- Computes permutations from list of players
-	local function permutations(units, trail, used, pairings)
-		if #units == #trail then
-			local pairing = {}
-			for i = 1, #units, 2 do
-				pairing[units[trail[i]]] = units[trail[i + 1]]
-			end
-			pairings[#pairings + 1] = pairing
-		else
-			for i = 1, #units do
-				if not used[i] then
-					used[i] = true
-					table.insert(trail, i)
-					permutations(units, trail, used, pairings)
-					table.remove(trail)
-					used[i] = false
-				end
-			end
-		end
-	end
-
-	-- Computes players pairings
-	local function iteratePairings(units)
-		-- Ensure we have an even number of units
-		if #units % 2 == 1 then
-			table.remove(units)
-		end
-
-		-- Init accumulators
-		local trail = {}
-		local used = {}
-		local pairings = {}
-
-		permutations(units, trail, used, pairings)
-		return ipairs(pairings)
-	end
-
-	local Unsuitable = 1e5 -- Added to distance total for unsuitable pairings
-	local Debuffs = { -- Debuffs to avoid during pairing evaluation
-		mod:SpellName(206936), -- Icy Ejection
-		mod:SpellName(205649), -- Fel Ejection
-	}
-
-	-- Score a specific set pairings
-	local function computeScore(pairings)
-		local score = 0
-		for a, b in pairs(pairings) do
-			score = score + distance(a, b)
-			for _, debuff in ipairs(Debuffs) do
-				if UnitDebuff(a, debuff) then
-					score = score + Unsuitable
-					if UnitDebuff(b, debuff) then
-						score = score + Unsuitable
-					end
-				end
-			end
-		end
-		return score;
-	end
-
-	local StarSigns = {
-		[205429] = mod:SpellName(205429), -- Crab
-		[205445] = mod:SpellName(205445), -- Wolf
-		[216345] = mod:SpellName(216345), -- Hunter
-		[216344] = mod:SpellName(216344), -- Dragon
-	}
-
-	function mod:GrandConjunctionAI()
-		-- Collect signs
-		local signs = {}
-		for unit in self:IterateGroup() do
-			for sign, name in pairs(StarSigns) do
-				if UnitDebuff(unit, name) then
-					if not signs[sign] then
-						signs[sign] = {}
-					end
-					table.insert(signs[sign], unit)
-					break
-				end
-			end
-		end
-
-		-- Perform pairings
-		local results = {}
-		for sign, units in pairs(signs) do
-			local bestScore = 1e9
-			local bestPairings
-			for _, pairings in iteratePairings(units) do
-				local score = computeScore(pairings)
-				if score < bestScore then
-					bestScore = score
-					bestPairings = pairings
-				end
-			end
-			results[sign] = bestPairings
-		end
-
-		mod:Send("GCPairings", results, "RAID")
-	end
-
-	-- Receive pairings distance
-	function mod:GCPairings(data)
-		local nextIcon = 1
-		for sign, pairings in pairs(data) do
-			for a, b in pairs(pairings) do
-				local icon = nextIcon < 9 and nextIcon
-				nextIcon = nextIcon + 1
-				if icon then
-					self:SetIcon(marks, b, nextIcon)
-				else
-					print("Missing icon for ", UnitName(b))
-				end
-				if icon and (UnitIsUnit(a, "player") or UnitIsUnit(b, "player")) then
-					self:Say(false, ("{rt%d}"):format(icon), true, "YELL")
-					self:Pulse(205408, "Interface\\TargetingFrame\\UI-RaidTargetingIcon_" .. icon)
-				end
-			end
-		end
 	end
 
 	function mod:StarSignApplied(args)
+		self:ScheduleTimer("WarnStarSign", 6, args.spellName, args.spellId)
+	end
+
+	function mod:WarnStarSign(spellName, spellId)
+		if UnitDebuff("player", spellName) then
+			local msg
+			if spellId == 205429 then
+				msg = "{rt2}" -- Crab / Circle
+			elseif spellId == 205445 then
+				msg = "{rt7}" -- Wolf / Cross
+			elseif spellId == 216345 then
+				msg = "{rt4}" -- Hunter / Green
+			elseif spellId == 205445 then
+				msg = "{rt5}" -- Dragon / Moon
+			end
+			if msg then
+				self:Say(false, msg, true, "YELL")
+			end
+		end
 	end
 
 	function mod:StarSignRemoved(args)
