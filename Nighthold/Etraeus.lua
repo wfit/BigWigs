@@ -511,7 +511,7 @@ end
 function mod:WorldDevouringForce(args)
 	self:Message(args.spellId, "Attention", "Warning", CL.casting:format(args.spellName))
 	--self:Bar(args.spellId, 4, CL.cast:format(args.spellName))
-	self:Bar(args.spellId, 43)
+	self:CDBar(args.spellId, timers[216909][devourCount])
 end
 
 function mod:DevouringRemnant(args)
