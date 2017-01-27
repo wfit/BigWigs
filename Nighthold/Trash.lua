@@ -375,7 +375,7 @@ end
 --[[ Etraeus to Telarn ]]--
 function mod:ArcanicRelease(args)
 	self:TargetMessage(args.spellId, args.destName, "Important", "Warning")
-	self:TargetBar(args.spellId, 10, args.destName)
+	self:TargetBar(args.spellId, 6, args.destName)
 	self:PrimaryIcon(args.spellId, args.destName)
 	if self:Me(args.destGUID) then
 		self:Say(args.spellId)
