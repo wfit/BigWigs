@@ -20,6 +20,7 @@ local gravPullSayTimers = {}
 local ejectionCount = 1
 local grandConjunctionCount = 1
 local felNovaCount = 1
+local devourCount = 1
 local timers = {
 	-- Icy Ejection, SPELL_CAST_SUCCESS, timers vary a lot (+-2s)
 	[206936] = {25, 35, 6, 6, 48, 2, 2},
@@ -37,6 +38,9 @@ local timers = {
 
 	-- Fel Nova, SPELL_CAST_START
 	[206517] = { 51.4, 48, 51 },
+
+	-- World-Devouring Force,SPELL_CAST_START
+	[216909] = { 21.4, 43, },
 }
 
 --------------------------------------------------------------------------------
@@ -219,10 +223,11 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 		self:StopBar(205408) -- Grand Conjunction
 		ejectionCount = 1
 		grandConjunctionCount = 1
+		devourCount = 1
 		self:CDBar(214335, 20) -- Gravitational Pull
 		self:CDBar(207439, 42) -- Fel Nova
 		if self:Mythic() then
-			self:CDBar(216909, 21) -- World-Devouring Force
+			self:CDBar(216909, timers[216909][devourCount]) -- World-Devouring Force
 			self:CDBar(205408, timers[205408][phase][grandConjunctionCount]) -- Grand Conjunction
 		end
 		self:Berserk(201.5, true, nil, 222761, 222761) -- Big Bang (end of cast)
