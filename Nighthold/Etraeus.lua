@@ -18,12 +18,21 @@ local phase = 1
 local mobCollector = {}
 local gravPullSayTimers = {}
 local ejectionCount = 1
+local grandConjunctionCount = 1
 local timers = {
 	-- Icy Ejection, SPELL_CAST_SUCCESS, timers vary a lot (+-2s)
 	[206936] = {25, 35, 6, 6, 48, 2, 2},
 
 	-- Fel Ejection, SPELL_CAST_SUCCESS
 	[205649] = {17, 4, 4, 2, 10, 3.5, 3.5, 32, 4, 3.5, 3.5, 3.5, 22, 7.5, 17.5, 1, 2, 1.5},
+
+	-- Grand Conjunction, SPELL_CAST_START
+	[205408] = {
+		[1] = { 15.0, 14.0, 14.0, 14.0, 14.0 },
+		[2] = { 27.0, 44.8, 57.7 },
+		[3] = { 60.0, 44.5 },
+		[4] = {},
+	}
 }
 
 --------------------------------------------------------------------------------
@@ -134,12 +143,13 @@ end
 function mod:OnEngage()
 	phase = 1
 	ejectionCount = 1
+	grandConjunctionCount = 1
 	wipe(mobCollector)
 	wipe(gravPullSayTimers)
 	self:Bar(206464, 12.5) -- Coronal Ejection
-	self:Bar(221875, 20) -- Nether Traversal
+	self:Bar(221875, self:Mythic() and 60 or 20) -- Nether Traversal
 	if self:Mythic() then
-		self:Bar(205408, 15) -- Grand Conjunction
+		self:Bar(205408, timers[205408][phase][grandConjunctionCount]) -- Grand Conjunction
 	end
 	self:RemarkTanks()
 end
@@ -178,9 +188,14 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 		self:Message("stages", "Neutral", "Long", CL.stage:format(2), false)
 		self:StopBar(205408) -- Grand Conjunction
 		ejectionCount = 1
+		grandConjunctionCount = 1
 		self:CDBar(206936, timers[206936][ejectionCount], CL.count:format(self:SpellName(206936), ejectionCount))
 		self:Bar(205984, 30) -- Gravitational Pull
 		self:Bar(206949, 53) -- Frigid Nova
+		self:Bar(221875, 180) -- Nether Traversal
+		if self:Mythic() then
+			self:CDBar(205408, timers[205408][phase][grandConjunctionCount]) -- Grand Conjunction
+		end
 
 		for _,timer in pairs(gravPullSayTimers) do
 			self:CancelTimer(timer)
@@ -194,9 +209,14 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 		self:StopBar(206949) -- Frigid Nova
 		self:StopBar(205408) -- Grand Conjunction
 		ejectionCount = 1
+		grandConjunctionCount = 1
 		self:CDBar(205649, timers[205649][ejectionCount], CL.count:format(self:SpellName(205649), ejectionCount))
 		self:CDBar(214167, 28) -- Gravitational Pull
 		self:CDBar(206517, 62) -- Fel Nova
+		self:Bar(221875, 180) -- Nether Traversal
+		if self:Mythic() then
+			self:CDBar(205408, timers[205408][phase][grandConjunctionCount]) -- Grand Conjunction
+		end
 
 		for _,timer in pairs(gravPullSayTimers) do
 			self:CancelTimer(timer)
@@ -211,8 +231,12 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 		self:StopBar(206517) -- Fel Nova
 		self:StopBar(205408) -- Grand Conjunction
 		ejectionCount = 1
+		grandConjunctionCount = 1
 		self:CDBar(214335, 20) -- Gravitational Pull
 		self:CDBar(207439, 42) -- Fel Nova
+		if self:Mythic() then
+			self:CDBar(205408, timers[205408][phase][grandConjunctionCount]) -- Grand Conjunction
+		end
 		self:Berserk(201.5, true, nil, 222761, 222761) -- Big Bang (end of cast)
 
 		for _,timer in pairs(gravPullSayTimers) do
@@ -257,11 +281,10 @@ do
 	-- Cast start, snapshot distances
 	function mod:GrandConjunctionStart(args)
 		self:Message(args.spellId, "Attention", "Long", CL.casting:format(args.spellName))
+		grandConjunctionCount = grandConjunctionCount + 1
 		wipe(distances)
 		self:ScheduleTimer("SnapshotGrandConjunction", 3.5)
-		if phase == 1 then
-			self:Bar(args.spellId, 14)
-		end
+		self:Bar(args.spellId, timers[args.spellId][phase][grandConjunctionCount])
 	end
 
 	local myDistances = {}
@@ -289,7 +312,7 @@ do
 	-- Cast success, perform attribution
 	function mod:GrandConjunction(args)
 		if self:GetOption(gcai) then
-			self:ScheduleTimer("GrandConjunctionAI", 0.2)
+			self:ScheduleTimer("GrandConjunctionAI", 0.1)
 			print("scheduling")
 		end
 		self:ScheduleTimer("RemarkTanks", 10)
