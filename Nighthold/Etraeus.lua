@@ -311,10 +311,12 @@ do
 
 	-- Cast success, perform attribution
 	function mod:GrandConjunction(args)
-		if self:GetOption(gcai) then
-			self:ScheduleTimer("GrandConjunctionAI", 0.1)
+		if phase > 1 then
+			if self:GetOption(gcai) then
+				self:ScheduleTimer("GrandConjunctionAI", 0.1)
+			end
+			self:ScheduleTimer("RemarkTanks", 10)
 		end
-		self:ScheduleTimer("RemarkTanks", 10)
 	end
 
 	-- Computes permutations from list of players
