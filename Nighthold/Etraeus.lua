@@ -251,7 +251,9 @@ do
 	end
 
 	function mod:StarSignApplied(args)
-		self:ScheduleTimer("WarnStarSign", 6, args.spellName, args.spellId)
+		if self:Me(args.destGUID) then
+			self:ScheduleTimer("WarnStarSign", 6, args.spellName, args.spellId)
+		end
 	end
 
 	function mod:WarnStarSign(spellName, spellId)
@@ -418,23 +420,16 @@ function mod:FelEjection(args)
 end
 
 do
-	local icons = { 2, 3, 4 }
 	local list = mod:NewTargetList()
-	local t = 0
 	function mod:FelEjectionApplied(args)
 		list[#list+1] = args.destName
 		if #list == 1 then
 			self:ScheduleTimer("TargetMessage", 0.1, args.spellId, list, "Attention", "Warning")
 		end
 
-		if self:Mythic() and GetTime() - t > 0.3 then
-			t = GetTime()
-			table.insert(icons, table.remove(icons, 1))
-		end
-
 		if self:Me(args.destGUID) then
 			if self:Mythic() then
-				self:Say(args.spellId, ("{rt%d}"):format(icons[1]), true)
+				self:Say(args.spellId, "{rt8}", true)
 			else
 				self:Say(args.spellId)
 			end
