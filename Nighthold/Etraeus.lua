@@ -114,7 +114,7 @@ function mod:OnBossEnable()
 	self:Log("SPELL_CAST_SUCCESS", "CoronalEjection", 206464)
 
 	--[[ Stage Two ]]--
-	self:Log("SPELL_CAST_SUCCESS", "Iceburst", 206921)
+	self:Log("SPELL_DAMAGE", "Iceburst", 206921)
 	self:Log("SPELL_AURA_APPLIED", "GravitationalPullP2", 205984)
 	self:Log("SPELL_CAST_SUCCESS", "GravitationalPullP2Success", 205984)
 	self:Log("SPELL_AURA_APPLIED", "Chilled", 206589)
@@ -472,7 +472,9 @@ end
 
 --[[ Stage Two ]]--
 function mod:Iceburst(args)
-	self:SetIcon(marks, args.destUnit, 8)
+	if self:Tank(args.destGUID) then
+		self:SetIcon(marks, args.destUnit, 8)
+	end
 end
 
 function mod:GravitationalPullP2Success(args)
@@ -593,7 +595,7 @@ do
 		end
 
 		if self:Me(args.destGUID) then
-			self:Say(args.spellId)
+			self:Say(args.spellId, "{rt8}", true)
 			self:Flash(args.spellId)
 			self:TargetBar(args.spellId, 8, args.destName)
 			self:ScheduleTimer("Message", 8, args.spellId, "Positive", "Info", CL.removed:format(args.spellName))
