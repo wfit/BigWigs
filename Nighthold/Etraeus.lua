@@ -427,7 +427,7 @@ do
 			self:ScheduleTimer("TargetMessage", 0.1, args.spellId, list, "Attention", "Warning")
 		end
 
-		if GetTime() - t > 0.3 then
+		if self:Mythic() and GetTime() - t > 0.3 then
 			t = GetTime()
 			table.insert(icons, table.remove(icons, 1))
 		end
