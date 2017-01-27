@@ -418,15 +418,26 @@ function mod:FelEjection(args)
 end
 
 do
+	local icons = { 2, 3, 4 }
 	local list = mod:NewTargetList()
+	local t = 0
 	function mod:FelEjectionApplied(args)
 		list[#list+1] = args.destName
 		if #list == 1 then
 			self:ScheduleTimer("TargetMessage", 0.1, args.spellId, list, "Attention", "Warning")
 		end
 
+		if GetTime() - t > 0.3 then
+			t = GetTime()
+			table.insert(icons, table.remove(icons, 1))
+		end
+
 		if self:Me(args.destGUID) then
-			self:Say(args.spellId, "{rt8}", true)
+			if self:Mythic() then
+				self:Say(args.spellId, ("{rt%d}"):format(icons[1]), true)
+			else
+				self:Say(args.spellId)
+			end
 			self:Flash(args.spellId)
 			self:TargetBar(args.spellId, 8, args.destName)
 			self:ScheduleTimer("Message", 8, args.spellId, "Positive", "Info", CL.removed:format(args.spellName))
