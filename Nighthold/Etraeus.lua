@@ -103,12 +103,8 @@ function mod:OnBossEnable()
 	self:Log("SPELL_AURA_APPLIED_DOSE", "GroundEffectDamage", 206398) -- Felflame
 
 	--[[ Grand Conjunction ]] --
-	self:Log("SPELL_CAST_START", "GrandConjunctionStart", 205408)
-	self:Log("SPELL_CAST_SUCCESS", "GrandConjunction", 205408)
-	self:Log("SPELL_AURA_APPLIED", "StarSignApplied", 205429, 205445, 216345, 216344) -- Crab, Wolf, Hunter, Dragon
-	self:Log("SPELL_AURA_REMOVED", "StarSignRemoved", 205429, 205445, 216345, 216344)
-	self:RegisterNetMessage("GCDistances")
-	self:RegisterNetMessage("GCPairings")
+	self:Log("SPELL_CAST_START", "GrandConjunction", 205408)
+	self:Log("SPELL_AURA_APPLIED", "StarSignApplied", 205429, 205445, 216345, 216344) -- Crab, Wolf, Hunter, Dragon)
 
 	--[[ Stage One ]]--
 	self:Log("SPELL_CAST_SUCCESS", "CoronalEjection", 206464)
@@ -176,7 +172,7 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 		self:CDBar(206936, timers[206936][ejectionCount], CL.count:format(self:SpellName(206936), ejectionCount))
 		self:Bar(205984, 30) -- Gravitational Pull
 		self:Bar(206949, 53) -- Frigid Nova
-		self:Bar(221875, 180) -- Nether Traversal
+		self:Bar(221875, 188.5) -- Nether Traversal
 		if self:Mythic() then
 			self:CDBar(205408, timers[205408][phase][grandConjunctionCount]) -- Grand Conjunction
 		end
@@ -198,7 +194,7 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 		self:CDBar(205649, timers[205649][ejectionCount], CL.count:format(self:SpellName(205649), ejectionCount))
 		self:CDBar(214167, 28) -- Gravitational Pull
 		self:CDBar(206517, self:Mythic() and timers[206517][felNovaCount] or 62) -- Fel Nova
-		self:Bar(221875, 180) -- Nether Traversal
+		self:Bar(221875, 188.5) -- Nether Traversal
 		if self:Mythic() then
 			self:CDBar(205408, timers[205408][phase][grandConjunctionCount]) -- Grand Conjunction
 		end
@@ -237,45 +233,33 @@ function mod:NetherTraversal(args)
 end
 
 --[[ Grand Conjunction ]] --
-do
-	-- Cast start
-	function mod:GrandConjunctionStart(args)
-		self:Message(args.spellId, "Attention", "Long", CL.casting:format(args.spellName))
-		grandConjunctionCount = grandConjunctionCount + 1
-		self:Bar(args.spellId, timers[args.spellId][phase][grandConjunctionCount])
+function mod:GrandConjunction(args)
+	self:Message(args.spellId, "Attention", "Long", CL.casting:format(args.spellName))
+	grandConjunctionCount = grandConjunctionCount + 1
+	self:Bar(args.spellId, timers[args.spellId][phase][grandConjunctionCount])
+end
+
+function mod:StarSignApplied(args)
+	if self:Me(args.destGUID) then
+		self:ScheduleTimer("WarnStarSign", 6, args.spellName, args.spellId)
 	end
+end
 
-	-- Cast success
-	function mod:GrandConjunction(args)
-
-	end
-
-	function mod:StarSignApplied(args)
-		if self:Me(args.destGUID) then
-			self:ScheduleTimer("WarnStarSign", 6, args.spellName, args.spellId)
+function mod:WarnStarSign(spellName, spellId)
+	if UnitDebuff("player", spellName) then
+		local msg
+		if spellId == 205429 then
+			msg = "{rt2}" -- Crab / Circle
+		elseif spellId == 205445 then
+			msg = "{rt7}" -- Wolf / Cross
+		elseif spellId == 216345 then
+			msg = "{rt4}" -- Hunter / Green
+		elseif spellId == 205445 then
+			msg = "{rt5}" -- Dragon / Moon
 		end
-	end
-
-	function mod:WarnStarSign(spellName, spellId)
-		if UnitDebuff("player", spellName) then
-			local msg
-			if spellId == 205429 then
-				msg = "{rt2}" -- Crab / Circle
-			elseif spellId == 205445 then
-				msg = "{rt7}" -- Wolf / Cross
-			elseif spellId == 216345 then
-				msg = "{rt4}" -- Hunter / Green
-			elseif spellId == 205445 then
-				msg = "{rt5}" -- Dragon / Moon
-			end
-			if msg then
-				self:Say(false, msg, true, "YELL")
-			end
+		if msg then
+			self:Say(false, msg, true, "YELL")
 		end
-	end
-
-	function mod:StarSignRemoved(args)
-		self:SetIcon(marks, args.destUnit, 0)
 	end
 end
 
