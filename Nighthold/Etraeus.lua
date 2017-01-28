@@ -519,15 +519,14 @@ function mod:ThingDeath(args)
 	--self:StopBar(207720) -- Witness the Void
 end
 
-do
-	local 
-	function mod:WorldDevouringForce(args)
-		self:Message(args.spellId, "Attention", "Warning", CL.casting:format(args.spellName))
-		--self:Bar(args.spellId, 4, CL.cast:format(args.spellName))
-		devourCount = devourCount + 1
-		self:CDBar(args.spellId, timers[216909][devourCount])
-	end
+
+function mod:WorldDevouringForce(args)
+	self:Message(args.spellId, "Attention", "Warning", CL.casting:format(args.spellName))
+	--self:Bar(args.spellId, 4, CL.cast:format(args.spellName))
+	devourCount = devourCount + 1
+	self:CDBar(args.spellId, timers[216909][devourCount])
 end
+
 
 function mod:DevouringRemnant(args)
 	self:TargetMessage(args.spellId, args.destName, "Urgent", "Warning")
