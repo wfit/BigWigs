@@ -90,8 +90,8 @@ function mod:GetOptions()
 
 		--[[ Thing That Should Not Be ]]--
 		207720, -- Witness the Void
-		--216909, -- World Devouring Force
-		{217046, "SAY", "FLASH"}
+		216909, -- World Devouring Force
+		--{217046, "SAY", "FLASH"}
 	}, {
 		["stages"] = "general",
 		[206464] = -13033, -- Stage One
@@ -519,11 +519,14 @@ function mod:ThingDeath(args)
 	--self:StopBar(207720) -- Witness the Void
 end
 
-function mod:WorldDevouringForce(args)
-	self:Message(args.spellId, "Attention", "Warning", CL.casting:format(args.spellName))
-	--self:Bar(args.spellId, 4, CL.cast:format(args.spellName))
-	devourCount = devourCount + 1
-	self:CDBar(args.spellId, timers[216909][devourCount])
+do
+	local 
+	function mod:WorldDevouringForce(args)
+		self:Message(args.spellId, "Attention", "Warning", CL.casting:format(args.spellName))
+		--self:Bar(args.spellId, 4, CL.cast:format(args.spellName))
+		devourCount = devourCount + 1
+		self:CDBar(args.spellId, timers[216909][devourCount])
+	end
 end
 
 function mod:DevouringRemnant(args)
