@@ -56,16 +56,14 @@ local L = mod:GetLocale()
 --
 
 local marks = mod:AddTokenOption { "marks", "Automatically set raid target icons", promote = true }
-local gcai = mod:AddTokenOption { "gcai", "Perform Grand Conjunction attributions", promote = true, default = false }
 
 function mod:GetOptions()
 	return {
 		--[[ General ]]--
 		"stages",
-		marks,
 		221875, -- Nether Traversal
 		{205408, "FLASH", "PULSE"}, -- Grand Conjunction
-		gcai,
+		marks,
 
 		--[[ Stage One ]]--
 		206464, -- Coronal Ejection
@@ -92,7 +90,7 @@ function mod:GetOptions()
 		--[[ Thing That Should Not Be ]]--
 		207720, -- Witness the Void
 		216909, -- World Devouring Force
-		--{217046, "SAY", "FLASH"}
+		--{217046, "SAY", "FLASH"} -- Devouring Remnant
 	}, {
 		["stages"] = "general",
 		[206464] = -13033, -- Stage One
@@ -537,7 +535,6 @@ do
 		end
 	end
 end
-
 
 function mod:DevouringRemnant(args)
 	self:TargetMessage(args.spellId, args.destName, "Urgent", "Warning")
