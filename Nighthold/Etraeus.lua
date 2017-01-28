@@ -21,6 +21,7 @@ local ejectionCount = 1
 local grandConjunctionCount = 1
 local felNovaCount = 1
 local devourCount = 1
+local witnessCount = 1
 local timers = {
 	-- Icy Ejection, SPELL_CAST_SUCCESS, timers vary a lot (+-2s)
 	[206936] = {25, 35, 6, 6, 48, 2, 2},
@@ -33,7 +34,7 @@ local timers = {
 		[1] = { 15.0, 14.0, 14.0, 14.0, 14.0 },
 		[2] = { 27.0, 44.8, 57.7 },
 		[3] = { 60.0, 44.0, 40.0 },
-		[4] = { 50.0 },
+		[4] = { 47.0 },
 	},
 
 	-- Fel Nova, SPELL_CAST_START
@@ -89,7 +90,7 @@ function mod:GetOptions()
 
 		--[[ Thing That Should Not Be ]]--
 		207720, -- Witness the Void
-		216909, -- World Devouring Force
+		--216909, -- World Devouring Force
 		{217046, "SAY", "FLASH"}
 	}, {
 		["stages"] = "general",
@@ -144,12 +145,12 @@ function mod:OnBossEnable()
 
 	--[[ Thing That Should Not Be ]]--
 	self:Log("SPELL_CAST_START", "WitnessTheVoid", 207720)
-	self:Log("SPELL_CAST_START", "WitnessTheVoidSuccess", 207720)
+	self:Log("SPELL_CAST_SUCCESS", "WitnessTheVoidSuccess", 207720)
 	self:Death("ThingDeath", 104880) -- Thing That Should Not Be
 
 	--[ Mythic ]]--
 	self:Log("SPELL_CAST_START", "WorldDevouringForce", 216909)
-	self:Log("SPELL_AURA_APPLIED", "DevouringRemnant", 217046)
+	--self:Log("SPELL_AURA_APPLIED", "DevouringRemnant", 217046)
 end
 
 function mod:OnEngage()
@@ -493,7 +494,8 @@ function mod:INSTANCE_ENCOUNTER_ENGAGE_UNIT()
 			mobCollector[guid] = true
 			local mobId = self:MobId(guid)
 			if mobId == 104880 then -- Thing That Should Not Be
-				self:Bar(207720, 12) -- Witness the Void
+				witnessCount = 1
+				self:Bar(207720, self:Mythic() and 11.8 or 16, CL.count:format(self:SpellName(207720), witnessCount)) -- Witness the Void
 			end
 		end
 	end
@@ -508,16 +510,19 @@ end
 function mod:WitnessTheVoidSuccess(args)
 	--self:Message(args.spellId, "Attention", "Warning", CL.casting:format(args.spellName))
 	--self:Bar(args.spellId, 4, CL.cast:format(args.spellName))
-	self:Bar(args.spellId, self:Mythic() and 13.4 or 15)
+	witnessCount = witnessCount + 1
+	self:Bar(args.spellId, self:Mythic() and 13.4 or 15, CL.count:format(args.spellName, witnessCount))
 end
 
 function mod:ThingDeath(args)
-	self:StopBar(207720) -- Witness the Void
+	self:StopBar(CL.count:format(self:SpellName(207720), witnessCount))
+	--self:StopBar(207720) -- Witness the Void
 end
 
 function mod:WorldDevouringForce(args)
 	self:Message(args.spellId, "Attention", "Warning", CL.casting:format(args.spellName))
 	--self:Bar(args.spellId, 4, CL.cast:format(args.spellName))
+	devourCount = devourCount + 1
 	self:CDBar(args.spellId, timers[216909][devourCount])
 end
 
