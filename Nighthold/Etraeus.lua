@@ -40,7 +40,7 @@ local timers = {
 	[206517] = { 51.4, 48, 51 },
 
 	-- World-Devouring Force,SPELL_CAST_START
-	[216909] = { 21.4, 43, },
+	[216909] = { 21.4, 42.1, 42.1, },
 }
 
 --------------------------------------------------------------------------------
@@ -144,6 +144,7 @@ function mod:OnBossEnable()
 
 	--[[ Thing That Should Not Be ]]--
 	self:Log("SPELL_CAST_START", "WitnessTheVoid", 207720)
+	self:Log("SPELL_CAST_START", "WitnessTheVoidSuccess", 207720)
 	self:Death("ThingDeath", 104880) -- Thing That Should Not Be
 
 	--[ Mythic ]]--
@@ -500,8 +501,14 @@ end
 
 function mod:WitnessTheVoid(args)
 	self:Message(args.spellId, "Attention", "Warning", CL.casting:format(args.spellName))
-	self:Bar(args.spellId, 4, CL.cast:format(args.spellName))
-	self:Bar(args.spellId, 15)
+	--self:Bar(args.spellId, 4, CL.cast:format(args.spellName))
+	--self:Bar(args.spellId, self:Mythic() and 13.4 or 15)
+end
+
+function mod:WitnessTheVoidSuccess(args)
+	--self:Message(args.spellId, "Attention", "Warning", CL.casting:format(args.spellName))
+	--self:Bar(args.spellId, 4, CL.cast:format(args.spellName))
+	self:Bar(args.spellId, self:Mythic() and 13.4 or 15)
 end
 
 function mod:ThingDeath(args)
