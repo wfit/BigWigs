@@ -22,6 +22,7 @@ local grandConjunctionCount = 1
 local felNovaCount = 1
 local devourCount = 1
 local witnessCount = 1
+local gravPullCount = 1
 local timers = {
 	-- Icy Ejection, SPELL_CAST_SUCCESS, timers vary a lot (+-2s)
 	[206936] = {25, 35, 6, 6, 48, 2, 2},
@@ -34,14 +35,14 @@ local timers = {
 		[1] = { 15.0, 14.0, 14.0, 14.0, 14.0 },
 		[2] = { 27.0, 44.8, 57.7 },
 		[3] = { 60.0, 44.0, 40.0 },
-		[4] = { 47.0 },
+		[4] = { 47.0, 62.0 },
 	},
 
 	-- Fel Nova, SPELL_CAST_START
 	[206517] = { 51.4, 48, 51 },
 
 	-- World-Devouring Force,SPELL_CAST_START
-	[216909] = { 21.4, 42.1, 42.1, },
+	[216909] = { 21.4, 42.1, 56, },
 }
 
 --------------------------------------------------------------------------------
@@ -226,6 +227,7 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 		ejectionCount = 1
 		grandConjunctionCount = 1
 		devourCount = 1
+		gravPullCount = 1
 		self:CDBar(214335, 20) -- Gravitational Pull
 		self:CDBar(207439, 42) -- Fel Nova
 		if self:Mythic() then
@@ -441,7 +443,7 @@ end
 --[[ Stage Four ]]--
 function mod:GravitationalPullP4Success(args)
 	self:TargetMessage(args.spellId, args.destName, "Urgent", "Warning", nil, nil, self:Tank())
-	self:CDBar(args.spellId, 62)
+	self:CDBar(args.spellId, 63)
 
 	if self:Me(args.destGUID) then
 		self:Say(args.spellId)
@@ -502,7 +504,7 @@ function mod:INSTANCE_ENCOUNTER_ENGAGE_UNIT()
 end
 
 function mod:WitnessTheVoid(args)
-	self:Message(args.spellId, "Attention", "Warning", CL.casting:format(args.spellName))
+	self:Message(args.spellId, "Attention", "Warning", CL.casting:format(CL.count:format(args.spellName, witnessCount)))
 	--self:Bar(args.spellId, 4, CL.cast:format(args.spellName))
 	--self:Bar(args.spellId, self:Mythic() and 13.4 or 15)
 end
@@ -519,12 +521,21 @@ function mod:ThingDeath(args)
 	--self:StopBar(207720) -- Witness the Void
 end
 
+do
+	local function warnOeil(self, spellId)
+		self:Message(spellId, "Attention", nil, "GROS OEIL SOOOOON !")
+		PlaySoundFile("Sound\\Creature\\AlgalonTheObserver\\UR_Algalon_BHole01.ogg","Master")
+	end
 
-function mod:WorldDevouringForce(args)
-	self:Message(args.spellId, "Attention", "Warning", CL.casting:format(args.spellName))
-	--self:Bar(args.spellId, 4, CL.cast:format(args.spellName))
-	devourCount = devourCount + 1
-	self:CDBar(args.spellId, timers[216909][devourCount])
+	function mod:WorldDevouringForce(args)
+		self:Message(args.spellId, "Attention", "Warning", CL.casting:format(args.spellName))
+		--self:Bar(args.spellId, 4, CL.cast:format(args.spellName))
+		devourCount = devourCount + 1
+		if timers[216909][devourCount] then
+			self:CDBar(args.spellId, timers[216909][devourCount])
+			self:ScheduleTimer(warnOeil, timers[216909][devourCount] - 4, self, args.spellId)
+		end
+	end
 end
 
 
