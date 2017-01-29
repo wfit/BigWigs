@@ -42,7 +42,7 @@ local timers = {
 	[206517] = { 51.4, 48, 51 },
 
 	-- World-Devouring Force,SPELL_CAST_START
-	[216909] = { 21.4, 42.1, 56, },
+	[216909] = { 21.4, 42.1, 58.0 },
 }
 
 --------------------------------------------------------------------------------
@@ -56,6 +56,7 @@ local L = mod:GetLocale()
 --
 
 local marks = mod:AddTokenOption { "marks", "Automatically set raid target icons", promote = true }
+local BEWARE = mod:AddCustomOption { "beware", "BEWARE World-Devouring Force", default = false }
 
 function mod:GetOptions()
 	return {
@@ -90,6 +91,7 @@ function mod:GetOptions()
 		--[[ Thing That Should Not Be ]]--
 		207720, -- Witness the Void
 		216909, -- World Devouring Force
+		BEWARE,
 		--{217046, "SAY", "FLASH"} -- Devouring Remnant
 	}, {
 		["stages"] = "general",
@@ -531,7 +533,9 @@ do
 		devourCount = devourCount + 1
 		if timers[216909][devourCount] then
 			self:CDBar(args.spellId, timers[216909][devourCount])
-			self:ScheduleTimer(warnOeil, timers[216909][devourCount] - 4, self, args.spellId)
+			if self:GetOption(BEWARE) then
+				self:ScheduleTimer(warnOeil, timers[216909][devourCount] - 4, self, args.spellId)
+			end
 		end
 	end
 end
