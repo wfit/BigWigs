@@ -118,7 +118,8 @@ function mod:OnBossEnable()
 	self:Log("SPELL_CAST_SUCCESS", "CoronalEjection", 206464)
 
 	--[[ Stage Two ]]--
-	self:Log("SPELL_DAMAGE", "Iceburst", 206921)
+	self:Log("SPELL_DAMAGE", "IceburstDamage", 206921)
+	self:Log("SPELL_MISSED", "IceburstDamage", 206921)
 	self:Log("SPELL_AURA_APPLIED", "GravitationalPull", 205984, 214167, 214335) -- Stage 2, Stage 3, Stage 4
 	self:Log("SPELL_AURA_REMOVED", "GravitationalPullRemoved", 205984, 214167, 214335) -- Stage 2, Stage 3, Stage 4
 	self:Log("SPELL_CAST_SUCCESS", "GravitationalPullSuccess", 205984, 214167, 214335) -- Stage 2, Stage 3, Stage 4
@@ -278,7 +279,7 @@ function mod:CoronalEjection(args)
 end
 
 --[[ Stage Two ]]--
-function mod:Iceburst(args)
+function mod:IceburstDamage(args)
 	if self:Tank(args.destGUID) then
 		self:SetIcon(marks, args.destUnit, 8)
 	end
@@ -302,6 +303,8 @@ function mod:GravitationalPull(args)
 	local remaining = expires-GetTime()
 	self:TargetBar(args.spellId, remaining, args.destName)
 
+	self:SetIcon(marks, args.destUnit, 8)
+
 	if self:Me(args.destGUID) then
 		self:Say(args.spellId)
 		wipe(gravPullSayTimers) -- they will be done either way
@@ -312,6 +315,7 @@ function mod:GravitationalPull(args)
 end
 
 function mod:GravitationalPullRemoved(args)
+	self:SetIcon(marks, args.destUnit, 0)
 	if self:Me(args.destGUID) then
 		for i = #gravPullSayTimers, 1, -1 do
 			self:CancelTimer(gravPullSayTimers[i])
