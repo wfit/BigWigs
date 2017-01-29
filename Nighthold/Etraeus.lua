@@ -240,24 +240,20 @@ end
 function mod:StarSignApplied(args)
 	if self:Me(args.destGUID) then
 		self:ScheduleTimer("WarnStarSign", 5, args.spellName, args.spellId)
+		self:ScheduleTimer("WarnStarSign", 2, args.spellName, args.spellId)
 	end
 end
 
-function mod:WarnStarSign(spellName, spellId)
-	if UnitDebuff("player", spellName) then
-		local msg
-		if spellId == 205429 then
-			msg = "{rt2}" -- Crab / Circle
-		elseif spellId == 205445 then
-			msg = "{rt7}" -- Wolf / Cross
-		elseif spellId == 216345 then
-			msg = "{rt4}" -- Hunter / Green
-		elseif spellId == 205445 then
-			msg = "{rt5}" -- Dragon / Moon
-		end
-		if msg then
-			self:Say(false, msg, true, "YELL")
-			self:ScheduleTimer("Say", 3, false, msg, true, "YELL")
+do
+	local msg = {
+		[205429] = "{rt2}", -- Crab / Circle
+		[205445] = "{rt7}", -- Wolf / Cross
+		[216345] = "{rt4}", -- Hunter / Green
+		[205445] = "{rt5}", -- Dragon / Moon
+	}
+	function mod:WarnStarSign(spellName, spellId)
+		if UnitDebuff("player", spellName) and msg[spellId] then
+			self:Say(false, msg[spellId], true, "YELL")
 		end
 	end
 end
