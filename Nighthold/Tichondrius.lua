@@ -26,13 +26,13 @@ local echoesOfTheVoidCount = 1
 local illusionaryNightCount = 1
 local timers = {
 	-- Carrion Plague, SPELL_CAST_SUCCESS for 212997
-	[206480] = {7, 25, 35.5, 24.5, 75, 25.5, 35.5, 27, 75, 25.5, 40.5, 20.5, 53.5, 25.5},
+	[206480] = {7, 25, 35.5, 24.5, 75, 25.5, 35.5, 27, 75, 25.5, 40.5, 20.5},
 
 	-- Seeker Swarm, SPELL_CAST_SUCCESS
-	[213238] = {27, 25, 35, 25, 75, 25.5, 37.5, 25, 75, 25.5, 36, 22.5, 56},
+	[213238] = {27, 25, 35, 25, 75, 25.5, 37.5, 25, 75, 25.5, 36, 22.5},
 
 	-- Brand of Argus, SPELL_CAST_SUCCESS
-	[212794] = {15, 25, 35, 25, 75, 25.5, 32.5, 30, 75, 25.5, 36, 22.5, 56, 25.5},
+	[212794] = {15, 25, 35, 25, 75, 25.5, 32.5, 30, 75, 25.5, 36, 22.5},
 
 	-- Feast of Blood, SPELL_AURA_APPLIED
 	[208230] = {20, 25, 35, 25, 75, 25.5, 37.5, 25, 75, 25.6, 36.1, 22.5},
@@ -61,7 +61,7 @@ function mod:GetOptions()
 		{212794, "SAY"}, -- Brand of Argus
 		208230, -- Feast of Blood
 		213531, -- Echoes of the Void
-		213534,
+		213534, -- Echoes of the Void (why 2 eotv ?!)
 		"berserk",
 
 		--[[ Stage Two ]]--
@@ -128,7 +128,9 @@ function mod:OnEngage()
 	self:Bar(208230, timers[208230][feastOfBloodCount], CL.count:format(self:SpellName(208230), feastOfBloodCount))
 	self:Bar(213531, timers[213531][echoesOfTheVoidCount], CL.count:format(self:SpellName(213531), echoesOfTheVoidCount))
 	self:Bar(206365, 130, CL.count:format(self:SpellName(206365), illusionaryNightCount))
-	self:Berserk(463)
+	if not self:LFR() then
+		self:Berserk(463)
+	end
 end
 
 --------------------------------------------------------------------------------
@@ -152,19 +154,26 @@ end
 
 function mod:CarrionPlagueSuccess(args)
 	carrionPlagueCount = carrionPlagueCount + 1
-	self:Bar(206480, timers[206480][carrionPlagueCount] or 20, CL.count:format(args.spellName, carrionPlagueCount % 4 == 0 and 4 or carrionPlagueCount % 4))
+	local timer = timers[206480][carrionPlagueCount]
+	if timer then
+		self:Bar(206480, timer, CL.count:format(args.spellName, carrionPlagueCount % 4 == 0 and 4 or carrionPlagueCount % 4))
+	end
 end
 
 function mod:SeekerSwarm(args)
 	self:Message(args.spellId, "Urgent", "Info", CL.count:format(args.spellName, seekerSwarmCount % 4 == 0 and 4 or seekerSwarmCount % 4))
 	seekerSwarmCount = seekerSwarmCount + 1
-	local time = timers[args.spellId][seekerSwarmCount] or 22
-	self:Bar(args.spellId, time, CL.count:format(args.spellName, seekerSwarmCount % 4 == 0 and 4 or seekerSwarmCount % 4))
-	self:ScheduleTimer("SeekerSwarmWarning", time - 8)
+	local timer = timers[args.spellId][seekerSwarmCount]
+	if timer then
+		self:Bar(args.spellId, timer, CL.count:format(args.spellName, seekerSwarmCount % 4 == 0 and 4 or seekerSwarmCount % 4))
+		if self:Me(args.destGUID) then
+			self:ScheduleTimer("SeekerSwarmWarning", timer - 8, args.spellName)
+		end
+	end
 end
 
-function mod:SeekerSwarmWarning()
-	if UnitDebuff("player", self:SpellName(206480)) then
+function mod:SeekerSwarmWarning(spellName)
+	if UnitDebuff("player", spellName) then
 		self:Say(213238, "{rt8}")
 	end
 end
@@ -185,13 +194,19 @@ end
 
 function mod:BrandOfArgusSuccess(args)
 	brandOfArgusCount = brandOfArgusCount + 1
-	self:Bar(args.spellId, timers[args.spellId][brandOfArgusCount] or 22, CL.count:format(args.spellName, brandOfArgusCount % 4 == 0 and 4 or brandOfArgusCount % 4))
+	local timer = timers[args.spellId][brandOfArgusCount]
+	if timer then
+		self:Bar(args.spellId, timer, CL.count:format(args.spellName, brandOfArgusCount % 4 == 0 and 4 or brandOfArgusCount % 4))
+	end
 end
 
 function mod:FeastOfBlood(args)
 	self:TargetMessage(args.spellId, args.destName, "Urgent", "Long", CL.count:format(args.spellName, feastOfBloodCount % 4 == 0 and 4 or feastOfBloodCount % 4), nil, true)
 	feastOfBloodCount = feastOfBloodCount + 1
-	self:Bar(args.spellId, timers[args.spellId][feastOfBloodCount] or 22, CL.count:format(args.spellName, feastOfBloodCount % 4 == 0 and 4 or feastOfBloodCount % 4))
+	local timer = timers[args.spellId][feastOfBloodCount]
+	if timer then
+		self:Bar(args.spellId, timer, CL.count:format(args.spellName, feastOfBloodCount % 4 == 0 and 4 or feastOfBloodCount % 4))
+	end
 end
 
 function mod:EchoesOfTheVoid(args)
@@ -199,7 +214,10 @@ function mod:EchoesOfTheVoid(args)
 	self:StopBar(CL.count:format(args.spellName, echoesOfTheVoidCount))
 	self:Bar(args.spellId, 10, CL.count:format(args.spellName, echoesOfTheVoidCount))
 	echoesOfTheVoidCount = echoesOfTheVoidCount + 1
-	self:Bar(args.spellId, timers[args.spellId][echoesOfTheVoidCount] or 60, CL.count:format(args.spellName, echoesOfTheVoidCount % 2 == 0 and 2 or echoesOfTheVoidCount % 2))
+	local timer = timers[args.spellId][echoesOfTheVoidCount]
+	if timer then
+		self:Bar(args.spellId, timer, CL.count:format(args.spellName, echoesOfTheVoidCount % 2 == 0 and 2 or echoesOfTheVoidCount % 2))
+	end
 end
 
 --[[ Stage Two ]]--
@@ -207,7 +225,9 @@ function mod:IllusionaryNight(args)
 	self:Message(args.spellId, "Neutral", "Long", CL.count:format(args.spellName, illusionaryNightCount))
 	self:Bar(args.spellId, 32, CL.cast:format(CL.count:format(args.spellName, illusionaryNightCount)))
 	illusionaryNightCount = illusionaryNightCount + 1
-	self:Bar(args.spellId, 163, CL.count:format(args.spellName, illusionaryNightCount))
+	if illusionaryNightCount < 3 then
+		self:Bar(args.spellId, 163, CL.count:format(args.spellName, illusionaryNightCount))
+	end
 	self:Bar(215988, 8.5, CL.cast:format(self:SpellName(215988))) -- Carrion Nightmare
 end
 
@@ -243,6 +263,13 @@ do
 		if #list == 1 then
 			self:ScheduleTimer("TargetMessage", 0.5, args.spellId, list, "Urgent", "Alarm", nil, nil, self:Dispeller("magic"))
 		end
+		if self:Me(args.destGUID) then
+			self:Say(args.spellId)
+			self:TargetBar(args.spellId, 8, args.destName)
+			self:ScheduleTimer("Say", 5, args.spellId, 3, true)
+			self:ScheduleTimer("Say", 6, args.spellId, 2, true)
+			self:ScheduleTimer("Say", 7, args.spellId, 1, true)
+		end
 		]]--
 		if self:Me(args.destGUID) then
 			if stacks == 1 then
@@ -261,6 +288,7 @@ do
 	end
 
 	function mod:VolatileWoundRemoved(args)
+		self:StopBar(args.spellId, args.destName)
 		if self:Me(args.destGUID) then
 			for _,timer in pairs(volaSayTimer) do
 				self:CancelTimer(timer)
