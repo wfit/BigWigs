@@ -465,6 +465,7 @@ function plugin:OnPluginEnable()
 	self:RegisterMessage("BigWigs_ResetPositions", resetAnchors)
 	self:RegisterMessage("BigWigs_SetConfigureTarget")
 	self:RegisterMessage("BigWigs_Message")
+	self:RegisterMessage("BigWigs_EmphasizedMessage")
 	self:RegisterMessage("BigWigs_EmphasizedCountdownMessage")
 	self:RegisterMessage("BigWigs_StartConfigureMode", showAnchors)
 	self:RegisterMessage("BigWigs_StopConfigureMode", hideAnchors)
@@ -657,7 +658,7 @@ function plugin:BigWigs_Message(event, module, key, text, color, icon)
 			text = text:upper()
 			text = text:gsub("(:%d+|)T", "%1t") -- Fix texture paths that need to end in lowercase |t
 		end
-		fakeEmphasizeMessageAddon:Pour(text, r, g, b)
+		self:BigWigs_EmphasizedMessage(nil, text, r, g, b)
 	else
 		self:Pour(text, r, g, b, nil, nil, nil, nil, nil, icon)
 	end
@@ -667,4 +668,8 @@ function plugin:BigWigs_Message(event, module, key, text, color, icon)
 		if icon then text = "|T"..icon..":15:15:0:0:64:64:4:60:4:60|t"..text end
 		DEFAULT_CHAT_FRAME:AddMessage(text, r, g, b)
 	end
+end
+
+function plugin:BigWigs_EmphasizedMessage(event, ...)
+	fakeEmphasizeMessageAddon:Pour(...)
 end
