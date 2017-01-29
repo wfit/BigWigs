@@ -81,7 +81,6 @@ function mod:OnBossEnable()
 	self:Log("SPELL_AURA_APPLIED_DOSE", "RecursiveStrikes", 218503)
 	self:Log("SPELL_CAST_START", "ControlledChaos", 218438)
 	self:Log("SPELL_CAST_START", "CallOfNightStart", 218807)
-	
 
 	--[[ Solarist Tel'arn ]]--
 	self:Log("SPELL_CAST_START", "SolarCollapse", 218148)
@@ -99,7 +98,7 @@ function mod:OnBossEnable()
 
 	-- Mythic
 	self:Log("SPELL_CAST_SUCCESS", "NatureInfusion", 222020)
-	self:Log("SPELL_CAST_SUCCESS", "ArcaneInfusion", 222021)  
+	self:Log("SPELL_CAST_SUCCESS", "ArcaneInfusion", 222021)
 	self:Log("SPELL_CAST_START", "CollapseOfNight", 223437)
 end
 
@@ -188,27 +187,19 @@ end
 do
 	local playerList, proxList, isOnMe, iconsUnused = mod:NewTargetList(), {}, nil, {2,5,6,7}
 
-	local t = 0
 	function mod:CallOfNight(args)
 		proxList[#proxList+1] = args.destName
 
 		if self:Me(args.destGUID) then
 			isOnMe = true
 			self:Flash(args.spellId)
-			if self:Mythic() then
-				local side = GetTime() - t > 2 and "Gauche" or "Droite"
-				self:Say(args.spellId, side, true)
-				self:Emphasized(false, side)
-			else
-				self:Say(args.spellId)
-			end
+			self:Say(args.spellId)
 			self:OpenProximity(args.spellId, 8, proxList) -- don't stand near others with the debuff
 			self:TargetBar(args.spellId, 45, args.destName)
 			if not callOfNightCheck then
 				callOfNightCheck = self:ScheduleRepeatingTimer("CallOfNightCheck", 1.5)
 			end
 		end
-		t = GetTime()
 
 		if not isOnMe then
 			self:OpenProximity(args.spellId, 8, proxList, true) -- stand near debuffed players
@@ -386,7 +377,7 @@ function mod:CancelAllBars()
 end
 
 function mod:NatureInfusion(args)
-	self:Message("stages", "Neutral", "Info", args.spellName, args.spellId) 
+	self:Message("stages", "Neutral", "Info", args.spellName, args.spellId)
 	phase = phase + 1
 	self:CancelAllBars()
 	mTimer = phase == 2 and 55 or 35
@@ -399,7 +390,7 @@ function mod:NatureInfusion(args)
 end
 
 function mod:ArcaneInfusion(args)
-	self:Message("stages", "Neutral", "Info", args.spellName, args.spellId) 
+	self:Message("stages", "Neutral", "Info", args.spellName, args.spellId)
 	phase = phase + 1
 	self:CancelAllBars()
 	mTimer = phase == 2 and 55 or 35
