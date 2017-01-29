@@ -42,7 +42,7 @@ local timers = {
 	[206517] = { 51.4, 48, 51 },
 
 	-- World-Devouring Force,SPELL_CAST_START
-	[216909] = { 21.4, 42.1, 58.0 },
+	[216909] = { 21.4, 42.1, 57.9 },
 }
 
 --------------------------------------------------------------------------------
@@ -56,7 +56,7 @@ local L = mod:GetLocale()
 --
 
 local marks = mod:AddTokenOption { "marks", "Automatically set raid target icons", promote = true }
-local BEWARE = mod:AddCustomOption { "beware", "BEWARE World-Devouring Force", default = false }
+local BEWARE = mod:AddCustomOption { "beware", "BEWARE World-Devouring Force", default = true }
 
 function mod:GetOptions()
 	return {
