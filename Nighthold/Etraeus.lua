@@ -119,8 +119,9 @@ function mod:OnBossEnable()
 
 	--[[ Stage Two ]]--
 	self:Log("SPELL_DAMAGE", "Iceburst", 206921)
-	self:Log("SPELL_AURA_APPLIED", "GravitationalPullP2", 205984)
-	self:Log("SPELL_CAST_SUCCESS", "GravitationalPullP2Success", 205984)
+	self:Log("SPELL_AURA_APPLIED", "GravitationalPull", 205984, 214167, 214335) -- Stage 2, Stage 3, Stage 4
+	self:Log("SPELL_AURA_REMOVED", "GravitationalPullRemoved", 205984, 214167, 214335) -- Stage 2, Stage 3, Stage 4
+	self:Log("SPELL_CAST_SUCCESS", "GravitationalPullSuccess", 205984, 214167, 214335) -- Stage 2, Stage 3, Stage 4
 	self:Log("SPELL_AURA_APPLIED", "Chilled", 206589)
 	self:Log("SPELL_CAST_SUCCESS", "IcyEjection", 206936)
 	self:Log("SPELL_AURA_APPLIED", "IcyEjectionApplied", 206936)
@@ -128,8 +129,6 @@ function mod:OnBossEnable()
 	self:Log("SPELL_CAST_START", "FrigidNova", 206949)
 
 	--[[ Stage Three ]]--
-	self:Log("SPELL_AURA_APPLIED", "GravitationalPullP3", 214167)
-	self:Log("SPELL_CAST_SUCCESS", "GravitationalPullP3Success", 214167)
 	self:Log("SPELL_AURA_APPLIED", "Felburst", 206388)
 	self:Log("SPELL_AURA_APPLIED_DOSE", "Felburst", 206388)
 	self:Log("SPELL_CAST_START", "FelNova", 206517)
@@ -137,8 +136,6 @@ function mod:OnBossEnable()
 	self:Log("SPELL_AURA_APPLIED", "FelEjectionApplied", 205649)
 
 	--[[ Stage Four ]]--
-	self:Log("SPELL_AURA_APPLIED", "GravitationalPullP4", 214335)
-	self:Log("SPELL_CAST_SUCCESS", "GravitationalPullP4Success", 214335)
 	self:Log("SPELL_CAST_START", "VoidNova", 207439)
 	self:Log("SPELL_AURA_APPLIED", "VoidburstApplied", 206965)
 	self:Log("SPELL_AURA_APPLIED_DOSE", "VoidburstApplied", 206965)
@@ -190,11 +187,6 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 			self:CDBar(205408, timers[205408][phase][grandConjunctionCount]) -- Grand Conjunction
 		end
 
-		for _,timer in pairs(gravPullSayTimers) do
-			self:CancelTimer(timer)
-		end
-		wipe(gravPullSayTimers)
-
 	elseif spellId == 222133 then -- Phase 3 Conversation
 		phase = 3
 		self:Message("stages", "Neutral", "Long", CL.stage:format(3), false)
@@ -211,11 +203,6 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 		if self:Mythic() then
 			self:CDBar(205408, timers[205408][phase][grandConjunctionCount]) -- Grand Conjunction
 		end
-
-		for _,timer in pairs(gravPullSayTimers) do
-			self:CancelTimer(timer)
-		end
-		wipe(gravPullSayTimers)
 
 	elseif spellId == 222134 then -- Phase 4 Conversation
 		phase = 4
@@ -235,12 +222,6 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 			self:CDBar(205408, timers[205408][phase][grandConjunctionCount]) -- Grand Conjunction
 		end
 		self:Berserk(201.5, true, nil, 222761, 222761) -- Big Bang (end of cast)
-
-		for _,timer in pairs(gravPullSayTimers) do
-			self:CancelTimer(timer)
-		end
-		wipe(gravPullSayTimers)
-
 	end
 end
 
@@ -257,7 +238,7 @@ end
 
 function mod:StarSignApplied(args)
 	if self:Me(args.destGUID) then
-		self:ScheduleTimer("WarnStarSign", 6, args.spellName, args.spellId)
+		self:ScheduleTimer("WarnStarSign", 5, args.spellName, args.spellId)
 	end
 end
 
@@ -275,6 +256,7 @@ function mod:WarnStarSign(spellName, spellId)
 		end
 		if msg then
 			self:Say(false, msg, true, "YELL")
+			self:ScheduleTimer("Say", 3, false, msg, true, "YELL")
 		end
 	end
 end
@@ -302,25 +284,39 @@ function mod:Iceburst(args)
 	end
 end
 
-function mod:GravitationalPullP2Success(args)
-	self:TargetMessage(args.spellId, args.destName, "Urgent", "Warning", nil, nil, self:Tank())
-	self:CDBar(args.spellId, 30)
-
-	if self:Me(args.destGUID) then
-		self:Say(args.spellId)
+do
+	local timers = {
+		[205984] = 30,
+		[214167] = 28,
+		[214335] = 63,
+	}
+	function mod:GravitationalPullSuccess(args)
+		self:CDBar(args.spellId, timers[args.spellId])
 	end
 end
 
-function mod:GravitationalPullP2(args)
+function mod:GravitationalPull(args)
+	self:TargetMessage(args.spellId, args.destName, "Urgent", "Warning", nil, nil, self:Tank())
+
 	local _, _, _, _, _, _, expires = UnitDebuff(args.destName, args.spellName)
 	local remaining = expires-GetTime()
 	self:TargetBar(args.spellId, remaining, args.destName)
 
-	wipe(gravPullSayTimers) -- they will be done either way
 	if self:Me(args.destGUID) then
-		gravPullSayTimers[#gravPullSayTimers+1] = self:ScheduleTimer("Say", remaining-3, args.spellId, 3, true)
-		gravPullSayTimers[#gravPullSayTimers+1] = self:ScheduleTimer("Say", remaining-2, args.spellId, 2, true)
-		gravPullSayTimers[#gravPullSayTimers+1] = self:ScheduleTimer("Say", remaining-1, args.spellId, 1, true)
+		self:Say(args.spellId)
+		wipe(gravPullSayTimers) -- they will be done either way
+		gravPullSayTimers[1] = self:ScheduleTimer("Say", remaining-3, args.spellId, 3, true)
+		gravPullSayTimers[2] = self:ScheduleTimer("Say", remaining-2, args.spellId, 2, true)
+		gravPullSayTimers[3] = self:ScheduleTimer("Say", remaining-1, args.spellId, 1, true)
+	end
+end
+
+function mod:GravitationalPullRemoved(args)
+	if self:Me(args.destGUID) then
+		for i = #gravPullSayTimers, 1, -1 do
+			self:CancelTimer(gravPullSayTimers[i])
+			gravPullSayTimers[i] = nil
+		end
 	end
 end
 
@@ -377,28 +373,6 @@ function mod:Chilled(args)
 end
 
 --[[ Stage Three ]]--
-function mod:GravitationalPullP3Success(args)
-	self:TargetMessage(args.spellId, args.destName, "Urgent", "Warning", nil, nil, self:Tank())
-	self:CDBar(args.spellId, 28)
-
-	if self:Me(args.destGUID) then
-		self:Say(args.spellId)
-	end
-end
-
-function mod:GravitationalPullP3(args)
-	local _, _, _, _, _, _, expires = UnitDebuff(args.destName, args.spellName)
-	local remaining = expires-GetTime()
-	self:TargetBar(args.spellId, remaining, args.destName)
-
-	wipe(gravPullSayTimers) -- they will be done either way
-	if self:Me(args.destGUID) then
-		gravPullSayTimers[#gravPullSayTimers+1] = self:ScheduleTimer("Say", remaining-3, args.spellId, 3, true)
-		gravPullSayTimers[#gravPullSayTimers+1] = self:ScheduleTimer("Say", remaining-2, args.spellId, 2, true)
-		gravPullSayTimers[#gravPullSayTimers+1] = self:ScheduleTimer("Say", remaining-1, args.spellId, 1, true)
-	end
-end
-
 function mod:Felburst(args)
 	local amount = args.amount or 1
 	if amount % 2 == 1 or amount > 5 then
@@ -441,28 +415,6 @@ do
 end
 
 --[[ Stage Four ]]--
-function mod:GravitationalPullP4Success(args)
-	self:TargetMessage(args.spellId, args.destName, "Urgent", "Warning", nil, nil, self:Tank())
-	self:CDBar(args.spellId, 63)
-
-	if self:Me(args.destGUID) then
-		self:Say(args.spellId)
-	end
-end
-
-function mod:GravitationalPullP4(args)
-	local _, _, _, _, _, _, expires = UnitDebuff(args.destName, args.spellName)
-	local remaining = expires-GetTime()
-	self:TargetBar(args.spellId, remaining, args.destName)
-
-	wipe(gravPullSayTimers) -- they will be done either way
-	if self:Me(args.destGUID) then
-		gravPullSayTimers[#gravPullSayTimers+1] = self:ScheduleTimer("Say", remaining-3, args.spellId, 3, true)
-		gravPullSayTimers[#gravPullSayTimers+1] = self:ScheduleTimer("Say", remaining-2, args.spellId, 2, true)
-		gravPullSayTimers[#gravPullSayTimers+1] = self:ScheduleTimer("Say", remaining-1, args.spellId, 1, true)
-	end
-end
-
 function mod:VoidNova(args)
 	self:Message(args.spellId, "Important", "Alarm")
 	self:Bar(args.spellId, 4, CL.cast:format(args.spellName))
