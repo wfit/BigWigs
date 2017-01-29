@@ -240,7 +240,7 @@ end
 function mod:StarSignApplied(args)
 	if self:Me(args.destGUID) then
 		self:ScheduleTimer("WarnStarSign", 5, args.spellName, args.spellId)
-		self:ScheduleTimer("WarnStarSign", 2, args.spellName, args.spellId)
+		self:ScheduleTimer("WarnStarSign", 7.5, args.spellName, args.spellId)
 	end
 end
 
