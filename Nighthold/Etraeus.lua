@@ -297,7 +297,9 @@ do
 end
 
 function mod:GravitationalPull(args)
-	self:SetIcon(marks, args.destUnit, 8)
+	if phase == 3 then
+		self:SetIcon(marks, args.destUnit, 8)
+	end
 
 	if self:Me(args.destGUID) then
 		local _, _, _, _, _, _, expires = UnitDebuff(args.destName, args.spellName)
