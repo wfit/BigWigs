@@ -249,7 +249,7 @@ do
 		[205429] = "{rt2}", -- Crab / Circle
 		[205445] = "{rt7}", -- Wolf / Cross
 		[216345] = "{rt4}", -- Hunter / Green
-		[205445] = "{rt5}", -- Dragon / Moon
+		[216344] = "{rt5}", -- Dragon / Moon
 	}
 	function mod:WarnStarSign(spellName, spellId)
 		if UnitDebuff("player", spellName) and msg[spellId] then
