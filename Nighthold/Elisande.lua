@@ -21,7 +21,8 @@ mod.instanceId = 1530
 
 local phase = 1
 
-local timers = {
+local timers
+local timersHeroic = {
 	-- Spanning Singularity, UNIT_SPELLCAST_SUCCEEDED
 	[209168] = { 23.0, 36.0, 57.0, 65.0 },
 
@@ -42,6 +43,28 @@ local timers = {
 
 	-- Summon Time Elemental - Fast, UNIT_SPELLCAST_SUCCEEDED
 	[211616] = { 8.0, 88.0, 95.0, 20.0 },
+}
+local timersMythic = {
+	-- Spanning Singularity, UNIT_SPELLCAST_SUCCEEDED
+	[209168] = { },
+
+	-- Arcanetic Ring, RAID_BOSS_EMOTE
+	[208807] = { },
+
+	-- Epocheric Orb, RAID_BOSS_EMOTE
+	[210022] = { },
+
+	-- Delphuric Beam, SPELL_CAST_START
+	[209244] = { },
+
+	-- Conflexive Burst,
+	[209597] = { },
+
+	-- Summon Time Elemental - Slow, UNIT_SPELLCAST_SUCCEEDED
+	[209005] = { },
+
+	-- Summon Time Elemental - Fast, UNIT_SPELLCAST_SUCCEEDED
+	[211616] = { },
 }
 
 local singularityCount = 1
@@ -165,6 +188,7 @@ end
 
 function mod:OnEngage()
 	phase = 1
+	timers = self:Mythic() and timersMythic or timersHeroic
 end
 
 --------------------------------------------------------------------------------
