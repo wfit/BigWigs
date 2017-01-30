@@ -164,7 +164,7 @@ function mod:OnBossEnable()
 end
 
 function mod:OnEngage()
-	local phase = 1
+	phase = 1
 end
 
 --------------------------------------------------------------------------------
