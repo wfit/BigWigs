@@ -96,9 +96,9 @@ local fast_zone_despawn = mod:AddCustomBarOption { "fzd", L.fastZoneDespawn, ico
 function mod:GetOptions()
 	return {
 		--[[ General ]]--
-		208887, -- Summon Time Elementals
 		"stages",
 		"berserk",
+		208887, -- Summon Time Elementals
 
 		--[[ Recursive Elemental ]]--
 		221863, -- Shield
@@ -231,6 +231,9 @@ function mod:Nightwell(args)
 	if phase == 3 then
 		self:Bar(209597, timers[209597][burstsCount], CL.count:format(self:SpellName(209597), burstsCount))
 	end
+	if self:Mythic() then
+		self:Bar("berserk", 199, 26662)
+	end
 end
 
 function mod:TimeStop()
@@ -244,6 +247,9 @@ function mod:TimeStop()
 	self:StopBar(CL.count:format(L.slowZoneDespawn, slowZoneCount))
 	self:StopBar(CL.count:format(L.slowZoneDespawn, slowZoneCount - 1))
 	self:StopBar(CL.count:format(L.fastZoneDespawn, fastZoneCount))
+	if self:Mythic() then
+		self:StopBar(26662) -- Berserk
+	end
 	if phase == 1 then
 		singularityMax = singularityCount
 		ringMax = ringCount
