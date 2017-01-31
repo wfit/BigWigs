@@ -36,6 +36,7 @@ local annihilateCount = 1
 local felLashCount = 1
 local searingBrandTargets = {}
 local frostbittenStacks = {}
+local isInfoOpen = nil
 
 --------------------------------------------------------------------------------
 -- Localization
@@ -86,7 +87,7 @@ function mod:GetOptions()
 		--[[ Master of Fire ]]--
 		{213148, "SAY", "FLASH"}, -- Pre Searing Brand
 		213166, -- Searing Brand
-		213275, -- Detonate: Searing Brand
+		{213275, "SAY"}, -- Detonate: Searing Brand
 		213567, -- Animate: Searing Brand
 		213278, -- Burning Ground
 		fireadd_marks,
@@ -101,7 +102,7 @@ function mod:GetOptions()
 
 		--[[ Mythic ]]--
 		230901, -- Fel Soul
-		230504, -- Decimate
+		{230504, "TANK"}, -- Decimate
 		230414, -- Fel Stomp
 		230403, -- Fel Lash
 	}, {
@@ -166,6 +167,7 @@ function mod:OnEngage()
 	phase = 0 -- will immediately get incremented by mod:Stages()
 	annihilateCount = 1
 	wipe(frostbittenStacks)
+	isInfoOpen = nil
 
 	timers = self:Mythic() and mythicTimers or heroicTimers
 	self:Bar(212492, timers[212492][annihilateCount]) -- Annihilate
@@ -340,16 +342,20 @@ do
 		local t = GetTime()
 		if t-prev > 2 then
 			prev = t
+			if not isInfoOpen then
+				isInfoOpen = true
+				self:OpenInfo(args.spellId, args.spellName)
+			end
 			self:SetInfoByTable(args.spellId, frostbittenStacks)
-			self:OpenInfo(args.spellId, args.spellName)
 		end
 	end
 end
 
 function mod:FrostbittenRemoved(args)
 	frostbittenStacks[args.destName] = nil
-	if not next(frostbittenStacks) then
+	if not next(frostbittenStacks) and isInfoOpen then
 		self:CloseInfo(args.spellId)
+		isInfoOpen = nil
 	end
 end
 
@@ -461,12 +467,12 @@ end
 
 --[[ Mythic ]]--
 function mod:SeveredSoul(args)
-	self:Message(230901, "Positive", "Alarm")
+	self:Message(230901, "Positive", "Alarm", CL.count:format(args.spellName, felLashCount))
 	self:Bar(230901, 45, CL.over:format(self:SpellName(230901))) -- Fel Soul
 	self:CDBar(230504, phase % 3 == 1 and 18 or phase % 3 == 2 and 11 or 10) -- Decimate
 	if phase % 3 == 0 then -- Magic
 		felLashCount = 1
-		self:Bar(230403, timers[args.spellId][felLashCount], CL.count:format(self:SpellName(230403), felLashCount)) -- Fel Lash
+		self:Bar(230403, timers[230403][felLashCount], CL.count:format(self:SpellName(230403), felLashCount)) -- Fel Lash
 	end
 end
 

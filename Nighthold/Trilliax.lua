@@ -52,6 +52,7 @@ function mod:GetOptions()
 	return {
 		-- General
 		"stages",
+		"berserk",
 		206488, -- Arcane Seepage
 		{206641, "TANK"}, -- Arcane Slash
 
@@ -110,6 +111,7 @@ function mod:OnEngage()
 	imprintCount = 1
 	wipe(bondTable)
 	wipe(mobCollector)
+	self:Berserk(540) -- Heroic
 	self:Bar(206641, 7.5) -- Arcane Slash
 	self:Bar(206788, 11) -- Toxic Slice
 	self:Bar("stages", 45, 206557, 206557) -- The Maniac
