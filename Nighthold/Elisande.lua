@@ -242,7 +242,7 @@ do
 end
 
 function mod:Nightwell(args)
-	singularityCount = 1
+	singularityCount = phase == 1 and 1 or 0
 	ringCount = 1
 	orbsCount = 1
 	beamsCount = 1
@@ -255,7 +255,9 @@ function mod:Nightwell(args)
 	slowZoneCount = 0
 	fastZoneCount = 0
 
-	self:EchoBar(1, 209168, spanning_echo, singularityCount)
+	if singularityCount > 0 then
+		self:EchoBar(1, 209168, spanning_echo, singularityCount)
+	end
 	self:Bar(208807, timers[208807][ringCount], CL.count:format(self:SpellName(208807), ringCount))
 	self:Bar(208887, timers[209005][slowAddCount], CL.count:format(L.slowAdd, slowAddCount))
 	self:Bar(208887, timers[211616][fastAddCount], CL.count:format(L.fastAdd, fastAddCount))
