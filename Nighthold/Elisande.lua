@@ -325,7 +325,7 @@ end
 
 function mod:SlowTime(args)
 	if self:Me(args.destGUID)then
-		self:TargetMessage(args.spellId, args.destName, "Personal", "Long")
+		self:TargetMessage(args.spellId, args.destName, "Personal", "Info")
 		local _, _, _, _, _, _, expires = UnitDebuff("player", args.spellName)
 		local t = expires - GetTime()
 		self:TargetBar(args.spellId, t, args.destName)
@@ -339,7 +339,7 @@ end
 
 function mod:FastTime(args)
 	if self:Me(args.destGUID)then
-		self:Message(args.spellId, "Positive", "Long", CL.you:format(args.spellName))
+		self:Message(args.spellId, "Positive", "Info", CL.you:format(args.spellName))
 		local _, _, _, _, _, _, expires = UnitDebuff("player", args.spellName)
 		local t = expires - GetTime()
 		self:TargetBar(args.spellId, t, args.destName)
