@@ -8,7 +8,7 @@
 
 local mod, CL = BigWigs:NewBoss("High Botanist Tel'arn", 1088, 1761)
 if not mod then return end
-mod:RegisterEnableMob(104528)
+mod:RegisterEnableMob(104528, 109040, 109038, 109041)
 mod.engageId = 1886
 mod.respawnTime = 30
 mod.instanceId = 1530
@@ -121,7 +121,7 @@ function mod:OnEngage()
 	end
 	if self:GetOption(bossMarker) then
 		self:RegisterEvent("INSTANCE_ENCOUNTER_ENGAGE_UNIT")
-		--self:INSTANCE_ENCOUNTER_ENGAGE_UNIT()
+		self:INSTANCE_ENCOUNTER_ENGAGE_UNIT()
 	end
 end
 
