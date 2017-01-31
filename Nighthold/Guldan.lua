@@ -477,7 +477,7 @@ function mod:Phase3(args)
 	self:Bar(167819, timers[phase][167819][stormCount], CL.count:format(self:SpellName(167819), stormCount)) -- Storm of the Destroyer
 	self:Bar(221891, timers[phase][221891][soulSiphonCount]) -- Soul Siphon
 	self:Bar(206744, timers[phase][206744][harvestCount], CL.count:format(self:SpellName(206744), harvestCount)) -- Black Harvest
-	self:Bar(221783, 13.8) -- Flames of Sargeras
+	self:Bar(221783, 18.2) -- Flames of Sargeras
 	self:OpenInfo("infobox", self:SpellName(221891))
 	self:SetInfo("infobox", 1, L.remaining)
 	self:SetInfo("infobox", 2, soulsRemaining)
