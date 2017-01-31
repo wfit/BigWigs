@@ -609,6 +609,7 @@ do
 			if not self.isEngaged then
 				self:Engage()
 				self:SendMessage("BigWigs_EncounterStart", self, id, name, diff, size)
+				self:ScheduleTimer("CheckBossStatus", 5)
 			end
 		elseif self.enabledState then
 			self:Disable()
