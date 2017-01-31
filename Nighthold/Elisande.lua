@@ -298,7 +298,7 @@ function mod:TimeStop()
 	end
 	phase = phase + 1
 	self:Message("stages", "Neutral", "Info", CL.phase:format(phase), false)
-	self:Bar("stages", 10, CL.stage:format(phase), 208863)
+	self:Bar("stages", 10, CL.stage:format(phase), 211647)
 end
 
 do
