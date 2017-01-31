@@ -351,7 +351,7 @@ function mod:ArcaneticRing()
 	self:Message(208807, "Urgent", "Alert")
 	ringCount = ringCount + 1
 	if phase == 1 or ringCount < ringMax then
-		self:Bar(208807, timers[208807][ringCount] or 30, CL.count:format(self:SpellName(208807), ringCount))
+		self:Bar(208807, timers[208807][ringCount], CL.count:format(self:SpellName(208807), ringCount))
 	end
 end
 
@@ -359,7 +359,7 @@ function mod:SpanningSingularity(args)
 	self:Message(209168, "Important", "Info")
 	singularityCount = singularityCount + 1
 	if phase == 1 or singularityCount < singularityMax then
-		self:Bar(209168, timers[209168][singularityCount] or 30, CL.count:format(self:SpellName(209168), singularityCount))
+		self:Bar(209168, timers[209168][singularityCount], CL.count:format(self:SpellName(209168), singularityCount))
 	end
 end
 
@@ -382,7 +382,7 @@ function mod:DelphuricBeam(args)
 	self:Bar(209244, 8, CL.cast:format(self:SpellName(209244)))
 	beamsCount = beamsCount + 1
 	if phase == 2 or (self:Mythic() and beamsCount < beamsMax) then
-		self:Bar(209244, timers[209244][beamsCount] or 30, CL.count:format(self:SpellName(209244), beamsCount))
+		self:Bar(209244, timers[209244][beamsCount], CL.count:format(self:SpellName(209244), beamsCount))
 	end
 end
 
@@ -410,7 +410,7 @@ function mod:EpochericOrb()
 	self:Bar(210022, 9, CL.cast:format(self:SpellName(210022)))
 	orbsCount = orbsCount + 1
 	if phase == 2 or orbsCount < orbsMax then
-		self:Bar(210022, timers[210022][orbsCount] or 30, CL.count:format(self:SpellName(210022), orbsCount))
+		self:Bar(210022, timers[210022][orbsCount], CL.count:format(self:SpellName(210022), orbsCount))
 	end
 end
 
