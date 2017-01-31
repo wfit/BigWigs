@@ -211,6 +211,7 @@ function boss:OnEnable(isWipe)
 
 	if self.engageId then
 		self:RegisterEvent("ENCOUNTER_START", "EncounterStart")
+		self:RegisterEvent("INSTANCE_ENCOUNTER_ENGAGE_UNIT", "CheckForEncounterEngage")
 		self:RegisterEvent("ENCOUNTER_END", "EncounterEnd")
 	end
 
