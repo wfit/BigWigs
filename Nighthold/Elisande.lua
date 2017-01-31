@@ -351,7 +351,7 @@ function mod:ArcaneticRing()
 	self:Message(208807, "Urgent", "Alert")
 	ringCount = ringCount + 1
 	if phase == 1 or ringCount < ringMax then
-		self:Bar(208807, timers[209168][ringCount] or 30, CL.count:format(self:SpellName(208807), ringCount))
+		self:Bar(208807, timers[208807][ringCount] or 30, CL.count:format(self:SpellName(208807), ringCount))
 	end
 end
 
