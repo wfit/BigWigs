@@ -25,46 +25,34 @@ local timers
 local timersHeroic = {
 	-- Spanning Singularity, UNIT_SPELLCAST_SUCCEEDED
 	[209168] = { 23.0, 36.0, 57.0, 65.0 },
-
 	-- Arcanetic Ring, RAID_BOSS_EMOTE
 	[208807] = { 34.0, 41.0, 10.0, 62.0, 10.0, 45.0, 10.0 },
-
 	-- Epocheric Orb, RAID_BOSS_EMOTE
 	[210022] = { 27.0, 76.0, 37.0, 70.0 },
-
 	-- Delphuric Beam, SPELL_CAST_START
 	[209244] = { 72.0, 57.0, 60.0 },
-
 	-- Conflexive Burst,
 	[209597] = { 58, 52.0, 56.0, 65.0 },
-
 	-- Summon Time Elemental - Slow, UNIT_SPELLCAST_SUCCEEDED
 	[209005] = { 5.0, 49.0, 52.0, 60.0 },
-
 	-- Summon Time Elemental - Fast, UNIT_SPELLCAST_SUCCEEDED
 	[211616] = { 8.0, 88.0, 95.0, 20.0 },
 }
 local timersMythic = {
 	-- Spanning Singularity, UNIT_SPELLCAST_SUCCEEDED
-	[209168] = { },
-
+	[209168] = { 54.0, 50.0, 45.0 },
 	-- Arcanetic Ring, RAID_BOSS_EMOTE
-	[208807] = { },
-
+	[208807] = { 32, 40, 15, 30, 20, 10, 25, 10, 10, 13 },
 	-- Epocheric Orb, RAID_BOSS_EMOTE
-	[210022] = { },
-
+	[210022] = { 14.5 },
 	-- Delphuric Beam, SPELL_CAST_START
-	[209244] = { },
-
+	[209244] = { 54.1 },
 	-- Conflexive Burst,
 	[209597] = { },
-
 	-- Summon Time Elemental - Slow, UNIT_SPELLCAST_SUCCEEDED
-	[209005] = { },
-
+	[209005] = { 5, 39, 75 },
 	-- Summon Time Elemental - Fast, UNIT_SPELLCAST_SUCCEEDED
-	[211616] = { },
+	[211616] = { 8, 81 },
 }
 
 local singularityCount = 1
