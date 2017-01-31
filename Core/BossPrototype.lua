@@ -210,7 +210,7 @@ function boss:OnEnable(isWipe)
 	enabledModules[#enabledModules+1] = self
 
 	if self.engageId then
-		self:RegisterEvent("INSTANCE_ENCOUNTER_ENGAGE_UNIT", "CheckForEncounterEngage")
+		self:RegisterEvent("ENCOUNTER_START", "EncounterStart")
 		self:RegisterEvent("ENCOUNTER_END", "EncounterEnd")
 	end
 
@@ -608,6 +608,18 @@ do
 		if self.isWiping then
 			self:CancelTimer(self.isWiping)
 			self.isWiping = nil
+		end
+	end
+
+	--- PULL
+	function boss:EncounterStart(event, id, name, diff, size)
+		if self.engageId == id then
+			if not self.isEngaged then
+				self:Engage()
+				self:SendMessage("BigWigs_EncounterStart", self, id, name, diff, size)
+			end
+		elseif self.enabledState then
+			self:Disable()
 		end
 	end
 
