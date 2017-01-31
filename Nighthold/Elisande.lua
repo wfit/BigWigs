@@ -80,18 +80,37 @@ local timeStopped = false
 
 local L = mod:GetLocale()
 if L then
+	L.echo = "Echo: %s"
+	L.echoOption = "%s (Bar Only)"
 	L.fastAdd = "Add Fast"
 	L.slowAdd = "Add Slow"
 	L.slowZoneDespawn = "Slow Zone Despawn"
 	L.fastZoneDespawn = "Fast Zone Despawn"
 end
 
+local echo = setmetatable({}, {
+	__index = function(self, key)
+		local name = L.echo:format(mod:SpellName(key))
+		self[key] = name
+		return name
+	end
+})
+
 --------------------------------------------------------------------------------
 -- Initialization
 --
 
-local slow_zone_despawn = mod:AddCustomBarOption { "szd", L.slowZoneDespawn, icon = 207013 }
-local fast_zone_despawn = mod:AddCustomBarOption { "fzd", L.fastZoneDespawn, icon = 207011 }
+local slow_zone_despawn = mod:AddCustomOption { "szd", L.slowZoneDespawn, icon = 207013, configurable = true }
+local fast_zone_despawn = mod:AddCustomOption { "fzd", L.fastZoneDespawn, icon = 207011, configurable = true }
+
+local function echoCustomOption(key, spellId)
+	return mod:AddCustomOption { key, L.echoOption:format(echo[spellId]), icon = spellId, configurable = true }
+end
+
+local spanning_echo = echoCustomOption("spanning_echo", 209168)
+local ring_echo = echoCustomOption("ring_echo", 208807)
+local orbs_echo = echoCustomOption("orbs_echo", 210022)
+local beams_echo = echoCustomOption("beams_echo", 209244)
 
 function mod:GetOptions()
 	return {
@@ -113,11 +132,15 @@ function mod:GetOptions()
 
 		--[[ Time Layer 1 ]]--
 		208807, -- Arcanetic Ring
+		ring_echo,
 		209168, -- Spanning Singularity
+		spanning_echo,
 
 		--[[ Time Layer 2 ]]--
 		{209244, "SAY", "FLASH"}, -- Delphuric Beam
+		beams_echo,
 		210022, -- Epocheric Orb
+		orbs_echo,
 		209973, -- Ablating Explosion
 
 		--[[ Time Layer 3 ]]--
@@ -179,6 +202,20 @@ function mod:OnEngage()
 	timers = self:Mythic() and timersMythic or timersHeroic
 end
 
+function mod:EchoBar(basePhase, spellId, echoKey, count)
+	if timers[spellId][count] then
+		local key = phase == basePhase and spellId or echoKey
+		local time = timers[spellId][count]
+		local text = CL.count:format(phase == basePhase and self:SpellName(spellId) or echo[spellId], count)
+		self:Bar(key, time, text, spellId)
+	end
+end
+
+function mod:StopEchoBar(spellId, count)
+	self:StopBar(CL.count:format(self:SpellName(spellId), count))
+	self:StopBar(CL.count:format(echo[spellId], count))
+end
+
 --------------------------------------------------------------------------------
 -- Event Handlers
 --
@@ -218,7 +255,7 @@ function mod:Nightwell(args)
 	slowZoneCount = 0
 	fastZoneCount = 0
 
-	self:Bar(209168, timers[209168][singularityCount], CL.count:format(self:SpellName(209168), singularityCount))
+	self:EchoBar(1, 209168, spanning_echo, singularityCount)
 	self:Bar(208807, timers[208807][ringCount], CL.count:format(self:SpellName(208807), ringCount))
 	self:Bar(208887, timers[209005][slowAddCount], CL.count:format(L.slowAdd, slowAddCount))
 	self:Bar(208887, timers[211616][fastAddCount], CL.count:format(L.fastAdd, fastAddCount))
@@ -238,10 +275,10 @@ end
 
 function mod:TimeStop()
 	timeStopped = true
-	self:StopBar(CL.count:format(self:SpellName(209168), singularityCount))
-	self:StopBar(CL.count:format(self:SpellName(208807), ringCount))
-	self:StopBar(CL.count:format(self:SpellName(210022), orbsCount))
-	self:StopBar(CL.count:format(self:SpellName(209244), beamsCount))
+	self:StopEchoBar(209168, singularityCount)
+	self:StopEchoBar(208807, ringCount)
+	self:StopEchoBar(210022, orbsCount)
+	self:StopEchoBar(209244, beamsCount)
 	self:StopBar(CL.count:format(L.fastAdd, fastAddCount))
 	self:StopBar(CL.count:format(L.slowAdd, slowAddCount))
 	self:StopBar(CL.count:format(L.slowZoneDespawn, slowZoneCount))
@@ -351,7 +388,7 @@ function mod:ArcaneticRing()
 	self:Message(208807, "Urgent", "Alert")
 	ringCount = ringCount + 1
 	if phase == 1 or ringCount < ringMax then
-		self:Bar(208807, timers[208807][ringCount], CL.count:format(self:SpellName(208807), ringCount))
+		self:EchoBar(1, 208807, ring_echo, ringCount)
 	end
 end
 
@@ -359,7 +396,7 @@ function mod:SpanningSingularity(args)
 	self:Message(209168, "Important", "Info")
 	singularityCount = singularityCount + 1
 	if phase == 1 or singularityCount < singularityMax then
-		self:Bar(209168, timers[209168][singularityCount], CL.count:format(self:SpellName(209168), singularityCount))
+		self:EchoBar(1, 209168, spanning_echo, singularityCount)
 	end
 end
 
@@ -382,7 +419,7 @@ function mod:DelphuricBeam(args)
 	self:Bar(209244, 8, CL.cast:format(self:SpellName(209244)))
 	beamsCount = beamsCount + 1
 	if phase == 2 or (self:Mythic() and beamsCount < beamsMax) then
-		self:Bar(209244, timers[209244][beamsCount], CL.count:format(self:SpellName(209244), beamsCount))
+		self:EchoBar(2, 209244, beams_echo, beamsCount)
 	end
 end
 
@@ -410,7 +447,7 @@ function mod:EpochericOrb()
 	self:Bar(210022, 9, CL.cast:format(self:SpellName(210022)))
 	orbsCount = orbsCount + 1
 	if phase == 2 or orbsCount < orbsMax then
-		self:Bar(210022, timers[210022][orbsCount], CL.count:format(self:SpellName(210022), orbsCount))
+		self:EchoBar(2, 210022, orbs_echo, orbsCount)
 	end
 end
 
