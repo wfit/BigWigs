@@ -187,7 +187,6 @@ end
 do
 	local prevSingularity = 0
 	function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
-		local t = GetTime()
 		if spellId == 211616 then -- Summon Time Elemental - Fast
 			self:Message(208887, "Neutral", "Info", CL.count:format(L.fastAdd, fastAddCount))
 			fastAddCount = fastAddCount + 1
@@ -198,7 +197,8 @@ do
 			self:Bar(208887, timers[209005][slowAddCount] or 30, CL.count:format(L.slowAdd, slowAddCount))
 		elseif spellId == 211647 then  -- Time Stop
 			self:TimeStop()
-		elseif spellId == 209168 or spellId == 233012 or spellId == 233011 and t - prevSingularity > 1 then -- Spanning Singularity
+		elseif spellId == 209168 or spellId == 233012 or spellId == 233011 and GetTime() - prevSingularity > 1 then -- Spanning Singularity
+			prevSingularity = GetTime()
 			self:SpanningSingularity()
 		end
 	end
