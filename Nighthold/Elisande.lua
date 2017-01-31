@@ -21,7 +21,6 @@ mod.instanceId = 1530
 
 local phase = 1
 
-local timers
 local timersHeroic = {
 	-- Spanning Singularity, UNIT_SPELLCAST_SUCCEEDED
 	[209168] = { 23.0, 36.0, 57.0, 65.0 },
@@ -54,6 +53,7 @@ local timersMythic = {
 	-- Summon Time Elemental - Fast, UNIT_SPELLCAST_SUCCEEDED
 	[211616] = { 8, 81 },
 }
+local timers = mod:Mythic() and timersMythic or timersHeroic
 
 local singularityCount = 1
 local singularityMax = 0
