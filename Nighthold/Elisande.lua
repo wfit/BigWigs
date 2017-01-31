@@ -258,14 +258,14 @@ function mod:Nightwell(args)
 	if singularityCount > 0 then
 		self:EchoBar(1, 209168, spanning_echo, singularityCount)
 	end
-	self:Bar(208807, timers[208807][ringCount], CL.count:format(self:SpellName(208807), ringCount))
+	self:EchoBar(1, 208807, ring_echo, ringCount)
 	self:Bar(208887, timers[209005][slowAddCount], CL.count:format(L.slowAdd, slowAddCount))
 	self:Bar(208887, timers[211616][fastAddCount], CL.count:format(L.fastAdd, fastAddCount))
 	if phase >= 2 then
-		self:Bar(210022, timers[210022][orbsCount], CL.count:format(self:SpellName(210022), orbsCount))
+		self:EchoBar(2, 210022, orbs_echo, orbsCount)
 	end
 	if phase == 2 or (phase == 3 and self:Mythic()) then
-		self:Bar(209244, timers[209244][beamsCount], CL.count:format(self:SpellName(209244), beamsCount))
+		self:EchoBar(2, 209244, beams_echo, beamsCount)
 	end
 	if phase == 3 then
 		self:Bar(209597, timers[209597][burstsCount], CL.count:format(self:SpellName(209597), burstsCount))
