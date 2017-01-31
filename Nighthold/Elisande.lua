@@ -126,7 +126,7 @@ function mod:GetOptions()
 		slow_zone_despawn,
 
 		--[[ Expedient Elemental ]]--
-		209568, -- Exothermic Release
+		--209568, -- Exothermic Release
 		209166, -- Fast Time
 		fast_zone_despawn,
 
@@ -172,7 +172,7 @@ function mod:OnBossEnable()
 	self:Log("SPELL_AURA_APPLIED", "SlowTime", 209165)
 
 	--[[ Expedient Elemental ]]--
-	self:Log("SPELL_CAST_START", "ExothermicRelease", 209568)
+	--self:Log("SPELL_CAST_START", "ExothermicRelease", 209568)
 	self:Log("SPELL_AURA_APPLIED", "FastTime", 209166)
 
 	--[[ Time Layer 1 ]]--
