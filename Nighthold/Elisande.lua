@@ -39,6 +39,7 @@ local timersHeroic = {
 }
 local timersMythic = {
 	-- Spanning Singularity, UNIT_SPELLCAST_SUCCEEDED
+	[209168] = { 56.8, 50.0, 45.0 },
 	-- Arcanetic Ring, RAID_BOSS_EMOTE
 	[208807] = { 32, 40, 15, 30, 20, 10, 25, 10, 10, 13 },
 	-- Epocheric Orb, RAID_BOSS_EMOTE
@@ -50,6 +51,7 @@ local timersMythic = {
 	-- Summon Time Elemental - Slow, UNIT_SPELLCAST_SUCCEEDED
 	[209005] = {
 		[1] = { 5, 39, 75 },
+		[2] = { 5, 39, 45, 30, },
 	},
 	-- Summon Time Elemental - Fast, UNIT_SPELLCAST_SUCCEEDED
 	[211616] =  {
@@ -163,6 +165,7 @@ function mod:GetOptions()
 end
 
 function mod:OnBossEnable()
+	print("ENCOUNTER_START phase : " .. phase )
 	--[[ General ]]--
 	self:RegisterUnitEvent("UNIT_SPELLCAST_SUCCEEDED", nil, "boss1")
 	self:RegisterEvent("INSTANCE_ENCOUNTER_ENGAGE_UNIT")
@@ -239,13 +242,13 @@ do
 			self:Message(208887, "Neutral", "Info", CL.count:format(L.fastAdd, fastAddCount))
 			fastAddCount = fastAddCount + 1
 			--print("Fast " .. timersMythic[211616][phase][fastAddCount] or "FUCK" )
-			self:Bar(208887, self:Mythic() and timersMythic[211616][phase][fastAddCount] or 30, CL.count:format(L.fastAdd, fastAddCount))
+			self:Bar(208887, self:Mythic() and timersMythic[211616] and timersMythic[211616][phase][fastAddCount], CL.count:format(L.fastAdd, fastAddCount))
 		elseif spellId == 209005 then -- Summon Time Elemental - Slow
 			self:StopBar(CL.count:format(L.slowAdd, slowAddCount))
 			self:Message(208887, "Neutral", "Info", CL.count:format(L.slowAdd, slowAddCount))
 			slowAddCount = slowAddCount + 1
 			--print("Slow " .. timersMythic[209005][phase][slowAddCount] or "FUCK" )
-			self:Bar(208887, self:Mythic() and timersMythic[209005][phase][slowAddCount] or 30, CL.count:format(L.slowAdd, slowAddCount))
+			self:Bar(208887, self:Mythic() and timersMythic[209005][phase] and timersMythic[209005][phase][slowAddCount], CL.count:format(L.slowAdd, slowAddCount))
 		elseif spellId == 211647 then  -- Time Stop
 			self:TimeStop()
 		elseif spellId == 209168 or spellId == 233012 or spellId == 233011 and GetTime() - prevSingularity > 1 then -- Spanning Singularity
@@ -274,8 +277,8 @@ function mod:Nightwell(args)
 		self:EchoBar(1, 209168, spanning_echo, singularityCount)
 	end
 	self:EchoBar(1, 208807, ring_echo, ringCount)
-	self:Bar(208887, self:Mythic() and timersMythic[209005][phase][slowAddCount] or timers[209005][slowAddCount], CL.count:format(L.slowAdd, slowAddCount))
-	self:Bar(208887, self:Mythic() and timersMythic[211616][phase][fastAddCount] or timers[211616][fastAddCount], CL.count:format(L.fastAdd, fastAddCount))
+	self:Bar(208887, self:Mythic() and timersMythic[209005][phase] and timersMythic[209005][phase][slowAddCount] or timers[209005][slowAddCount], CL.count:format(L.slowAdd, slowAddCount))
+	self:Bar(208887, self:Mythic() and timersMythic[211616][phase] and timersMythic[211616][phase][fastAddCount] or timers[211616][fastAddCount], CL.count:format(L.fastAdd, fastAddCount))
 	if phase >= 2 then
 		self:EchoBar(2, 210022, orbs_echo, orbsCount)
 	end
@@ -319,9 +322,12 @@ end
 do
 	local SLOW_ELEMENTAL = 105299
 	local FAST_ELEMENTAL = 105301
+	local ELISANDE_GUID = 106643
 	local elementalsSeen = {}
+	local elisandeSeen = ""
 
 	function mod:INSTANCE_ENCOUNTER_ENGAGE_UNIT()
+		print("INSTANCE_ENCOUNTER_ENGAGE_UNIT phase : " .. phase )
 		if timeStopped then
 			wipe(elementalsAlive)
 			return
@@ -333,6 +339,11 @@ do
 			if UnitExists(unit) then
 				local guid = UnitGUID(unit)
 				local mob = self:MobId(guid)
+				if mob == ELISANDE_GUID and guid ~= elisandeSeen then
+					elisandeSeen = guid
+					phase = 1
+					print("RESET : " .. guid)
+				end
 				if mob == SLOW_ELEMENTAL or mob == FAST_ELEMENTAL then
 					elementalsSeen[guid] = true
 					elementalsAlive[guid] = mob
