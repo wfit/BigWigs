@@ -215,6 +215,18 @@ function mod:OnDisable()
 	phase = 1
 end
 
+function mod:ElementalBar(spellId, name, count)
+	local time
+	if self:Mythic() and timers[spellId][phase] then
+		time = timers[spellId][phase][count]
+	elseif not self:Mythic() then
+		time = timers[spellId][count]
+	end
+	if time then
+		self:Bar(208887, time, CL.count:format(name, count))
+	end
+end
+
 function mod:EchoBar(basePhase, spellId, echoKey, count)
 	if timers[spellId][count] then
 		local key = phase == basePhase and spellId or echoKey
@@ -242,13 +254,13 @@ do
 			self:Message(208887, "Neutral", "Info", CL.count:format(L.fastAdd, fastAddCount))
 			fastAddCount = fastAddCount + 1
 			--print("Fast " .. timersMythic[211616][phase][fastAddCount] or "FUCK" )
-			self:Bar(208887, self:Mythic() and timersMythic[211616] and timersMythic[211616][phase][fastAddCount], CL.count:format(L.fastAdd, fastAddCount))
+			self:ElementalBar(211616, L.fastAdd, fastAddCount)
 		elseif spellId == 209005 then -- Summon Time Elemental - Slow
 			self:StopBar(CL.count:format(L.slowAdd, slowAddCount))
 			self:Message(208887, "Neutral", "Info", CL.count:format(L.slowAdd, slowAddCount))
 			slowAddCount = slowAddCount + 1
 			--print("Slow " .. timersMythic[209005][phase][slowAddCount] or "FUCK" )
-			self:Bar(208887, self:Mythic() and timersMythic[209005][phase] and timersMythic[209005][phase][slowAddCount], CL.count:format(L.slowAdd, slowAddCount))
+			self:ElementalBar(209005, L.slowAdd, slowAddCount)
 		elseif spellId == 211647 then  -- Time Stop
 			self:TimeStop()
 		elseif spellId == 209168 or spellId == 233012 or spellId == 233011 and GetTime() - prevSingularity > 1 then -- Spanning Singularity
@@ -277,8 +289,8 @@ function mod:Nightwell(args)
 		self:EchoBar(1, 209168, spanning_echo, singularityCount)
 	end
 	self:EchoBar(1, 208807, ring_echo, ringCount)
-	self:Bar(208887, self:Mythic() and timersMythic[209005][phase] and timersMythic[209005][phase][slowAddCount] or timers[209005][slowAddCount], CL.count:format(L.slowAdd, slowAddCount))
-	self:Bar(208887, self:Mythic() and timersMythic[211616][phase] and timersMythic[211616][phase][fastAddCount] or timers[211616][fastAddCount], CL.count:format(L.fastAdd, fastAddCount))
+	self:ElementalBar(209005, L.slowAdd, slowAddCount)
+	self:ElementalBar(211616, L.fastAdd, fastAddCount)
 	if phase >= 2 then
 		self:EchoBar(2, 210022, orbs_echo, orbsCount)
 	end
