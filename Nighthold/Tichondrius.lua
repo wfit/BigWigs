@@ -167,13 +167,13 @@ function mod:SeekerSwarm(args)
 	if timer then
 		self:Bar(args.spellId, timer, CL.count:format(args.spellName, seekerSwarmCount % 4 == 0 and 4 or seekerSwarmCount % 4))
 		if self:Me(args.destGUID) then
-			self:ScheduleTimer("SeekerSwarmWarning", timer - 8, args.spellName)
+			self:ScheduleTimer("SeekerSwarmWarning", timer - 8)
 		end
 	end
 end
 
-function mod:SeekerSwarmWarning(spellName)
-	if UnitDebuff("player", spellName) then
+function mod:SeekerSwarmWarning()
+	if UnitDebuff("player", self:SpellName(206480)) then
 		self:Say(213238, "{rt8}")
 	end
 end
