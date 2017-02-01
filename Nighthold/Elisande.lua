@@ -23,7 +23,7 @@ local phase = 1
 
 local timersHeroic = {
 	-- Spanning Singularity, UNIT_SPELLCAST_SUCCEEDED
-	[209168] = { 23.0, 36.0, 57.0, 65.0 },
+	[209168] = { 25.0, 36.0, 57.0, 65.0 },
 	-- Arcanetic Ring, RAID_BOSS_EMOTE
 	[208807] = { 34.0, 41.0, 10.0, 62.0, 10.0, 45.0, 10.0 },
 	-- Epocheric Orb, RAID_BOSS_EMOTE
@@ -39,19 +39,23 @@ local timersHeroic = {
 }
 local timersMythic = {
 	-- Spanning Singularity, UNIT_SPELLCAST_SUCCEEDED
-	[209168] = { 54.0, 50.0, 45.0 },
 	-- Arcanetic Ring, RAID_BOSS_EMOTE
 	[208807] = { 32, 40, 15, 30, 20, 10, 25, 10, 10, 13 },
 	-- Epocheric Orb, RAID_BOSS_EMOTE
-	[210022] = { 14.5 },
+	[210022] = { 14.5, 85 },
 	-- Delphuric Beam, SPELL_CAST_START
-	[209244] = { 54.1 },
+	[209244] = { 54.0, 50 },
 	-- Conflexive Burst,
 	[209597] = { },
 	-- Summon Time Elemental - Slow, UNIT_SPELLCAST_SUCCEEDED
-	[209005] = { 5, 39, 75 },
+	[209005] = {
+		[1] = { 5, 39, 75 },
+	},
 	-- Summon Time Elemental - Fast, UNIT_SPELLCAST_SUCCEEDED
-	[211616] = { 8, 81 },
+	[211616] =  {
+		[1] = { 8, 81, },
+		[2] = { 8, 51, },
+	}
 }
 local timers = mod:Mythic() and timersMythic or timersHeroic
 
@@ -200,6 +204,12 @@ end
 function mod:OnEngage()
 	phase = 1
 	timers = self:Mythic() and timersMythic or timersHeroic
+	print("ENCOUNTER_START phase : " .. phase )
+end
+
+function mod:OnDisable()
+	print("ENCOUNTER_END phase : " .. phase )
+	phase = 1
 end
 
 function mod:EchoBar(basePhase, spellId, echoKey, count)
@@ -225,13 +235,17 @@ do
 	local prevSingularity = 0
 	function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 		if spellId == 211616 then -- Summon Time Elemental - Fast
+			self:StopBar(CL.count:format(L.fastAdd, fastAddCount))
 			self:Message(208887, "Neutral", "Info", CL.count:format(L.fastAdd, fastAddCount))
 			fastAddCount = fastAddCount + 1
-			self:Bar(208887, timers[211616][fastAddCount] or 30, CL.count:format(L.fastAdd, fastAddCount))
+			--print("Fast " .. timersMythic[211616][phase][fastAddCount] or "FUCK" )
+			self:Bar(208887, self:Mythic() and timersMythic[211616][phase][fastAddCount] or 30, CL.count:format(L.fastAdd, fastAddCount))
 		elseif spellId == 209005 then -- Summon Time Elemental - Slow
+			self:StopBar(CL.count:format(L.slowAdd, slowAddCount))
 			self:Message(208887, "Neutral", "Info", CL.count:format(L.slowAdd, slowAddCount))
 			slowAddCount = slowAddCount + 1
-			self:Bar(208887, timers[209005][slowAddCount] or 30, CL.count:format(L.slowAdd, slowAddCount))
+			--print("Slow " .. timersMythic[209005][phase][slowAddCount] or "FUCK" )
+			self:Bar(208887, self:Mythic() and timersMythic[209005][phase][slowAddCount] or 30, CL.count:format(L.slowAdd, slowAddCount))
 		elseif spellId == 211647 then  -- Time Stop
 			self:TimeStop()
 		elseif spellId == 209168 or spellId == 233012 or spellId == 233011 and GetTime() - prevSingularity > 1 then -- Spanning Singularity
@@ -242,6 +256,7 @@ do
 end
 
 function mod:Nightwell(args)
+	print("Nightwell " .. phase )
 	singularityCount = phase == 1 and 1 or 0
 	ringCount = 1
 	orbsCount = 1
@@ -259,8 +274,8 @@ function mod:Nightwell(args)
 		self:EchoBar(1, 209168, spanning_echo, singularityCount)
 	end
 	self:EchoBar(1, 208807, ring_echo, ringCount)
-	self:Bar(208887, timers[209005][slowAddCount], CL.count:format(L.slowAdd, slowAddCount))
-	self:Bar(208887, timers[211616][fastAddCount], CL.count:format(L.fastAdd, fastAddCount))
+	self:Bar(208887, self:Mythic() and timersMythic[209005][phase][slowAddCount] or timers[209005][slowAddCount], CL.count:format(L.slowAdd, slowAddCount))
+	self:Bar(208887, self:Mythic() and timersMythic[211616][phase][fastAddCount] or timers[211616][fastAddCount], CL.count:format(L.fastAdd, fastAddCount))
 	if phase >= 2 then
 		self:EchoBar(2, 210022, orbs_echo, orbsCount)
 	end
