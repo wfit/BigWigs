@@ -168,7 +168,6 @@ function mod:OnBossEnable()
 	print("ENCOUNTER_START phase : " .. phase )
 	--[[ General ]]--
 	self:RegisterUnitEvent("UNIT_SPELLCAST_SUCCEEDED", nil, "boss1")
-	self:RegisterEvent("INSTANCE_ENCOUNTER_ENGAGE_UNIT")
 	self:Log("SPELL_CAST_SUCCESS", "Nightwell", 208863)
 	self:RegisterEvent("RAID_BOSS_EMOTE")
 
@@ -207,6 +206,7 @@ end
 function mod:OnEngage()
 	phase = 1
 	timers = self:Mythic() and timersMythic or timersHeroic
+	self:RegisterEvent("INSTANCE_ENCOUNTER_ENGAGE_UNIT")
 	print("ENCOUNTER_START phase : " .. phase )
 end
 
