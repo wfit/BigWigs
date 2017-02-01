@@ -169,7 +169,6 @@ function mod:UNIT_HEALTH_FREQUENT(unit)
 end
 
 function mod:INSTANCE_ENCOUNTER_ENGAGE_UNIT()
-	print("IEEU")
 	for i = 1, 5 do
 		local unit = ("boss%d"):format(i)
 		local mob = self:MobId(unit)
