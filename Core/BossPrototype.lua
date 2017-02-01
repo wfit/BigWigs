@@ -605,6 +605,7 @@ do
 
 	--- PULL
 	function boss:EncounterStart(event, id, name, diff, size)
+		if debug then dbg(self, ":EncounterStart (id = " .. id .. ", engageId = " .. self.engageId .. ")") end
 		if self.engageId == id then
 			if not self.isEngaged then
 				self:Engage()
@@ -927,6 +928,7 @@ do
 end
 
 function boss:EncounterEnd(event, id, name, diff, size, status)
+	if debug then dbg(self, ":EncounterEnd") end
 	if self.engageId == id and self.enabledState then
 		if status == 1 then
 			if self.journalId then

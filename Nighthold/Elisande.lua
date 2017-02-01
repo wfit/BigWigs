@@ -20,6 +20,7 @@ mod.respawnTime = 30
 --
 
 local phase = 1
+local engaged = 0
 
 local timersHeroic = {
 	-- Spanning Singularity, UNIT_SPELLCAST_SUCCEEDED
@@ -165,7 +166,6 @@ function mod:GetOptions()
 end
 
 function mod:OnBossEnable()
-	print("ENCOUNTER_START phase : " .. phase )
 	--[[ General ]]--
 	self:RegisterUnitEvent("UNIT_SPELLCAST_SUCCEEDED", nil, "boss1")
 	self:Log("SPELL_CAST_SUCCESS", "Nightwell", 208863)
@@ -204,15 +204,10 @@ function mod:OnBossEnable()
 end
 
 function mod:OnEngage()
+	engaged = GetTime()
 	phase = 1
 	timers = self:Mythic() and timersMythic or timersHeroic
 	self:RegisterEvent("INSTANCE_ENCOUNTER_ENGAGE_UNIT")
-	print("ENCOUNTER_START phase : " .. phase )
-end
-
-function mod:OnDisable()
-	print("ENCOUNTER_END phase : " .. phase )
-	phase = 1
 end
 
 function mod:ElementalBar(spellId, name, count)
@@ -271,7 +266,6 @@ do
 end
 
 function mod:Nightwell(args)
-	print("Nightwell " .. phase )
 	singularityCount = phase == 1 and 1 or 0
 	ringCount = 1
 	orbsCount = 1
@@ -334,12 +328,11 @@ end
 do
 	local SLOW_ELEMENTAL = 105299
 	local FAST_ELEMENTAL = 105301
-	local ELISANDE_GUID = 106643
+	local ELISANDE = 106643
 	local elementalsSeen = {}
-	local elisandeSeen = ""
+	local elisandeGUID = ""
 
 	function mod:INSTANCE_ENCOUNTER_ENGAGE_UNIT()
-		print("INSTANCE_ENCOUNTER_ENGAGE_UNIT phase : " .. phase )
 		if timeStopped then
 			wipe(elementalsAlive)
 			return
@@ -351,12 +344,14 @@ do
 			if UnitExists(unit) then
 				local guid = UnitGUID(unit)
 				local mob = self:MobId(guid)
-				if mob == ELISANDE_GUID and guid ~= elisandeSeen then
-					elisandeSeen = guid
-					phase = 1
-					print("RESET : " .. guid)
-				end
-				if mob == SLOW_ELEMENTAL or mob == FAST_ELEMENTAL then
+				if mob == ELISANDE and guid ~= elisandeGUID then
+					elisandeGUID = guid
+					if GetTime() - engaged > 5 then
+						self:Disable()
+						self:Enable()
+						self:Engage()
+					end
+				elseif mob == SLOW_ELEMENTAL or mob == FAST_ELEMENTAL then
 					elementalsSeen[guid] = true
 					elementalsAlive[guid] = mob
 				end
