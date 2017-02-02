@@ -82,6 +82,8 @@ end
 -- ENCOUNTER event handler
 --
 
+local debug = false
+
 local encounterInProgress = false
 local playerRegenEnabled = true
 
@@ -91,6 +93,7 @@ local difficulty = 0
 local raidSize = 0
 
 function addon:ENCOUNTER_START(event, id, name, diff, size)
+	if debug then print(":ENCOUNTER_START", event, id, name, diff, size) end
 	if encounterInProgress then
 		-- Fake an ENCOUNTER_END event if a new _START is detected
 		self:ENCOUNTER_END(_, encounter, encounterName, difficulty, raidSize, 0)
@@ -133,6 +136,7 @@ end
 
 local bossUnits = { "boss1", "boss2", "boss3", "boss4", "boss5" }
 function addon:INSTANCE_ENCOUNTER_ENGAGE_UNIT()
+	if debug then print(":INSTANCE_ENCOUNTER_ENGAGE_UNIT", UnitExists("boss1") and UnitGUID("boss1") or "nil") end
 	if encounterInProgress then return end
 	for _, unit in next, bossUnits do
 		if UnitExists(unit) then
@@ -159,6 +163,7 @@ function addon:INSTANCE_ENCOUNTER_ENGAGE_UNIT()
 end
 
 function addon:ENCOUNTER_END(event, id, name, diff, size, status)
+	if debug then print(":ENCOUNTER_END", event, id, name, diff, size, status) end
 	if not encounterInProgress then return end
 
 	local result = status == 1 and "Killed" or "Wiped on"
@@ -183,14 +188,17 @@ function addon:ENCOUNTER_END(event, id, name, diff, size, status)
 end
 
 function addon:BOSS_KILL(event, id, name)
+	if debug then print(":BOSS_KILL", event, id, name) end
 	self:ENCOUNTER_END(event, id, name, difficulty, raidSize, 1)
 end
 
 function addon:PLAYER_REGEN_DISABLED()
+	if debug then print(":PLAYER_REGEN_DISABLED") end
 	playerRegenEnabled = false
 end
 
 function addon:PLAYER_REGEN_ENABLED()
+	if debug then print(":PLAYER_REGEN_ENABLED") end
 	playerRegenEnabled = true
 	if not encounterInProgress then return end
 	self:ScheduleTimer("CheckForWipe", 2)
