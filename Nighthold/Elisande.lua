@@ -44,15 +44,14 @@ local timersMythic = {
 	-- Arcanetic Ring, RAID_BOSS_EMOTE
 	[208807] = { 32, 40, 15, 30, 20, 10, 25, 10, 10, 13 },
 	-- Epocheric Orb, RAID_BOSS_EMOTE
-	[210022] = { 14.5, 85 },
+	[210022] = { 14.5, 85, 60 },
 	-- Delphuric Beam, SPELL_CAST_START
-	[209244] = { 54.0, 50 },
 	-- Conflexive Burst,
 	[209597] = { },
 	-- Summon Time Elemental - Slow, UNIT_SPELLCAST_SUCCEEDED
 	[209005] = {
 		[1] = { 5, 39, 75 },
-		[2] = { 5, 39, 45, 30, },
+		[2] = { 5, 39, 45, 30, 30, },
 	},
 	-- Summon Time Elemental - Fast, UNIT_SPELLCAST_SUCCEEDED
 	[211616] =  {
