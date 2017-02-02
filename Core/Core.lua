@@ -96,7 +96,7 @@ function addon:ENCOUNTER_START(event, id, name, diff, size)
 		self:ENCOUNTER_END(_, encounter, encounterName, difficulty, raidSize, 0)
 	end
 
-	self:Printf("Pulling |cff64b4ff%s |cff999999(%i, %i, %i)", name, id, diff_id, size)
+	self:Print(("|cffffffffEngaging |cff64b4ff%s |cff999999(%i, %i, %i, %s)"):format(name, id, diff, size, event))
 	encounterInProgress = true
 
 	encounter = id
@@ -125,7 +125,7 @@ local function emulateEncounterStart(moduleName)
 		local encounterId = module.engageId
 		local encounterName = moduleName
 		local _, _, difficulty, _, _, _, _, _, size = GetInstanceInfo()
-		addon:ENCOUNTER_START("ENCOUNTER_START", encounterId, encounterName, difficulty, size)
+		addon:ENCOUNTER_START("SYNTHETIC", encounterId, encounterName, difficulty, size)
 		return true
 	end
 	return false
@@ -162,7 +162,7 @@ function addon:ENCOUNTER_END(event, id, name, diff, size, status)
 	if not encounterInProgress then return end
 
 	local result = status == 1 and "Killed" or "Wiped on"
-	self:Printf("%s |cff64b4ff%s |cff999999(%i, %i, %i)", result, name, id, diff, size)
+	self:Print(("|cffffffff%s |cff64b4ff%s |cff999999(%i, %i, %i, %s)"):format(result, name, id, diff, size, event))
 	encounterInProgress = false
 
 	for _, module in next, bossCore.modules do
@@ -182,8 +182,8 @@ function addon:ENCOUNTER_END(event, id, name, diff, size, status)
 	end
 end
 
-function addon:BOSS_KILL(_, id, name)
-	self:ENCOUNTER_END("ENCOUNTER_END", id, name, difficulty, raidSize, 1)
+function addon:BOSS_KILL(event, id, name)
+	self:ENCOUNTER_END(event, id, name, difficulty, raidSize, 1)
 end
 
 function addon:PLAYER_REGEN_DISABLED()
@@ -199,7 +199,7 @@ end
 function addon:CheckForWipe()
 	if not encounterInProgress or not playerRegenEnabled then return end
 	if not IsEncounterInProgress() then
-		self:ENCOUNTER_END("ENCOUNTER_END", encounter, encounterName, difficulty, raidSize, 0)
+		self:ENCOUNTER_END("SYNTHETIC", encounter, encounterName, difficulty, raidSize, 0)
 	else
 		self:ScheduleTimer("CheckForWipe", 2)
 	end
