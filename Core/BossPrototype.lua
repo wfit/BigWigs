@@ -209,12 +209,6 @@ function boss:OnEnable(isWipe)
 	end
 	enabledModules[#enabledModules+1] = self
 
-	if self.engageId then
-		self:RegisterEvent("ENCOUNTER_START", "EncounterStart")
-		self:RegisterEvent("INSTANCE_ENCOUNTER_ENGAGE_UNIT", "CheckForEncounterEngage")
-		self:RegisterEvent("ENCOUNTER_END", "EncounterEnd")
-	end
-
 	if self.SetupOptions then self:SetupOptions() end
 	if type(self.OnBossEnable) == "function" then self:OnBossEnable() end
 
@@ -603,19 +597,6 @@ do
 		end
 	end
 
-	--- PULL
-	function boss:EncounterStart(event, id, name, diff, size)
-		if debug then dbg(self, ":EncounterStart (id = " .. id .. ", engageId = " .. self.engageId .. ")") end
-		if self.engageId == id then
-			if not self.isEngaged then
-				self:Engage()
-				self:SendMessage("BigWigs_EncounterStart", self, id, name, diff, size)
-			end
-		elseif self.enabledState then
-			self:Disable()
-		end
-	end
-
 	--- Update module engage status from querying boss units.
 	-- Engages modules if boss1-boss5 matches an registered enabled mob,
 	-- disables the module if set as engaged but has no boss match.
@@ -818,6 +799,7 @@ do
 
 	function boss:Engage(noEngage)
 		-- Engage
+		if self.isEngaged then return end
 		self.isEngaged = true
 
 		-- Prevent rare combat log bug
@@ -837,6 +819,7 @@ do
 	end
 
 	function boss:Win()
+		if not self.isEngaged then return end
 		if debug then dbg(self, ":Win") end
 		self.lastKill = GetTime() -- Add the kill time for the enable check.
 		if self.OnWin then self:OnWin() end
@@ -847,6 +830,7 @@ do
 	end
 
 	function boss:Wipe()
+		if not self.isEngaged then return end
 		self:Reboot(true)
 		if self.OnWipe then self:OnWipe() end
 	end
@@ -924,23 +908,6 @@ do
 		self:UnregisterEvent("UPDATE_MOUSEOVER_UNIT")
 		self:UnregisterEvent("UNIT_TARGET")
 		self:UnregisterEvent("NAME_PLATE_UNIT_ADDED")
-	end
-end
-
-function boss:EncounterEnd(event, id, name, diff, size, status)
-	if debug then dbg(self, ":EncounterEnd") end
-	if self.engageId == id and self.enabledState then
-		if status == 1 then
-			if self.journalId then
-				self:Win() -- Official boss module
-			else
-				self:Disable() -- Custom external boss module
-			end
-		elseif status == 0 then
-			self:SendMessage("BigWigs_StopBars", self)
-			self:ScheduleTimer("Wipe", 5) -- Delayed for now due to issues with certain encounters and using IEEU for engage.
-		end
-		self:SendMessage("BigWigs_EncounterEnd", self, id, name, diff, size, status) -- Do NOT use this for wipe detection, use BigWigs_OnBossWipe.
 	end
 end
 

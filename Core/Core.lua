@@ -82,14 +82,126 @@ end
 -- ENCOUNTER event handler
 --
 
-function addon:ENCOUNTER_START(_, id)
+local encounterInProgress = false
+local playerRegenEnabled = true
+
+local encounter = 0
+local encounterName = ""
+local difficulty = 0
+local raidSize = 0
+
+function addon:ENCOUNTER_START(event, id, name, diff, size)
+	if encounterInProgress then
+		-- Fake an ENCOUNTER_END event if a new _START is detected
+		self:ENCOUNTER_END(_, encounter, encounterName, difficulty, raidSize, 0)
+	end
+
+	self:Printf("Pulling |cff64b4ff%s |cff999999(%i, %i, %i)", name, id, diff_id, size)
+	encounterInProgress = true
+
+	encounter = id
+	encounterName = name
+	difficulty = diff
+	raidSize = size
+
 	for _, module in next, bossCore.modules do
 		if module.engageId == id then
 			if not module.enabledState then
 				module:Enable()
+			end
+			if not module.isEngaged then
 				module:Engage()
 			end
+			module:SendMessage("BigWigs_EncounterStart", module, id, name, diff, size)
+		elseif module.engageId ~= nil and module.enabledState then
+			module:Disable()
 		end
+	end
+end
+
+local function emulateEncounterStart(moduleName)
+	local module = addon:GetBossModule(moduleName, true)
+	if module and module.engageId then
+		local encounterId = module.engageId
+		local encounterName = moduleName
+		local _, _, difficulty, _, _, _, _, _, size = GetInstanceInfo()
+		addon:ENCOUNTER_START("ENCOUNTER_START", encounterId, encounterName, difficulty, size)
+		return true
+	end
+	return false
+end
+
+local bossUnits = { "boss1", "boss2", "boss3", "boss4", "boss5" }
+function addon:INSTANCE_ENCOUNTER_ENGAGE_UNIT()
+	if encounterInProgress then return end
+	for _, unit in next, bossUnits do
+		if UnitExists(unit) then
+			local guid = UnitGUID(unit)
+			local _, _, _, _, _, mobId = strsplit("-", guid)
+			mobId = mobId and tonumber(mobId)
+			if mobId then
+				local module = self:GetEnableMobs()[mobId]
+				local modType = type(module)
+				if modType == "string" then
+					if emulateEncounterStart(module) then
+						return
+					end
+				elseif modType == "table" then
+					for i = 1, #module do
+						if emulateEncounterStart(module[i]) then
+							return
+						end
+					end
+				end
+			end
+		end
+	end
+end
+
+function addon:ENCOUNTER_END(event, id, name, diff, size, status)
+	if not encounterInProgress then return end
+
+	local result = status == 1 and "Killed" or "Wiped on"
+	self:Printf("%s |cff64b4ff%s |cff999999(%i, %i, %i)", result, name, id, diff, size)
+	encounterInProgress = false
+
+	for _, module in next, bossCore.modules do
+		if module.engageId == id and module.enabledState then
+			if status == 1 then
+				if module.journalId then
+					module:Win() -- Official boss module
+				else
+					module:Disable() -- Custom external boss module
+				end
+			elseif status == 0 then
+				module:SendMessage("BigWigs_StopBars", self)
+				module:ScheduleTimer("Wipe", 5) -- Delayed for now due to issues with certain encounters and using IEEU for engage.
+			end
+			module:SendMessage("BigWigs_EncounterEnd", module, id, name, diff, size, status)
+		end
+	end
+end
+
+function addon:BOSS_KILL(_, id, name)
+	self:ENCOUNTER_END("ENCOUNTER_END", id, name, difficulty, raidSize, 1)
+end
+
+function addon:PLAYER_REGEN_DISABLED()
+	playerRegenEnabled = false
+end
+
+function addon:PLAYER_REGEN_ENABLED()
+	playerRegenEnabled = true
+	if not encounterInProgress then return end
+	self:ScheduleTimer("CheckForWipe", 2)
+end
+
+function addon:CheckForWipe()
+	if not encounterInProgress or not playerRegenEnabled then return end
+	if not IsEncounterInProgress() then
+		self:ENCOUNTER_END("ENCOUNTER_END", encounter, encounterName, difficulty, raidSize, 0)
+	else
+		self:ScheduleTimer("CheckForWipe", 2)
 	end
 end
 
@@ -331,6 +443,11 @@ function addon:OnEnable()
 	self:RegisterEvent("ZONE_CHANGED_NEW_AREA", zoneChanged)
 
 	self:RegisterEvent("ENCOUNTER_START")
+	self:RegisterEvent("INSTANCE_ENCOUNTER_ENGAGE_UNIT")
+	self:RegisterEvent("ENCOUNTER_END")
+	self:RegisterEvent("BOSS_KILL")
+	self:RegisterEvent("PLAYER_REGEN_DISABLED")
+	self:RegisterEvent("PLAYER_REGEN_ENABLED")
 
 	self:RegisterEvent("RAID_BOSS_WHISPER")
 
