@@ -174,7 +174,7 @@ function addon:ENCOUNTER_END(event, id, name, diff, size, status)
 					module:Disable() -- Custom external boss module
 				end
 			elseif status == 0 then
-				module:SendMessage("BigWigs_StopBars", self)
+				module:SendMessage("BigWigs_StopBars", module)
 				module:ScheduleTimer("Wipe", 5) -- Delayed for now due to issues with certain encounters and using IEEU for engage.
 			end
 			module:SendMessage("BigWigs_EncounterEnd", module, id, name, diff, size, status)
