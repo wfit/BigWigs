@@ -85,7 +85,7 @@ end
 local debug = false
 
 local encounterInProgress = false
-local playerRegenEnabled = true
+local playerRegenEnabled = not InCombatLockdown()
 
 local encounter = 0
 local encounterName = ""
@@ -96,11 +96,12 @@ function addon:ENCOUNTER_START(event, id, name, diff, size)
 	if debug then print(":ENCOUNTER_START", event, id, name, diff, size) end
 	if encounterInProgress then
 		-- Fake an ENCOUNTER_END event if a new _START is detected
-		self:ENCOUNTER_END(_, encounter, encounterName, difficulty, raidSize, 0)
+		self:ENCOUNTER_END(event, encounter, encounterName, difficulty, raidSize, 0)
 	end
 
 	self:Print(("|cffffffffEngaging |cff64b4ff%s |cff999999(%i, %i, %i, %s)"):format(name, id, diff, size, event))
 	encounterInProgress = true
+	self:UnregisterEvent("INSTANCE_ENCOUNTER_ENGAGE_UNIT")
 
 	encounter = id
 	encounterName = name
@@ -171,6 +172,7 @@ function addon:ENCOUNTER_END(event, id, name, diff, size, status)
 	local result = status == 1 and "Killed" or "Wiped on"
 	self:Print(("|cffffffff%s |cff64b4ff%s |cff999999(%i, %i, %i, %s)"):format(result, name, id, diff, size, event))
 	encounterInProgress = false
+	self:RegisterEvent("INSTANCE_ENCOUNTER_ENGAGE_UNIT")
 
 	for _, module in next, bossCore.modules do
 		if module.engageId == id and module.enabledState then
