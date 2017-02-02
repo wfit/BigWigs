@@ -158,6 +158,8 @@ function addon:INSTANCE_ENCOUNTER_ENGAGE_UNIT()
 					end
 				end
 			end
+		else
+			return
 		end
 	end
 end
