@@ -491,7 +491,6 @@ function mod:AblatingExplosion(args)
 	self:Bar(args.spellId, 20.7)
 	self:TargetMessage(args.spellId, args.destName, "Attention", "Long")
 	self:TargetBar(args.spellId, 8, args.destName)
-	self:ScheduleTimer("Bar", 8, args.spellId, 7)
 end
 
 --[[ Time Layer 3 ]]--
