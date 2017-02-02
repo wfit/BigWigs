@@ -20,7 +20,6 @@ mod.respawnTime = 30
 --
 
 local phase = 1
-local engaged = 0
 
 local timersHeroic = {
 	-- Spanning Singularity, UNIT_SPELLCAST_SUCCEEDED
@@ -204,7 +203,6 @@ function mod:OnBossEnable()
 end
 
 function mod:OnEngage()
-	engaged = GetTime()
 	phase = 1
 	timers = self:Mythic() and timersMythic or timersHeroic
 	self:RegisterEvent("INSTANCE_ENCOUNTER_ENGAGE_UNIT")
@@ -328,9 +326,7 @@ end
 do
 	local SLOW_ELEMENTAL = 105299
 	local FAST_ELEMENTAL = 105301
-	local ELISANDE = 106643
 	local elementalsSeen = {}
-	local elisandeGUID = ""
 
 	function mod:INSTANCE_ENCOUNTER_ENGAGE_UNIT()
 		if timeStopped then
@@ -344,14 +340,7 @@ do
 			if UnitExists(unit) then
 				local guid = UnitGUID(unit)
 				local mob = self:MobId(guid)
-				if mob == ELISANDE and guid ~= elisandeGUID then
-					elisandeGUID = guid
-					if GetTime() - engaged > 5 then
-						self:Disable()
-						self:Enable()
-						self:Engage()
-					end
-				elseif mob == SLOW_ELEMENTAL or mob == FAST_ELEMENTAL then
+				if mob == SLOW_ELEMENTAL or mob == FAST_ELEMENTAL then
 					elementalsSeen[guid] = true
 					elementalsAlive[guid] = mob
 				end
