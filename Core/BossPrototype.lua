@@ -1613,7 +1613,7 @@ end
 -- @section bars
 --
 
-local nilLengthError = "Module %s started a bar for %s using nil length."
+local nilLengthError = "Missing timer before the next '%s' (%s)."
 
 --- Display a bar.
 -- @param key the option key
@@ -1621,13 +1621,14 @@ local nilLengthError = "Module %s started a bar for %s using nil length."
 -- @param[opt] text the bar text (if nil, key is used)
 -- @param[opt] icon the bar icon (spell id or texture name)
 function boss:Bar(key, length, text, icon)
-	if not length then core:Print(format(nilLengthError, self.moduleName, key)) return end
 	local textType = type(text)
+	local label = textType == "string" and text or spells[text or key]
+	if not length then core:Print(format(nilLengthError, label, key)) return end
 	if checkFlag(self, key, C.BAR) then
-		self:SendMessage("BigWigs_StartBar", self, key, textType == "string" and text or spells[text or key], length, icons[icon or textType == "number" and text or key])
+		self:SendMessage("BigWigs_StartBar", self, key, label, length, icons[icon or textType == "number" and text or key])
 	end
 	if checkFlag(self, key, C.COUNTDOWN) then
-		self:SendMessage("BigWigs_StartEmphasize", self, key, textType == "string" and text or spells[text or key], length)
+		self:SendMessage("BigWigs_StartEmphasize", self, key, label, length)
 	end
 end
 
