@@ -310,6 +310,7 @@ function mod:TimeStop()
 	self:StopBar(CL.count:format(L.slowZoneDespawn, slowZoneCount))
 	self:StopBar(CL.count:format(L.slowZoneDespawn, slowZoneCount - 1))
 	self:StopBar(CL.count:format(L.fastZoneDespawn, fastZoneCount))
+	self:StopBar(209973) -- Ablating Explosion
 	if self:Mythic() then
 		self:StopBar(26662) -- Berserk
 	end
