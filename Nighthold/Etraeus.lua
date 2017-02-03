@@ -176,7 +176,7 @@ end
 function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 	if spellId == 222130 then -- Phase 2 Conversation
 		phase = 2
-		self:Message("stages", "Neutral", "Long", CL.stage:format(2), false)
+		self:Message("stages", "Neutral", "Long", "90% - ".. CL.stage:format(2), false)
 		self:StopBar(205408) -- Grand Conjunction
 		ejectionCount = 1
 		grandConjunctionCount = 1
@@ -190,7 +190,7 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 
 	elseif spellId == 222133 then -- Phase 3 Conversation
 		phase = 3
-		self:Message("stages", "Neutral", "Long", CL.stage:format(3), false)
+		self:Message("stages", "Neutral", "Long", "60% - ".. CL.stage:format(3), false)
 		self:StopBar(CL.count:format(self:SpellName(206936, ejectionCount)))
 		self:StopBar(206949) -- Frigid Nova
 		self:StopBar(205408) -- Grand Conjunction
@@ -207,7 +207,7 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 
 	elseif spellId == 222134 then -- Phase 4 Conversation
 		phase = 4
-		self:Message("stages", "Neutral", "Long", CL.stage:format(4), false)
+		self:Message("stages", "Neutral", "Long", "30% - ".. CL.stage:format(4), false)
 		self:RegisterEvent("INSTANCE_ENCOUNTER_ENGAGE_UNIT")
 		self:StopBar(CL.count:format(self:SpellName(205649, ejectionCount)))
 		self:StopBar(206517) -- Fel Nova
