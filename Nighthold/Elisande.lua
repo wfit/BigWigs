@@ -39,24 +39,26 @@ local timersHeroic = {
 }
 local timersMythic = {
 	-- Spanning Singularity, UNIT_SPELLCAST_SUCCEEDED
-	[209168] = { 56.8, 50.0, 45.0 },
+	[209168] = { 54, 50.0, 45.0 },
 	-- Arcanetic Ring, RAID_BOSS_EMOTE
 	[208807] = { 32, 40, 15, 30, 20, 10, 25, 10, 10, 13 },
 	-- Epocheric Orb, RAID_BOSS_EMOTE
 	[210022] = { 14.5, 85, 60, 20 },
 	-- Delphuric Beam, SPELL_CAST_START
-	[209244] = { 54.0, 50, 65 },
+	[209244] = { 58, 50, 65 },
 	-- Conflexive Burst,
-	[209597] = { },
+	[209597] = { 39, 90, },
 	-- Summon Time Elemental - Slow, UNIT_SPELLCAST_SUCCEEDED
 	[209005] = {
 		[1] = { 5, 39, 75 },
 		[2] = { 5, 39, 45, 30, 30, },
+		[3] = { 5, 54, 55, },
 	},
 	-- Summon Time Elemental - Fast, UNIT_SPELLCAST_SUCCEEDED
 	[211616] =  {
 		[1] = { 8, 81, },
 		[2] = { 8, 51, },
+		[3] = { 8, 36, 45 },
 	}
 }
 local timers = mod:Mythic() and timersMythic or timersHeroic
@@ -188,7 +190,7 @@ function mod:OnBossEnable()
 	--self:Log("SPELL_PERIODIC_MISSED", "SingularityDamage", 209433)
 
 	--[[ Time Layer 2 ]]--
-	self:Log("SPELL_CAST_START", "DelphuricBeam", 214278, 214295) -- Boss: 214278, Echo: 214295
+	self:Log("SPELL_CAST_SUCCESS", "DelphuricBeam", 214278, 214295) -- Boss: 214278, Echo: 214295
 	self:Log("SPELL_AURA_APPLIED", "DelphuricBeamApplied", 209244)
 	--self:Log("SPELL_CAST_SUCCESS", "EpochericOrb", 210022)
 	self:Log("SPELL_AURA_APPLIED", "AblatingExplosion", 209973)
@@ -459,17 +461,18 @@ do
 			self:TargetBar(args.spellId, t, args.destName)
 		end
 
-		playerList[#playerList+1] = args.destName
+		--[[playerList[#playerList+1] = args.destName
 
 		if #playerList == 1 then
 			self:ScheduleTimer("TargetMessage", 0.3, args.spellId, playerList, "Important", "Alarm")
 		end
+		]]--
 	end
 end
 
 function mod:EpochericOrb()
 	self:Message(210022, "Urgent", "Alert", CL.incoming:format(self:SpellName(210022)))
-	self:Bar(210022, 9, CL.cast:format(self:SpellName(210022)))
+	self:Bar(210022, 8, CL.cast:format(self:SpellName(210022)))
 	orbsCount = orbsCount + 1
 	if phase == 2 or orbsCount < orbsMax then
 		self:EchoBar(2, 210022, orbs_echo, orbsCount)
