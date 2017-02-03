@@ -32,6 +32,8 @@ local timersHeroic = {
 	[209244] = { 72.0, 57.0, 60.0 },
 	-- Conflexive Burst,
 	[209597] = { 58, 52.0, 56.0, 65.0 },
+	-- Permeliative Tormert
+	[211261] = { 23, 61.0, 37.0, 60.0 },
 	-- Summon Time Elemental - Slow, UNIT_SPELLCAST_SUCCEEDED
 	[209005] = { 5.0, 49.0, 52.0, 60.0 },
 	-- Summon Time Elemental - Fast, UNIT_SPELLCAST_SUCCEEDED
@@ -47,12 +49,14 @@ local timersMythic = {
 	-- Delphuric Beam, SPELL_CAST_START
 	[209244] = { 58, 50, 65 },
 	-- Conflexive Burst,
-	[209597] = { 39, 90, },
+	[209597] = { 39, 90, 45 },
+	-- Permeliative Tormert
+	[211261] = { 64, 75, 25, 20 },
 	-- Summon Time Elemental - Slow, UNIT_SPELLCAST_SUCCEEDED
 	[209005] = {
 		[1] = { 5, 39, 75 },
 		[2] = { 5, 39, 45, 30, 30, },
-		[3] = { 5, 54, 55, },
+		[3] = { 5, 54, 55, 30, },
 	},
 	-- Summon Time Elemental - Fast, UNIT_SPELLCAST_SUCCEEDED
 	[211616] =  {
@@ -72,6 +76,7 @@ local orbsMax = 0
 local beamsCount = 1
 local beamsMax = 0
 local burstsCount = 1
+local tormentCount = 1
 
 local slowAddCount = 1
 local fastAddCount = 1
@@ -149,7 +154,7 @@ function mod:GetOptions()
 		beams_echo,
 		210022, -- Epocheric Orb
 		orbs_echo,
-		209973, -- Ablating Explosion
+		{209973, "SAY"}, -- Ablating Explosion
 
 		--[[ Time Layer 3 ]]--
 		{211261, "FLASH"}, -- Permeliative Torment
@@ -248,17 +253,15 @@ do
 			self:StopBar(CL.count:format(L.fastAdd, fastAddCount))
 			self:Message(208887, "Neutral", "Info", CL.count:format(L.fastAdd, fastAddCount))
 			fastAddCount = fastAddCount + 1
-			--print("Fast " .. timersMythic[211616][phase][fastAddCount] or "FUCK" )
 			self:ElementalBar(211616, L.fastAdd, fastAddCount)
 		elseif spellId == 209005 then -- Summon Time Elemental - Slow
 			self:StopBar(CL.count:format(L.slowAdd, slowAddCount))
 			self:Message(208887, "Neutral", "Info", CL.count:format(L.slowAdd, slowAddCount))
 			slowAddCount = slowAddCount + 1
-			--print("Slow " .. timersMythic[209005][phase][slowAddCount] or "FUCK" )
 			self:ElementalBar(209005, L.slowAdd, slowAddCount)
 		elseif spellId == 211647 then  -- Time Stop
 			self:TimeStop()
-		elseif spellId == 209168 or spellId == 233012 or spellId == 233011 and GetTime() - prevSingularity > 1 then -- Spanning Singularity
+		elseif (spellId == 209168 or spellId == 233012 or spellId == 233011) and GetTime() - prevSingularity > 2 then -- Spanning Singularity
 			prevSingularity = GetTime()
 			self:SpanningSingularity()
 		end
@@ -271,6 +274,7 @@ function mod:Nightwell(args)
 	orbsCount = 1
 	beamsCount = 1
 	burstsCount = 1
+	tormentCount = 1
 	slowAddCount = 1
 	fastAddCount = 1
 	timeStopped = false
@@ -293,9 +297,10 @@ function mod:Nightwell(args)
 	end
 	if phase == 3 then
 		self:Bar(209597, timers[209597][burstsCount], CL.count:format(self:SpellName(209597), burstsCount))
+		self:Bar(211261, timers[211261][tormentCount], CL.count:format(self:SpellName(211261), tormentCount))
 	end
 	if self:Mythic() then
-		self:Bar("berserk", 199, 26662)
+		self:Bar("berserk", phase == 3 and 194 or 199, 26662)
 	end
 end
 
@@ -483,7 +488,10 @@ end
 function mod:AblatingExplosion(args)
 	self:Bar(args.spellId, 20.7)
 	self:TargetMessage(args.spellId, args.destName, "Attention", "Long")
-	self:TargetBar(args.spellId, 8, args.destName)
+	if self:Me(args.destGUID) then
+		self:Say(args.spellId)
+	end
+	--self:TargetBar(args.spellId, 8, args.destName)
 end
 
 --[[ Time Layer 3 ]]--
@@ -501,6 +509,8 @@ do
 
 		if #playerList == 1 then
 			self:ScheduleTimer("TargetMessage", 0.3, args.spellId, playerList, "Important", "Alarm")
+			tormentCount = tormentCount + 1
+			self:Bar(args.spellId, timers[211261][tormentCount], CL.count:format(args.spellName, tormentCount))
 		end
 	end
 end
@@ -508,7 +518,7 @@ end
 
 function mod:ConflexiveBurst(args)
 	burstsCount = burstsCount + 1
-	self:Bar(209597, timers[209597][burstsCount] or 10, CL.count:format(self:SpellName(209597), burstsCount))
+	self:Bar(209597, timers[209597][burstsCount], CL.count:format(self:SpellName(209597), burstsCount))
 end
 
 do
