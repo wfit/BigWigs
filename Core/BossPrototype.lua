@@ -1598,9 +1598,10 @@ function boss:Bar(key, length, text, icon)
 	local label = textType == "string" and text or spells[text or key]
 	if not length then
 		local last = self.autoTimers[key]
-		self.autoTimers[key] = GetTime()
+		local now = GetTime()
+		self.autoTimers[key] = now
 		if last then
-			core:Print(format(nilLengthErrorAuto, label, key, GetTime() - last))
+			core:Print(format(nilLengthErrorAuto, label, key, now - last))
 		else
 			core:Print(format(nilLengthError, label, key))
 		end
