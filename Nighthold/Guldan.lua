@@ -325,7 +325,7 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 			self:EmpowerSpell(206219, 206220, liquidHellfireCount)
 		elseif not eyesEmpowered then
 			eyesEmpowered = true
-			self:EmpowerSpell(209270, 211152)
+			self:EmpowerSpell(209270, 211152, eyeOfGuldanCount)
 		end
 		empowerCount = empowerCount + 1
 		if self:Mythic() and empowerCount < 4 then
@@ -344,8 +344,8 @@ end
 
 function mod:EmpowerSpell(baseSpellId, empSpellId, count)
 	self:Message(empower, "Neutral", "Info", mod:SpellName(empSpellId), false)
-	local unempowered = count and CL.count:format(self:SpellName(baseSpellId), count) or baseSpellId
-	local empowered = count and CL.count:format(self:SpellName(empSpellId), count) or nil
+	local unempowered = CL.count:format(self:SpellName(baseSpellId), count)
+	local empowered = CL.count:format(self:SpellName(empSpellId), count)
 	local timer = self:BarTimeLeft(unempowered)
 	if timer then
 		self:Bar(empSpellId, timer, empowered)
