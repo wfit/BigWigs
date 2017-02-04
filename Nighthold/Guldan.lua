@@ -199,7 +199,7 @@ function mod:GetOptions()
 		[-14897] = -14897, -- Inquisitor Vethriz
 		[-14894] = -14894, -- Fel Lord Kuraz'mal
 		[-14902] = -14902, -- D'zorykx the Trapper
-		[209011] = -14062, -- Stage Two
+		[206222] = -14062, -- Stage Two
 		[-13500] = -13500, -- Dreadlords of the Twisting Nether
 		[167819] = -14090, -- Stage Three
 	}
