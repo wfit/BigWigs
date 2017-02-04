@@ -60,7 +60,7 @@ local timersHeroic = {
 	-- Phase 3
 	[3] = {
 		-- Empowered Eye of Gul'dan, SPELL_CAST_START
-		[211152] = { 30.6, 62.5, 62.5, 25.0 },
+		[209270] = { 30.6, 62.5, 62.5, 25.0 },
 		-- Storm of the Destroyer, SPELL_CAST_START
 		[167819] = { 75.8, 68.8, 61.2 },
 		-- Soul Siphon, SPELL_AURA_APPLIED
@@ -70,11 +70,33 @@ local timersHeroic = {
 	}
 }
 
+local overridesHeroic = {
+	-- Nothing
+}
+
 local timersMythic = {
-	-- Nothing for now ?
+	-- Phase 2
+	[2] = {
+		[206222] = 40, -- Bonds of Fel, SPELL_CAST_START
+		[212258] = 165, -- Hand of Gul'dan, SPELL_CAST_START
+		[209270] = 48, -- Eye of Gul'dan, SPELL_CAST_START
+		[206219] = 33, -- Liquid Hellfire, SPELL_CAST_START
+		[210277] = { 20.1, 76, 88.8 }, -- Empower
+	},
+}
+
+local overridesMythic = {
+	-- Phase 2
+	[2] = {
+		[206222] = { [1] = 6.1 }, -- Bonds of Fel
+		[212258] = { [1] = 16.1 }, -- Hand of Gul'dan
+		[209270] = { [1] = 26.1 }, -- Eye of Gul'dan
+		[206219] = { [1] = 36.1, [5] = 66.0 }, -- Liquid Hellfire
+	}
 }
 
 local timers = mod:Mythic() and timersMythic or timersHeroic
+local overrides = mod:Mythic() and overridesMythic or overridesHeroic
 
 --------------------------------------------------------------------------------
 -- Localization
@@ -216,6 +238,7 @@ end
 
 function mod:OnEngage()
 	timers = self:Mythic() and timersMythic or timersHeroic
+	overrides = mod:Mythic() and overridesMythic or overridesHeroic
 	phase = self:Mythic() and 2 or 1
 
 	liquidHellfireCount = 1
@@ -236,16 +259,14 @@ function mod:OnEngage()
 		self:RegisterEvent("CHAT_MSG_MONSTER_YELL")
 	end
 
+	self:CDBar(206219, self:Timer(206219, liquidHellfireCount), CL.count:format(self:SpellName(206219), liquidHellfireCount))
+	self:CDBar(212258, self:Timer(212258, handOfGuldanCount), CL.count:format(self:SpellName(212258), handOfGuldanCount))
 	if self:Mythic() then
-		self:CDBar(206222, 6.1) -- Bond of Fel, _start
-		self:CDBar(212258, 16.1) -- Hand of Guldan, _start
-		self:CDBar(209454, 26.1) -- Eye of Gul'dan, _start
-		self:CDBar(206219, 36.1) -- Liquid Hellfire, _start
-		self:CDBar(empower, 20.1, CL.count:format(L.emp, empowerCount), 210277) -- Empower
+		self:CDBar(206222, self:Timer(206222, bondsOfFelCount), CL.count:format(self:SpellName(206222), bondsOfFelCount))
+		self:CDBar(209270, self:Timer(209454, eyeOfGuldanCount), CL.count:format(self:SpellName(209270), eyeOfGuldanCount))
+		self:CDBar(empower, self:Timer(210277, empowerCount), CL.count:format(L.emp, empowerCount), 210277)
 	else
-		self:Bar(206219, timers[phase][206219][liquidHellfireCount], CL.count:format(self:SpellName(206219), liquidHellfireCount)) -- Liquid Hellfire
-		self:Bar(206514, timers[phase][206514][felEffluxCount]) -- Fel Efflux
-		self:Bar(212258, timers[phase][212258][handOfGuldanCount], CL.count:format(self:SpellName(212258), handOfGuldanCount)) -- Hand of Gul'dan
+		self:CDBar(206514, self:Timer(206514, felEffluxCount))
 	end
 
 	if self:GetOption(tanks_marker) then
@@ -272,6 +293,22 @@ function mod:OnBossDisable()
 	end
 end
 
+function mod:Timer(spell, count)
+	-- Override
+	if overrides[phase] and overrides[phase][spell] and overrides[phase][spell][count] then
+		return overrides[phase][spell][count]
+	end
+	-- Basic timer
+	local timer = timers[phase] and timers[phase][spell] and timers[phase][spell]
+	if type(timer) == "table" then
+		return timer[count]
+	elseif type(timer) == "number" then
+		return timer
+	else
+		return nil
+	end
+end
+
 --------------------------------------------------------------------------------
 -- Event Handlers
 --
@@ -292,7 +329,7 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 		end
 		empowerCount = empowerCount + 1
 		if self:Mythic() and empowerCount < 4 then
-			self:CDBar(empower, empowerCount == 2 and 76 or 88.8, CL.count:format(L.emp, empowerCount), 210277)
+			self:CDBar(empower, self:Timer(210277, empowerCount), CL.count:format(L.emp, empowerCount), 210277)
 		end
 	elseif spellId == 215736 then -- Summon Fel Lord Kuraz'mal
 		self:FellordSpawn()
@@ -327,15 +364,14 @@ function mod:LiquidHellfire(args)
 	if inTransition then return end
 	self:Message(args.spellId, "Urgent", "Alarm", CL.incoming:format(CL.count:format(args.spellName, liquidHellfireCount)))
 	liquidHellfireCount = liquidHellfireCount + 1
-	local timer = self:Mythic() and 33 or timers[phase][206219][liquidHellfireCount]
-	self:Bar(args.spellId, timer, CL.count:format(args.spellName, liquidHellfireCount))
+	self:Bar(args.spellId, self:Timer(206219, liquidHellfireCount), CL.count:format(args.spellName, liquidHellfireCount))
 end
 
 function mod:FelEfflux(args)
 	if inTransition then return end
 	self:Message(args.spellId, "Important", "Alert")
 	felEffluxCount = felEffluxCount + 1
-	self:CDBar(args.spellId, timers[phase][args.spellId][felEffluxCount])
+	self:CDBar(args.spellId, self:Timer(206514, felEffluxCount))
 end
 
 function mod:HandOfGuldan(args)
@@ -343,8 +379,7 @@ function mod:HandOfGuldan(args)
 	self:Message(args.spellId, "Attention", "Info")
 	handOfGuldanCount = handOfGuldanCount + 1
 	if handOfGuldanCount < (self:Mythic() and 3 or 4) then
-		local timer = self:Mythic() and 165 or timers[phase][args.spellId][handOfGuldanCount]
-		self:Bar(args.spellId, timer, CL.count:format(args.spellName, handOfGuldanCount))
+		self:Bar(args.spellId, self:Timer(212258, handOfGuldanCount), CL.count:format(args.spellName, handOfGuldanCount))
 	end
 end
 
@@ -373,7 +408,7 @@ end
 function mod:ShatterEssence(args)
 	self:Message(args.spellId, "Important", "Warning", CL.casting:format(args.spellName))
 	self:Bar(args.spellId, 3, CL.cast:format(args.spellName))
-	self:Bar(args.spellId, 53.5)
+	self:Bar(args.spellId, self:Mythic() and 21 or 53.5)
 end
 
 function mod:FelObelisk(spellId)
@@ -434,9 +469,9 @@ function mod:Phase2(args)
 	self:Message("stages", "Neutral", "Long", CL.stage:format(phase), false)
 	liquidHellfireCount = 1
 	handOfGuldanCount = 1
-	self:Bar(206219, timers[phase][206219][liquidHellfireCount], CL.count:format(self:SpellName(206219), liquidHellfireCount)) -- Liquid Hellfire
-	self:Bar(212258, timers[phase][212258][handOfGuldanCount], CL.count:format(self:SpellName(212258), handOfGuldanCount)) -- Hand of Gul'dan
-	self:Bar(206222, timers[phase][206222][bondsOfFelCount], CL.count:format(self:SpellName(206222), bondsOfFelCount)) -- Bonds of Fel
+	self:Bar(206219, self:Timer(206219, liquidHellfireCount), CL.count:format(self:SpellName(206219), liquidHellfireCount)) -- Liquid Hellfire
+	self:Bar(212258, self:Timer(212258, handOfGuldanCount), CL.count:format(self:SpellName(212258), handOfGuldanCount)) -- Hand of Gul'dan
+	self:Bar(206222, self:Timer(206222, bondsOfFelCount), CL.count:format(self:SpellName(206222), bondsOfFelCount)) -- Bonds of Fel
 	self:Bar(209270, 29.1) -- Eye of Gul'dan
 end
 
@@ -446,8 +481,7 @@ do
 	function mod:BondsOfFelCast(args)
 		self:Message(args.spellId, "Attention", "Info", CL.casting:format(args.spellName))
 		bondsOfFelCount = bondsOfFelCount + 1
-		local timer = self:Mythic() and 40 or timers[phase][206222][bondsOfFelCount]
-		self:Bar(args.spellId, timer, CL.count:format(args.spellName, bondsOfFelCount))
+		self:Bar(args.spellId, self:Timer(206222, bondsOfFelCount), CL.count:format(args.spellName, bondsOfFelCount))
 		felBondsDebuffCount = 0
 	end
 
@@ -482,8 +516,7 @@ function mod:EyeOfGuldan(args)
 		self:Bar(args.spellId, 53.3)
 	else
 		eyeOfGuldanCount = eyeOfGuldanCount + 1
-		local timer = self:Mythic() and 48 or timers[phase][args.spellId][eyeOfGuldanCount]
-		self:Bar(args.spellId, timer)
+		self:Bar(args.spellId, self:Timer(209270, eyeOfGuldanCount), CL.count:format(args.spellName, eyeOfGuldanCount))
 	end
 end
 
@@ -549,10 +582,10 @@ function mod:Phase3(args)
 	soulSiphonCount = 1
 	harvestCount = 1
 	soulsRemaining = 0
-	self:Bar(211152, timers[phase][211152][eyeOfGuldanCount]) -- Empowered Eye of Gul'dan
-	self:Bar(167819, timers[phase][167819][stormCount], CL.count:format(self:SpellName(167819), stormCount)) -- Storm of the Destroyer
-	self:Bar(221891, timers[phase][221891][soulSiphonCount]) -- Soul Siphon
-	self:Bar(206744, timers[phase][206744][harvestCount], CL.count:format(self:SpellName(206744), harvestCount)) -- Black Harvest
+	self:Bar(211152, self:Timer(211152, eyeOfGuldanCount)) -- Empowered Eye of Gul'dan
+	self:Bar(167819, self:Timer(167819, stormCount), CL.count:format(self:SpellName(167819), stormCount)) -- Storm of the Destroyer
+	self:Bar(221891, self:Timer(221891, soulSiphonCount)) -- Soul Siphon
+	self:Bar(206744, self:Timer(206744, harvestCount), CL.count:format(self:SpellName(206744), harvestCount)) -- Black Harvest
 	self:Bar(221783, 18.2) -- Flames of Sargeras
 	self:OpenInfo("infobox", self:SpellName(221891))
 	self:SetInfo("infobox", 1, L.remaining)
@@ -563,7 +596,7 @@ function mod:StormOfTheDestroyer(args)
 	self:Message(args.spellId, "Important", "Long", CL.casting:format(CL.count:format(args.spellName, stormCount)))
 	self:Bar(args.spellId, 10, CL.cast:format(args.spellName))
 	stormCount = stormCount + 1
-	self:Bar(167819, timers[phase][167819][stormCount] or 60, CL.count:format(args.spellName, stormCount))
+	self:Bar(167819, self:Timer(167819, stormCount), CL.count:format(args.spellName, stormCount))
 end
 
 do
@@ -578,7 +611,7 @@ do
 		if #list == 1 then
 			self:ScheduleTimer(warn, 1, self, args.spellId, args.spellName)
 			soulSiphonCount = soulSiphonCount + 1
-			self:Bar(args.spellId, timers[phase][args.spellId][soulSiphonCount] or 10.2)
+			self:Bar(args.spellId, self:Timer(221891, soulSiphonCount))
 		end
 		soulsRemaining = soulsRemaining + 1
 		self:SetInfo("infobox", 2, soulsRemaining)
@@ -597,7 +630,7 @@ end
 function mod:BlackHarvest(args)
 	self:Message(args.spellId, "Urgent", "Alert", CL.incoming:format(args.spellName))
 	harvestCount = harvestCount + 1
-	self:CDBar(206744, timers[phase][206744][harvestCount] or 70, CL.count:format(args.spellName, harvestCount)) -- Black Harvest
+	self:CDBar(206744, self:Timer(206744, harvestCount), CL.count:format(args.spellName, harvestCount)) -- Black Harvest
 end
 
 function mod:BlackHarvestSuccess(args)
