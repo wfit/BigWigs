@@ -181,6 +181,9 @@ function mod:GetOptions()
 		{211152, "SAY", "FLASH", "PROXIMITY"}, -- Empowered Eye of Gul'dan
 		prox_before_eyes,
 		{227556, "TANK"}, -- Fury of the Fel
+
+		--[[ Dreadlords of the Twisting Nether ]] --
+		-13500,
 		208672, -- Carrion Wave
 
 		--[[ Stage Three ]]--
@@ -197,6 +200,7 @@ function mod:GetOptions()
 		[-14894] = -14894, -- Fel Lord Kuraz'mal
 		[-14902] = -14902, -- D'zorykx the Trapper
 		[209011] = -14062, -- Stage Two
+		[-13500] = -13500, -- Dreadlords of the Twisting Nether
 		[167819] = -14090, -- Stage Three
 	}
 end
@@ -237,6 +241,8 @@ function mod:OnBossEnable()
 	self:Log("SPELL_AURA_REMOVED", "EyeOfGuldanRemoved", 209454, 221728)
 	self:Log("SPELL_AURA_APPLIED", "FuryOfTheFel", 227556)
 	self:Log("SPELL_AURA_APPLIED_DOSE", "FuryOfTheFel", 227556)
+
+	--[[ Dreadlords of the Twisting Nether ]] --
 	self:Log("SPELL_CAST_START", "CarrionWave", 208672)
 	self:Death("DreadlordDeath", 107232, 107233, 105295) -- Beltheris, Dalvengyr, Azagrim
 
@@ -410,7 +416,7 @@ end
 
 --[[ Inquisitor Vethriz ]]--
 function mod:InquisitorSpawn()
-	self:Message(-14897, "Neutral", "Info", nil, 215738)
+	self:Message(-14897, "Neutral", "Info", nil, false)
 	-- TODO if present in Mythic encounter
 end
 
@@ -426,7 +432,7 @@ end
 
 --[[ Fel Lord Kuraz'mal ]]--
 function mod:FellordSpawn()
-	self:Message(-14894, "Neutral", "Info", nil, 215736)
+	self:Message(-14894, "Neutral", "Info", nil, false)
 	self:Bar(210273, 11) -- Fel Obelisk
 end
 
@@ -448,7 +454,7 @@ end
 
 --[[ D'zorykx the Trapper ]]--
 function mod:TrapperSpawn()
-	self:Message(-14902, "Neutral", "Info", nil, 215739)
+	self:Message(-14902, "Neutral", "Info", nil, false)
 	self:Bar(206883, 6) -- Soul Vortex
 end
 
@@ -604,8 +610,9 @@ do
 	end
 end
 
---[[ Dreadlord ]] --
+--[[ Dreadlords of the Twisting Nether ]] --
 function mod:DreadlordSpawn()
+	self:Message(-13500, "Neutral", "Info", nil, false)
 	carrionCount = 1
 	self:CDBar(208672, 5, CL.count:format(self:SpellName(208672), carrionCount)) -- Carrion Wave
 end
