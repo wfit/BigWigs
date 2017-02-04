@@ -436,7 +436,7 @@ do
 
 	local list = mod:NewTargetList()
 	function mod:BondsOfFel(args)
-		local key = (args.destId == 209011) and 206222 or 206221
+		local key = (args.spellId == 209011) and 206222 or 206221
 		list[#list+1] = args.destName
 		felBondsDebuffCount = felBondsDebuffCount + 1
 		if #list == 1 then
