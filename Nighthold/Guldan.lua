@@ -92,7 +92,7 @@ end
 -- Initialization
 --
 
-local emp_bar = mod:AddCustomOption { "szd", L.emp_bar, icon = 210277, configurable = true }
+local empower = mod:AddCustomOption { "empower", L.emp_bar, icon = 210277, configurable = true }
 local tanks_marker = mod:AddMarkerOption(true, "player", 7, 71038, 6, 7)
 local bonds_marker = mod:AddMarkerOption(true, "player", 1, 206222, 1, 2, 3, 4)
 
@@ -103,7 +103,7 @@ function mod:GetOptions()
 		tanks_marker,
 		"infobox",
 		"berserk",
-		emp_bar,
+		empower,
 
 		--[[ Stage One ]]--
 		206219, -- Liquid Hellfire
@@ -241,7 +241,7 @@ function mod:OnEngage()
 		self:CDBar(212258, 16.1) -- Hand of Guldan, _start
 		self:CDBar(209454, 26.1) -- Eye of Gul'dan, _start
 		self:CDBar(206219, 36.1) -- Liquid Hellfire, _start
-		self:CDBar(emp_bar, 20.1, CL.count:format(L.emp, empowerCount), 210277) -- Empower
+		self:CDBar(empower, 20.1, CL.count:format(L.emp, empowerCount), 210277) -- Empower
 	else
 		self:Bar(206219, timers[phase][206219][liquidHellfireCount], CL.count:format(self:SpellName(206219), liquidHellfireCount)) -- Liquid Hellfire
 		self:Bar(206514, timers[phase][206514][felEffluxCount]) -- Fel Efflux
@@ -281,8 +281,8 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 		self:FelObelisk(spellId)
 	elseif spellId == 210277 then -- Gul'dan, spell empowerement
 		empowerCount = empowerCount + 1
-		if self:Mythic() then
-			self:CDBar(emp_bar, empowerCount == 2 and 76 or 88.8, CL.count:format(L.emp, empowerCount), 210277)
+		if self:Mythic() and empowerCount < 4 then
+			self:CDBar(empower, empowerCount == 2 and 76 or 88.8, CL.count:format(L.emp, empowerCount), 210277)
 		end
 		if not bondsEmpowered then
 			bondsEmpowered = true
@@ -306,7 +306,7 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 end
 
 function mod:EmpowerSpell(baseSpellId, empSpellId, count)
-	self:Message(emp_bar, "Neutral", "Info", mod:SpellName(empSpellId), false)
+	self:Message(empower, "Neutral", "Info", mod:SpellName(empSpellId), false)
 	local unempowered = count and CL.count:format(self:SpellName(baseSpellId), count) or baseSpellId
 	local empowered = count and CL.count:format(self:SpellName(empSpellId), count) or nil
 	local timer = self:BarTimeLeft(unempowered)
