@@ -35,7 +35,7 @@ local hellfireEmpowered = false
 local eyesEmpowered = false
 local inTransition = false
 
-local timers = {
+local timersHeroic = {
 	-- Phase 1
 	[1] = {
 		-- Liquid Hellfire, SPELL_CAST_START
@@ -69,6 +69,11 @@ local timers = {
 	}
 }
 
+local timersMythic = {
+	-- Nothing for now ?
+}
+
+local timers = mod:Mythic() and timersMythic or timersHeroic
 
 --------------------------------------------------------------------------------
 -- Localization
@@ -85,7 +90,7 @@ end
 --
 
 local tanks_marker = mod:AddMarkerOption(true, "player", 6, 71038, 6, 7)
-local bonds_marker = mod:AddMarkerOption(true, "player", 1, 206222, 1, 2, 3)
+local bonds_marker = mod:AddMarkerOption(true, "player", 1, 206222, 1, 2, 3, 4)
 
 function mod:GetOptions()
 	return {
@@ -144,8 +149,6 @@ end
 
 function mod:OnBossEnable()
 	self:RegisterUnitEvent("UNIT_SPELLCAST_SUCCEEDED", nil, "boss1", "boss2", "boss3", "boss4", "boss5")
-	self:RegisterEvent("RAID_BOSS_EMOTE")
-	self:RegisterEvent("CHAT_MSG_MONSTER_YELL")
 
 	--[[ Stage One ]]--
 	self:Log("SPELL_CAST_START", "LiquidHellfire", 206219, 206220)
@@ -202,16 +205,31 @@ function mod:OnBossEnable()
 end
 
 function mod:OnEngage()
+	timers = self:Mythic() and timersMythic or timersHeroic
 	phase = 1
 
 	liquidHellfireCount = 1
 	felEffluxCount = 1
 	handOfGuldanCount = 1
+	bondsOfFelCount = 1
+	eyeOfGuldanCount = 1
 	inTransition = false
 
-	self:Bar(206219, timers[phase][206219][liquidHellfireCount], CL.count:format(self:SpellName(206219), liquidHellfireCount)) -- Liquid Hellfire
-	self:Bar(206514, timers[phase][206514][felEffluxCount]) -- Fel Efflux
-	self:Bar(212258, timers[phase][212258][handOfGuldanCount], CL.count:format(self:SpellName(212258), handOfGuldanCount)) -- Hand of Gul'dan
+	if not self:Mythic() then
+		-- First transition detection
+		self:RegisterEvent("CHAT_MSG_MONSTER_YELL")
+	end
+
+	if self:Mythic() then
+		self:CDBar(206222, 6.1) -- Bond of Fel, _start
+		self:CDBar(212258, 16.1) -- Hand of Guldan, _start
+		self:CDBar(209454, 26.1) -- Eye of Gul'dan, _start
+		self:CDBar(206219, 36.1) -- Liquid Hellfire, _start
+	else
+		self:Bar(206219, timers[phase][206219][liquidHellfireCount], CL.count:format(self:SpellName(206219), liquidHellfireCount)) -- Liquid Hellfire
+		self:Bar(206514, timers[phase][206514][felEffluxCount]) -- Fel Efflux
+		self:Bar(212258, timers[phase][212258][handOfGuldanCount], CL.count:format(self:SpellName(212258), handOfGuldanCount)) -- Hand of Gul'dan
+	end
 
 	if self:GetOption(tanks_marker) then
 		local marked = 0
@@ -245,28 +263,26 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 	if spellId == 210273 then -- Fel Obelisk
 		self:Message(spellId, "Attention", "Alarm")
 		self:CDBar(spellId, 23)
+	elseif spellId == 210277 then -- Gul'dan, spell empowerement
+		if not bondsEmpowered then
+			bondsEmpowered = true
+			self:EmpowerSpell(206222, 206221, bondsOfFelCount)
+		elseif not hellfireEmpowered then
+			hellfireEmpowered = true
+			self:EmpowerSpell(206219, 206220, liquidHellfireCount)
+		elseif not eyesEmpowered then
+			eyesEmpowered = true
+			self:EmpowerSpell(209270, 211152)
+		end
 	end
 end
 
-function mod:RAID_BOSS_EMOTE(event, msg, npcname)
-	if msg:find("spell:206221") and not bondsEmpowered then -- 85%: Empowered Bonds of Fel
-		bondsEmpowered = true
-		self:Message("stages", "Neutral", "Info", CL.other:format("85%", mod:SpellName(206221)), false)
-		local unempowered = CL.count:format(self:SpellName(206222), bondsOfFelCount)
-		self:Bar(206221, self:BarTimeLeft(unempowered), CL.count:format(self:SpellName(206221), bondsOfFelCount))
-		self:StopBar(unempowered)
-	elseif msg:find("spell:206220") and not hellfireEmpowered then -- 70%: Empowered Liquid Hellfire
-		hellfireEmpowered = true
-		self:Message("stages", "Neutral", "Info", CL.other:format("70%", mod:SpellName(206220)), false)
-		local unempowered = CL.count:format(self:SpellName(206219), liquidHellfireCount)
-		self:Bar(206220, self:BarTimeLeft(unempowered), CL.count:format(self:SpellName(206220), liquidHellfireCount))
-		self:StopBar(unempowered)
-	elseif msg:find("spell:211152") and not eyesEmpowered then -- 55%: Empowered Eye of Gul'dan
-		eyesEmpowered = true
-		self:Message("stages", "Neutral", "Info", CL.other:format("55%", mod:SpellName(211152)), false)
-		self:Bar(211152, self:BarTimeLeft(mod:SpellName(209270)))
-		self:StopBar(mod:SpellName(209270))
-	end
+function mod:EmpowerSpell(baseSpellId, empSpellId, count)
+	self:Message("stages", "Neutral", "Info", mod:SpellName(empSpellId), false)
+	local unempowered = count and CL.count:format(self:SpellName(baseSpellId), count) or baseSpellId
+	local empowered = count and CL.count:format(self:SpellName(empSpellId), count) or nil
+	self:Bar(empSpellId, self:BarTimeLeft(unempowered), empowered)
+	self:StopBar(unempowered)
 end
 
 function mod:CHAT_MSG_MONSTER_YELL(event, msg)
@@ -280,7 +296,8 @@ function mod:LiquidHellfire(args)
 	if inTransition then return end
 	self:Message(args.spellId, "Urgent", "Alarm", CL.incoming:format(CL.count:format(args.spellName, liquidHellfireCount)))
 	liquidHellfireCount = liquidHellfireCount + 1
-	self:Bar(args.spellId, timers[phase][206219][liquidHellfireCount] or 36.7, CL.count:format(args.spellName, liquidHellfireCount), args.spellId)
+	local timer = self:Mythic() and 33 or timers[phase][206219][liquidHellfireCount]
+	self:Bar(args.spellId, timer, CL.count:format(args.spellName, liquidHellfireCount))
 end
 
 function mod:FelEfflux(args)
@@ -295,7 +312,8 @@ function mod:HandOfGuldan(args)
 	self:Message(args.spellId, "Attention", "Info")
 	handOfGuldanCount = handOfGuldanCount + 1
 	if handOfGuldanCount < 4 then
-		self:Bar(args.spellId, timers[phase][args.spellId][handOfGuldanCount], CL.count:format(args.spellName, handOfGuldanCount))
+		local timer = self:Mythic() and 165 or timers[phase][args.spellId][handOfGuldanCount]
+		self:Bar(args.spellId, timer, CL.count:format(args.spellName, handOfGuldanCount))
 	end
 	if phase == 2 and not self:Mythic() then
 		carrionCount = 1
@@ -366,7 +384,6 @@ function mod:Phase2(args)
 	self:Message("stages", "Neutral", "Long", CL.stage:format(phase), false)
 	liquidHellfireCount = 1
 	handOfGuldanCount = 1
-	bondsOfFelCount = 1
 	bondsEmpowered = false
 	hellfireEmpowered = false
 	eyesEmpowered = false
@@ -382,7 +399,8 @@ do
 	function mod:BondsOfFelCast(args)
 		self:Message(args.spellId, "Attention", "Info", CL.casting:format(args.spellName))
 		bondsOfFelCount = bondsOfFelCount + 1
-		self:Bar(args.spellId, timers[phase][206222][bondsOfFelCount] or 21.2, CL.count:format(args.spellName, bondsOfFelCount))
+		local timer = self:Mythic() and 40 or timers[phase][206222][bondsOfFelCount]
+		self:Bar(args.spellId, timer, CL.count:format(args.spellName, bondsOfFelCount))
 		felBondsDebuffCount = 0
 	end
 
@@ -413,11 +431,12 @@ end
 
 function mod:EyeOfGuldan(args)
 	self:Message(args.spellId, "Urgent", "Alert")
-	if phase == 2 then
+	if phase == 2 and not self:Mythic() then
 		self:Bar(args.spellId, 53.3)
 	else
 		eyeOfGuldanCount = eyeOfGuldanCount + 1
-		self:Bar(args.spellId, timers[phase][args.spellId][eyeOfGuldanCount] or 25)
+		local timer = self:Mythic() and 48 or timers[phase][args.spellId][eyeOfGuldanCount]
+		self:Bar(args.spellId, timer)
 	end
 end
 
