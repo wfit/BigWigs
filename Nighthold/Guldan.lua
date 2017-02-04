@@ -501,10 +501,10 @@ do
 	function mod:BondsOfFel(args)
 		local key = (args.spellId == 209011) and 206222 or 206221
 		felBondsDebuffCount = felBondsDebuffCount + 1
-		--list[#list + 1] = args.destName
-		--if #list == 1 then
-		--	self:ScheduleTimer("TargetMessage", 0.7, key, list, "Important", "Warning", nil, nil, true)
-		--end
+		list[#list + 1] = args.destName
+		if #list == 1 then
+			self:ScheduleTimer("TargetMessage", 1, key, list, "Important")
+		end
 		if self:Me(args.destGUID) then
 			--self:Say(key, CL.count:format(args.spellName, #list))
 			self:Flash(key)
