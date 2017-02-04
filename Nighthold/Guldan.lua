@@ -490,11 +490,11 @@ do
 		local key = (args.spellId == 209011) and 206222 or 206221
 		list[#list+1] = args.destName
 		felBondsDebuffCount = felBondsDebuffCount + 1
-		if #list == 1 then
-			self:ScheduleTimer("TargetMessage", 0.7, key, list, "Important", "Warning", nil, nil, true)
-		end
+		--if #list == 1 then
+		--	self:ScheduleTimer("TargetMessage", 0.7, key, list, "Important", "Warning", nil, nil, true)
+		--end
 		if self:Me(args.destGUID) then
-			self:Say(key, CL.count:format(args.spellName, #list))
+			--self:Say(key, CL.count:format(args.spellName, #list))
 			self:Flash(key)
 		end
 		if not GetRaidTargetIndex(args.destUnit) then
