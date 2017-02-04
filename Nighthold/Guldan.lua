@@ -80,7 +80,7 @@ local timersMythic = {
 		[206222] = 40, -- Bonds of Fel, SPELL_CAST_START
 		[212258] = 165, -- Hand of Gul'dan, SPELL_CAST_START
 		[209270] = 48, -- Eye of Gul'dan, SPELL_CAST_START
-		[206219] = 33, -- Liquid Hellfire, SPELL_CAST_START
+		[206219] = { 36.1, 33, 33, 33, 66, 33, 66, 56 }, -- Liquid Hellfire, SPELL_CAST_START
 		[210277] = { 20.1, 76, 88.8 }, -- Empower
 	},
 }
@@ -91,7 +91,6 @@ local overridesMythic = {
 		[206222] = { [1] = 6.1 }, -- Bonds of Fel
 		[212258] = { [1] = 16.1 }, -- Hand of Gul'dan
 		[209270] = { [1] = 26.1 }, -- Eye of Gul'dan
-		[206219] = { [1] = 36.1, [5] = 66.0 }, -- Liquid Hellfire
 	}
 }
 
