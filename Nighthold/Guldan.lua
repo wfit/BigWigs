@@ -319,7 +319,7 @@ function mod:HandOfGuldan(args)
 	if inTransition then return end
 	self:Message(args.spellId, "Attention", "Info")
 	handOfGuldanCount = handOfGuldanCount + 1
-	if handOfGuldanCount < 4 then
+	if handOfGuldanCount < (self:Mythic() and 3 or 4) then
 		local timer = self:Mythic() and 165 or timers[phase][args.spellId][handOfGuldanCount]
 		self:Bar(args.spellId, timer, CL.count:format(args.spellName, handOfGuldanCount))
 	end
