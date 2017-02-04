@@ -29,6 +29,7 @@ local stormCount = 1
 local soulSiphonCount = 1
 local harvestCount = 1
 local carrionCount = 1
+local empowerCount = 1
 local soulsRemaining = 0
 local bondsEmpowered = false
 local hellfireEmpowered = false
@@ -83,12 +84,15 @@ local L = mod:GetLocale()
 if L then
 	L.remaining = "Remaining"
 	L.firstTransi = "indulge"
+	L.emp_bar = "Gul'dan Empower"
+	L.emp = "Empower"
 end
 
 --------------------------------------------------------------------------------
 -- Initialization
 --
 
+local emp_bar = mod:AddCustomOption { "szd", L.emp_bar, icon = 210277, configurable = true }
 local tanks_marker = mod:AddMarkerOption(true, "player", 7, 71038, 6, 7)
 local bonds_marker = mod:AddMarkerOption(true, "player", 1, 206222, 1, 2, 3, 4)
 
@@ -99,6 +103,7 @@ function mod:GetOptions()
 		tanks_marker,
 		"infobox",
 		"berserk",
+		emp_bar,
 
 		--[[ Stage One ]]--
 		206219, -- Liquid Hellfire
@@ -218,6 +223,7 @@ function mod:OnEngage()
 	handOfGuldanCount = 1
 	bondsOfFelCount = 1
 	eyeOfGuldanCount = 1
+	empowerCount = 1
 
 	bondsEmpowered = false
 	hellfireEmpowered = false
@@ -235,6 +241,7 @@ function mod:OnEngage()
 		self:CDBar(212258, 16.1) -- Hand of Guldan, _start
 		self:CDBar(209454, 26.1) -- Eye of Gul'dan, _start
 		self:CDBar(206219, 36.1) -- Liquid Hellfire, _start
+		self:CDBar(emp_bar, 20.1, CL.count:format(L.emp, empowerCount), 210277) -- Empower
 	else
 		self:Bar(206219, timers[phase][206219][liquidHellfireCount], CL.count:format(self:SpellName(206219), liquidHellfireCount)) -- Liquid Hellfire
 		self:Bar(206514, timers[phase][206514][felEffluxCount]) -- Fel Efflux
@@ -273,6 +280,10 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 	if spellId == 210273 then -- Fel Obelisk
 		self:FelObelisk(spellId)
 	elseif spellId == 210277 then -- Gul'dan, spell empowerement
+		empowerCount = empowerCount + 1
+		if self:Mythic() then
+			self:CDBar(emp_bar, empowerCount == 2 and 76 or 88.8, CL.count:format(L.emp, empowerCount), 210277)
+		end
 		if not bondsEmpowered then
 			bondsEmpowered = true
 			self:EmpowerSpell(206222, 206221, bondsOfFelCount)
@@ -295,7 +306,7 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 end
 
 function mod:EmpowerSpell(baseSpellId, empSpellId, count)
-	self:Message("stages", "Neutral", "Info", mod:SpellName(empSpellId), false)
+	self:Message(emp_bar, "Neutral", "Info", mod:SpellName(empSpellId), false)
 	local unempowered = count and CL.count:format(self:SpellName(baseSpellId), count) or baseSpellId
 	local empowered = count and CL.count:format(self:SpellName(empSpellId), count) or nil
 	self:Bar(empSpellId, self:BarTimeLeft(unempowered), empowered)
