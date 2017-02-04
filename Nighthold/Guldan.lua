@@ -106,15 +106,18 @@ function mod:GetOptions()
 		212258, -- Hand of Gul'dan
 
 		--[[ Inquisitor Vethriz ]]--
+		-14897,
 		207938, -- Shadowblink
 		212568, -- Drain
 		217770, -- Gaze of Vethriz
 
 		--[[ Fel Lord Kuraz'mal ]]--
+		-14894,
 		{206675, "TANK"}, -- Shatter Essence
 		210273, -- Fel Obelisk
 
 		--[[ D'zorykx the Trapper ]]--
+		-14902,
 		208545, -- Anguished Spirits
 		206883, -- Soul Vortex
 		{206896, "TANK"}, -- Torn Soul
@@ -139,9 +142,9 @@ function mod:GetOptions()
 	}, {
 		["stages"] = "general",
 		[206219] = -14885, -- Stage One
-		[207938] = -14897, -- Inquisitor Vethriz
-		[206675] = -14894, -- Fel Lord Kuraz'mal
-		[208545] = -14902, -- D'zorykx the Trapper
+		[-14897] = -14897, -- Inquisitor Vethriz
+		[-14894] = -14894, -- Fel Lord Kuraz'mal
+		[-14902] = -14902, -- D'zorykx the Trapper
 		[209011] = -14062, -- Stage Two
 		[167819] = -14090, -- Stage Three
 	}
