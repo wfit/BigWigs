@@ -480,7 +480,7 @@ do
 	local felBondsDebuffCount = 0
 
 	function mod:BondsOfFelCast(args)
-		self:Message(args.spellId, "Attention", "Info", CL.casting:format(args.spellName))
+		self:Message(args.spellId, "Important", "Warning", CL.casting:format(args.spellName))
 		bondsOfFelCount = bondsOfFelCount + 1
 		self:Bar(args.spellId, self:Timer(206222, bondsOfFelCount), CL.count:format(args.spellName, bondsOfFelCount))
 		felBondsDebuffCount = 0
