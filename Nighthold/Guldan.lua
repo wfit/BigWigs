@@ -510,28 +510,40 @@ do
 	end
 end
 
-function mod:EyeOfGuldan(args)
-	self:Message(args.spellId, "Urgent", "Alert")
-	if phase == 2 and not self:Mythic() then
-		self:Bar(args.spellId, 53.3)
-	else
-		eyeOfGuldanCount = eyeOfGuldanCount + 1
-		self:Bar(args.spellId, self:Timer(209270, eyeOfGuldanCount), CL.count:format(args.spellName, eyeOfGuldanCount))
+do
+	local eyesActive = 0
+	function mod:EyeOfGuldan(args)
+		self:Message(args.spellId, "Urgent", "Alert")
+		eyesActive = 0
+		self:OpenProximity(args.spellId, 8)
+		if phase == 2 and not self:Mythic() then
+			self:Bar(args.spellId, 53.3)
+		else
+			eyeOfGuldanCount = eyeOfGuldanCount + 1
+			self:Bar(args.spellId, self:Timer(209270, eyeOfGuldanCount), CL.count:format(args.spellName, eyeOfGuldanCount))
+		end
 	end
-end
 
-function mod:EyeOfGuldanApplied(args)
-	if self:Me(args.destGUID) then
-		local key = (args.spellId == 209454) and 209270 or 211152
-		self:Say(key)
-		self:Flash(key)
-		self:OpenProximity(key, 8)
+	function mod:EyeOfGuldanApplied(args)
+		eyesActive = eyesActive + 1
+		if self:Me(args.destGUID) then
+			local key = (args.spellId == 209454) and 209270 or 211152
+			self:Say(key, "{rt8}")
+			self:Flash(key)
+		end
 	end
-end
 
-function mod:EyeOfGuldanRemoved(args)
-	if self:Me(args.destGUID) then
-		self:CloseProximity((args.spellId == 209454) and 209270 or 211152)
+	function mod:EyeOfGuldanRemoved(args)
+		eyesActive = eyesActive - 1
+		if eyesActive == 0 then
+			self:ScheduleTimer("CheckAndCloseEyeProximity", 2.5, args.spellId)
+		end
+	end
+
+	function mod:CheckAndCloseEyeProximity(spellId)
+		if eyesActive == 0 then
+			self:CloseProximity((spellId == 209454) and 209270 or 211152)
+		end
 	end
 end
 
