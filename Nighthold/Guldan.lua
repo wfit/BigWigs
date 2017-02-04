@@ -116,6 +116,7 @@ end
 local empower = mod:AddCustomOption { "empower", L.emp_bar, icon = 210277, configurable = true }
 local tanks_marker = mod:AddMarkerOption(true, "player", 7, 71038, 6, 7)
 local bonds_marker = mod:AddMarkerOption(true, "player", 1, 206222, 1, 2, 3, 4)
+local prox_before_eyes = mod:AddCustomOption { "prox_before_eyes", "Display Proximity display before first fixate" }
 
 function mod:GetOptions()
 	return {
@@ -155,6 +156,7 @@ function mod:GetOptions()
 		206220, -- Empowered Liquid Hellfire
 		{209270, "SAY", "FLASH", "PROXIMITY"}, -- Eye of Gul'dan
 		{211152, "SAY", "FLASH", "PROXIMITY"}, -- Empowered Eye of Gul'dan
+		prox_before_eyes,
 		{227556, "TANK"}, -- Fury of the Fel
 		208672, -- Carrion Wave
 
@@ -519,7 +521,7 @@ do
 		eyesActive = 0
 		wipe(eyesTargets)
 		onMe = 0
-		if self:Ranged() or self:Healer() then
+		if self:GetOption(prox_before_eyes) and (self:Ranged() or self:Healer()) then
 			self:OpenProximity(args.spellId, 8)
 		end
 		if phase == 2 and not self:Mythic() then
