@@ -125,11 +125,11 @@ if L then
 	L.emp = "Empower"
 
 	L.hellfire = "Hellfire"
-	L.emp_hellfire = "Emp. Hellfire"
+	L.emp_hellfire = "Empowered Hellfire"
 	L.bonds = "Bonds"
-	L.emp_bonds = "Emp. Bonds"
+	L.emp_bonds = "Empowered Bonds"
 	L.eyes = "Eyes"
-	L.emp_eyes = "Emp. Eyes"
+	L.emp_eyes = "Empowered Eyes"
 end
 
 --------------------------------------------------------------------------------
@@ -254,7 +254,7 @@ function mod:OnBossEnable()
 	self:Log("SPELL_AURA_APPLIED", "SoulCorrosion", 208802)
 	self:Log("SPELL_AURA_APPLIED_DOSE", "SoulCorrosion", 208802)
 	self:Log("SPELL_CAST_START", "BlackHarvest", 206744)
-	self:Log("SPELL_CAST_SUCCESS", "BlackHarvestSuccess", 206744)
+	--self:Log("SPELL_CAST_SUCCESS", "BlackHarvestSuccess", 206744)
 	self:Log("SPELL_CAST_START", "FlamesOfSargeras", 221783)
 	self:Log("SPELL_AURA_APPLIED", "FlamesOfSargerasSoon", 221606)
 	self:Log("SPELL_AURA_REMOVED", "FlamesOfSargerasRemoved", 221603)
@@ -696,9 +696,10 @@ function mod:BlackHarvest(args)
 	self:Message(args.spellId, "Urgent", "Alert", CL.incoming:format(args.spellName))
 	harvestCount = harvestCount + 1
 	self:CDBar(206744, self:Timer(206744, harvestCount), CL.count:format(args.spellName, harvestCount)) -- Black Harvest
+	self:ScheduleTimer("ResetSouls", 6)
 end
 
-function mod:BlackHarvestSuccess(args)
+function mod:ResetSouls()
 	soulsRemaining = 0
 	self:SetInfo("infobox", 2, soulsRemaining)
 end
