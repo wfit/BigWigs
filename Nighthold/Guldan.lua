@@ -96,9 +96,9 @@ local timersMythic = {
 		-- Storm of the Destroyer, SPELL_CAST_START
 		[167819] = { },
 		-- Soul Siphon, SPELL_AURA_APPLIED
-		[221891] = { 28, 9.5 },
+		[221891] = { 21.7, 9.5 },
 		-- Black Harvest, SPELL_CAST_START
-		[206744] = { },
+		[206744] = { 48 },
 	},
 }
 
@@ -647,10 +647,10 @@ function mod:Phase3(args)
 	soulSiphonCount = 1
 	harvestCount = 1
 	soulsRemaining = 0
-	self:Bar(211152, self:Timer(211152, eyeOfGuldanCount)) -- Empowered Eye of Gul'dan
-	self:Bar(167819, self:Timer(167819, stormCount), CL.count:format(self:SpellName(167819), stormCount)) -- Storm of the Destroyer
+	self:Bar(211152, self:Timer(211152, eyeOfGuldanCount), CL.count:format(L.emp_eyes, eyeOfGuldanCount)) -- Empowered Eye of Gul'dan
+	self:Bar(167819, self:Timer(167819, stormCount), CL.count:format(self:SpellName(167819), stormCount))
 	self:Bar(221891, self:Timer(221891, soulSiphonCount)) -- Soul Siphon
-	self:Bar(206744, self:Timer(206744, harvestCount), CL.count:format(self:SpellName(206744), harvestCount)) -- Black Harvest
+	self:Bar(206744, self:Timer(206744, harvestCount), CL.count:format(self:SpellName(206744), harvestCount))
 	self:Bar(221783, self:Mythic() and 22.4 or 18.2) -- Flames of Sargeras
 	self:OpenInfo("infobox", self:SpellName(221891))
 	self:SetInfo("infobox", 1, L.remaining)
