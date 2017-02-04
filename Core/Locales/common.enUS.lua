@@ -15,6 +15,7 @@ L.count = "%s (%d)"
 L.count_icon = "%s (%d|T13700%d:0|t)"
 L.count_rticon = "%s (%d{rt%d})"
 L.near = "%s near YOU!"
+L.next = "<Next: %s>"
 
 L.phase = "Phase %d"
 L.stage = "Stage %d"

@@ -493,6 +493,7 @@ do
 	end
 end
 
+--[[ Dreadlord ]] --
 function mod:DreadlordSpawn()
 	carrionCount = 1
 	self:CDBar(208672, 5, CL.count:format(self:SpellName(208672), carrionCount)) -- Carrion Wave
@@ -583,6 +584,9 @@ end
 function mod:FlamesOfSargeras(args)
 	self:Message(args.spellId, "Urgent", "Warning", CL.incoming:format(args.spellName))
 	self:Bar(args.spellId, 51.3) -- Flames of Sargeras
+	-- Debuffs waves
+	self:ScheduleTimer("Bar", 3, args.spellId, 7.7, CL.next:format(args.spellName))
+	self:ScheduleTimer("Bar", 10.7, args.spellId, 8.7, CL.next:format(args.spellName))
 end
 
 do
