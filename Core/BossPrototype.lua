@@ -196,7 +196,11 @@ function boss:IsBossModule()
 	return true
 end
 
-function boss:Initialize() core:RegisterBossModule(self) end
+function boss:Initialize()
+	core:RegisterBossModule(self)
+	self.autoTimers = {}
+end
+
 function boss:OnEnable(isWipe)
 	if debug then dbg(self, isWipe and "OnEnable() via Wipe()" or "OnEnable()") end
 
@@ -273,6 +277,7 @@ function boss:OnDisable(isWipe)
 	self.targetEventFunc = nil
 	self.isWiping = nil
 	self.isEngaged = nil
+	wipe(self.autoTimers)
 
 	if not isWipe then
 		self:SendMessage("BigWigs_OnBossDisable", self)
@@ -1580,7 +1585,8 @@ end
 -- @section bars
 --
 
-local nilLengthError = "Missing timer before the next '%s' (%s)."
+local nilLengthError = "Missing timer until next '%s' (%s)."
+local nilLengthErrorAuto = "Missing timer until next '%s' (%s) [last was %d sec. ago]."
 
 --- Display a bar.
 -- @param key the option key
@@ -1590,7 +1596,16 @@ local nilLengthError = "Missing timer before the next '%s' (%s)."
 function boss:Bar(key, length, text, icon)
 	local textType = type(text)
 	local label = textType == "string" and text or spells[text or key]
-	if not length then core:Print(format(nilLengthError, label, key)) return end
+	if not length then
+		local last = self.autoTimers[key]
+		self.autoTimers[key] = GetTime()
+		if last then
+			core:Print(format(nilLengthErrorAuto, label, key, GetTime() - last))
+		else
+			core:Print(format(nilLengthError, label, key))
+		end
+		return
+	end
 	if checkFlag(self, key, C.BAR) then
 		self:SendMessage("BigWigs_StartBar", self, key, label, length, icons[icon or textType == "number" and text or key])
 	end
