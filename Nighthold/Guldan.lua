@@ -280,10 +280,6 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 	if spellId == 210273 then -- Fel Obelisk
 		self:FelObelisk(spellId)
 	elseif spellId == 210277 then -- Gul'dan, spell empowerement
-		empowerCount = empowerCount + 1
-		if self:Mythic() and empowerCount < 4 then
-			self:CDBar(empower, empowerCount == 2 and 76 or 88.8, CL.count:format(L.emp, empowerCount), 210277)
-		end
 		if not bondsEmpowered then
 			bondsEmpowered = true
 			self:EmpowerSpell(206222, 206221, bondsOfFelCount)
@@ -293,6 +289,10 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 		elseif not eyesEmpowered then
 			eyesEmpowered = true
 			self:EmpowerSpell(209270, 211152)
+		end
+		empowerCount = empowerCount + 1
+		if self:Mythic() and empowerCount < 4 then
+			self:CDBar(empower, empowerCount == 2 and 76 or 88.8, CL.count:format(L.emp, empowerCount), 210277)
 		end
 	elseif spellId == 215736 then -- Summon Fel Lord Kuraz'mal
 		self:FellordSpawn()
