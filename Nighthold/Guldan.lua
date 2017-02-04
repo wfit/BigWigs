@@ -169,6 +169,7 @@ function mod:OnBossEnable()
 	self:Log("SPELL_AURA_APPLIED", "TornSoul", 206896)
 	self:Log("SPELL_AURA_APPLIED_DOSE", "TornSoul", 206896)
 	self:Log("SPELL_AURA_REMOVED", "TornSoulRemoved", 206896)
+	self:Death("TrapperDeath", 104534)
 
 	--self:Death("FirstTransition", 104534, 104536, 104537)
 
@@ -310,14 +311,18 @@ end
 function mod:HandOfGuldan(args)
 	if inTransition then return end
 	self:Message(args.spellId, "Attention", "Info")
+	if phase == 2 and not self:Mythic() then
+		carrionCount = 1
+		self:CDBar(208672, 9, CL.count:format(self:SpellName(208672), carrionCount))
+	elseif self:Mythic() then
+		if handOfGuldanCount == 1 then -- D'zorykx the Trapper
+			self:Bar(206883, 7) -- Soul Vortex
+		end
+	end
 	handOfGuldanCount = handOfGuldanCount + 1
 	if handOfGuldanCount < 4 then
 		local timer = self:Mythic() and 165 or timers[phase][args.spellId][handOfGuldanCount]
 		self:Bar(args.spellId, timer, CL.count:format(args.spellName, handOfGuldanCount))
-	end
-	if phase == 2 and not self:Mythic() then
-		carrionCount = 1
-		self:CDBar(208672, 9, CL.count:format(self:SpellName(208672), carrionCount))
 	end
 end
 
@@ -351,8 +356,7 @@ end
 
 function mod:SoulVortex(args)
 	self:Message(args.spellId, "Urgent", "Long")
-	self:Bar(args.spellId, 3, CL.cast:format(args.spellName)) -- actual cast
-	self:ScheduleTimer("Bar", 3, args.spellId, 6, CL.cast:format(args.spellName)) -- pull in
+	self:Bar(args.spellId, 21)
 end
 
 function mod:TornSoul(args)
@@ -367,6 +371,10 @@ function mod:TornSoulRemoved(args)
 	if self:Me(args.destGUID) then
 		self:StopBar(args.spellId, args.destName)
 	end
+end
+
+function mod:TrapperDeath()
+	self:StopBar(206883) -- Soul Vortex
 end
 
 --[[ Stage Two ]]--
