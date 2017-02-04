@@ -207,7 +207,7 @@ end
 
 function mod:OnEngage()
 	timers = self:Mythic() and timersMythic or timersHeroic
-	phase = 1
+	phase = self:Mythic() and 2 or 1
 
 	liquidHellfireCount = 1
 	felEffluxCount = 1
@@ -317,7 +317,7 @@ function mod:FelEfflux(args)
 	if inTransition then return end
 	self:Message(args.spellId, "Important", "Alert")
 	felEffluxCount = felEffluxCount + 1
-	self:CDBar(args.spellId, timers[phase][args.spellId][felEffluxCount] or 15.1)
+	self:CDBar(args.spellId, timers[phase][args.spellId][felEffluxCount])
 end
 
 function mod:HandOfGuldan(args)
