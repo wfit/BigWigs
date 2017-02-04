@@ -564,7 +564,7 @@ do
 		if eyesActive == 0 and canClose then
 			self:CloseProximity(key)
 		else
-			self:OpenProximity(key, 8, onMe and eyesTargets or nil)
+			self:OpenProximity(key, 8, (not onMe) and eyesTargets or nil)
 		end
 	end
 end
