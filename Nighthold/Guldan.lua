@@ -89,7 +89,7 @@ end
 -- Initialization
 --
 
-local tanks_marker = mod:AddMarkerOption(true, "player", 6, 71038, 6, 7)
+local tanks_marker = mod:AddMarkerOption(true, "player", 7, 71038, 6, 7)
 local bonds_marker = mod:AddMarkerOption(true, "player", 1, 206222, 1, 2, 3, 4)
 
 function mod:GetOptions()
@@ -262,8 +262,7 @@ end
 
 function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 	if spellId == 210273 then -- Fel Obelisk
-		self:Message(spellId, "Attention", "Alarm")
-		self:CDBar(spellId, 23)
+		self:FelObelisk(spellId)
 	elseif spellId == 210277 then -- Gul'dan, spell empowerement
 		if not bondsEmpowered then
 			bondsEmpowered = true
@@ -275,6 +274,14 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 			eyesEmpowered = true
 			self:EmpowerSpell(209270, 211152)
 		end
+	elseif spellId == 215736 then -- Summon Fel Lord Kuraz'mal
+		self:FellordSpawn()
+	elseif spellId == 215738 then -- Summon Inquisitor Vethriz
+		self:InquisitorSpawn()
+	elseif spellId == 215739 then -- Summon D'zorykx the Trapper
+		self:TrapperSpawn()
+	elseif spellId == 212721 or spellId == 212722 or spellId == 209126 then -- Summon Dreadlord
+		self:DreadlordSpawn()
 	end
 end
 
@@ -311,14 +318,6 @@ end
 function mod:HandOfGuldan(args)
 	if inTransition then return end
 	self:Message(args.spellId, "Attention", "Info")
-	if phase == 2 and not self:Mythic() then
-		carrionCount = 1
-		self:CDBar(208672, 9, CL.count:format(self:SpellName(208672), carrionCount))
-	elseif self:Mythic() then
-		if handOfGuldanCount == 1 then -- D'zorykx the Trapper
-			self:Bar(206883, 7) -- Soul Vortex
-		end
-	end
 	handOfGuldanCount = handOfGuldanCount + 1
 	if handOfGuldanCount < 4 then
 		local timer = self:Mythic() and 165 or timers[phase][args.spellId][handOfGuldanCount]
@@ -327,6 +326,11 @@ function mod:HandOfGuldan(args)
 end
 
 --[[ Inquisitor Vethriz ]]--
+function mod:InquisitorSpawn()
+	self:Message(-14897, "Attention", "Info", nil, 215738)
+	-- TODO if present in Mythic encounter
+end
+
 function mod:Shadowblink(args)
 	self:Message(args.spellId, "Attention", "Info")
 end
@@ -338,10 +342,20 @@ function mod:Drain(args)
 end
 
 --[[ Fel Lord Kuraz'mal ]]--
+function mod:FellordSpawn()
+	self:Message(-14894, "Attention", "Info", nil, 215736)
+	self:Bar(210273, 11) -- Fel Obelisk
+end
+
 function mod:ShatterEssence(args)
 	self:Message(args.spellId, "Important", "Warning", CL.casting:format(args.spellName))
 	self:Bar(args.spellId, 3, CL.cast:format(args.spellName))
 	self:Bar(args.spellId, 53.5)
+end
+
+function mod:FelObelisk(spellId)
+	self:Message(spellId, "Attention", "Alarm")
+	self:CDBar(spellId, 23)
 end
 
 function mod:FelLordDeath(args)
@@ -350,6 +364,11 @@ function mod:FelLordDeath(args)
 end
 
 --[[ D'zorykx the Trapper ]]--
+function mod:TrapperSpawn()
+	self:Message(-14902, "Attention", "Info", nil, 215739)
+	self:Bar(206883, 3) -- Soul Vortex
+end
+
 function mod:AnguishedSpirits(args)
 	self:Message(args.spellId, "Attention", "Alert", CL.incoming:format(args.spellName))
 end
@@ -416,14 +435,14 @@ do
 	function mod:BondsOfFel(args)
 		local key = (args.destId == 209011) and 206222 or 206221
 		list[#list+1] = args.destName
+		felBondsDebuffCount = felBondsDebuffCount + 1
 		if #list == 1 then
-			self:ScheduleTimer("TargetMessage", 0.5, key, list, "Important", "Warning", nil, nil, true)
+			self:ScheduleTimer("TargetMessage", 0.7, key, list, "Important", "Warning", nil, nil, true)
 		end
 		if self:Me(args.destGUID) then
 			self:Say(key, CL.count:format(args.spellName, #list))
 			self:Flash(key)
 		end
-		felBondsDebuffCount = felBondsDebuffCount + 1
 		if not GetRaidTargetIndex(args.destUnit) then
 			self:SetIcon(bonds_marker, args.destUnit, felBondsDebuffCount)
 		end
@@ -431,7 +450,7 @@ do
 
 	function mod:BondsOfFelRemoved(args)
 		local icon = GetRaidTargetIndex(args.destUnit)
-		if icon and icon < felBondsDebuffCount then
+		if icon and icon <= felBondsDebuffCount then
 			self:SetIcon(bonds_marker, args.destUnit, 0)
 		end
 	end
@@ -472,6 +491,11 @@ do
 			self:Message(args.spellId, "Positive", "Info", CL.count:format(args.spellName, amount))
 		end
 	end
+end
+
+function mod:DreadlordSpawn()
+	carrionCount = 1
+	self:CDBar(208672, 5, CL.count:format(self:SpellName(208672), carrionCount)) -- Carrion Wave
 end
 
 function mod:CarrionWave(args)
