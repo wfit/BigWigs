@@ -79,9 +79,21 @@ local timersMythic = {
 	[2] = {
 		[206222] = 40, -- Bonds of Fel, SPELL_CAST_START
 		[212258] = 165, -- Hand of Gul'dan, SPELL_CAST_START
-		[209270] = 48, -- Eye of Gul'dan, SPELL_CAST_START
+		[209270] = { 26.1, 48, 48, 48, 48, 48, 80, 76.6 }, -- Eye of Gul'dan, SPELL_CAST_START
 		[206219] = { 36.1, 33, 33, 33, 66, 33, 66, 56 }, -- Liquid Hellfire, SPELL_CAST_START
 		[210277] = { 20.1, 76, 88.8 }, -- Empower
+	},
+
+	-- Phase 3
+	[3] = {
+		-- Empowered Eye of Gul'dan, SPELL_CAST_START
+		[209270] = { 33 },
+		-- Storm of the Destroyer, SPELL_CAST_START
+		[167819] = { },
+		-- Soul Siphon, SPELL_AURA_APPLIED
+		[221891] = { 28, 9.5 },
+		-- Black Harvest, SPELL_CAST_START
+		[206744] = { },
 	},
 }
 
@@ -90,7 +102,6 @@ local overridesMythic = {
 	[2] = {
 		[206222] = { [1] = 6.1 }, -- Bonds of Fel
 		[212258] = { [1] = 16.1 }, -- Hand of Gul'dan
-		[209270] = { [1] = 26.1 }, -- Eye of Gul'dan
 	}
 }
 
@@ -386,7 +397,7 @@ end
 
 --[[ Inquisitor Vethriz ]]--
 function mod:InquisitorSpawn()
-	self:Message(-14897, "Attention", "Info", nil, 215738)
+	self:Message(-14897, "Neutral", "Info", nil, 215738)
 	-- TODO if present in Mythic encounter
 end
 
@@ -402,7 +413,7 @@ end
 
 --[[ Fel Lord Kuraz'mal ]]--
 function mod:FellordSpawn()
-	self:Message(-14894, "Attention", "Info", nil, 215736)
+	self:Message(-14894, "Neutral", "Info", nil, 215736)
 	self:Bar(210273, 11) -- Fel Obelisk
 end
 
@@ -424,7 +435,7 @@ end
 
 --[[ D'zorykx the Trapper ]]--
 function mod:TrapperSpawn()
-	self:Message(-14902, "Attention", "Info", nil, 215739)
+	self:Message(-14902, "Neutral", "Info", nil, 215739)
 	self:Bar(206883, 6) -- Soul Vortex
 end
 
@@ -622,7 +633,7 @@ function mod:Phase3(args)
 	self:Bar(167819, self:Timer(167819, stormCount), CL.count:format(self:SpellName(167819), stormCount)) -- Storm of the Destroyer
 	self:Bar(221891, self:Timer(221891, soulSiphonCount)) -- Soul Siphon
 	self:Bar(206744, self:Timer(206744, harvestCount), CL.count:format(self:SpellName(206744), harvestCount)) -- Black Harvest
-	self:Bar(221783, 18.2) -- Flames of Sargeras
+	self:Bar(221783, self:Mythic() and 22.4 or 18.2) -- Flames of Sargeras
 	self:OpenInfo("infobox", self:SpellName(221891))
 	self:SetInfo("infobox", 1, L.remaining)
 	self:SetInfo("infobox", 2, soulsRemaining)
@@ -678,8 +689,9 @@ function mod:FlamesOfSargeras(args)
 	self:Message(args.spellId, "Urgent", "Warning", CL.incoming:format(args.spellName))
 	self:Bar(args.spellId, 51.3) -- Flames of Sargeras
 	-- Debuffs waves
-	self:ScheduleTimer("Bar", 3, args.spellId, 7.7, CL.next:format(args.spellName))
-	self:ScheduleTimer("Bar", 10.7, args.spellId, 8.7, CL.next:format(args.spellName))
+	local delay = self:Mythic() and 7.4 or 8.7
+	self:Bar(args.spellId, delay, CL.next:format(args.spellName))
+	self:ScheduleTimer("Bar", delay, args.spellId, delay, CL.next:format(args.spellName))
 end
 
 do
