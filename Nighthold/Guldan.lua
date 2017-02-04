@@ -632,9 +632,9 @@ end
 
 --[[ Stage Three ]]--
 function mod:SecondTransition(args)
-	self:StopBar(CL.count:format(self:SpellName(206220), liquidHellfireCount)) -- Emp. Hellfire
-	self:StopBar(CL.count:format(self:SpellName(206221), bondsOfFelCount)) -- Emp. Bonds
-	self:StopBar(211152) -- Emp. Eyes
+	self:StopBar(CL.count:format(L.emp_hellfire, liquidHellfireCount))
+	self:StopBar(CL.count:format(L.emp_bonds, bondsOfFelCount))
+	self:StopBar(CL.count:format(L.emp_eyes, eyeOfGuldanCount))
 	self:Message("stages", "Neutral", "Long", "Second Transition", false)
 	self:Bar("stages", 8, CL.stage:format(phase + 1), 227427)
 end
