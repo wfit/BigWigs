@@ -184,6 +184,7 @@ function mod:OnBossEnable()
 	self:Log("SPELL_AURA_APPLIED", "FuryOfTheFel", 227556)
 	self:Log("SPELL_AURA_APPLIED_DOSE", "FuryOfTheFel", 227556)
 	self:Log("SPELL_CAST_START", "CarrionWave", 208672)
+	self:Death("DreadlordDeath", 107232, 107233, 105295) -- Beltheris, Dalvengyr, Azagrim
 
 	--[[ Stage Three ]]--
 	self:Log("SPELL_AURA_APPLIED", "SecondTransition", 227427) -- Eye of Aman'Thul
@@ -508,6 +509,10 @@ function mod:CarrionWave(args)
 		carrionCount = carrionCount + 1
 		self:Bar(args.spellId, 6.1, CL.count:format(args.spellName, carrionCount))
 	end
+end
+
+function mod:DreadlordDeath()
+	self:StopBar(CL.count:format(208672, carrionCount))
 end
 
 --[[ Stage Three ]]--
