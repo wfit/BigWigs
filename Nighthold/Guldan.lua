@@ -512,10 +512,15 @@ end
 
 do
 	local eyesActive = 0
+	local eyesTargets = {}
+
 	function mod:EyeOfGuldan(args)
 		self:Message(args.spellId, "Urgent", "Alert")
 		eyesActive = 0
-		self:OpenProximity(args.spellId, 8)
+		wipe(eyesTargets)
+		if self:Ranged() or self:Healer() then
+			self:OpenProximity(args.spellId, 8)
+		end
 		if phase == 2 and not self:Mythic() then
 			self:Bar(args.spellId, 53.3)
 		else
@@ -526,6 +531,8 @@ do
 
 	function mod:EyeOfGuldanApplied(args)
 		eyesActive = eyesActive + 1
+		eyesTargets[#eyesTargets + 1] = args.destName
+		self:UpdateEyeProximity(args.spellId)
 		if self:Me(args.destGUID) then
 			local key = (args.spellId == 209454) and 209270 or 211152
 			self:Say(key, "{rt8}")
@@ -535,14 +542,24 @@ do
 
 	function mod:EyeOfGuldanRemoved(args)
 		eyesActive = eyesActive - 1
+		for i, target in ipairs(eyesTargets) do
+			if UnitIsUnit(target, eyesTargets[i]) then
+				table.remove(eyesTargets, i)
+				break
+			end
+		end
+		self:UpdateEyeProximity(args.spellId)
 		if eyesActive == 0 then
-			self:ScheduleTimer("CheckAndCloseEyeProximity", 2.5, args.spellId)
+			self:ScheduleTimer("UpdateEyeProximity", 2.5, args.spellId, true)
 		end
 	end
 
-	function mod:CheckAndCloseEyeProximity(spellId)
-		if eyesActive == 0 then
-			self:CloseProximity((spellId == 209454) and 209270 or 211152)
+	function mod:UpdateEyeProximity(spellId, canClose)
+		local key = (spellId == 209454) and 209270 or 211152
+		if eyesActive == 0 and canClose then
+			self:CloseProximity(key)
+		else
+			self:OpenProximity(key, 8, eyesTargets)
 		end
 	end
 end
