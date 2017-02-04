@@ -512,11 +512,13 @@ end
 do
 	local eyesActive = 0
 	local eyesTargets = {}
+	local onMe = false
 
 	function mod:EyeOfGuldan(args)
 		self:Message(args.spellId, "Urgent", "Alert")
 		eyesActive = 0
 		wipe(eyesTargets)
+		onMe = false
 		if self:Ranged() or self:Healer() then
 			self:OpenProximity(args.spellId, 8)
 		end
@@ -536,6 +538,7 @@ do
 			local key = (args.spellId == 209454) and 209270 or 211152
 			self:Say(key, "{rt8}")
 			self:Flash(key)
+			onMe = true
 		end
 	end
 
@@ -546,6 +549,9 @@ do
 				table.remove(eyesTargets, i)
 				break
 			end
+		end
+		if self:Me(args.destGUID) then
+			onMe = false
 		end
 		self:UpdateEyeProximity(args.spellId)
 		if eyesActive == 0 then
@@ -558,7 +564,7 @@ do
 		if eyesActive == 0 and canClose then
 			self:CloseProximity(key)
 		else
-			self:OpenProximity(key, 8, eyesTargets)
+			self:OpenProximity(key, 8, onMe and eyesTargets or nil)
 		end
 	end
 end
