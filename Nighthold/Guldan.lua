@@ -293,7 +293,7 @@ function mod:OnEngage()
 	self:CDBar(212258, self:Timer(212258, handOfGuldanCount), CL.count:format(self:SpellName(212258), handOfGuldanCount))
 	if self:Mythic() then
 		self:CDBar(206222, self:Timer(206222, bondsOfFelCount), CL.count:format(L.bonds, bondsOfFelCount))
-		self:CDBar(209270, self:Timer(209270, eyeOfGuldanCount), CL.count:format(sL.eyes, eyeOfGuldanCount))
+		self:CDBar(209270, self:Timer(209270, eyeOfGuldanCount), CL.count:format(L.eyes, eyeOfGuldanCount))
 		self:CDBar(empower, self:Timer(210277, empowerCount), CL.count:format(L.emp, empowerCount), 210277)
 	else
 		self:CDBar(206514, self:Timer(206514, felEffluxCount))
