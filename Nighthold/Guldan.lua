@@ -309,8 +309,11 @@ function mod:EmpowerSpell(baseSpellId, empSpellId, count)
 	self:Message(emp_bar, "Neutral", "Info", mod:SpellName(empSpellId), false)
 	local unempowered = count and CL.count:format(self:SpellName(baseSpellId), count) or baseSpellId
 	local empowered = count and CL.count:format(self:SpellName(empSpellId), count) or nil
-	self:Bar(empSpellId, self:BarTimeLeft(unempowered), empowered)
-	self:StopBar(unempowered)
+	local timer = self:BarTimeLeft(unempowered)
+	if timer then
+		self:Bar(empSpellId, timer, empowered)
+		self:StopBar(unempowered)
+	end
 end
 
 function mod:CHAT_MSG_MONSTER_YELL(event, msg)
