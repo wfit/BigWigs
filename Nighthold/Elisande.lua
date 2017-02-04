@@ -148,6 +148,7 @@ function mod:GetOptions()
 		ring_echo,
 		209168, -- Spanning Singularity
 		spanning_echo,
+		{209615, "TANK"}, -- Ablation
 
 		--[[ Time Layer 2 ]]--
 		{209244, "SAY", "FLASH"}, -- Delphuric Beam
@@ -193,6 +194,8 @@ function mod:OnBossEnable()
 	--self:Log("SPELL_AURA_APPLIED", "SingularityDamage", 209433)
 	--self:Log("SPELL_PERIODIC_DAMAGE", "SingularityDamage", 209433)
 	--self:Log("SPELL_PERIODIC_MISSED", "SingularityDamage", 209433)
+	self:Log("SPELL_AURA_APPLIED", "Ablation", 209615)
+	self:Log("SPELL_AURA_APPLIED_DOSE", "Ablation", 209615)
 
 	--[[ Time Layer 2 ]]--
 	self:Log("SPELL_CAST_SUCCESS", "DelphuricBeam", 214278, 214295) -- Boss: 214278, Echo: 214295
@@ -430,6 +433,13 @@ function mod:SpanningSingularity(args)
 	singularityCount = singularityCount + 1
 	if phase == 1 or singularityCount < singularityMax then
 		self:EchoBar(1, 209168, spanning_echo, singularityCount)
+	end
+end
+
+function mod:Ablation(args)
+	local amount = args.amount or 1
+	if amount % 2 == 1 or amount > 3 then
+		self:StackMessage(args.spellId, args.destName, amount, "Urgent", amount > 3 and "Warning")
 	end
 end
 
