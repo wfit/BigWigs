@@ -168,7 +168,7 @@ function mod:OnBossEnable()
 
 	--[[ D'zorykx the Trapper ]]--
 	self:Log("SPELL_CAST_START", "AnguishedSpirits", 208545)
-	self:Log("SPELL_CAST_START", "SoulVortex", 206883)
+	self:Log("SPELL_CAST_SUCCESS", "SoulVortex", 206883)
 	self:Log("SPELL_AURA_APPLIED", "TornSoul", 206896)
 	self:Log("SPELL_AURA_APPLIED_DOSE", "TornSoul", 206896)
 	self:Log("SPELL_AURA_REMOVED", "TornSoulRemoved", 206896)
@@ -375,7 +375,7 @@ end
 --[[ D'zorykx the Trapper ]]--
 function mod:TrapperSpawn()
 	self:Message(-14902, "Attention", "Info", nil, 215739)
-	self:Bar(206883, 3) -- Soul Vortex
+	self:Bar(206883, 6) -- Soul Vortex
 end
 
 function mod:AnguishedSpirits(args)
