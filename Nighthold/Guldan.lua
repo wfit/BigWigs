@@ -214,6 +214,11 @@ function mod:OnEngage()
 	handOfGuldanCount = 1
 	bondsOfFelCount = 1
 	eyeOfGuldanCount = 1
+
+	bondsEmpowered = false
+	hellfireEmpowered = false
+	eyesEmpowered = false
+
 	inTransition = false
 
 	if not self:Mythic() then
@@ -411,9 +416,6 @@ function mod:Phase2(args)
 	self:Message("stages", "Neutral", "Long", CL.stage:format(phase), false)
 	liquidHellfireCount = 1
 	handOfGuldanCount = 1
-	bondsEmpowered = false
-	hellfireEmpowered = false
-	eyesEmpowered = false
 	self:Bar(206219, timers[phase][206219][liquidHellfireCount], CL.count:format(self:SpellName(206219), liquidHellfireCount)) -- Liquid Hellfire
 	self:Bar(212258, timers[phase][212258][handOfGuldanCount], CL.count:format(self:SpellName(212258), handOfGuldanCount)) -- Hand of Gul'dan
 	self:Bar(206222, timers[phase][206222][bondsOfFelCount], CL.count:format(self:SpellName(206222), bondsOfFelCount)) -- Bonds of Fel
