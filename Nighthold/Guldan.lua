@@ -207,7 +207,7 @@ function mod:OnBossEnable()
 	self:Log("SPELL_AURA_REMOVED", "Phase2", 206516) -- Eye of Aman'Thu
 	self:Log("SPELL_CAST_START", "BondsOfFelCast", 206222, 206221)
 	self:Log("SPELL_AURA_APPLIED", "BondsOfFel", 209011, 206366)
-	self:Log("SPELL_AURA_REMOVED", "BondsOfFelRemoved", 209011, 206366)
+	self:Log("SPELL_AURA_REMOVED", "BondsOfFelRemoved", 209011, 206384) -- Emp. Bonds switch from 206366 to 206384 once the target hits the ground
 	self:Log("SPELL_CAST_START", "EyeOfGuldan", 209270, 211152)
 	self:Log("SPELL_AURA_APPLIED", "EyeOfGuldanApplied", 209454, 206384)
 	self:Log("SPELL_AURA_REMOVED", "EyeOfGuldanRemoved", 209454, 206384)
@@ -488,8 +488,8 @@ do
 	local list = mod:NewTargetList()
 	function mod:BondsOfFel(args)
 		local key = (args.spellId == 209011) and 206222 or 206221
-		list[#list+1] = args.destName
 		felBondsDebuffCount = felBondsDebuffCount + 1
+		--list[#list + 1] = args.destName
 		--if #list == 1 then
 		--	self:ScheduleTimer("TargetMessage", 0.7, key, list, "Important", "Warning", nil, nil, true)
 		--end
