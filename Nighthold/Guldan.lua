@@ -137,7 +137,7 @@ end
 --
 
 local empower = mod:AddCustomOption { "empower", L.emp_bar, icon = 210277, configurable = true }
-local tanks_marker = mod:AddMarkerOption(true, "player", 7, 71038, 6, 7)
+local tanks_marker = mod:AddMarkerOption(true, "player", 7, -14884, 6, 7)
 local bonds_marker = mod:AddMarkerOption(true, "player", 1, 206222, 1, 2, 3, 4)
 local prox_before_eyes = mod:AddCustomOption { "prox_before_eyes", "Display Proximity display before first fixate" }
 
