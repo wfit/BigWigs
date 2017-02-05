@@ -431,7 +431,7 @@ do
 		end
 	})
 
-	bossUtilityFrame:SetScript("OnEvent", function(_, _, _, event, _, sourceGUID, sourceName, sourceFlags, sourceRaidFlags, destGUID, destName, destFlags, destRaidFlags, spellId, spellName, _, extraSpellId, amount)
+	bossUtilityFrame:SetScript("OnEvent", function(_, _, timestamp, event, _, sourceGUID, sourceName, sourceFlags, sourceRaidFlags, destGUID, destName, destFlags, destRaidFlags, spellId, spellName, _, extraSpellId, amount)
 		if allowedEvents[event] then
 			if event == "UNIT_DIED" then
 				local _, _, _, _, _, id = strsplit("-", destGUID)
@@ -442,7 +442,7 @@ do
 						local m = eventMap[self][event]
 						if m and m[mobId] then
 							local func = m[mobId]
-							args.mobId, args.destGUID, args.destName, args.destFlags, args.destRaidFlags = mobId, destGUID, destName, destFlags, args.destRaidFlags
+							args.timestamp, args.mobId, args.destGUID, args.destName, args.destFlags, args.destRaidFlags = timestamp, mobId, destGUID, destName, destFlags, args.destRaidFlags
 							if type(func) == "function" then
 								func(args)
 							else
@@ -458,6 +458,7 @@ do
 					if m and (m[spellId] or m["*"]) then
 						local func = m[spellId] or m["*"]
 						-- DEVS! Please ask if you need args attached to the table that we've missed out!
+						args.timestamp = timestamp
 						args.sourceGUID, args.sourceName, args.sourceFlags, args.sourceRaidFlags = sourceGUID, sourceName, sourceFlags, sourceRaidFlags
 						args.destGUID, args.destName, args.destFlags, args.destRaidFlags = destGUID, destName, destFlags, destRaidFlags
 						args.spellId, args.spellName, args.extraSpellId, args.extraSpellName, args.amount = spellId, spellName, extraSpellId, amount, amount

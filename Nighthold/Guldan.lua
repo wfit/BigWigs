@@ -677,13 +677,19 @@ do
 			self:Bar(args.spellId, self:Timer(221891, soulSiphonCount))
 		end
 	end
+end
 
+do
+	local last = 0
 	function mod:SoulCorrosion(args)
 		local amount = args.amount or 1
-		soulsRemaining = soulsRemaining - 1
-		self:SetInfo("infobox", 2, soulsRemaining)
 		if self:Me(args.destGUID) and amount == 9 then
 			self:Message(args.spellId, "Personal", "Warning", "You cant soak anymore!!")
+		end
+		if last ~= args.timestamp then
+			last = args.timestamp
+			soulsRemaining = soulsRemaining - 1
+			self:SetInfo("infobox", 2, soulsRemaining)
 		end
 	end
 end
