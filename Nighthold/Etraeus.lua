@@ -150,6 +150,9 @@ function mod:OnBossEnable()
 	--[ Mythic ]]--
 	self:Log("SPELL_CAST_START", "WorldDevouringForce", 216909)
 	--self:Log("SPELL_AURA_APPLIED", "DevouringRemnant", 217046)
+
+	-- Experimenting with using callbacks for nameplate addons
+	self:SendMessage("BigWigs_EnableFriendlyNameplates", self)
 end
 
 function mod:OnEngage()
@@ -167,6 +170,7 @@ end
 
 function mod:OnBossDisable()
 	wipe(mobCollector)
+	self:SendMessage("BigWigs_DisableFriendlyNameplates", self)
 end
 
 --------------------------------------------------------------------------------
