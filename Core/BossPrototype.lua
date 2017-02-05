@@ -1666,7 +1666,7 @@ end
 
 function boss:OnDisableAutoTimersSummary()
 	if not next(self.autoTimersSummary) then return end
-	self:Print("Auto-Timers summary:")
+	core:Print("Auto-Timers summary:")
 	for key, timers in pairs(self.autoTimersSummary) do
 		local label = type(key) == "number" and (key .. "-" .. spells[key]) or key
 		core:Print(autoTimersSummary:format(label, table.concat(timers, ",")))
