@@ -1636,12 +1636,12 @@ local function autotimers(self, key, label)
 	end
 	if last then
 		local timer = round(now - last, 2)
+		core:Print(format(autoTimersFound, lastLabel, timer))
 		if not self.autoTimersSummary[key] then
 			self.autoTimersSummary[key] = { timer }
 		else
 			table.insert(self.autoTimersSummary[key], timer)
 		end
-		core:Print(format(autoTimersFound, lastLabel, timer))
 	end
 end
 
@@ -1652,8 +1652,9 @@ function boss:TimersCheckpoint(key)
 	end
 end
 
+
 function boss:OnDisableAutoTimersSummary()
-	if #self.autoTimersSummary < 1 then return end
+	if not next(self.autoTimersSummary) then return end
 	self:Print("Auto-Timers summary:")
 	for key, timers in pairs(self.autoTimersSummary) do
 		self:Print(autoTimersSummary:format(spells[key], key, table.concat(timers, ",")))
