@@ -30,6 +30,7 @@ local soulSiphonCount = 1
 local harvestCount = 1
 local carrionCount = 1
 local empowerCount = 1
+local windCount = 1
 local soulsRemaining = 0
 local bondsEmpowered = false
 local hellfireEmpowered = false
@@ -99,6 +100,8 @@ local timersMythic = {
 		[221891] = { 21.7, 9.5, 42, 9.5, 9.5, 50.5, 9.5, 9.5, 9.5 },
 		-- Black Harvest, SPELL_CAST_START
 		[206744] = { 47.8, 61, 75.3 },
+		-- Fel Wind
+		[215125] = { 3.8, 31.2, 116.1 },
 	},
 }
 
@@ -147,8 +150,9 @@ function mod:GetOptions()
 		"stages",
 		tanks_marker,
 		"infobox",
-		"berserk",
 		empower,
+		215125, -- Fel Wind
+		"berserk",
 
 		--[[ Stage One ]]--
 		206219, -- Liquid Hellfire
@@ -647,15 +651,31 @@ function mod:Phase3(args)
 	stormCount = 1
 	soulSiphonCount = 1
 	harvestCount = 1
+	windCount = 1
 	soulsRemaining = 0
 	self:Bar(211152, self:Timer(209270, eyeOfGuldanCount), CL.count:format(L.emp_eyes, eyeOfGuldanCount))
 	self:Bar(167819, self:Timer(167819, stormCount), CL.count:format(self:SpellName(167819), stormCount))
 	self:Bar(221891, self:Timer(221891, soulSiphonCount))
 	self:Bar(206744, self:Timer(206744, harvestCount), CL.count:format(self:SpellName(206744), harvestCount))
 	self:Bar(221783, self:Mythic() and 16.6 or 18.2) -- Flames of Sargeras
+	if self:Mythic() then
+		local windTimer = self:Timer(215125, windCount)
+		self:Bar(215125, windTimer)
+		self:ScheduleTimer("FelWind", windTimer, 215125)
+	end
 	self:OpenInfo("infobox", self:SpellName(221891))
 	self:SetInfo("infobox", 1, L.remaining)
 	self:SetInfo("infobox", 2, soulsRemaining)
+end
+
+function mod:FelWind(spellId)
+	self:Message(spellId, "Attention", "Long")
+	windCount = windCount + 1
+	local timer = self:Timer(spellId, windCount)
+	if timer then
+		self:Bar(spellId, timer)
+		self:ScheduleTimer("FelWind", timer, spellId)
+	end
 end
 
 function mod:StormOfTheDestroyer(args)
