@@ -193,7 +193,7 @@ function mod:GetOptions()
 		--[[ Stage Three ]]--
 		167819, -- Storm of the Destroyer
 		221891, -- Soul Siphon
-		208802, -- Soul Corrosion
+		{208802, "PROXIMITY"}, -- Soul Corrosion
 		206744, -- Black Harvest
 		{221783, "SAY", "FLASH", "PROXIMITY"}, -- Flames of Sargeras
 		221781, -- Desolate Ground
@@ -255,6 +255,8 @@ function mod:OnBossEnable()
 	self:Log("SPELL_AURA_REMOVED", "Phase3", 227427) -- Eye of Aman'Thul
 	self:Log("SPELL_CAST_START", "StormOfTheDestroyer", 167819)
 	self:Log("SPELL_AURA_APPLIED", "SoulSiphon", 221891)
+	self:Log("SPELL_AURA_APPLIED", "WellOfSoulsApplied", 208536)
+	self:Log("SPELL_AURA_REMOVED", "WellOfSoulsRemoved", 208536)
 	self:Log("SPELL_AURA_APPLIED", "SoulCorrosion", 208802)
 	self:Log("SPELL_AURA_APPLIED_DOSE", "SoulCorrosion", 208802)
 	self:Log("SPELL_CAST_START", "BlackHarvest", 206744)
@@ -696,6 +698,18 @@ do
 			soulSiphonCount = soulSiphonCount + 1
 			self:Bar(args.spellId, self:Timer(221891, soulSiphonCount))
 		end
+	end
+end
+
+function mod:WellOfSoulsApplied(args)
+	if self:Me(args.destGUID) then
+		self:OpenProximity(208802, 8)
+	end
+end
+
+function mod:WellOfSoulsRemoved(args)
+	if self:Me(args.destGUID) then
+		self:CloseProximity(208802)
 	end
 end
 
