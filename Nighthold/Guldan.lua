@@ -703,7 +703,7 @@ end
 
 function mod:WellOfSoulsApplied(args)
 	if self:Me(args.destGUID) then
-		self:OpenProximity(208802, 8)
+		self:OpenProximity(208802, 5)
 	end
 end
 
