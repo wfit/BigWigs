@@ -1686,11 +1686,7 @@ end
 function boss:Bar(key, length, text, icon)
 	local textType = type(text)
 	local label = textType == "string" and text or spells[text or key]
-	if not length then
-		return autotimers(self, key, label)
-	else
-		self.autoTimers[key], self.autoTimersLabels[key] = GetTime(), label
-	end
+	if not length then return autotimers(self, key, label) end
 	if checkFlag(self, key, C.BAR) then
 		self:SendMessage("BigWigs_StartBar", self, key, label, length, icons[icon or textType == "number" and text or key])
 	end
@@ -1708,11 +1704,7 @@ end
 function boss:CDBar(key, length, text, icon)
 	local textType = type(text)
 	local label = textType == "string" and text or spells[text or key]
-	if not length then
-		return autotimers(self, key, label)
-	else
-		self.autoTimers[key], self.autoTimersLabels[key] = GetTime(), label
-	end
+	if not length then return autotimers(self, key, label)	end
 	if checkFlag(self, key, C.BAR) then
 		self:SendMessage("BigWigs_StartBar", self, key, label, length, icons[icon or textType == "number" and text or key], true)
 	end
