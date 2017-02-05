@@ -1631,7 +1631,7 @@ local function autotimers(self, key, label)
 	local last, lastLabel = self.autoTimers[key], self.autoTimersLabels[key]
 	self.autoTimers[key], self.autoTimersLabels[key] = now, label
 	if not last then
-		local checkpoint = self.autoTimersCheckpoint[key] or self.autoTimersCheckpoint["*"]
+		local checkpoint = self.autoTimersCheckpoints[key] or self.autoTimersCheckpoints["*"]
 		last, lastLabel = checkpoint, "Checkpoint"
 	end
 	if last then
