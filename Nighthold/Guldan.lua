@@ -96,7 +96,7 @@ local timersMythic = {
 		-- Storm of the Destroyer, SPELL_CAST_START
 		[167819] = { 65, 57.8 },
 		-- Soul Siphon, SPELL_AURA_APPLIED
-		[221891] = { 22.1, 51.5, 50.2 },
+		--[221891] = { 22.1, 51.5, 50.2 },
 		-- Black Harvest, SPELL_CAST_START
 		[206744] = { 48, 61 },
 	},
@@ -672,6 +672,7 @@ do
 		self:SetInfo("infobox", 2, soulsRemaining)
 		if GetTime() - t > 5 then
 			t = GetTime()
+			self:Message(args.spellId, "Attention", "Alert")
 			soulSiphonCount = soulSiphonCount + 1
 			self:Bar(args.spellId, self:Timer(221891, soulSiphonCount))
 		end

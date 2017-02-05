@@ -1619,7 +1619,7 @@ end
 
 local autoTimersMissing = "Missing timer until next '%s' (%s)."
 local autoTimersFound = "Last '%s' was %s sec. ago."
-local autoTimersSummary = "%s [%s]: %s"
+local autoTimersSummary = "[%s]: %s"
 
 local function round(value, decimals)
 	return math.floor((value * 10 ^ decimals) + 0.5) / (10 ^ decimals)
@@ -1646,10 +1646,21 @@ local function autotimers(self, key, label)
 end
 
 function boss:TimersCheckpoint(key)
-	self.autoTimersCheckpoints[key or "*"] = GetTime()
-	for key, timers in pairs(self.autoTimersSummary) do
-		table.insert(timers, "C")
+	if not key then
+		wipe(self.autoTimersCheckpoints)
+		wipe(self.autoTimers)
+		wipe(self.autoTimersLabels)
+		for key, timers in pairs(self.autoTimersSummary) do
+			table.insert(timers, "C")
+		end
+	else
+		self.autoTimers[key] = nil
+		self.autoTimersLabels[key] = nil
+		if self.autoTimersSummary[key] then
+			table.insert(self.autoTimersSummary[key], "C")
+		end
 	end
+	self.autoTimersCheckpoints[key or "*"] = GetTime()
 end
 
 
@@ -1657,7 +1668,8 @@ function boss:OnDisableAutoTimersSummary()
 	if not next(self.autoTimersSummary) then return end
 	self:Print("Auto-Timers summary:")
 	for key, timers in pairs(self.autoTimersSummary) do
-		self:Print(autoTimersSummary:format(spells[key], key, table.concat(timers, ",")))
+		local label = type(key) == "number" and (key .. "-" .. spells[key]) or key
+		core:Print(autoTimersSummary:format(label, table.concat(timers, ",")))
 	end
 end
 
@@ -1674,7 +1686,11 @@ end
 function boss:Bar(key, length, text, icon)
 	local textType = type(text)
 	local label = textType == "string" and text or spells[text or key]
-	if not length then return autotimers(self, key, label) end
+	if not length then
+		return autotimers(self, key, label)
+	else
+		self.autoTimers[key], self.autoTimersLabels[key] = GetTime(), label
+	end
 	if checkFlag(self, key, C.BAR) then
 		self:SendMessage("BigWigs_StartBar", self, key, label, length, icons[icon or textType == "number" and text or key])
 	end
@@ -1692,7 +1708,11 @@ end
 function boss:CDBar(key, length, text, icon)
 	local textType = type(text)
 	local label = textType == "string" and text or spells[text or key]
-	if not length then return autotimers(self, key, label) end
+	if not length then
+		return autotimers(self, key, label)
+	else
+		self.autoTimers[key], self.autoTimersLabels[key] = GetTime(), label
+	end
 	if checkFlag(self, key, C.BAR) then
 		self:SendMessage("BigWigs_StartBar", self, key, label, length, icons[icon or textType == "number" and text or key], true)
 	end
