@@ -96,7 +96,7 @@ local timersMythic = {
 		-- Storm of the Destroyer, SPELL_CAST_START
 		[167819] = { 65, 57.8 },
 		-- Soul Siphon, SPELL_AURA_APPLIED
-		[221891] = { 22.1, 9.5, 42, 9.5, 40.8 },
+		[221891] = { 22.1, 51.5, 50.2 },
 		-- Black Harvest, SPELL_CAST_START
 		[206744] = { 48, 61 },
 	},
@@ -666,21 +666,15 @@ function mod:StormOfTheDestroyer(args)
 end
 
 do
-	local list = mod:NewTargetList()
-	local function warn(self, spellId, spellName)
-		self:Message(spellId, "Important", "Warning", ("Soul Siphon +%d"):format(#list))
-		wipe(list)
-	end
-
+	local t = 0
 	function mod:SoulSiphon(args)
-		list[#list+1] = args.destName
-		if #list == 1 then
-			self:ScheduleTimer(warn, 1, self, args.spellId, args.spellName)
+		soulsRemaining = soulsRemaining + 1
+		self:SetInfo("infobox", 2, soulsRemaining)
+		if GetTime() - t > 5 then
+			t = GetTime()
 			soulSiphonCount = soulSiphonCount + 1
 			self:Bar(args.spellId, self:Timer(221891, soulSiphonCount))
 		end
-		soulsRemaining = soulsRemaining + 1
-		self:SetInfo("infobox", 2, soulsRemaining)
 	end
 
 	function mod:SoulCorrosion(args)
