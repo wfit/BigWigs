@@ -92,11 +92,11 @@ local timersMythic = {
 	-- Phase 3
 	[3] = {
 		-- Empowered Eye of Gul'dan, SPELL_CAST_START
-		[209270] = { 27.2 },
+		[209270] = { 27.1, 52.6 },
 		-- Storm of the Destroyer, SPELL_CAST_START
 		[167819] = { 65 },
 		-- Soul Siphon, SPELL_AURA_APPLIED
-		[221891] = { 22, 9.5 },
+		[221891] = { 22.1, 9.5, 42, 9.5 },
 		-- Black Harvest, SPELL_CAST_START
 		[206744] = { 48 },
 	},
@@ -647,9 +647,9 @@ function mod:Phase3(args)
 	soulSiphonCount = 1
 	harvestCount = 1
 	soulsRemaining = 0
-	self:Bar(211152, self:Timer(211152, eyeOfGuldanCount), CL.count:format(L.emp_eyes, eyeOfGuldanCount)) -- Empowered Eye of Gul'dan
+	self:Bar(211152, self:Timer(209270, eyeOfGuldanCount), CL.count:format(L.emp_eyes, eyeOfGuldanCount))
 	self:Bar(167819, self:Timer(167819, stormCount), CL.count:format(self:SpellName(167819), stormCount))
-	self:Bar(221891, self:Timer(221891, soulSiphonCount)) -- Soul Siphon
+	self:Bar(221891, self:Timer(221891, soulSiphonCount))
 	self:Bar(206744, self:Timer(206744, harvestCount), CL.count:format(self:SpellName(206744), harvestCount))
 	self:Bar(221783, self:Mythic() and 16.6 or 18.2) -- Flames of Sargeras
 	self:OpenInfo("infobox", self:SpellName(221891))
@@ -706,7 +706,7 @@ end
 
 function mod:FlamesOfSargeras(args)
 	self:Message(args.spellId, "Urgent", "Warning", CL.incoming:format(args.spellName))
-	self:Bar(args.spellId, self:Mythic() and 43.2 or 51.3) -- Flames of Sargeras
+	self:Bar(args.spellId, self:Mythic() and 43.1 or 51.3) -- Flames of Sargeras
 	-- Debuffs waves
 	local delay = self:Mythic() and 7.4 or 8.7
 	self:Bar(args.spellId, delay, CL.next:format(args.spellName))
