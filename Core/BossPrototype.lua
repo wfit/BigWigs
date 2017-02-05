@@ -200,6 +200,8 @@ function boss:Initialize()
 	core:RegisterBossModule(self)
 	self.autoTimers = {}
 	self.autoTimersLabels = {}
+	self.autoTimersSummary = {}
+	self.autoTimersCheckpoints = {}
 end
 
 function boss:OnEnable(isWipe)
@@ -229,6 +231,7 @@ function boss:OnEnable(isWipe)
 		self:SendMessage("BigWigs_OnBossEnable", self)
 	end
 end
+
 function boss:OnDisable(isWipe)
 	if debug then dbg(self, isWipe and "OnDisable() via Wipe()" or "OnDisable()") end
 	if type(self.OnBossDisable) == "function" then self:OnBossDisable() end
@@ -278,13 +281,19 @@ function boss:OnDisable(isWipe)
 	self.targetEventFunc = nil
 	self.isWiping = nil
 	self.isEngaged = nil
+
+	-- Reset auto timers
+	self:OnDisableAutoTimersSummary()
 	wipe(self.autoTimers)
 	wipe(self.autoTimersLabels)
+	wipe(self.autoTimersSummary)
+	wipe(self.autoTimersCheckpoints)
 
 	if not isWipe then
 		self:SendMessage("BigWigs_OnBossDisable", self)
 	end
 end
+
 function boss:Reboot(isWipe)
 	if debug then dbg(self, ":Reboot()") end
 	if isWipe then
@@ -1602,17 +1611,59 @@ do
 	end
 end
 
+
 -------------------------------------------------------------------------------
--- Bars.
--- @section bars
+-- Autotimers.
+-- @section autotimers
 --
 
-local nilLengthError = "Missing timer until next '%s' (%s)."
-local nilLengthAutoTimer = "Last '%s' was %s sec. ago."
+local autoTimersMissing = "Missing timer until next '%s' (%s)."
+local autoTimersFound = "Last '%s' was %s sec. ago."
+local autoTimersSummary = "%s [%s]: %s"
 
 local function round(value, decimals)
 	return math.floor((value * 10 ^ decimals) + 0.5) / (10 ^ decimals)
 end
+
+local function autotimers(self, key, label)
+	core:Print(format(autoTimersMissing, label, key))
+	local now = GetTime()
+	local last, lastLabel = self.autoTimers[key], self.autoTimersLabels[key]
+	self.autoTimers[key], self.autoTimersLabels[key] = now, label
+	if not last then
+		local checkpoint = self.autoTimersCheckpoint[key] or self.autoTimersCheckpoint["*"]
+		last, lastLabel = checkpoint, "Checkpoint"
+	end
+	if last then
+		local timer = round(now - last, 2)
+		if not self.autoTimersSummary[key] then
+			self.autoTimersSummary[key] = { timer }
+		else
+			table.insert(self.autoTimersSummary[key], timer)
+		end
+		core:Print(format(autoTimersFound, lastLabel, timer))
+	end
+end
+
+function boss:TimersCheckpoint(key)
+	self.autoTimersCheckpoints[key or "*"] = GetTime()
+	for key, timers in pairs(self.autoTimersSummary) do
+		table.insert(timers, "C")
+	end
+end
+
+function boss:OnDisableAutoTimersSummary()
+	if #self.autoTimersSummary < 1 then return end
+	self:Print("Auto-Timers summary:")
+	for key, timers in pairs(self.autoTimersSummary) do
+		self:Print(autoTimersSummary:format(spells[key], key, table.concat(timers, ",")))
+	end
+end
+
+-------------------------------------------------------------------------------
+-- Bars.
+-- @section bars
+--
 
 --- Display a bar.
 -- @param key the option key
@@ -1622,16 +1673,7 @@ end
 function boss:Bar(key, length, text, icon)
 	local textType = type(text)
 	local label = textType == "string" and text or spells[text or key]
-	if not length then
-		local now = GetTime()
-		local last, lastLabel = self.autoTimers[key], self.autoTimersLabels[key]
-		self.autoTimers[key], self.autoTimersLabels[key] = now, label
-		core:Print(format(nilLengthError, label, key))
-		if last then
-			core:Print(format(nilLengthAutoTimer, lastLabel, round(now - last, 2)))
-		end
-		return
-	end
+	if not length then return autotimers(self, key, label) end
 	if checkFlag(self, key, C.BAR) then
 		self:SendMessage("BigWigs_StartBar", self, key, label, length, icons[icon or textType == "number" and text or key])
 	end
@@ -1647,13 +1689,14 @@ end
 -- @param[opt] text the bar text (if nil, key is used)
 -- @param[opt] icon the bar icon (spell id or texture name)
 function boss:CDBar(key, length, text, icon)
-	if not length then core:Print(format(nilLengthError, self.moduleName, key)) return end
 	local textType = type(text)
+	local label = textType == "string" and text or spells[text or key]
+	if not length then return autotimers(self, key, label) end
 	if checkFlag(self, key, C.BAR) then
-		self:SendMessage("BigWigs_StartBar", self, key, textType == "string" and text or spells[text or key], length, icons[icon or textType == "number" and text or key], true)
+		self:SendMessage("BigWigs_StartBar", self, key, label, length, icons[icon or textType == "number" and text or key], true)
 	end
 	if checkFlag(self, key, C.COUNTDOWN) then
-		self:SendMessage("BigWigs_StartEmphasize", self, key, textType == "string" and text or spells[text or key], length)
+		self:SendMessage("BigWigs_StartEmphasize", self, key, label, length)
 	end
 end
 
@@ -1664,7 +1707,6 @@ end
 -- @param[opt] text the bar text (if nil, key is used)
 -- @param[opt] icon the bar icon (spell id or texture name)
 function boss:TargetBar(key, length, player, text, icon)
-	if not length then core:Print(format(nilLengthError, self.moduleName, key)) return end
 	local textType = type(text)
 	if not player and checkFlag(self, key, C.BAR) then
 		self:SendMessage("BigWigs_StartBar", self, key, format(L.other, textType == "string" and text or spells[text or key], "???"), length, icons[icon or textType == "number" and text or key])

@@ -640,6 +640,7 @@ function mod:SecondTransition(args)
 end
 
 function mod:Phase3(args)
+	self:TimersCheckpoint()
 	phase = 3
 	self:Message("stages", "Neutral", "Long", CL.stage:format(phase), false)
 	eyeOfGuldanCount = 1
