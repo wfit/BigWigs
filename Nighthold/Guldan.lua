@@ -96,7 +96,7 @@ local timersMythic = {
 		-- Storm of the Destroyer, SPELL_CAST_START
 		[167819] = { 65, 57.8 },
 		-- Soul Siphon, SPELL_AURA_APPLIED
-		--[221891] = { 22.1, 51.5, 50.2 },
+		[221891] = { 22.1, 9.5, 42.1, 9.5, 9.5 },
 		-- Black Harvest, SPELL_CAST_START
 		[206744] = { 48, 61 },
 	},
