@@ -199,6 +199,7 @@ end
 function boss:Initialize()
 	core:RegisterBossModule(self)
 	self.autoTimers = {}
+	self.autoTimersLabels = {}
 end
 
 function boss:OnEnable(isWipe)
@@ -278,6 +279,7 @@ function boss:OnDisable(isWipe)
 	self.isWiping = nil
 	self.isEngaged = nil
 	wipe(self.autoTimers)
+	wipe(self.autoTimersLabels)
 
 	if not isWipe then
 		self:SendMessage("BigWigs_OnBossDisable", self)
@@ -1606,7 +1608,7 @@ end
 --
 
 local nilLengthError = "Missing timer until next '%s' (%s)."
-local nilLengthErrorAuto = "Missing timer until next '%s' (%s) [last was %s sec. ago]."
+local nilLengthAutoTimer = "Last '%s' was %s sec. ago."
 
 local function round(value, decimals)
 	return math.floor((value * 10 ^ decimals) + 0.5) / (10 ^ decimals)
@@ -1621,13 +1623,12 @@ function boss:Bar(key, length, text, icon)
 	local textType = type(text)
 	local label = textType == "string" and text or spells[text or key]
 	if not length then
-		local last = self.autoTimers[key]
 		local now = GetTime()
-		self.autoTimers[key] = now
+		local last, lastLabel = self.autoTimers[key], self.autoTimersLabels[key]
+		self.autoTimers[key], self.autoTimersLabels[key] = now, label
+		core:Print(format(nilLengthError, label, key))
 		if last then
-			core:Print(format(nilLengthErrorAuto, label, key, round(now - last, 2)))
-		else
-			core:Print(format(nilLengthError, label, key))
+			core:Print(format(nilLengthAutoTimer, lastLabel, round(now - last, 2)))
 		end
 		return
 	end
