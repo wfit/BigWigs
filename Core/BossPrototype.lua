@@ -825,6 +825,7 @@ do
 
 		if not noEngage or noEngage ~= "NoEngage" then
 			updateData(self)
+			self:TimersCheckpoint()
 
 			if self.OnEngage then
 				self:OnEngage(difficulty)
