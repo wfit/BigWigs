@@ -1608,6 +1608,10 @@ end
 local nilLengthError = "Missing timer until next '%s' (%s)."
 local nilLengthErrorAuto = "Missing timer until next '%s' (%s) [last was %s sec. ago]."
 
+local function round(value, decimals)
+	return math.floor((value * 10 ^ decimals) + 0.5) / (10 ^ decimals)
+end
+
 --- Display a bar.
 -- @param key the option key
 -- @param length the bar duration in seconds
@@ -1621,7 +1625,7 @@ function boss:Bar(key, length, text, icon)
 		local now = GetTime()
 		self.autoTimers[key] = now
 		if last then
-			core:Print(format(nilLengthErrorAuto, label, key, now - last))
+			core:Print(format(nilLengthErrorAuto, label, key, round(now - last, 2)))
 		else
 			core:Print(format(nilLengthError, label, key))
 		end
