@@ -101,7 +101,7 @@ local timersMythic = {
 		-- Black Harvest, SPELL_CAST_START
 		[206744] = { 47.8, 61, 75.3 },
 		-- Fel Wind
-		[215125] = { 3.8, 31.2, 116.1 },
+		[215125] = { 3.8, 87.4, 85 },
 	},
 }
 
