@@ -132,7 +132,7 @@ if L then
 	L.bonds = "Bonds"
 	L.emp_bonds = "Empowered Bonds"
 	L.eyes = "Eyes"
-	L.emp_eyes = "Empowered Eye"
+	L.emp_eye = "Empowered Eye"
 end
 
 --------------------------------------------------------------------------------
@@ -362,7 +362,7 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 			self:EmpowerSpell(L.hellfire, L.emp_hellfire, 206220, liquidHellfireCount)
 		elseif not eyesEmpowered then
 			eyesEmpowered = true
-			self:EmpowerSpell(L.eyes, L.emp_eyes, 211152, eyeOfGuldanCount)
+			self:EmpowerSpell(L.eyes, L.emp_eye, 211152, eyeOfGuldanCount)
 		end
 		empowerCount = empowerCount + 1
 		if self:Mythic() and empowerCount < 4 then
@@ -563,7 +563,7 @@ do
 			self:OpenProximity(args.spellId, 8)
 		end
 		eyeOfGuldanCount = eyeOfGuldanCount + 1
-		local label = args.spellId == 209270 and L.eyes or L.emp_eyes
+		local label = args.spellId == 209270 and L.eyes or L.emp_eye
 		self:Bar(args.spellId, self:Timer(209270, eyeOfGuldanCount), CL.count:format(label, eyeOfGuldanCount))
 	end
 
@@ -641,7 +641,7 @@ end
 function mod:SecondTransition(args)
 	self:StopBar(CL.count:format(L.emp_hellfire, liquidHellfireCount))
 	self:StopBar(CL.count:format(L.emp_bonds, bondsOfFelCount))
-	self:StopBar(CL.count:format(L.emp_eyes, eyeOfGuldanCount))
+	self:StopBar(CL.count:format(L.emp_eye, eyeOfGuldanCount))
 	self:Message("stages", "Neutral", "Long", "Second Transition", false)
 	self:Bar("stages", 8, CL.stage:format(phase + 1), 227427)
 end
@@ -656,7 +656,7 @@ function mod:Phase3(args)
 	harvestCount = 1
 	windCount = 1
 	soulsRemaining = 0
-	self:Bar(211152, self:Timer(209270, eyeOfGuldanCount), CL.count:format(L.emp_eyes, eyeOfGuldanCount))
+	self:Bar(211152, self:Timer(209270, eyeOfGuldanCount), CL.count:format(L.emp_eye, eyeOfGuldanCount))
 	self:Bar(167819, self:Timer(167819, stormCount), CL.count:format(self:SpellName(167819), stormCount))
 	self:Bar(221891, self:Timer(221891, soulSiphonCount))
 	self:Bar(206744, self:Timer(206744, harvestCount), CL.count:format(self:SpellName(206744), harvestCount))
