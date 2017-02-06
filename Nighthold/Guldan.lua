@@ -254,7 +254,8 @@ function mod:OnBossEnable()
 	self:Log("SPELL_AURA_APPLIED", "SecondTransition", 227427) -- Eye of Aman'Thul
 	self:Log("SPELL_AURA_REMOVED", "Phase3", 227427) -- Eye of Aman'Thul
 	self:Log("SPELL_CAST_START", "StormOfTheDestroyer", 167819)
-	self:Log("SPELL_AURA_APPLIED", "SoulSiphon", 221891)
+	self:Log("SPELL_DAMAGE", "SoulSiphon", 221891)
+	self:Log("SPELL_MISSED", "SoulSiphon", 221891)
 	self:Log("SPELL_AURA_APPLIED", "WellOfSoulsApplied", 208536)
 	self:Log("SPELL_AURA_REMOVED", "WellOfSoulsRemoved", 208536)
 	self:Log("SPELL_AURA_APPLIED", "SoulCorrosion", 208802)
