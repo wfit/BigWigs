@@ -258,9 +258,8 @@ function mod:OnBossEnable()
 	self:Log("SPELL_MISSED", "SoulSiphon", 221891)
 	self:Log("SPELL_AURA_APPLIED", "WellOfSoulsApplied", 208536)
 	self:Log("SPELL_AURA_REMOVED", "WellOfSoulsRemoved", 208536)
-	self:Log("SPELL_AURA_APPLIED", "SoulCorrosion", 208802)
-	self:Log("SPELL_AURA_APPLIED_DOSE", "SoulCorrosion", 208802)
-	self:Log("SPELL_AURA_REFRESH", "SoulCorrosion", 208802)
+	self:Log("SPELL_DAMAGE", "SoulExplulsion", 228267)
+	self:Log("SPELL_MISSED", "SoulExplulsion", 228267)
 	self:Log("SPELL_CAST_START", "BlackHarvest", 206744)
 	--self:Log("SPELL_CAST_SUCCESS", "BlackHarvestSuccess", 206744)
 	self:Log("SPELL_CAST_START", "FlamesOfSargeras", 221783)
@@ -717,7 +716,7 @@ end
 
 do
 	local last = 0
-	function mod:SoulCorrosion(args)
+	function mod:SoulExplulsion(args)
 		if last ~= args.timestamp then
 			last = args.timestamp
 			soulsRemaining = soulsRemaining - 1
