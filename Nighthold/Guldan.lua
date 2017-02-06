@@ -132,7 +132,7 @@ if L then
 	L.bonds = "Bonds"
 	L.emp_bonds = "Empowered Bonds"
 	L.eyes = "Eyes"
-	L.emp_eyes = "Empowered Eyes"
+	L.emp_eyes = "Empowered Eye"
 end
 
 --------------------------------------------------------------------------------
