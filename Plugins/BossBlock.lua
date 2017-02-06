@@ -178,7 +178,7 @@ do
 		[152] = true, -- Garrosh defeat
 		[294] = true, -- Archimonde portal
 		[295] = true, -- Archimonde kill
-		[549] = true, -- Guldan death
+		[549] = true, -- Gul'dan kill
 	}
 
 	function plugin:PLAY_MOVIE(_, id)
@@ -240,6 +240,7 @@ do
 			local areaId = GetCurrentMapAreaID() or 0
 			local areaLevel = GetCurrentMapDungeonLevel() or 0
 			local id = ("%d:%d"):format(areaId, areaLevel)
+
 			if cinematicZones[id] then
 				if type(cinematicZones[id]) == "table" then -- For zones with more than 1 cinematic per floor
 					if type(BigWigs.db.global.watchedMovies[id]) ~= "table" then BigWigs.db.global.watchedMovies[id] = {} end
