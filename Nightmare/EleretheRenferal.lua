@@ -102,7 +102,7 @@ function mod:OnEngage()
 	self:Bar(215300, 6) -- Web of Pain
 	self:Bar(215443, 12) -- Necrotic Venom
 	self:Bar(212364, 16) -- Feeding Time
-	self:Bar("stages", 90, -13263, "inv_ravenlordmount") -- Roc Form
+	self:Bar("stages", 91, -13263, "inv_ravenlordmount") -- Roc Form
 end
 
 --------------------------------------------------------------------------------
@@ -128,6 +128,7 @@ do
 				players[guid] = true
 				list[#list+1] = self:UnitName(unit)
 				if unit == "player" then
+					self:Message(key, "Personal", "Long", CL.you:format(spellName))
 					self:Flash(key)
 					self:Say(key)
 
@@ -198,7 +199,7 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(_, _, _, _, spellId)
 		self:Message("stages", "Neutral", "Info", -13259, "inv_spidermount") -- Spider Form
 		self:Bar(215300, 6) -- Web of Pain
 		self:Bar(212364, 16) -- Feeding Time
-		self:Bar("stages", 90, -13263, "inv_ravenlordmount") -- Roc Form
+		self:Bar("stages", 97, -13263, "inv_ravenlordmount") -- Roc Form
 	end
 end
 

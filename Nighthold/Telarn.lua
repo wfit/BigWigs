@@ -329,7 +329,7 @@ end
 
 function mod:GraceOfNature(args)
 	self:Message(args.spellId, "Important", "Long", CL.casting:format(args.spellName))
-	self:Bar(args.spellId, 50)
+	self:Bar(args.spellId, (self:Mythic() and (phase == 2 and 55 or phase == 3 and 35 or 65)) or 50)
 end
 
 do
