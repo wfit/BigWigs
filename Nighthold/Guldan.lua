@@ -93,7 +93,7 @@ local timersMythic = {
 	-- Phase 3
 	[3] = {
 		-- Empowered Eye of Gul'dan, SPELL_CAST_START
-		[209270] = { 26.7, 52.6, 53.2, 20.4, 84.2, 52.63 },
+		[209270] = { 26.7, 52.6, 53.2, 20.4, 84.2, 52.6 },
 		-- Storm of the Destroyer, SPELL_CAST_START
 		[167819] = { 64.5, 57.8, 51.5, 64.6, 57.4 },
 		-- Soul Siphon, SPELL_AURA_APPLIED
