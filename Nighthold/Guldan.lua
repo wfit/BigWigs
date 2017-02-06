@@ -260,6 +260,7 @@ function mod:OnBossEnable()
 	self:Log("SPELL_AURA_REMOVED", "WellOfSoulsRemoved", 208536)
 	self:Log("SPELL_AURA_APPLIED", "SoulCorrosion", 208802)
 	self:Log("SPELL_AURA_APPLIED_DOSE", "SoulCorrosion", 208802)
+	self:Log("SPELL_AURA_REFRESH", "SoulCorrosion", 208802)
 	self:Log("SPELL_CAST_START", "BlackHarvest", 206744)
 	--self:Log("SPELL_CAST_SUCCESS", "BlackHarvestSuccess", 206744)
 	self:Log("SPELL_CAST_START", "FlamesOfSargeras", 221783)
@@ -717,10 +718,6 @@ end
 do
 	local last = 0
 	function mod:SoulCorrosion(args)
-		local amount = args.amount or 1
-		if self:Me(args.destGUID) and amount == 9 then
-			self:Message(args.spellId, "Personal", "Warning", "You cant soak anymore!!")
-		end
 		if last ~= args.timestamp then
 			last = args.timestamp
 			soulsRemaining = soulsRemaining - 1
