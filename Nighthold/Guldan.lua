@@ -93,11 +93,11 @@ local timersMythic = {
 	-- Phase 3
 	[3] = {
 		-- Empowered Eye of Gul'dan, SPELL_CAST_START
-		[209270] = { 26.7, 52.6, 53.2, 20.4, 84.2 },
+		[209270] = { 26.7, 52.6, 53.2, 20.4, 84.2, 52.63 },
 		-- Storm of the Destroyer, SPELL_CAST_START
-		[167819] = { 64.5, 57.8, 51.5, 64.6 },
+		[167819] = { 64.5, 57.8, 51.5, 64.6, 57.4 },
 		-- Soul Siphon, SPELL_AURA_APPLIED
-		[221891] = { 21.7, 9.5, 42, 9.5, 9.5, 50.5, 9.5, 9.5, 9.5, 45.3, 9.5, 9.5, 9.5, 9.5 },
+		[221891] = { 21.7, 9.5, 42, 9.5, 9.5, 50.5, 9.5, 9.5, 9.5, 45.3, 9.5, 9.5, 9.5, 9.5, 27.3, 9.5 },
 		-- Black Harvest, SPELL_CAST_START
 		[206744] = { 47.8, 61, 75.3, 86.7 },
 		-- Fel Wind
@@ -317,7 +317,7 @@ function mod:OnEngage()
 		end
 	end
 
-	self:Berserk(720)
+	self:Berserk(self:Mythic() and 632.2 or 720)
 end
 
 function mod:OnBossDisable()
