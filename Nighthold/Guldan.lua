@@ -216,7 +216,7 @@ function mod:GetOptions()
 
 		--[[ The Demon Within ]] --
 		220957, -- Soulsever
-		206847, -- Parasitic Wound
+		{206847, "SAY", "FLASH"}, -- Parasitic Wound
 		227008, -- Vision of the Dark Titan
 		227096, -- Flame Crash
 	}, {
@@ -851,6 +851,10 @@ do
 			self:ScheduleTimer("TargetMessage", 0.2, 221783, list, "Important", "Alert", nil, nil, true)
 			parasiticCount = parasiticCount + 1
 			self:Bar(args.spellId, self:Timer(args.spellId, parasiticCount), CL.count:format(args.spellName, parasiticCount))
+		end
+		if self:Me(args.destGUID) then
+			self:Flash(args.spellId)
+			self:Say(args.spellId)
 		end
 	end
 end
