@@ -119,9 +119,9 @@ local timersMythic = {
 		-- Manifest Azzinoth, UNIT_SPELLCAST_SUCCEEDED
 		[227264] = { 22.3, 40.9 },
 		-- Summon Nightorb, UNIT_SPELLCAST_SUCCEEDED
-		[227283] = { 35.5 },
+		[227283] = { 35.5, 45 },
 		-- Visions of the Dark Titan, SPELL_CAST_START
-		[227008] = {},
+		[227008] = { 91.3 },
 	},
 }
 
