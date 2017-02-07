@@ -111,13 +111,13 @@ local timersMythic = {
 
 		-- P4 is actually P3 to handle simultaneous Gul'dan
 		-- Parasitic Wound, SPELL_AURA_APPLIED
-		[227035] = 36,
+		[206847] = 36,
 		-- Soulsever, SPELL_CAST_START
 		[220957] = 20,
 		-- Flame Crash, SPELL_CAST_START
 		[227094] = 20,
 		-- Manifest Azzinoth, UNIT_SPELLCAST_SUCCEEDED
-		[227264] = { 22.5 },
+		[227264] = { 22.5, 40.9 },
 		-- Summon Nightorb, UNIT_SPELLCAST_SUCCEEDED
 		[227283] = { 35.5 },
 		-- Visions of the Dark Titan, SPELL_CAST_START
@@ -133,7 +133,7 @@ local overridesMythic = {
 	},
 	-- Phase 3
 	[3] = {
-		[227035] = { [1] = 4.9 }, -- Parasitic Wound
+		[227035] = { [1] = 4.5 }, -- Parasitic Wound
 		[220957] = { [1] = 15.5 }, -- Soulsever
 		[227094] = { [1] = 25.5 }, -- Flame Crash
 	},
