@@ -108,14 +108,14 @@ local timersMythic = {
 		[215125] = { 3.8, 87.4, 84.5, 84.5 },
 
 		-- P4 is actually P3 to handle simultaneous Gul'dan
-		-- Soulsever, SPELL_CAST_START
-		[220957] = { 15.8 },
 		-- Parasitic Wound, SPELL_AURA_APPLIED
-		[206847] = { 4.9 },
+		[206847] = { 4.9, 18 },
+		-- Soulsever, SPELL_CAST_START
+		[220957] = 20,
+		-- Flame Crash, SPELL_CAST_START
+		[227094] = 20,
 		-- Visions of the Dark Titan, SPELL_CAST_START
 		[227008] = {},
-		-- Flame Crash, SPELL_CAST_START
-		[227096] = {},
 	},
 }
 
@@ -124,7 +124,12 @@ local overridesMythic = {
 	[2] = {
 		[206222] = { [1] = 6.1 }, -- Bonds of Fel
 		[212258] = { [1] = 16.1 }, -- Hand of Gul'dan
-	}
+	},
+	-- Phase 3
+	[3] = {
+		[220957] = { [1] = 16 }, -- Soulsever
+		[227094] = { [1] = 26 }, -- Flame Crash
+	},
 }
 
 local timers = mod:Mythic() and timersMythic or timersHeroic
@@ -215,10 +220,10 @@ function mod:GetOptions()
 		221781, -- Desolate Ground
 
 		--[[ The Demon Within ]] --
-		220957, -- Soulsever
 		{206847, "SAY", "FLASH"}, -- Parasitic Wound
+		220957, -- Soulsever
+		227094, -- Flame Crash
 		227008, -- Vision of the Dark Titan
-		227096, -- Flame Crash
 	}, {
 		["stages"] = "general",
 		[206219] = -14885, -- Stage One
@@ -297,10 +302,9 @@ function mod:OnBossEnable()
 
 	--[[ The Demon Within ]] --
 	self:Log("SPELL_CAST_SUCCESS", "WillOfTheDemonWithin", 211439)
-	self:Log("SPELL_CAST_START", "Soulsever", 220957)
 	self:Log("SPELL_AURA_APPLIED", "ParasiticWound", 206847)
+	self:Log("SPELL_CAST_START", "Soulsever", 220957)
 	self:Log("SPELL_CAST_START", "VisionOfTheDarkTitan", 227008)
-	self:Log("SPELL_CAST_START", "FlameCrash", 227096)
 end
 
 function mod:OnEngage()
@@ -411,6 +415,8 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 		self:TrapperSpawn()
 	elseif spellId == 212721 or spellId == 212722 or spellId == 209126 then -- Summon Dreadlord
 		self:DreadlordSpawn()
+	elseif spellId == 227094 then
+		self:FlameCrash()
 	end
 end
 
@@ -809,7 +815,7 @@ end
 --[[ The Demon Within ]] --
 function mod:MythicRolePlayEvent()
 	self:Message("stages", "Neutral", "Long", CL.incoming:format(self:SpellName(211439)), false)
-	self:Bar("stages", 43, 211439) -- Will of the Demon Within
+	self:Bar("stages", 42.6, 211439) -- Will of the Demon Within
 	self:StopBar(26662) -- Gul'dan can no longer berserk once under 10% health
 end
 
@@ -827,20 +833,14 @@ function mod:WillOfTheDemonWithin()
 	-- because it is possible for Gul'dan to still be alive during that phase and we don't
 	-- want to fuck up his timers.
 	self:Message("stages", "Neutral", "Long", CL.stage:format(4), false)
-	soulseverCount = 1
 	parasiticCount = 1
-	visionCount = 1
+	soulseverCount = 1
 	flameCrashCount = 1
-	self:Bar(220957, self:Timer(220957, soulseverCount), CL.count:format(self:SpellName(220957), soulseverCount))
+	visionCount = 1
 	self:Bar(206847, self:Timer(206847, parasiticCount), CL.count:format(self:SpellName(206847), parasiticCount))
+	self:Bar(220957, self:Timer(220957, soulseverCount), CL.count:format(self:SpellName(220957), soulseverCount))
+	self:Bar(227094, self:Timer(227094, flameCrashCount), CL.count:format(self:SpellName(227094), flameCrashCount))
 	self:Bar(227008, self:Timer(227008, visionCount), CL.count:format(self:SpellName(227008), visionCount))
-	self:Bar(227096, self:Timer(227096, flameCrashCount), CL.count:format(self:SpellName(227096), flameCrashCount))
-end
-
-function mod:Soulsever(args)
-	self:Message(args.spellId, "Urgent", "Warning", CL.incoming:format(args.spellName))
-	soulseverCount = soulseverCount + 1
-	self:Bar(args.spellId, self:Timer(args.spellId, soulseverCount), CL.count:format(args.spellName, soulseverCount))
 end
 
 do
@@ -848,7 +848,7 @@ do
 	function mod:ParasiticWound(args)
 		list[#list + 1] = args.destName
 		if #list == 1 then
-			self:ScheduleTimer("TargetMessage", 0.2, 221783, list, "Important", "Alert", nil, nil, true)
+			self:ScheduleTimer("TargetMessage", 0.2, 206847, list, "Important", "Alert", nil, nil, true)
 			parasiticCount = parasiticCount + 1
 			self:Bar(args.spellId, self:Timer(args.spellId, parasiticCount), CL.count:format(args.spellName, parasiticCount))
 		end
@@ -859,16 +859,22 @@ do
 	end
 end
 
+function mod:Soulsever(args)
+	self:Message(args.spellId, "Urgent", "Warning", CL.incoming:format(args.spellName))
+	soulseverCount = soulseverCount + 1
+	self:Bar(args.spellId, self:Timer(args.spellId, soulseverCount), CL.count:format(args.spellName, soulseverCount))
+end
+
+function mod:FlameCrash(spellId)
+	self:Message(227094, "Urgent", "Alert")
+	flameCrashCount = flameCrashCount + 1
+	self:Bar(227094, self:Timer(227094, flameCrashCount), CL.count:format(self:SpellName(227094), flameCrashCount))
+end
+
 function mod:VisionOfTheDarkTitan(args)
 	self:Message(args.spellId, "Urgent", "Warning", CL.incoming:format(args.spellName))
 	visionCount = visionCount + 1
 	self:Bar(args.spellId, self:Timer(args.spellId, visionCount), CL.count:format(args.spellName, visionCount))
-end
-
-function mod:FlameCrash(args)
-	self:Message(args.spellId, "Urgent", "Alert")
-	flameCrashCount = flameCrashCount + 1
-	self:Bar(args.spellId, self:Timer(args.spellId, flameCrashCount), CL.count:format(args.spellName, flameCrashCount))
 end
 
 --[[ Generic Damage Warnings ]] --
