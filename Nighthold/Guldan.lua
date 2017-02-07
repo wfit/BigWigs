@@ -35,6 +35,7 @@ local soulseverCount = 1
 local parasiticCount = 1
 local visionCount = 1
 local flameCrashCount = 1
+local azzinothCount = 1
 local nightorbCount = 1
 local soulsRemaining = 0
 local bondsEmpowered = false
@@ -115,7 +116,9 @@ local timersMythic = {
 		[220957] = 20,
 		-- Flame Crash, SPELL_CAST_START
 		[227094] = 20,
-		-- Summon Nightorb
+		-- Manifest Azzinoth, UNIT_SPELLCAST_SUCCEEDED
+		[227264] = { 23 },
+		-- Summon Nightorb, UNIT_SPELLCAST_SUCCEEDED
 		[227283] = { 36.1 },
 		-- Visions of the Dark Titan, SPELL_CAST_START
 		[227008] = {},
@@ -226,6 +229,7 @@ function mod:GetOptions()
 		{206847, "SAY", "FLASH"}, -- Parasitic Wound
 		220957, -- Soulsever
 		227094, -- Flame Crash
+		227264, -- Manifest Azzinoth
 		227283, -- Summon Nightorb
 		227008, -- Vision of the Dark Titan
 	}, {
@@ -421,6 +425,8 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 		self:DreadlordSpawn()
 	elseif spellId == 227094 then
 		self:FlameCrash()
+	elseif spellId == 227264 then
+		self:ManifestAzzinoth()
 	elseif spellId == 227283 then
 		self:SummonNightorb()
 	end
@@ -842,11 +848,13 @@ function mod:WillOfTheDemonWithin()
 	parasiticCount = 1
 	soulseverCount = 1
 	flameCrashCount = 1
+	azzinothCount = 1
 	nightorbCount = 1
 	visionCount = 1
 	self:Bar(206847, self:Timer(206847, parasiticCount), CL.count:format(self:SpellName(206847), parasiticCount))
 	self:Bar(220957, self:Timer(220957, soulseverCount), CL.count:format(self:SpellName(220957), soulseverCount))
 	self:Bar(227094, self:Timer(227094, flameCrashCount), CL.count:format(self:SpellName(227094), flameCrashCount))
+	self:Bar(227264, self:Timer(227264, azzinothCount), CL.count:format(self:SpellName(227264), azzinothCount))
 	self:Bar(227283, self:Timer(227283, nightorbCount), CL.count:format(self:SpellName(227283), nightorbCount))
 	self:Bar(227008, self:Timer(227008, visionCount), CL.count:format(self:SpellName(227008), visionCount))
 end
@@ -877,6 +885,12 @@ function mod:FlameCrash(spellId)
 	self:Message(227094, "Urgent", "Alert")
 	flameCrashCount = flameCrashCount + 1
 	self:Bar(227094, self:Timer(227094, flameCrashCount), CL.count:format(self:SpellName(227094), flameCrashCount))
+end
+
+function mod:ManifestAzzinoth()
+	self:Message(227264, "Neutral", "Info")
+	azzinothCount = azzinothCount + 1
+	self:Bar(227264, self:Timer(227264, azzinothCount), CL.count:format(self:SpellName(227264), azzinothCount))
 end
 
 function mod:SummonNightorb()
