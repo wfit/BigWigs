@@ -232,6 +232,7 @@ function mod:GetOptions()
 		227094, -- Flame Crash
 		227264, -- Manifest Azzinoth
 		221382, -- Chaos Seed
+		221408, -- Bulwark of Azzinoth
 		227283, -- Summon Nightorb
 		211832, -- Time Stop Field
 		227008, -- Vision of the Dark Titan
