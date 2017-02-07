@@ -32,6 +32,8 @@ local carrionCount = 1
 local empowerCount = 1
 local windCount = 1
 local soulseverCount = 1
+local parasiticCount = 1
+local visionCount = 1
 local flameCrashCount = 1
 local soulsRemaining = 0
 local bondsEmpowered = false
@@ -95,19 +97,23 @@ local timersMythic = {
 	-- Phase 3
 	[3] = {
 		-- Empowered Eye of Gul'dan, SPELL_CAST_START
-		[209270] = { 26.7, 52.6, 53.2, 20.4, 84.2, 52.6 },
+		[209270] = { 26.7, 52.6, 53.2, 20.4, 84.2, 52.6, 35.8 },
 		-- Storm of the Destroyer, SPELL_CAST_START
 		[167819] = { 64.5, 57.8, 51.5, 64.6, 57.4 },
 		-- Soul Siphon, SPELL_AURA_APPLIED
-		[221891] = { 21.7, 9.5, 42, 9.5, 9.5, 50.5, 9.5, 9.5, 9.5, 45.3, 9.5, 9.5, 9.5, 9.5, 27.3, 9.5, 9.5, 9.5 },
+		[221891] = { 21.7, 9.5, 42, 9.5, 9.5, 50.5, 9.5, 9.5, 9.5, 45.3, 9.5, 9.5, 9.5, 9.5, 27.3, 9.5, 9.5, 9.5, 9.5, 9.5 },
 		-- Black Harvest, SPELL_CAST_START
-		[206744] = { 47.8, 61, 75.3, 86.7 },
+		[206744] = { 47.8, 61, 75.3, 86.7, 75.8 },
 		-- Fel Wind
 		[215125] = { 3.8, 87.4, 84.5, 84.5 },
 
 		-- P4 is actually P3 to handle simultaneous Gul'dan
 		-- Soulsever, SPELL_CAST_START
-		[220957] = {},
+		[220957] = { 15.8 },
+		-- Parasitic Wound, SPELL_AURA_APPLIED
+		[206847] = { 4.9 },
+		-- Visions of the Dark Titan, SPELL_CAST_START
+		[227008] = {},
 		-- Flame Crash, SPELL_CAST_START
 		[227096] = {},
 	},
@@ -210,6 +216,8 @@ function mod:GetOptions()
 
 		--[[ The Demon Within ]] --
 		220957, -- Soulsever
+		206847, -- Parasitic Wound
+		227008, -- Vision of the Dark Titan
 		227096, -- Flame Crash
 	}, {
 		["stages"] = "general",
@@ -290,6 +298,8 @@ function mod:OnBossEnable()
 	--[[ The Demon Within ]] --
 	self:Log("SPELL_CAST_SUCCESS", "WillOfTheDemonWithin", 211439)
 	self:Log("SPELL_CAST_START", "Soulsever", 220957)
+	self:Log("SPELL_AURA_APPLIED", "ParasiticWound", 206847)
+	self:Log("SPELL_CAST_START", "VisionOfTheDarkTitan", 227008)
 	self:Log("SPELL_CAST_START", "FlameCrash", 227096)
 end
 
@@ -799,7 +809,7 @@ end
 --[[ The Demon Within ]] --
 function mod:MythicRolePlayEvent()
 	self:Message("stages", "Neutral", "Long", CL.incoming:format(self:SpellName(211439)), false)
-	self:Bar("stages", 42.2, 211439) -- Will of the Demon Within
+	self:Bar("stages", 43, 211439) -- Will of the Demon Within
 	self:StopBar(26662) -- Gul'dan can no longer berserk once under 10% health
 end
 
@@ -816,12 +826,14 @@ function mod:WillOfTheDemonWithin()
 	-- We'll just pretend we are in phase 4 without actually updating the phase variable
 	-- because it is possible for Gul'dan to still be alive during that phase and we don't
 	-- want to fuck up his timers.
-	self:TimersCheckpoint()
 	self:Message("stages", "Neutral", "Long", CL.stage:format(4), false)
-	-- NOT A SINGLE CLUE WHAT'S NEXT! :D
 	soulseverCount = 1
+	parasiticCount = 1
+	visionCount = 1
 	flameCrashCount = 1
 	self:Bar(220957, self:Timer(220957, soulseverCount), CL.count:format(self:SpellName(220957), soulseverCount))
+	self:Bar(206847, self:Timer(206847, parasiticCount), CL.count:format(self:SpellName(206847), parasiticCount))
+	self:Bar(227008, self:Timer(227008, visionCount), CL.count:format(self:SpellName(227008), visionCount))
 	self:Bar(227096, self:Timer(227096, flameCrashCount), CL.count:format(self:SpellName(227096), flameCrashCount))
 end
 
@@ -829,6 +841,24 @@ function mod:Soulsever(args)
 	self:Message(args.spellId, "Urgent", "Warning", CL.incoming:format(args.spellName))
 	soulseverCount = soulseverCount + 1
 	self:Bar(args.spellId, self:Timer(args.spellId, soulseverCount), CL.count:format(args.spellName, soulseverCount))
+end
+
+do
+	local list = mod:NewTargetList()
+	function mod:ParasiticWound(args)
+		list[#list + 1] = args.destName
+		if #list == 1 then
+			self:ScheduleTimer("TargetMessage", 0.2, 221783, list, "Important", "Alert", nil, nil, true)
+			parasiticCount = parasiticCount + 1
+			self:Bar(args.spellId, self:Timer(args.spellId, parasiticCount), CL.count:format(args.spellName, parasiticCount))
+		end
+	end
+end
+
+function mod:VisionOfTheDarkTitan(args)
+	self:Message(args.spellId, "Urgent", "Warning", CL.incoming:format(args.spellName))
+	visionCount = visionCount + 1
+	self:Bar(args.spellId, self:Timer(args.spellId, visionCount), CL.count:format(args.spellName, visionCount))
 end
 
 function mod:FlameCrash(args)
