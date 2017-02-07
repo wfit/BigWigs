@@ -97,7 +97,7 @@ local timersMythic = {
 		-- Storm of the Destroyer, SPELL_CAST_START
 		[167819] = { 64.5, 57.8, 51.5, 64.6, 57.4 },
 		-- Soul Siphon, SPELL_AURA_APPLIED
-		[221891] = { 21.7, 9.5, 42, 9.5, 9.5, 50.5, 9.5, 9.5, 9.5, 45.3, 9.5, 9.5, 9.5, 9.5, 27.3, 9.5 },
+		[221891] = { 21.7, 9.5, 42, 9.5, 9.5, 50.5, 9.5, 9.5, 9.5, 45.3, 9.5, 9.5, 9.5, 9.5, 27.3, 9.5, 9.5, 9.5 },
 		-- Black Harvest, SPELL_CAST_START
 		[206744] = { 47.8, 61, 75.3, 86.7 },
 		-- Fel Wind
@@ -133,6 +133,8 @@ if L then
 	L.emp_bonds = "Empowered Bonds"
 	L.eyes = "Eyes"
 	L.emp_eye = "Empowered Eye"
+
+	L.demonWithinStart = "Time to return the demon hunter's soul to his body"
 end
 
 --------------------------------------------------------------------------------
@@ -197,6 +199,9 @@ function mod:GetOptions()
 		206744, -- Black Harvest
 		{221783, "SAY", "FLASH", "PROXIMITY"}, -- Flames of Sargeras
 		221781, -- Desolate Ground
+
+		--[[ The Demon Within ]] --
+		211439, -- Will of the Demon Within
 	}, {
 		["stages"] = "general",
 		[206219] = -14885, -- Stage One
@@ -206,6 +211,7 @@ function mod:GetOptions()
 		[206222] = -14062, -- Stage Two
 		[-13500] = -13500, -- Dreadlords of the Twisting Nether
 		[167819] = -14090, -- Stage Three
+		[211439] = 211439, -- Will of the Demon Within
 	}
 end
 
@@ -271,6 +277,9 @@ function mod:OnBossEnable()
 	self:Log("SPELL_PERIODIC_MISSED", "Damage", 206515, 221781)
 	self:Log("SPELL_DAMAGE", "Damage", 217770, 221781) -- Gaze of Vethriz, Desolate Ground
 	self:Log("SPELL_MISSED", "Damage", 217770, 221781)
+
+	--[[ The Demon Within ]] --
+	self:Log("SPELL_CAST_SUCCESS", "WillOfTheDemonWithin", 211439)
 end
 
 function mod:OnEngage()
@@ -291,9 +300,16 @@ function mod:OnEngage()
 
 	inTransition = false
 
-	if not self:Mythic() then
-		-- First transition detection
-		self:RegisterEvent("CHAT_MSG_MONSTER_YELL")
+	-- Heroic 1st transition + mythic 10% detection
+	self:RegisterEvent("CHAT_MSG_MONSTER_YELL")
+
+	if self:Mythic() then
+		-- Must be canceled once the mythic transition begins
+		self:Bar("berserk", 632, 26662)
+		-- Used to cancel/close Gul'dan related stuff once really in P4
+		self:Death("GuldanDeath", 104154)
+	else
+		self:Berserk(720)
 	end
 
 	self:CDBar(206219, self:Timer(206219, liquidHellfireCount), CL.count:format(L.hellfire, liquidHellfireCount))
@@ -316,8 +332,6 @@ function mod:OnEngage()
 			end
 		end
 	end
-
-	self:Berserk(self:Mythic() and 632.2 or 720)
 end
 
 function mod:OnBossDisable()
@@ -393,6 +407,8 @@ end
 function mod:CHAT_MSG_MONSTER_YELL(event, msg)
 	if msg:find(L.firstTransi) then
 		self:FirstTransition()
+	elseif msg:find(L.demonWithinStart) then
+		self:MythicRolePlayEvent()
 	end
 end
 
@@ -769,6 +785,32 @@ function mod:FlamesOfSargerasRemoved(args)
 	end
 end
 
+--[[ The Demon Within ]] --
+function mod:MythicRolePlayEvent()
+	self:Message("stages", "Neutral", "Long", CL.incoming:format(self:SpellName(211439)), false)
+	self:Bar("stages", 42.2, 211439) -- Will of the Demon Within
+	self:StopBar(26662) -- Gul'dan can no longer berserk once under 10% health
+end
+
+function mod:GuldanDeath()
+	self:StopBar(CL.count:format(L.emp_eye, eyeOfGuldanCount))
+	self:StopBar(CL.count:format(self:SpellName(167819), stormCount))
+	self:StopBar(CL.count:format(self:SpellName(206744), harvestCount))
+	self:StopBar(221891) -- Soul Siphon
+	self:StopBar(221783) -- Flames of Sargeras
+	self:CloseInfo("infobox")
+end
+
+function mod:WillOfTheDemonWithin()
+	-- We'll just pretend we are in phase 4 without actually updating the phase variable
+	-- because it is possible for Gul'dan to still be alive during that phase and we don't
+	-- want to fuck up his timers.
+	self:TimersCheckpoint()
+	self:Message("stages", "Neutral", "Long", CL.stage:format(4), false)
+	-- NOT A SINGLE CLUE WHAT'S NEXT! :D
+end
+
+--[[ Generic Damage Warnings ]] --
 do
 	local mapping = {
 		[206515] = 206514, -- Fel Efflux
