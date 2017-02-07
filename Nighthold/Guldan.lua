@@ -234,6 +234,7 @@ function mod:GetOptions()
 		221382, -- Chaos Seed
 		221408, -- Bulwark of Azzinoth
 		227283, -- Summon Nightorb
+		211832, -- Time Stop Field
 		227008, -- Vision of the Dark Titan
 	}, {
 		["stages"] = "general",
@@ -438,6 +439,8 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 		self:ChaosSeed()
 	elseif spellId == 227283 then
 		self:SummonNightorb()
+	elseif spellId == 208917 then
+		self:TimeStopField()
 	end
 end
 
@@ -931,8 +934,13 @@ function mod:SummonNightorb()
 	self:Bar(227283, self:Timer(227283, nightorbCount), CL.count:format(self:SpellName(227283), nightorbCount), 155145)
 end
 
+function mod:TimeStopField()
+	self:Message(211832, "Positive", "Info")
+	self:Bar(211832, 10, CL.over:format(self:SpellName(211832)))
+end
+
 function mod:VisionOfTheDarkTitan(args)
-	self:Message(args.spellId, "Urgent", "Warning", CL.incoming:format(args.spellName))
+	self:Message(args.spellId, "Urgent", "Long", CL.casting:format(args.spellName))
 	visionCount = visionCount + 1
 	self:Bar(args.spellId, self:Timer(args.spellId, visionCount), CL.count:format(args.spellName, visionCount))
 end
