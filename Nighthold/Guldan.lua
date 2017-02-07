@@ -133,7 +133,7 @@ local overridesMythic = {
 	},
 	-- Phase 3
 	[3] = {
-		[227035] = { [1] = 4.5 }, -- Parasitic Wound
+		[206847] = { [1] = 4.5 }, -- Parasitic Wound
 		[220957] = { [1] = 15.5 }, -- Soulsever
 		[227094] = { [1] = 25.5 }, -- Flame Crash
 	},
@@ -919,7 +919,7 @@ do
 end
 
 function mod:BulwarkOfAzzinoth(args)
-	self:Message(args.spellId, "Important", "Alert", CL.on:format(args.spellName, args.destName))
+	self:Message(args.spellId, "Important", "Alert", CL.on:format(args.spellName, args.sourceName))
 end
 
 function mod:AzzinothDeath()
