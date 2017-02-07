@@ -31,6 +31,8 @@ local harvestCount = 1
 local carrionCount = 1
 local empowerCount = 1
 local windCount = 1
+local soulseverCount = 1
+local flameCrashCount = 1
 local soulsRemaining = 0
 local bondsEmpowered = false
 local hellfireEmpowered = false
@@ -102,6 +104,12 @@ local timersMythic = {
 		[206744] = { 47.8, 61, 75.3, 86.7 },
 		-- Fel Wind
 		[215125] = { 3.8, 87.4, 84.5, 84.5 },
+
+		-- P4 is actually P3 to handle simultaneous Gul'dan
+		-- Soulsever, SPELL_CAST_START
+		[220957] = {},
+		-- Flame Crash, SPELL_CAST_START
+		[227096] = {},
 	},
 }
 
@@ -201,7 +209,8 @@ function mod:GetOptions()
 		221781, -- Desolate Ground
 
 		--[[ The Demon Within ]] --
-		211439, -- Will of the Demon Within
+		220957, -- Soulsever
+		227096, -- Flame Crash
 	}, {
 		["stages"] = "general",
 		[206219] = -14885, -- Stage One
@@ -211,7 +220,7 @@ function mod:GetOptions()
 		[206222] = -14062, -- Stage Two
 		[-13500] = -13500, -- Dreadlords of the Twisting Nether
 		[167819] = -14090, -- Stage Three
-		[211439] = 211439, -- Will of the Demon Within
+		[220957] = 211439, -- Will of the Demon Within
 	}
 end
 
@@ -280,6 +289,8 @@ function mod:OnBossEnable()
 
 	--[[ The Demon Within ]] --
 	self:Log("SPELL_CAST_SUCCESS", "WillOfTheDemonWithin", 211439)
+	self:Log("SPELL_CAST_START", "Soulsever", 220957)
+	self:Log("SPELL_CAST_START", "FlameCrash", 227096)
 end
 
 function mod:OnEngage()
@@ -808,6 +819,22 @@ function mod:WillOfTheDemonWithin()
 	self:TimersCheckpoint()
 	self:Message("stages", "Neutral", "Long", CL.stage:format(4), false)
 	-- NOT A SINGLE CLUE WHAT'S NEXT! :D
+	soulseverCount = 1
+	flameCrashCount = 1
+	self:Bar(220957, self:Timer(220957, soulseverCount), CL.count:format(self:SpellName(220957), soulseverCount))
+	self:Bar(227096, self:Timer(227096, flameCrashCount), CL.count:format(self:SpellName(227096), flameCrashCount))
+end
+
+function mod:Soulsever(args)
+	self:Message(args.spellId, "Urgent", "Warning", CL.incoming:format(args.spellName))
+	soulseverCount = soulseverCount + 1
+	self:Bar(args.spellId, self:Timer(args.spellId, soulseverCount), CL.count:format(args.spellName, soulseverCount))
+end
+
+function mod:FlameCrash(args)
+	self:Message(args.spellId, "Urgent", "Alert")
+	flameCrashCount = flameCrashCount + 1
+	self:Bar(args.spellId, self:Timer(args.spellId, flameCrashCount), CL.count:format(args.spellName, flameCrashCount))
 end
 
 --[[ Generic Damage Warnings ]] --
