@@ -232,6 +232,7 @@ function mod:GetOptions()
 		227094, -- Flame Crash
 		227264, -- Manifest Azzinoth
 		221382, -- Chaos Seed
+		221408, -- Bulwark of Azzinoth
 		227283, -- Summon Nightorb
 		227008, -- Vision of the Dark Titan
 	}, {
@@ -314,6 +315,7 @@ function mod:OnBossEnable()
 	self:Log("SPELL_CAST_SUCCESS", "WillOfTheDemonWithin", 211439)
 	self:Log("SPELL_AURA_APPLIED", "ParasiticWoundApplied", 206847)
 	self:Log("SPELL_CAST_START", "Soulsever", 220957)
+	self:Log("SPELL_CAST_SUCCESS", "BulwarkOfAzzinoth", 221408)
 	self:Log("SPELL_CAST_START", "VisionOfTheDarkTitan", 227008)
 	self:Death("AzzinothDeath", 111070)
 end
@@ -902,6 +904,7 @@ function mod:ManifestAzzinoth()
 	azzinothCount = azzinothCount + 1
 	self:Bar(227264, self:Timer(227264, azzinothCount), CL.count:format(self:SpellName(227264), azzinothCount))
 	self:CDBar(221382, 7) -- Chaos Seed
+	self:Bar(221408, 20.8) -- Bulwark of Azzinoth
 end
 
 do
@@ -915,8 +918,13 @@ do
 	end
 end
 
+function mod:BulwarkOfAzzinoth(args)
+	self:Message(args.spellId, "Important", "Alert", CL.on:format(args.spellName, args.destName))
+end
+
 function mod:AzzinothDeath()
 	self:StopBar(221382) -- Chaos Seed
+	self:StopBar(221408) -- Bulwark of Azzinoth
 end
 
 function mod:SummonNightorb()
