@@ -117,9 +117,9 @@ local timersMythic = {
 		-- Flame Crash, SPELL_CAST_START
 		[227094] = 20,
 		-- Manifest Azzinoth, UNIT_SPELLCAST_SUCCEEDED
-		[227264] = { 23 },
+		[227264] = { 22.5 },
 		-- Summon Nightorb, UNIT_SPELLCAST_SUCCEEDED
-		[227283] = { 36.1 },
+		[227283] = { 35.5 },
 		-- Visions of the Dark Titan, SPELL_CAST_START
 		[227008] = {},
 	},
@@ -134,8 +134,8 @@ local overridesMythic = {
 	-- Phase 3
 	[3] = {
 		[227035] = { [1] = 4.9 }, -- Parasitic Wound
-		[220957] = { [1] = 16 }, -- Soulsever
-		[227094] = { [1] = 26 }, -- Flame Crash
+		[220957] = { [1] = 15.5 }, -- Soulsever
+		[227094] = { [1] = 25.5 }, -- Flame Crash
 	},
 }
 
