@@ -904,7 +904,6 @@ function mod:ManifestAzzinoth()
 	azzinothCount = azzinothCount + 1
 	self:Bar(227264, self:Timer(227264, azzinothCount), CL.count:format(self:SpellName(227264), azzinothCount), 195304)
 	self:CDBar(221382, 7) -- Chaos Seed
-	self:Bar(221408, 12) -- Bulwark of Azzinoth
 end
 
 do
@@ -924,7 +923,6 @@ end
 
 function mod:AzzinothDeath()
 	self:StopBar(221382) -- Chaos Seed
-	self:StopBar(221408) -- Bulwark of Azzinoth
 end
 
 function mod:SummonNightorb()
