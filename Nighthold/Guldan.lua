@@ -111,7 +111,7 @@ local timersMythic = {
 
 		-- P4 is actually P3 to handle simultaneous Gul'dan
 		-- Parasitic Wound, SPELL_AURA_APPLIED
-		[206847] = { 4.9, 18 },
+		[227035] = 36,
 		-- Soulsever, SPELL_CAST_START
 		[220957] = 20,
 		-- Flame Crash, SPELL_CAST_START
@@ -133,6 +133,7 @@ local overridesMythic = {
 	},
 	-- Phase 3
 	[3] = {
+		[227035] = { [1] = 4.9 }, -- Parasitic Wound
 		[220957] = { [1] = 16 }, -- Soulsever
 		[227094] = { [1] = 26 }, -- Flame Crash
 	},
@@ -226,7 +227,7 @@ function mod:GetOptions()
 		221781, -- Desolate Ground
 
 		--[[ The Demon Within ]] --
-		{206847, "SAY", "FLASH"}, -- Parasitic Wound
+		{227035, "SAY", "FLASH"}, -- Parasitic Wound
 		220957, -- Soulsever
 		227094, -- Flame Crash
 		227264, -- Manifest Azzinoth
@@ -241,7 +242,7 @@ function mod:GetOptions()
 		[206222] = -14062, -- Stage Two
 		[-13500] = -13500, -- Dreadlords of the Twisting Nether
 		[167819] = -14090, -- Stage Three
-		[220957] = 211439, -- Will of the Demon Within
+		[227035] = 211439, -- Will of the Demon Within
 	}
 end
 
@@ -310,7 +311,7 @@ function mod:OnBossEnable()
 
 	--[[ The Demon Within ]] --
 	self:Log("SPELL_CAST_SUCCESS", "WillOfTheDemonWithin", 211439)
-	self:Log("SPELL_AURA_APPLIED", "ParasiticWound", 206847)
+	self:Log("SPELL_AURA_APPLIED", "ParasiticWoundApplied", 206847)
 	self:Log("SPELL_CAST_START", "Soulsever", 220957)
 	self:Log("SPELL_CAST_START", "VisionOfTheDarkTitan", 227008)
 end
@@ -425,6 +426,8 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 		self:DreadlordSpawn()
 	elseif spellId == 227094 then
 		self:FlameCrash()
+	elseif spellId == 227035 then
+		self:ParasiticWound()
 	elseif spellId == 227264 then
 		self:ManifestAzzinoth()
 	elseif spellId == 227283 then
@@ -859,18 +862,21 @@ function mod:WillOfTheDemonWithin()
 	self:Bar(227008, self:Timer(227008, visionCount), CL.count:format(self:SpellName(227008), visionCount))
 end
 
+function mod:ParasiticWound()
+	parasiticCount = parasiticCount + 1
+	self:Bar(227035, self:Timer(227035, parasiticCount), CL.count:format(self:SpellName(227035), parasiticCount))
+end
+
 do
 	local list = mod:NewTargetList()
-	function mod:ParasiticWound(args)
+	function mod:ParasiticWoundApplied(args)
 		list[#list + 1] = args.destName
 		if #list == 1 then
-			self:ScheduleTimer("TargetMessage", 0.2, 206847, list, "Important", "Alert", nil, nil, true)
-			parasiticCount = parasiticCount + 1
-			self:Bar(args.spellId, self:Timer(args.spellId, parasiticCount), CL.count:format(args.spellName, parasiticCount))
+			self:ScheduleTimer("TargetMessage", 0.2, 227035, list, "Important", "Alert", nil, nil, true)
 		end
 		if self:Me(args.destGUID) then
-			self:Flash(args.spellId)
-			self:Say(args.spellId)
+			self:Flash(227035)
+			self:Say(227035)
 		end
 	end
 end
