@@ -117,7 +117,7 @@ local timersMythic = {
 		-- Flame Crash, SPELL_CAST_START
 		[227094] = 20,
 		-- Manifest Azzinoth, UNIT_SPELLCAST_SUCCEEDED
-		[227264] = { 22.5, 40.9 },
+		[227264] = { 22.3, 40.9 },
 		-- Summon Nightorb, UNIT_SPELLCAST_SUCCEEDED
 		[227283] = { 35.5 },
 		-- Visions of the Dark Titan, SPELL_CAST_START
@@ -231,6 +231,7 @@ function mod:GetOptions()
 		220957, -- Soulsever
 		227094, -- Flame Crash
 		227264, -- Manifest Azzinoth
+		221382, -- Chaos Seed
 		227283, -- Summon Nightorb
 		227008, -- Vision of the Dark Titan
 	}, {
@@ -303,9 +304,9 @@ function mod:OnBossEnable()
 	self:Log("SPELL_AURA_APPLIED", "FlamesOfSargerasSoon", 221606)
 	self:Log("SPELL_AURA_REMOVED", "FlamesOfSargerasRemoved", 221603)
 
-	self:Log("SPELL_AURA_APPLIED", "Damage", 206515, 221781) -- Fel Efflux, Desolate Ground
-	self:Log("SPELL_PERIODIC_DAMAGE", "Damage", 206515, 221781)
-	self:Log("SPELL_PERIODIC_MISSED", "Damage", 206515, 221781)
+	self:Log("SPELL_AURA_APPLIED", "Damage", 206515, 221781, 221326) -- Fel Efflux, Desolate Ground, Chaos Seed
+	self:Log("SPELL_PERIODIC_DAMAGE", "Damage", 206515, 221781, 221326)
+	self:Log("SPELL_PERIODIC_MISSED", "Damage", 206515, 221781, 221326)
 	self:Log("SPELL_DAMAGE", "Damage", 217770, 221781) -- Gaze of Vethriz, Desolate Ground
 	self:Log("SPELL_MISSED", "Damage", 217770, 221781)
 
@@ -314,6 +315,7 @@ function mod:OnBossEnable()
 	self:Log("SPELL_AURA_APPLIED", "ParasiticWoundApplied", 206847)
 	self:Log("SPELL_CAST_START", "Soulsever", 220957)
 	self:Log("SPELL_CAST_START", "VisionOfTheDarkTitan", 227008)
+	self:Death("AzzinothDeath", 111070)
 end
 
 function mod:OnEngage()
@@ -430,6 +432,8 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 		self:ParasiticWound()
 	elseif spellId == 227264 then
 		self:ManifestAzzinoth()
+	elseif spellId == 221382 then
+		self:ChaosSeed()
 	elseif spellId == 227283 then
 		self:SummonNightorb()
 	end
@@ -882,7 +886,7 @@ do
 end
 
 function mod:Soulsever(args)
-	self:Message(args.spellId, "Urgent", "Warning", CL.incoming:format(args.spellName))
+	self:Message(args.spellId, "Urgent", "Warning", CL.casting:format(args.spellName))
 	soulseverCount = soulseverCount + 1
 	self:Bar(args.spellId, self:Timer(args.spellId, soulseverCount), CL.count:format(args.spellName, soulseverCount))
 end
@@ -897,6 +901,22 @@ function mod:ManifestAzzinoth()
 	self:Message(227264, "Neutral", "Info")
 	azzinothCount = azzinothCount + 1
 	self:Bar(227264, self:Timer(227264, azzinothCount), CL.count:format(self:SpellName(227264), azzinothCount))
+	self:CDBar(221382, 7) -- Chaos Seed
+end
+
+do
+	local t = 0
+	function mod:ChaosSeed()
+		if GetTime() - t > 1 then
+			t = GetTime()
+			self:Message(221382, "Attention", "Alert")
+			self:Bar(221382, 10)
+		end
+	end
+end
+
+function mod:AzzinothDeath()
+	self:StopBar(221382) -- Chaos Seed
 end
 
 function mod:SummonNightorb()
@@ -917,6 +937,7 @@ do
 		[206515] = 206514, -- Fel Efflux
 		[209518] = 209270, -- Eye of Guldan
 		[211132] = 211152, -- Empowered Eye of Gul'dan
+		[221326] = 221382,
 	}
 	local prev = 0
 	function mod:Damage(args)
