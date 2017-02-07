@@ -863,8 +863,8 @@ function mod:WillOfTheDemonWithin()
 	self:Bar(206847, self:Timer(206847, parasiticCount), CL.count:format(self:SpellName(206847), parasiticCount))
 	self:Bar(220957, self:Timer(220957, soulseverCount), CL.count:format(self:SpellName(220957), soulseverCount))
 	self:Bar(227094, self:Timer(227094, flameCrashCount), CL.count:format(self:SpellName(227094), flameCrashCount))
-	self:Bar(227264, self:Timer(227264, azzinothCount), CL.count:format(self:SpellName(227264), azzinothCount))
-	self:Bar(227283, self:Timer(227283, nightorbCount), CL.count:format(self:SpellName(227283), nightorbCount))
+	self:Bar(227264, self:Timer(227264, azzinothCount), CL.count:format(self:SpellName(227264), azzinothCount), 195304)
+	self:Bar(227283, self:Timer(227283, nightorbCount), CL.count:format(self:SpellName(227283), nightorbCount), 155145)
 	self:Bar(227008, self:Timer(227008, visionCount), CL.count:format(self:SpellName(227008), visionCount))
 end
 
@@ -900,9 +900,9 @@ function mod:FlameCrash(spellId)
 end
 
 function mod:ManifestAzzinoth()
-	self:Message(227264, "Neutral", "Info")
+	self:Message(227264, "Neutral", "Info", nil, 195304)
 	azzinothCount = azzinothCount + 1
-	self:Bar(227264, self:Timer(227264, azzinothCount), CL.count:format(self:SpellName(227264), azzinothCount))
+	self:Bar(227264, self:Timer(227264, azzinothCount), CL.count:format(self:SpellName(227264), azzinothCount), 195304)
 	self:CDBar(221382, 7) -- Chaos Seed
 	self:Bar(221408, 20.8) -- Bulwark of Azzinoth
 end
@@ -928,9 +928,9 @@ function mod:AzzinothDeath()
 end
 
 function mod:SummonNightorb()
-	self:Message(227283, "Neutral", "Info")
+	self:Message(227283, "Neutral", "Info", nil, 155145)
 	nightorbCount = nightorbCount + 1
-	self:Bar(227283, self:Timer(227283, nightorbCount), CL.count:format(self:SpellName(227283), nightorbCount))
+	self:Bar(227283, self:Timer(227283, nightorbCount), CL.count:format(self:SpellName(227283), nightorbCount), 155145)
 end
 
 function mod:VisionOfTheDarkTitan(args)
