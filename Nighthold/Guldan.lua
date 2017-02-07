@@ -227,7 +227,7 @@ function mod:GetOptions()
 		221781, -- Desolate Ground
 
 		--[[ The Demon Within ]] --
-		{227035, "SAY", "FLASH"}, -- Parasitic Wound
+		{206847, "SAY", "FLASH"}, -- Parasitic Wound
 		220957, -- Soulsever
 		227094, -- Flame Crash
 		227264, -- Manifest Azzinoth
@@ -242,7 +242,7 @@ function mod:GetOptions()
 		[206222] = -14062, -- Stage Two
 		[-13500] = -13500, -- Dreadlords of the Twisting Nether
 		[167819] = -14090, -- Stage Three
-		[227035] = 211439, -- Will of the Demon Within
+		[206847] = 211439, -- Will of the Demon Within
 	}
 end
 
@@ -864,7 +864,7 @@ end
 
 function mod:ParasiticWound()
 	parasiticCount = parasiticCount + 1
-	self:Bar(227035, self:Timer(227035, parasiticCount), CL.count:format(self:SpellName(227035), parasiticCount))
+	self:Bar(206847, self:Timer(206847, parasiticCount), CL.count:format(self:SpellName(206847), parasiticCount))
 end
 
 do
@@ -872,11 +872,11 @@ do
 	function mod:ParasiticWoundApplied(args)
 		list[#list + 1] = args.destName
 		if #list == 1 then
-			self:ScheduleTimer("TargetMessage", 0.2, 227035, list, "Important", "Alert", nil, nil, true)
+			self:ScheduleTimer("TargetMessage", 0.2, 206847, list, "Important", "Alert", nil, nil, true)
 		end
 		if self:Me(args.destGUID) then
-			self:Flash(227035)
-			self:Say(227035)
+			self:Flash(206847)
+			self:Say(206847)
 		end
 	end
 end
