@@ -59,6 +59,7 @@ local L = mod:GetLocale()
 -- Initialization
 --
 
+local tanksMarker = mod:AddMarkerOption(true, "player", 7, -14884, 7, 8)
 local searingBrandMarker = mod:AddMarkerOption(false, "player", 1, 213166, 1, 2, 3, 4, 5, 6)
 local fieryAddMarker = mod:AddMarkerOption(false, "npc", 1, 213867, 1, 2, 3, 4, 5, 6)
 function mod:GetOptions()
@@ -67,6 +68,7 @@ function mod:GetOptions()
 		{212492, "TANK_HEALER"}, -- Annihilate
 		"stages",
 		"berserk",
+		tanksMarker,
 		230951, -- Severed Soul
 
 		--[[ Master of Frost ]]--
@@ -180,6 +182,27 @@ function mod:OnEngage()
 		self:Berserk(490)
 	elseif self:Mythic() then
 		self:Berserk(450)
+	end
+
+	if self:GetOption(tanksMarker) then
+		local marked = 0
+		for unit in self:IterateGroup() do
+			if self:Tank(unit) then
+				SetRaidTarget(unit, 8 - marked)
+				marked = marked + 1
+				if marked == 2 then break end
+			end
+		end
+	end
+end
+
+function mod:OnBossDisable()
+	if self:GetOption(tanksMarker) then
+		for unit in self:IterateGroup() do
+			if self:Tank(unit) then
+				SetRaidTarget(unit, 0)
+			end
+		end
 	end
 end
 
