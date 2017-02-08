@@ -60,8 +60,8 @@ local L = mod:GetLocale()
 --
 
 local tanksMarker = mod:AddMarkerOption(true, "player", 7, -14884, 7, 8)
-local searingBrandMarker = mod:AddMarkerOption(false, "player", 1, 213166, 1, 2, 3, 4, 5, 6)
-local fieryAddMarker = mod:AddMarkerOption(false, "npc", 1, 213867, 1, 2, 3, 4, 5, 6)
+local searingBrandMarker = mod:AddMarkerOption(true, "player", 1, 213166, 1, 2, 3, 4, 5, 6)
+local fieryAddMarker = mod:AddMarkerOption(true, "npc", 1, 213867, 1, 2, 3, 4, 5, 6)
 function mod:GetOptions()
 	return {
 		--[[ General ]]--
