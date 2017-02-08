@@ -7,7 +7,7 @@ local mod, CL = BigWigs:NewBoss("Star Augur Etraeus", 1088, 1732)
 if not mod then return end
 mod:RegisterEnableMob(103758)
 mod.engageId = 1863
-mod.respawnTime = 50 -- might be wrong
+mod.respawnTime = 50
 mod.instanceId = 1530
 
 --------------------------------------------------------------------------------
@@ -113,6 +113,7 @@ function mod:OnBossEnable()
 	--[[ Grand Conjunction ]] --
 	self:Log("SPELL_CAST_START", "GrandConjunction", 205408)
 	self:Log("SPELL_AURA_APPLIED", "StarSignApplied", 205429, 205445, 216345, 216344) -- Crab, Wolf, Hunter, Dragon)
+	self:Log("SPELL_AURA_REMOVED", "StarSignRemoved", 205429, 205445, 216345, 216344) -- Crab, Wolf, Hunter, Dragon)
 
 	--[[ Stage One ]]--
 	self:Log("SPELL_CAST_SUCCESS", "CoronalEjection", 206464)
@@ -151,8 +152,10 @@ function mod:OnBossEnable()
 	self:Log("SPELL_CAST_START", "WorldDevouringForce", 216909)
 	--self:Log("SPELL_AURA_APPLIED", "DevouringRemnant", 217046)
 
-	-- Experimenting with using callbacks for nameplate addons
-	self:SendMessage("BigWigs_EnableFriendlyNameplates", self)
+	if self:Mythic() then
+		-- Experimenting with using callbacks for nameplate addons
+		self:ShowFriendlyNameplates()
+	end
 end
 
 function mod:OnEngage()
@@ -170,7 +173,7 @@ end
 
 function mod:OnBossDisable()
 	wipe(mobCollector)
-	self:SendMessage("BigWigs_DisableFriendlyNameplates", self)
+	self:HideFriendlyNameplates()
 end
 
 --------------------------------------------------------------------------------
@@ -242,10 +245,15 @@ function mod:GrandConjunction(args)
 end
 
 function mod:StarSignApplied(args)
+	self:AddPlate(args.spellId, args.destName, 10)
 	if self:Me(args.destGUID) then
 		self:ScheduleTimer("WarnStarSign", 5, args.spellName, args.spellId)
 		self:ScheduleTimer("WarnStarSign", 7.5, args.spellName, args.spellId)
 	end
+end
+
+function mod:StarSignRemoved(args)
+	self:RemovePlate(args.spellId, args.destName)
 end
 
 do

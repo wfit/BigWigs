@@ -1384,6 +1384,37 @@ function boss:CloseProximity(key)
 end
 
 -------------------------------------------------------------------------------
+-- Nameplates.
+-- @section nameplates
+--
+
+--- Toggle showing friendly nameplates to the enabled state.
+function boss:ShowFriendlyNameplates()
+	self:SendMessage("BigWigs_EnableFriendlyNameplates", self)
+end
+
+--- Toggle showing friendly nameplates to the disabled state.
+function boss:HideFriendlyNameplates()
+	self:SendMessage("BigWigs_DisableFriendlyNameplates", self)
+end
+
+--- Add aura to nameplate.
+-- @param spellId the associated spell id
+-- @param playerName the affected player
+-- @param[opt] duration the duration of the aura
+-- @param[opt] desaturate true if the texture should be desaturated
+function boss:AddPlate(spellId, playerName, duration, desaturate)
+	self:SendMessage("BigWigs_ShowNameplateAura", self, playerName, icons[spellId], duration, desaturate)
+end
+
+--- Remove aura from nameplate.
+-- @param spellId the associated spell id
+-- @param playerName the affected player
+function boss:RemovePlate(spellId, playerName)
+	self:SendMessage("BigWigs_HideNameplateAura", self, playerName, icons[spellId])
+end
+
+-------------------------------------------------------------------------------
 -- Auras.
 -- @section auras
 --
@@ -1446,7 +1477,7 @@ function boss:Message(key, color, sound, text, icon)
 
 		local temp = (icon == false and 0) or (icon ~= false and icon) or (textType == "number" and text) or key
 		if temp == key and type(key) == "string" then
-			BigWigs:Print(("Message '%s' doesn't have an icon set."):format(textType == "string" and text or spells[text or key])) -- XXX temp
+			core:Print(("Message '%s' doesn't have an icon set."):format(textType == "string" and text or spells[text or key])) -- XXX temp
 		end
 
 		self:SendMessage("BigWigs_Message", self, key, textType == "string" and text or spells[text or key], color, icon ~= false and icons[icon or textType == "number" and text or key])
@@ -1671,71 +1702,76 @@ end
 -- @section bars
 --
 
---- Display a bar.
--- @param key the option key
--- @param length the bar duration in seconds
--- @param[opt] text the bar text (if nil, key is used)
--- @param[opt] icon the bar icon (spell id or texture name)
-function boss:Bar(key, length, text, icon)
-	local textType = type(text)
-	local label = textType == "string" and text or spells[text or key]
-	if not length then
-		return autotimers(self, key, label)
-	elseif length < 0 then
-		return
-	end
-	if checkFlag(self, key, C.BAR) then
-		self:SendMessage("BigWigs_StartBar", self, key, label, length, icons[icon or textType == "number" and text or key])
-	end
-	if checkFlag(self, key, C.COUNTDOWN) then
-		self:SendMessage("BigWigs_StartEmphasize", self, key, label, length)
-	end
-end
+do
+	local msg = "Attempted to start bar %q without a valid time."
 
---- Display a cooldown bar.
--- Indicates an unreliable duration by prefixing the time with "~"
--- @param key the option key
--- @param length the bar duration in seconds
--- @param[opt] text the bar text (if nil, key is used)
--- @param[opt] icon the bar icon (spell id or texture name)
-function boss:CDBar(key, length, text, icon)
-	local textType = type(text)
-	local label = textType == "string" and text or spells[text or key]
-	if not length then
-		return autotimers(self, key, label)
-	elseif length < 0 then
-		return
-	end
-	if checkFlag(self, key, C.BAR) then
-		self:SendMessage("BigWigs_StartBar", self, key, label, length, icons[icon or textType == "number" and text or key], true)
-	end
-	if checkFlag(self, key, C.COUNTDOWN) then
-		self:SendMessage("BigWigs_StartEmphasize", self, key, label, length)
-	end
-end
-
---- Display a target bar.
--- @param key the option key
--- @param length the bar duration in seconds
--- @param player the player name to show on the bar
--- @param[opt] text the bar text (if nil, key is used)
--- @param[opt] icon the bar icon (spell id or texture name)
-function boss:TargetBar(key, length, player, text, icon)
-	local textType = type(text)
-	if not player and checkFlag(self, key, C.BAR) then
-		self:SendMessage("BigWigs_StartBar", self, key, format(L.other, textType == "string" and text or spells[text or key], "???"), length, icons[icon or textType == "number" and text or key])
-		return
-	end
-	if player == pName then
-		local msg = format(L.you, textType == "string" and text or spells[text or key])
+	--- Display a bar.
+	-- @param key the option key
+	-- @param length the bar duration in seconds
+	-- @param[opt] text the bar text (if nil, key is used)
+	-- @param[opt] icon the bar icon (spell id or texture name)
+	function boss:Bar(key, length, text, icon)
+		local textType = type(text)
+		local label = textType == "string" and text or spells[text or key]
+		if not length then
+			return autotimers(self, key, label)
+		elseif length < 0 then
+			return
+		end
 		if checkFlag(self, key, C.BAR) then
-			self:SendMessage("BigWigs_StartBar", self, key, msg, length, icons[icon or textType == "number" and text or key])
+			self:SendMessage("BigWigs_StartBar", self, key, label, length, icons[icon or textType == "number" and text or key])
 		end
 		if checkFlag(self, key, C.COUNTDOWN) then
-			self:SendMessage("BigWigs_StartEmphasize", self, key, msg, length)
+			self:SendMessage("BigWigs_StartEmphasize", self, key, label, length)
 		end
-	elseif not checkFlag(self, key, C.ME_ONLY) and checkFlag(self, key, C.BAR) then
-		self:SendMessage("BigWigs_StartBar", self, key, format(L.other, textType == "string" and text or spells[text or key], gsub(player, "%-.+", "*")), length, icons[icon or textType == "number" and text or key])
+	end
+
+	--- Display a cooldown bar.
+	-- Indicates an unreliable duration by prefixing the time with "~"
+	-- @param key the option key
+	-- @param length the bar duration in seconds
+	-- @param[opt] text the bar text (if nil, key is used)
+	-- @param[opt] icon the bar icon (spell id or texture name)
+	function boss:CDBar(key, length, text, icon)
+		local textType = type(text)
+		local label = textType == "string" and text or spells[text or key]
+		if not length then
+			return autotimers(self, key, label)
+		elseif length < 0 then
+			return
+		end
+		if checkFlag(self, key, C.BAR) then
+			self:SendMessage("BigWigs_StartBar", self, key, label, length, icons[icon or textType == "number" and text or key], true)
+		end
+		if checkFlag(self, key, C.COUNTDOWN) then
+			self:SendMessage("BigWigs_StartEmphasize", self, key, label, length)
+		end
+	end
+
+	--- Display a target bar.
+	-- @param key the option key
+	-- @param length the bar duration in seconds
+	-- @param player the player name to show on the bar
+	-- @param[opt] text the bar text (if nil, key is used)
+	-- @param[opt] icon the bar icon (spell id or texture name)
+	function boss:TargetBar(key, length, player, text, icon)
+		if type(length) ~= "number" then core:Print(format(msg,key)) return end
+		local textType = type(text)
+		if not player and checkFlag(self, key, C.BAR) then
+			self:SendMessage("BigWigs_StartBar", self, key, format(L.other, textType == "string" and text or spells[text or key], "???"), length, icons[icon or textType == "number" and text or key])
+			return
+		end
+		if player == pName then
+			local msg = format(L.you, textType == "string" and text or spells[text or key])
+			if checkFlag(self, key, C.BAR) then
+				self:SendMessage("BigWigs_StartBar", self, key, msg, length, icons[icon or textType == "number" and text or key])
+			end
+			if checkFlag(self, key, C.COUNTDOWN) then
+				self:SendMessage("BigWigs_StartEmphasize", self, key, msg, length)
+			end
+		elseif not checkFlag(self, key, C.ME_ONLY) and checkFlag(self, key, C.BAR) then
+			self:SendMessage("BigWigs_StartBar", self, key, format(L.other, textType == "string" and text or spells[text or key], gsub(player, "%-.+", "*")), length, icons[icon or textType == "number" and text or key])
+		end
 	end
 end
 

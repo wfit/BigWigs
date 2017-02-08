@@ -1,9 +1,8 @@
 
 --------------------------------------------------------------------------------
--- TODO List:
--- - We could merge the "pre" debuffs with the actual debuffs for Mark of Frost and Searing Brand.
---   I decided to do it like that because you have more customization options (emphasize and stuff)
-
+-- Notes:
+-- - The "pre" and actual debuffs for Mark of Frost and Searing Brand are separate
+--   because of customization (emphasize and stuff).
 
 --------------------------------------------------------------------------------
 -- Module Declaration
@@ -19,24 +18,36 @@ mod.instanceId = 1530
 --------------------------------------------------------------------------------
 -- Locals
 --
+
 local heroicTimers = {
 	-- Annihilate
-	[212492] = {8.0, 45.0, 40.0, 44.0, 38.0, 37.0, 33.0, 47.0, 41.0, 44.0, 38.0, 37.0},
+	[212492] = {8, 45, 40, 44, 38, 37, 33, 47, 41, 44, 38, 37},
 }
 local mythicTimers = {
 	-- Annihilate
 	[212492] = {8, 45, 30, 37, 35, 43, 27, 37, 41, 37, 35, 43, 27},
 
 	-- Fel Lash
-	[230403] = {7, 11, 6, 12, 6},
+	[230403] = {5.5, 11, 6, 12, 6},
 }
 local timers = mod:Mythic() and mythicTimers or heroicTimers
 local phase = 0 -- will immediately get incremented by mod:Stages()
 local annihilateCount = 1
 local felLashCount = 1
 local searingBrandTargets = {}
+local markOfFrostTargets = {}
+local proxList = {} -- Mark of Frost and Searing Brand
 local frostbittenStacks = {}
-local isInfoOpen = nil
+local mobCollector = {}
+local isInfoOpen = false
+local markOfFrostOnMe = nil
+local searingBrandOnMe = nil
+
+--------------------------------------------------------------------------------
+-- Upvalues
+--
+
+local tDeleteItem, tContains = tDeleteItem, tContains
 
 --------------------------------------------------------------------------------
 -- Localization
@@ -44,53 +55,38 @@ local isInfoOpen = nil
 
 local L = mod:GetLocale()
 
-local phase = 1
-local iconsPool = {}
-local iconsUsed = {}
-
-local function resetIcons()
-	wipe(iconsPool)
-	wipe(iconsUsed)
-	for i = 1, 6 do
-		iconsPool[#iconsPool + 1] = i
-	end
-end
-
 --------------------------------------------------------------------------------
 -- Initialization
 --
 
-local tank_marks = mod:AddTokenOption { "tank_marks", "Automatically set markers on tanks on pull", promote = true }
-local frost_marks = mod:AddTokenOption { "frost_marks", "Set markers on Players affected by Mark of Frost", promote = true }
-local fireadd_marks = mod:AddTokenOption { "fireadd_marks", "Set markers fire adds", promote = true }
-
+local searingBrandMarker = mod:AddMarkerOption(false, "player", 1, 213166, 1, 2, 3, 4, 5, 6)
+local fieryAddMarker = mod:AddMarkerOption(false, "npc", 1, 213867, 1, 2, 3, 4, 5, 6)
 function mod:GetOptions()
 	return {
 		--[[ General ]]--
 		{212492, "TANK_HEALER"}, -- Annihilate
 		"stages",
-		tank_marks,
 		"berserk",
 		230951, -- Severed Soul
 
 		--[[ Master of Frost ]]--
 		{212531, "SAY", "FLASH"}, -- Pre Mark of Frost
 		{212587, "SAY", "FLASH", "PROXIMITY"}, -- Mark of Frost
-		frost_marks,
 		{212647, "SAY", "INFOBOX"}, -- Frostbitten
 		212530, -- Replicate: Mark of Frost
-		212735, -- Detonate: Mark of Frost
+		{212735, "SAY"}, -- Detonate: Mark of Frost
 		213853, -- Animate: Mark of Frost"
 		213083, -- Frozen Tempest
 		212736, -- Pool of Frost
 
 		--[[ Master of Fire ]]--
-		{213148, "SAY", "FLASH"}, -- Pre Searing Brand
-		213166, -- Searing Brand
+		{213148, "SAY"}, -- Pre Searing Brand
+		{213166, "PROXIMITY"}, -- Searing Brand
+		searingBrandMarker,
 		{213275, "SAY"}, -- Detonate: Searing Brand
 		213567, -- Animate: Searing Brand
+		fieryAddMarker,
 		213278, -- Burning Ground
-		fireadd_marks,
 
 		--[[ Master of the Arcane ]]--
 		213520, -- Arcane Orb
@@ -132,7 +128,6 @@ function mod:OnBossEnable()
 	self:Log("SPELL_AURA_APPLIED_DOSE", "Frostbitten", 212647)
 	self:Log("SPELL_AURA_REMOVED", "FrostbittenRemoved", 212647)
 	self:Log("SPELL_CAST_START", "ReplicateMarkOfFrost", 212530)
-	self:Log("SPELL_CAST_START", "DetonateMarkOfFrost", 212735)
 	self:Log("SPELL_CAST_START", "AnimateMarkOfFrost", 213853)
 	self:Log("SPELL_CAST_START", "FrozenTempest", 213083)
 	self:Death("IcyEnchantmentDeath", 107237)
@@ -140,9 +135,9 @@ function mod:OnBossEnable()
 	--[[ Master of Fire ]]--
 	self:Log("SPELL_AURA_APPLIED", "PreSearingBrandApplied", 213148)
 	self:Log("SPELL_AURA_APPLIED", "SearingBrandApplied", 213166)
-	self:Log("SPELL_CAST_START", "DetonateSearingBrand", 213275)
+	self:Log("SPELL_AURA_REMOVED", "SearingBrandRemoved", 213166)
+	self:Log("SPELL_CAST_START", "DetonateSearingBrandOrFrost", 213275, 212735) -- Detonate: Searing Brand, Detonate: Mark of Frost
 	self:Log("SPELL_CAST_START", "AnimateSearingBrand", 213567)
-	self:Death("FireAddDeath", 107285)
 
 	--[[ Master of the Arcane ]]--
 	self:Log("SPELL_CAST_START", "ReplicateArcaneOrb", 213852)
@@ -166,8 +161,14 @@ end
 function mod:OnEngage()
 	phase = 0 -- will immediately get incremented by mod:Stages()
 	annihilateCount = 1
+	isInfoOpen = false
+	wipe(searingBrandTargets)
+	wipe(markOfFrostTargets)
 	wipe(frostbittenStacks)
-	isInfoOpen = nil
+	wipe(mobCollector)
+	wipe(proxList)
+	markOfFrostOnMe = nil
+	searingBrandOnMe = nil
 
 	timers = self:Mythic() and mythicTimers or heroicTimers
 	self:Bar(212492, timers[212492][annihilateCount]) -- Annihilate
@@ -180,36 +181,27 @@ function mod:OnEngage()
 	elseif self:Mythic() then
 		self:Berserk(450)
 	end
-
-	if self:GetOption(fireadd_marks) then
-		self:RegisterTargetEvents("FireAddMark")
-	end
-
-	if self:GetOption(tank_marks) then
-		local marked = 0
-		for unit in self:IterateGroup() do
-			if self:Tank(unit) then
-				SetRaidTarget(unit, 8 - marked)
-				marked = marked + 1
-				if marked == 2 then break end
-			end
-		end
-	end
-end
-
-function mod:OnBossDisable()
-	if self:GetOption(tank_marks) then
-		for unit in self:IterateGroup() do
-			if self:Tank(unit) then
-				SetRaidTarget(unit, 0)
-			end
-		end
-	end
 end
 
 --------------------------------------------------------------------------------
 -- Event Handlers
 --
+
+local function updateProximity(self)
+	local showMark = self:CheckOption(212587, "PROXIMITY") -- Mark of Frost Radius: 8 yards
+	local showBrand = self:CheckOption(213166, "PROXIMITY") -- Searing Brand http://www.wowhead.com/spell=213276 Radius: 10 yards
+	if showMark and markOfFrostOnMe then
+		self:OpenProximity(212587, 8)
+	elseif showBrand and searingBrandOnMe then
+		self:OpenProximity(213166, 10)
+	elseif showMark and showBrand and #proxList > 0 then
+		self:OpenProximity(213166, 10, proxList)
+	elseif showMark and #markOfFrostTargets > 0 then
+		self:OpenProximity(212587, 8, markOfFrostTargets)
+	elseif showBrand and #searingBrandTargets > 0 then
+		self:OpenProximity(213166, 10, searingBrandTargets)
+	end
+end
 
 function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 	if spellId == 215455 then -- Arcane Orb
@@ -241,7 +233,6 @@ do
 	function mod:Stages(args)
 		phase = phase + 1
 		self:Message("stages", "Neutral", "Long", args.spellName, args.spellId)
-		resetIcons()
 
 		if args.spellId == 216389 then -- Icy
 			if self:Mythic() then -- Fel Soul
@@ -256,12 +247,13 @@ do
 			if self:Mythic() then -- Fel Soul
 				self:Bar(230901, 15)
 			end
-			self:Bar(212587, self:Mythic() and 2 or 18) -- Mark of Frost (timer is the "pre" mark of frost aura applied)
-			self:Bar(212530, self:Mythic() and 15 or 41) -- Replicate: Mark of Frost
-			self:Bar(212735, self:Mythic() and 35 or 71) -- Detonate: Mark of Frost
-			self:Bar(213853, self:Mythic() and 52 or 75, nil, 31687) -- Animate: Mark of Frost, Water Elemental icon
+			self:Bar(212587, 2) -- Mark of Frost (timer is the "pre" mark of frost aura applied)
+			self:Bar(212530, 15) -- Replicate: Mark of Frost
+			self:Bar(212735, self:Mythic() and 35 or 45) -- Detonate: Mark of Frost
+			self:Bar(213853, self:Mythic() and 52 or 62, nil, 31687) -- Animate: Mark of Frost, Water Elemental icon
 			self:Bar("stages", self:Mythic() and 75 or 85, self:SpellName(213867), 213867) -- Next: Fiery
 		elseif args.spellId == 213867 then -- Fiery
+			wipe(searingBrandTargets)
 			if self:Mythic() then -- Fel Soul
 				self:Bar(230901, 18)
 			end
@@ -286,12 +278,22 @@ do
 	local preDebuffApplied = 0
 	function mod:PreMarkOfFrostApplied(args)
 		if self:Me(args.destGUID) then
+			preDebuffApplied = GetTime()
 			self:TargetMessage(args.spellId, args.destName, "Attention", "Alert")
 			self:Say(args.spellId)
 			self:Flash(args.spellId)
-			self:OpenProximity(212587, 8)
-			preDebuffApplied = GetTime()
+			markOfFrostOnMe = true
 		end
+
+		if not tContains(markOfFrostTargets, args.destName) then
+			markOfFrostTargets[#markOfFrostTargets+1] = args.destName
+		end
+
+		if not tContains(proxList, args.destName) then
+			proxList[#proxList+1] = args.destName
+		end
+
+		updateProximity(self)
 	end
 
 	local list = mod:NewTargetList()
@@ -301,61 +303,65 @@ do
 			self:ScheduleTimer("TargetMessage", 1, args.spellId, list, "Urgent")
 		end
 
-		if self:Token(frost_marks) and #iconsPool > 0 then
-			local icon = table.remove(iconsPool, 1)
-			iconsUsed[args.destGUID] = icon
-			SetRaidTarget(args.destUnit, icon)
+		if self:Me(args.destGUID) then
+			markOfFrostOnMe = true
+			local t = GetTime()
+			if t-preDebuffApplied > 5.5 then
+				self:TargetMessage(args.spellId, args.destName, "Attention", "Alert")
+				self:Say(args.spellId)
+				self:Flash(args.spellId)
+			end
 		end
 
-		local t = GetTime()
-		if self:Me(args.destGUID) and t-preDebuffApplied > 5.5 then
-			self:TargetMessage(args.spellId, args.destName, "Attention", "Alert")
-			self:Say(args.spellId)
-			self:Flash(args.spellId)
-			self:OpenProximity(212587, 8)
+		if not tContains(markOfFrostTargets, args.destName) then
+			markOfFrostTargets[#markOfFrostTargets+1] = args.destName
 		end
+
+		if not tContains(proxList, args.destName) then
+			proxList[#proxList+1] = args.destName
+		end
+
+		updateProximity(self)
 	end
 end
 
 function mod:MarkOfFrostRemoved(args)
-	if iconsUsed[args.destGUID] then
-		table.insert(iconsPool, iconsUsed[args.destGUID])
-		iconsUsed[args.destGUID] = nil
-		SetRaidTarget(args.destUnit, 0)
-	end
 	if self:Me(args.destGUID) then
-		self:CloseProximity(212587)
+		markOfFrostOnMe = nil
 	end
+
+	tDeleteItem(markOfFrostTargets, args.destName)
+	tDeleteItem(proxList, args.destName)
+
+	if #markOfFrostTargets == 0 then
+		self:CloseProximity(args.spellId)
+	end
+
+	updateProximity(self)
 end
 
-do
-	local prev = 0
-	function mod:Frostbitten(args)
-		local amount = args.amount or 1
-		if self:Me(args.destGUID) and amount % 2 == 0 then
-			self:StackMessage(args.spellId, args.destName, amount, "Important", amount > 10 and "Warning")
-			self:Say(args.spellId, tostring(amount))
-		end
-
-		frostbittenStacks[args.destName] = amount
-
-		local t = GetTime()
-		if t-prev > 2 then
-			prev = t
-			if not isInfoOpen then
-				isInfoOpen = true
-				self:OpenInfo(args.spellId, args.spellName)
-			end
-			self:SetInfoByTable(args.spellId, frostbittenStacks)
-		end
+function mod:Frostbitten(args)
+	local amount = args.amount or 1
+	if self:Me(args.destGUID) and amount % 2 == 0 then
+		self:StackMessage(args.spellId, args.destName, amount, "Important", amount > 7 and "Warning")
+		self:Say(args.spellId, tostring(amount))
 	end
+
+	frostbittenStacks[args.destName] = amount
+
+	if not isInfoOpen then
+		isInfoOpen = true
+		self:OpenInfo(args.spellId, args.spellName)
+	end
+
+	self:SetInfoByTable(args.spellId, frostbittenStacks)
 end
 
 function mod:FrostbittenRemoved(args)
 	frostbittenStacks[args.destName] = nil
 	if not next(frostbittenStacks) and isInfoOpen then
 		self:CloseInfo(args.spellId)
-		isInfoOpen = nil
+		isInfoOpen = false
 	end
 end
 
@@ -364,10 +370,6 @@ function mod:AnimateMarkOfFrost(args)
 end
 
 function mod:ReplicateMarkOfFrost(args)
-	self:Message(args.spellId, "Important", "Alarm")
-end
-
-function mod:DetonateMarkOfFrost(args)
 	self:Message(args.spellId, "Important", "Alarm")
 end
 
@@ -396,51 +398,109 @@ do
 			self:ScheduleTimer("TargetMessage", 0.3, args.spellId, list, "Urgent")
 		end
 
+		if not tContains(searingBrandTargets, args.destName) then
+			searingBrandTargets[#searingBrandTargets+1] = args.destName
+			if self:GetOption(searingBrandMarker) then
+				SetRaidTarget(args.destName, #searingBrandTargets)
+			end
+		end
+
+		if not tContains(proxList, args.destName) then
+			proxList[#proxList+1] = args.destName
+		end
+
 		if self:Me(args.destGUID) then
 			self:Say(args.spellId)
-			self:Flash(args.spellId)
+			searingBrandOnMe = true
 		end
+
+		updateProximity(self)
 	end
 end
 
 function mod:SearingBrandApplied(args)
 	if self:Me(args.destGUID) then
+		searingBrandOnMe = true
 		local _, _, _, _, _, _, expires = UnitDebuff("player", args.spellName)
 		if expires and expires > 0 then
 			local timeLeft = expires - GetTime()
 			self:TargetBar(args.spellId, timeLeft, args.destName)
 			local remaining = self:BarTimeLeft(213275)
 			for i = 1, 5 do
-				if remaining-i > 0 then
-					self:ScheduleTimer("Say", remaining-i, 213148, i, true)
+				if remaining - i > 0 then
+					self:ScheduleTimer("Say", remaining - i, 213148, i, true)
 				end
 			end
 		end
 	end
+
+	if not tContains(searingBrandTargets, args.destName) then
+		searingBrandTargets[#searingBrandTargets+1] = args.destName
+		if self:GetOption(searingBrandMarker) then
+			SetRaidTarget(args.destName, #searingBrandTargets)
+		end
+	end
+
+	if not tContains(proxList, args.destName) then
+		proxList[#proxList+1] = args.destName
+	end
+
+	updateProximity(self)
 end
 
-function mod:DetonateSearingBrand(args)
+function mod:SearingBrandRemoved(args)
+	if self:Me(args.destGUID) then
+		searingBrandOnMe = nil
+	end
+
+	tDeleteItem(searingBrandTargets, args.destName)
+	tDeleteItem(proxList, args.destName)
+
+	if self:GetOption(searingBrandMarker) then
+		SetRaidTarget(args.destName, 0)
+	end
+
+	if #searingBrandTargets == 0 then
+		self:CloseProximity(args.spellId)
+	end
+
+	updateProximity(self)
+end
+
+function mod:DetonateSearingBrandOrFrost(args)
 	self:Message(args.spellId, "Important", "Alarm")
-end
-
-function mod:AnimateSearingBrand(args)
-	self:Message(args.spellId, "Important", "Info")
-	resetIcons()
-end
-
-function mod:FireAddMark(event, unit)
-	local guid = UnitGUID(unit)
-	if self:MobId(guid) == 107285 and not iconsUsed[guid] and self:Token(fireadd_marks) then
-		local icon = table.remove(iconsPool, 1)
-		iconsUsed[guid] = icon
-		SetRaidTarget(unit, icon)
+	if markOfFrostOnMe or searingBrandOnMe then
+		self:Say(args.spellId, 151913) -- "Detonate"
 	end
 end
 
-function mod:FireAddDeath(args)
-	if iconsUsed[args.destGUID] then -- Did we mark the Ichor?
-		table.insert(iconsPool, iconsUsed[args.destGUID])
-		iconsUsed[args.destGUID] = nil
+do
+	local fieryAddMarks = {}
+	function mod:FieryAddMark(event, unit)
+		local guid = UnitGUID(unit)
+		if self:MobId(guid) == 107285 and not mobCollector[guid] then
+			for i = 1, 6 do
+				if not fieryAddMarks[i] then
+					SetRaidTarget(unit, i)
+					fieryAddMarks[i] = guid
+					mobCollector[guid] = true
+					if i == 6 then
+						self:UnregisterTargetEvents()
+					end
+					return
+				end
+			end
+		end
+	end
+
+	function mod:AnimateSearingBrand(args)
+		self:Message(args.spellId, "Important", "Info")
+
+		if self:GetOption(fieryAddMarker) then
+			wipe(fieryAddMarks)
+			self:RegisterTargetEvents("FieryAddMark")
+			self:ScheduleTimer("UnregisterTargetEvents", 10)
+		end
 	end
 end
 
@@ -472,7 +532,7 @@ function mod:SeveredSoul(args)
 	self:CDBar(230504, phase % 3 == 1 and 18 or phase % 3 == 2 and 11 or 10) -- Decimate
 	if phase % 3 == 0 then -- Magic
 		felLashCount = 1
-		self:Bar(230403, timers[230403][felLashCount], CL.count:format(self:SpellName(230403), felLashCount)) -- Fel Lash
+		self:CDBar(230403, timers[230403][felLashCount], CL.count:format(self:SpellName(230403), felLashCount)) -- Fel Lash
 	end
 end
 
@@ -506,5 +566,3 @@ do
 		end
 	end
 end
-
-

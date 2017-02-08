@@ -163,9 +163,9 @@ function mod:GetOptions()
 		209971, -- Ablative Pulse
 		{211887, "TANK"}, -- Ablated
 	},{
-		[208887] = "general",
+		["stages"] = "general",
 		[221863] = -13226, -- Recursive Elemental
-		[209568] = -13229, -- Expedient Elemental
+		[209166] = -13229, -- Expedient Elemental
 		[208807] = -13222, -- Time Layer 1
 		[209244] = -13235, -- Time Layer 2
 		[211261] = -13232, -- Time Layer 3
