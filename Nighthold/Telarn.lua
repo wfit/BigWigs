@@ -101,11 +101,6 @@ function mod:OnEngage()
 	nextPhaseSoon = 80
 	phase = 1
 
-	for _,timer in pairs(collapseSayTimers) do
-		self:CancelTimer(timer)
-	end
-	wipe(collapseSayTimers)
-
 	if not self:Mythic() then
 		self:Bar(218148, self:Easy() and 14.3 or 10) -- Solar Collapse, to _start
 		self:Bar(218304, self:Easy() and 30 or 21.5) -- Parasitic Fetter, to _success
