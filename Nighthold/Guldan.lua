@@ -886,6 +886,11 @@ do
 		if self:Me(args.destGUID) then
 			self:Flash(206847)
 			self:Say(206847)
+			local _, _, _, _, _, _, expires = UnitDebuff("player", args.spellName)
+			local t = expires - GetTime()
+			self:ScheduleTimer("Say", t-3, 206847, 3, true)
+			self:ScheduleTimer("Say", t-2, 206847, 2, true)
+			self:ScheduleTimer("Say", t-1, 206847, 1, true)
 		end
 	end
 end
