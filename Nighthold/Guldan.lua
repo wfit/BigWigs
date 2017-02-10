@@ -134,8 +134,8 @@ local overridesMythic = {
 	-- Phase 3
 	[3] = {
 		[206847] = { [1] = 4.5 }, -- Parasitic Wound
-		[220957] = { [1] = 15.5 }, -- Soulsever
-		[227094] = { [1] = 25.5 }, -- Flame Crash
+		[220957] = { [1] = 15.5, [5] = 70.0, [9] = 50.0 }, -- Soulsever
+		[227094] = { [1] = 25.5, [5] = 50.0, [9] = 70.0 }, -- Flame Crash
 	},
 }
 
@@ -872,10 +872,8 @@ function mod:WillOfTheDemonWithin()
 end
 
 function mod:ParasiticWound()
-	if parasiticCount < 3 then
-		parasiticCount = parasiticCount + 1
-		self:Bar(206847, self:Timer(206847, parasiticCount), CL.count:format(self:SpellName(206847), parasiticCount))
-	end
+	parasiticCount = parasiticCount + 1
+	self:Bar(206847, self:Timer(206847, parasiticCount), CL.count:format(self:SpellName(206847), parasiticCount))
 end
 
 do
@@ -899,18 +897,14 @@ end
 
 function mod:Soulsever(args)
 	self:Message(args.spellId, "Urgent", "Warning", CL.casting:format(args.spellName))
-	if soulseverCount < 4 then
-		soulseverCount = soulseverCount + 1
-		self:Bar(args.spellId, self:Timer(args.spellId, soulseverCount), CL.count:format(args.spellName, soulseverCount))
-	end
+	soulseverCount = soulseverCount + 1
+	self:Bar(args.spellId, self:Timer(args.spellId, soulseverCount), CL.count:format(args.spellName, soulseverCount))
 end
 
 function mod:FlameCrash(spellId)
 	self:Message(227094, "Urgent", "Alert")
-	if flameCrashCount < 4 then
-		flameCrashCount = flameCrashCount + 1
-		self:Bar(227094, self:Timer(227094, flameCrashCount), CL.count:format(self:SpellName(227094), flameCrashCount))
-	end
+	flameCrashCount = flameCrashCount + 1
+	self:Bar(227094, self:Timer(227094, flameCrashCount), CL.count:format(self:SpellName(227094), flameCrashCount))
 end
 
 function mod:ManifestAzzinoth()
