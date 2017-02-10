@@ -121,7 +121,7 @@ local timersMythic = {
 		-- Summon Nightorb, UNIT_SPELLCAST_SUCCEEDED
 		[227283] = { 35.5, 45, 60 },
 		-- Visions of the Dark Titan, SPELL_CAST_START
-		[227008] = { 91.3 },
+		[227008] = { 91.3, 120 },
 	},
 }
 
