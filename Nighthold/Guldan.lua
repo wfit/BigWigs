@@ -948,11 +948,6 @@ function mod:VisionOfTheDarkTitan(args)
 	self:Message(args.spellId, "Urgent", "Long", CL.casting:format(args.spellName))
 	visionCount = visionCount + 1
 	self:Bar(args.spellId, self:Timer(args.spellId, visionCount), CL.count:format(args.spellName, visionCount))
-	parasiticCount = 1
-	soulseverCount = 1
-	flameCrashCount = 1
-	azzinothCount = 1
-	nightorbCount = 1
 end
 
 --[[ Generic Damage Warnings ]] --
