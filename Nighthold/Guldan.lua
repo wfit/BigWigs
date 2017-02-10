@@ -117,7 +117,7 @@ local timersMythic = {
 		-- Flame Crash, SPELL_CAST_START
 		[227094] = 20,
 		-- Manifest Azzinoth, UNIT_SPELLCAST_SUCCEEDED
-		[227264] = { 22.3, 40.9 },
+		[227264] = { 22.3, 41, 41, 42 },
 		-- Summon Nightorb, UNIT_SPELLCAST_SUCCEEDED
 		[227283] = { 35.5, 45, 60 },
 		-- Visions of the Dark Titan, SPELL_CAST_START
@@ -433,7 +433,7 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 		self:FlameCrash()
 	elseif spellId == 227035 then
 		self:ParasiticWound()
-	elseif spellId == 227264 then
+	elseif spellId == 227264 or spellId == 227277 then
 		self:ManifestAzzinoth()
 	elseif spellId == 221382 then
 		self:ChaosSeed()
