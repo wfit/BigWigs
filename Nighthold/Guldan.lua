@@ -872,8 +872,10 @@ function mod:WillOfTheDemonWithin()
 end
 
 function mod:ParasiticWound()
-	parasiticCount = parasiticCount + 1
-	self:Bar(206847, self:Timer(206847, parasiticCount), CL.count:format(self:SpellName(206847), parasiticCount))
+	if parasiticCount < 3 then
+		parasiticCount = parasiticCount + 1
+		self:Bar(206847, self:Timer(206847, parasiticCount), CL.count:format(self:SpellName(206847), parasiticCount))
+	end
 end
 
 do
@@ -897,14 +899,18 @@ end
 
 function mod:Soulsever(args)
 	self:Message(args.spellId, "Urgent", "Warning", CL.casting:format(args.spellName))
-	soulseverCount = soulseverCount + 1
-	self:Bar(args.spellId, self:Timer(args.spellId, soulseverCount), CL.count:format(args.spellName, soulseverCount))
+	if soulseverCount < 4 then
+		soulseverCount = soulseverCount + 1
+		self:Bar(args.spellId, self:Timer(args.spellId, soulseverCount), CL.count:format(args.spellName, soulseverCount))
+	end
 end
 
 function mod:FlameCrash(spellId)
 	self:Message(227094, "Urgent", "Alert")
-	flameCrashCount = flameCrashCount + 1
-	self:Bar(227094, self:Timer(227094, flameCrashCount), CL.count:format(self:SpellName(227094), flameCrashCount))
+	if flameCrashCount < 4 then
+		flameCrashCount = flameCrashCount + 1
+		self:Bar(227094, self:Timer(227094, flameCrashCount), CL.count:format(self:SpellName(227094), flameCrashCount))
+	end
 end
 
 function mod:ManifestAzzinoth()
@@ -948,6 +954,11 @@ function mod:VisionOfTheDarkTitan(args)
 	self:Message(args.spellId, "Urgent", "Long", CL.casting:format(args.spellName))
 	visionCount = visionCount + 1
 	self:Bar(args.spellId, self:Timer(args.spellId, visionCount), CL.count:format(args.spellName, visionCount))
+	parasiticCount = 1
+	soulseverCount = 1
+	flameCrashCount = 1
+	azzinothCount = 1
+	nightorbCount = 1
 end
 
 --[[ Generic Damage Warnings ]] --
