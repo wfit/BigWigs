@@ -947,6 +947,7 @@ end
 function mod:VisionOfTheDarkTitan(args)
 	self:Message(args.spellId, "Urgent", "Long", CL.casting:format(args.spellName))
 	visionCount = visionCount + 1
+	self:Bar(args.spellId, 9)
 	self:Bar(args.spellId, self:Timer(args.spellId, visionCount), CL.count:format(args.spellName, visionCount))
 end
 
