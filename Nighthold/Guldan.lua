@@ -957,7 +957,7 @@ function mod:VisionsOfTheDarkTitan(args)
 end
 
 function mod:VisionsOfTheDarkTitanStart(args)
-	self:Bar(visions_cast, 9, CL.cast:format(args.spellName))
+	self:Bar(visions_cast, 9, CL.cast:format(args.spellName), 226975)
 end
 
 function mod:Wounded()
