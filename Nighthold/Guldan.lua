@@ -862,7 +862,7 @@ do
 		self:Bar(206847, 4, CL.count:format(self:SpellName(206847), parasiticCount))
 		self:Bar(220957, 15, CL.count:format(self:SpellName(220957), soulseverCount))
 		self:Bar(227094, 25, CL.count:format(self:SpellName(227094), flameCrashCount))
-		self:Bar(227008, 90, CL.count:format(self:SpellName(227008), visionsCount))
+		self:Bar(226975, 90, CL.count:format(self:SpellName(227008), visionsCount))
 		self:Bar(227264, self:Timer(227264, azzinothCount), CL.count:format(self:SpellName(227264), azzinothCount), 195304)
 		self:Bar(227283, self:Timer(227283, nightorbCount), CL.count:format(self:SpellName(227283), nightorbCount), 155145)
 	end
