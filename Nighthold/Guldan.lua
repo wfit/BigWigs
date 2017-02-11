@@ -292,9 +292,9 @@ function mod:OnBossEnable()
 	self:Log("SPELL_AURA_APPLIED", "FlamesOfSargerasSoon", 221606)
 	self:Log("SPELL_AURA_REMOVED", "FlamesOfSargerasRemoved", 221603)
 
-	self:Log("SPELL_AURA_APPLIED", "Damage", 206515, 221781, 221326) -- Fel Efflux, Desolate Ground, Chaos Seed
-	self:Log("SPELL_PERIODIC_DAMAGE", "Damage", 206515, 221781, 221326)
-	self:Log("SPELL_PERIODIC_MISSED", "Damage", 206515, 221781, 221326)
+	self:Log("SPELL_AURA_APPLIED", "Damage", 206515, 221781) -- Fel Efflux, Desolate Ground
+	self:Log("SPELL_PERIODIC_DAMAGE", "Damage", 206515, 221781)
+	self:Log("SPELL_PERIODIC_MISSED", "Damage", 206515, 221781)
 	self:Log("SPELL_DAMAGE", "Damage", 217770, 221781) -- Gaze of Vethriz, Desolate Ground
 	self:Log("SPELL_MISSED", "Damage", 217770, 221781)
 
