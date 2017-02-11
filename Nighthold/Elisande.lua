@@ -41,28 +41,28 @@ local timersHeroic = {
 }
 local timersMythic = {
 	-- Spanning Singularity, UNIT_SPELLCAST_SUCCEEDED
-	[209168] = { 54, 50.0, 45.0 },
+	[209168] = { 54, 50, 45, -1 },
 	-- Arcanetic Ring, RAID_BOSS_EMOTE
 	[208807] = { 32, 40, 15, 30, 20, 10, 25, 10, 10, 13 },
 	-- Epocheric Orb, RAID_BOSS_EMOTE
-	[210022] = { 14.5, 85, 60, 20 },
+	[210022] = { 14.5, 85, 60, 20, 10, -1 },
 	-- Delphuric Beam, SPELL_CAST_START
-	[209244] = { 58, 50, 65 },
+	[209244] = { 58, 50, 65, -1 },
 	-- Conflexive Burst,
-	[209597] = { 39, 90, 45 },
+	[209597] = { 39, 90, 45, 30, -1 },
 	-- Permeliative Tormert
-	[211261] = { 64, 75, 25, 20 },
+	[211261] = { 64, 75, 25, 20, -1 },
 	-- Summon Time Elemental - Slow, UNIT_SPELLCAST_SUCCEEDED
 	[209005] = {
-		[1] = { 5, 39, 75 },
-		[2] = { 5, 39, 45, 30, 30, },
-		[3] = { 5, 54, 55, 30, },
+		[1] = { 5, 39, 75, -1 },
+		[2] = { 5, 39, 45, 30, 30, -1 },
+		[3] = { 5, 54, 55, 30, -1 },
 	},
 	-- Summon Time Elemental - Fast, UNIT_SPELLCAST_SUCCEEDED
 	[211616] =  {
-		[1] = { 8, 81, },
-		[2] = { 8, 51, },
-		[3] = { 8, 36, 45 },
+		[1] = { 8, 81, -1 },
+		[2] = { 8, 51, -1 },
+		[3] = { 8, 36, 45, -1 },
 	}
 }
 local timers = mod:Mythic() and timersMythic or timersHeroic

@@ -402,7 +402,6 @@ function mod:FelNova(args)
 	self:CDBar(args.spellId, self:Mythic() and timers[args.spellId][felNovaCount] or 45)
 end
 
-
 function mod:FelEjection(args)
 	ejectionCount = ejectionCount + 1
 	self:CDBar(args.spellId, timers[args.spellId][ejectionCount] or 30, CL.count:format(args.spellName, ejectionCount))

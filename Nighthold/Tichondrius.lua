@@ -103,7 +103,6 @@ function mod:OnBossEnable()
 
 	--[[ Stage Two ]]--
 	self:Log("SPELL_CAST_START", "IllusionaryNight", 206365)
-	self:Log("SPELL_AURA_REMOVED", "IllusionaryNightRemoved", 206311)
 	self:Log("SPELL_CAST_SUCCESS", "CarrionNightmare", 215988)
 	self:Log("SPELL_AURA_APPLIED", "EssenceOfNight", 206466)
 	self:Death("BatDeath", 104326)
@@ -246,10 +245,7 @@ function mod:IllusionaryNight(args)
 	self:SetInfo(206466, 4, #essenceTargets)
 
 	self:OpenInfo(206466, self:SpellName(206466))
-end
-
-function mod:IllusionaryNightRemoved(args)
-	self:ScheduleTimer("CloseInfo", 10, 206466) -- some delay to look at the InfoBox after the phase
+	self:ScheduleTimer("CloseInfo", 40, 206466) -- some delay to look at the InfoBox after the phase
 end
 
 function mod:CarrionNightmare(args)
@@ -269,7 +265,7 @@ function mod:BatDeath(args)
 	addsKilled = addsKilled + 1
 	self:SetInfo(206466, 2, addsKilled)
 	if self:Mythic() and addsKilled % 5 == 0 then
-		self:Message(206466, "Neutral", nil, CL.add_killed:format(addsKilled, 20))
+		self:Message(206466, "Neutral", nil, CL.mob_killed:format(CL.adds, addsKilled, 20))
 	end
 end
 

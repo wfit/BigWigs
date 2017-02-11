@@ -217,7 +217,7 @@ local function updateProximity(self)
 		self:OpenProximity(212587, 8)
 	elseif showBrand and searingBrandOnMe then
 		self:OpenProximity(213166, 10)
-	elseif showMark and showBrand and #proxList > 0 then
+	elseif showMark and showBrand and #markOfFrostTargets > 0 and #searingBrandTargets > 0 then
 		self:OpenProximity(213166, 10, proxList)
 	elseif showMark and #markOfFrostTargets > 0 then
 		self:OpenProximity(212587, 8, markOfFrostTargets)
@@ -494,6 +494,14 @@ function mod:DetonateSearingBrandOrFrost(args)
 	self:Message(args.spellId, "Important", "Alarm")
 	if markOfFrostOnMe or searingBrandOnMe then
 		self:Say(args.spellId, 151913) -- "Detonate"
+	end
+	if args.spellId == 213275 then -- Detonate: Searing Brand
+		-- At this point there will be no more Mark of Frost targets and you no
+		-- longer need to stay away from Searing Brand targets, so wipe everything!
+		wipe(markOfFrostTargets) -- empty anyway
+		wipe(searingBrandTargets)
+		wipe(proxList)
+		self:CloseProximity(213166) -- Searing Brand
 	end
 end
 
