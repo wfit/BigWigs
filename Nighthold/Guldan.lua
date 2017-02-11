@@ -111,7 +111,7 @@ local timersMythic = {
 
 		-- P4 is actually P3 to handle simultaneous Gul'dan
 		-- Manifest Azzinoth, UNIT_SPELLCAST_SUCCEEDED
-		[227264] = { 22, 41, 41, 42, 40 },
+		[227264] = { 22, 41, 41, 42, 40, 41 },
 		-- Summon Nightorb, UNIT_SPELLCAST_SUCCEEDED
 		[227283] = { 35, 45, 60, 40 },
 	},
