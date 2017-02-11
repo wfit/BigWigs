@@ -33,7 +33,7 @@ local empowerCount = 1
 local windCount = 1
 local soulseverCount = 1
 local parasiticCount = 1
-local visionCount = 1
+local visionsCount = 1
 local flameCrashCount = 1
 local azzinothCount = 1
 local nightorbCount = 1
@@ -110,18 +110,10 @@ local timersMythic = {
 		[215125] = { 3.8, 87.4, 84.5, 84.5 },
 
 		-- P4 is actually P3 to handle simultaneous Gul'dan
-		-- Parasitic Wound, SPELL_AURA_APPLIED
-		[206847] = 36,
-		-- Soulsever, SPELL_CAST_START
-		[220957] = 20,
-		-- Flame Crash, SPELL_CAST_START
-		[227094] = 20,
 		-- Manifest Azzinoth, UNIT_SPELLCAST_SUCCEEDED
 		[227264] = { 22.3, 41, 41, 42, 40 },
 		-- Summon Nightorb, UNIT_SPELLCAST_SUCCEEDED
 		[227283] = { 35.5, 45, 60, 40 },
-		-- Visions of the Dark Titan, SPELL_CAST_START
-		[227008] = { 91.3, 90 },
 	},
 }
 
@@ -130,12 +122,6 @@ local overridesMythic = {
 	[2] = {
 		[206222] = { [1] = 6.1 }, -- Bonds of Fel
 		[212258] = { [1] = 16.1 }, -- Hand of Gul'dan
-	},
-	-- Phase 3
-	[3] = {
-		[206847] = { [1] = 4.5 }, -- Parasitic Wound
-		[220957] = { [1] = 15.5, [5] = 70.0, --[[ [7] = 70.0 ]] }, -- Soulsever
-		[227094] = { [1] = 25.5, [5] = 50.0, --[[ [8] = 50.0 ]] }, -- Flame Crash
 	},
 }
 
@@ -232,10 +218,10 @@ function mod:GetOptions()
 		227094, -- Flame Crash
 		227264, -- Manifest Azzinoth
 		221382, -- Chaos Seed
-		221408, -- Bulwark of Azzinoth
 		227283, -- Summon Nightorb
 		211832, -- Time Stop Field
-		227008, -- Vision of the Dark Titan
+		221486, -- Purified Essence
+		226975, -- Visions of the Dark Titan
 	}, {
 		["stages"] = "general",
 		[206219] = -14885, -- Stage One
@@ -313,11 +299,11 @@ function mod:OnBossEnable()
 	self:Log("SPELL_MISSED", "Damage", 217770, 221781)
 
 	--[[ The Demon Within ]] --
-	self:Log("SPELL_CAST_SUCCESS", "WillOfTheDemonWithin", 211439)
 	self:Log("SPELL_AURA_APPLIED", "ParasiticWoundApplied", 206847)
 	self:Log("SPELL_CAST_START", "Soulsever", 220957)
-	self:Log("SPELL_CAST_SUCCESS", "BulwarkOfAzzinoth", 221408)
-	self:Log("SPELL_CAST_START", "VisionOfTheDarkTitan", 227008)
+	self:Log("SPELL_CAST_SUCCESS", "VisionsOfTheDarkTitan", 226975)
+	self:Log("SPELL_CAST_START", "PurifiedEssence", 221486)
+	self:Log("SPELL_AURA_APPLIED", "Wounded", 227009)
 	self:Death("AzzinothDeath", 111070)
 end
 
@@ -429,6 +415,8 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 		self:TrapperSpawn()
 	elseif spellId == 212721 or spellId == 212722 or spellId == 209126 then -- Summon Dreadlord
 		self:DreadlordSpawn()
+	elseif spellId == 227260 then
+		self:Phase4()
 	elseif spellId == 227094 then
 		self:FlameCrash()
 	elseif spellId == 227035 then
@@ -852,28 +840,38 @@ function mod:GuldanDeath()
 	self:CloseInfo("infobox")
 end
 
-function mod:WillOfTheDemonWithin()
-	-- We'll just pretend we are in phase 4 without actually updating the phase variable
-	-- because it is possible for Gul'dan to still be alive during that phase and we don't
-	-- want to fuck up his timers.
-	self:Message("stages", "Neutral", "Long", CL.stage:format(4), false)
-	parasiticCount = 1
-	soulseverCount = 1
-	flameCrashCount = 1
-	azzinothCount = 1
-	nightorbCount = 1
-	visionCount = 1
-	self:Bar(206847, self:Timer(206847, parasiticCount), CL.count:format(self:SpellName(206847), parasiticCount))
-	self:Bar(220957, self:Timer(220957, soulseverCount), CL.count:format(self:SpellName(220957), soulseverCount))
-	self:Bar(227094, self:Timer(227094, flameCrashCount), CL.count:format(self:SpellName(227094), flameCrashCount))
-	self:Bar(227264, self:Timer(227264, azzinothCount), CL.count:format(self:SpellName(227264), azzinothCount), 195304)
-	self:Bar(227283, self:Timer(227283, nightorbCount), CL.count:format(self:SpellName(227283), nightorbCount), 155145)
-	self:Bar(227008, self:Timer(227008, visionCount), CL.count:format(self:SpellName(227008), visionCount))
+do
+	-- Phase start timestamp for Soulsever / Flame Crash timing
+	local phaseStart = 0
+
+	function mod:Phase4()
+		-- We'll just pretend we are in phase 4 without actually updating the phase variable
+		-- because it is possible for Gul'dan to still be alive during that phase and we don't
+		-- want to fuck up his timers.
+		self:Message("stages", "Neutral", "Long", CL.stage:format(4), false)
+		phaseStart = GetTime()
+		parasiticCount = 1
+		soulseverCount = 1
+		flameCrashCount = 1
+		visionsCount = 1
+		nightorbCount = 1
+		azzinothCount = 1
+		self:Bar(206847, 4, CL.count:format(self:SpellName(206847), parasiticCount))
+		self:Bar(220957, 15, CL.count:format(self:SpellName(220957), soulseverCount))
+		self:Bar(227094, 25, CL.count:format(self:SpellName(227094), flameCrashCount))
+		self:Bar(227008, 90, CL.count:format(self:SpellName(227008), visionsCount))
+		self:Bar(227264, self:Timer(227264, azzinothCount), CL.count:format(self:SpellName(227264), azzinothCount), 195304)
+		self:Bar(227283, self:Timer(227283, nightorbCount), CL.count:format(self:SpellName(227283), nightorbCount), 155145)
+	end
+
+	function mod:DemonWithinClock()
+		return GetTime() - phaseStart
+	end
 end
 
 function mod:ParasiticWound()
 	parasiticCount = parasiticCount + 1
-	self:Bar(206847, self:Timer(206847, parasiticCount), CL.count:format(self:SpellName(206847), parasiticCount))
+	self:Bar(206847, 36, CL.count:format(self:SpellName(206847), parasiticCount))
 end
 
 do
@@ -898,13 +896,17 @@ end
 function mod:Soulsever(args)
 	self:Message(args.spellId, "Urgent", "Warning", CL.casting:format(args.spellName))
 	soulseverCount = soulseverCount + 1
-	self:Bar(args.spellId, self:Timer(args.spellId, soulseverCount), CL.count:format(args.spellName, soulseverCount))
+	if (self:DemonWithinClock() + 20) < (visionsCount * 90) then
+		self:Bar(args.spellId, 20, CL.count:format(args.spellName, soulseverCount))
+	end
 end
 
 function mod:FlameCrash(spellId)
 	self:Message(227094, "Urgent", "Alert")
 	flameCrashCount = flameCrashCount + 1
-	self:Bar(227094, self:Timer(227094, flameCrashCount), CL.count:format(self:SpellName(227094), flameCrashCount))
+	if (self:DemonWithinClock() + 20) < (visionsCount * 90) then
+		self:Bar(227094, 20, CL.count:format(self:SpellName(227094), flameCrashCount))
+	end
 end
 
 function mod:ManifestAzzinoth()
@@ -925,10 +927,6 @@ do
 	end
 end
 
-function mod:BulwarkOfAzzinoth(args)
-	self:Message(args.spellId, "Important", "Alert", CL.on:format(args.spellName, args.sourceName))
-end
-
 function mod:AzzinothDeath()
 	self:StopBar(221382) -- Chaos Seed
 end
@@ -944,11 +942,28 @@ function mod:TimeStopField()
 	self:Bar(211832, 10, CL.over:format(self:SpellName(211832)))
 end
 
-function mod:VisionOfTheDarkTitan(args)
-	self:Message(args.spellId, "Urgent", "Long", CL.casting:format(args.spellName))
-	visionCount = visionCount + 1
-	self:Bar(args.spellId, 9, CL.cast:format(args.spellName))
-	self:Bar(args.spellId, self:Timer(args.spellId, visionCount), CL.count:format(args.spellName, visionCount))
+function mod:PurifiedEssence(args)
+	self:Message(args.spellId, "Important", "Long", CL.incoming:format(args.spellName))
+	self:Bar(args.spellId, 4)
+end
+
+function mod:VisionsOfTheDarkTitan(args)
+	self:Message(args.spellId, "Urgent", "Long", CL.incoming:format(args.spellName))
+	visionsCount = visionsCount + 1
+	self:Bar(args.spellId, 90, CL.count:format(args.spellName, visionsCount))
+end
+
+function mod:Wounded()
+	local now = self:DemonWithinClock()
+	local lastVisions = (visionsCount - 1) * 90
+	local nextSoulsever = lastVisions + 35
+	local nextFlameCrash = lastVisions + 45
+	local removeTime = now + 15
+	if removeTime > (nextSoulsever - 10) then
+		nextSoulsever = nextSoulsever + 20
+	end
+	self:Bar(220957, nextSoulsever - now, CL.count:format(self:SpellName(220957), soulseverCount))
+	self:Bar(227094, nextFlameCrash - now, CL.count:format(self:SpellName(227094), flameCrashCount))
 end
 
 --[[ Generic Damage Warnings ]] --
