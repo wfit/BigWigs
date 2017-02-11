@@ -157,6 +157,7 @@ local empower = mod:AddCustomOption { "empower", L.emp_bar, icon = 210277, confi
 local tanks_marker = mod:AddMarkerOption(true, "player", 7, -14884, 6, 7)
 local bonds_marker = mod:AddMarkerOption(true, "player", 1, 206222, 1, 2, 3, 4)
 local prox_before_eyes = mod:AddCustomOption { "prox_before_eyes", "Display Proximity display before first fixate" }
+local visions_cast = mod:AddCustomOption { "visions_cast", "Visions of the Dark Titan (cast bar)", icon = 227008, configurable = true }
 
 function mod:GetOptions()
 	return {
@@ -222,6 +223,7 @@ function mod:GetOptions()
 		211832, -- Time Stop Field
 		221486, -- Purified Essence
 		226975, -- Visions of the Dark Titan
+		visions_cast, -- Visions of the Dark Titan (cast)
 	}, {
 		["stages"] = "general",
 		[206219] = -14885, -- Stage One
@@ -302,6 +304,7 @@ function mod:OnBossEnable()
 	self:Log("SPELL_AURA_APPLIED", "ParasiticWoundApplied", 206847)
 	self:Log("SPELL_CAST_START", "Soulsever", 220957)
 	self:Log("SPELL_CAST_SUCCESS", "VisionsOfTheDarkTitan", 226975)
+	self:Log("SPELL_CAST_START", "VisionsOfTheDarkTitanStart", 227008)
 	self:Log("SPELL_CAST_START", "PurifiedEssence", 221486)
 	self:Log("SPELL_AURA_APPLIED", "Wounded", 227009)
 	self:Death("AzzinothDeath", 111070)
@@ -951,6 +954,10 @@ function mod:VisionsOfTheDarkTitan(args)
 	self:Message(args.spellId, "Urgent", "Long", CL.incoming:format(args.spellName))
 	visionsCount = visionsCount + 1
 	self:Bar(args.spellId, 90, CL.count:format(args.spellName, visionsCount))
+end
+
+function mod:VisionsOfTheDarkTitanStart(args)
+	self:Bar(visions_cast, 9, CL.cast:format(args.spellName))
 end
 
 function mod:Wounded()
