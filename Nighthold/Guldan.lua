@@ -865,7 +865,6 @@ function mod:Phase4()
 	self:Bar(226975, 90, CL.count:format(self:SpellName(227008), visionsCount))
 	self:Bar(227264, self:Timer(227264, azzinothCount), CL.count:format(self:SpellName(227264), azzinothCount), 195304)
 	self:Bar(227283, self:Timer(227283, nightorbCount), CL.count:format(self:SpellName(227283), nightorbCount), 155145)
-	self:Bar("berserk", 330, 26662)
 end
 
 function mod:ParasiticWound()
@@ -954,7 +953,11 @@ function mod:VisionsOfTheDarkTitan(args)
 	if visionsCount < 4 then
 		lastVisions = GetTime()
 		nextVisions = lastVisions + (visionsCount < 3 and 90 or 150)
-		self:Bar(args.spellId, 90, CL.count:format(args.spellName, visionsCount))
+		if visionsCount < 3 then
+			self:Bar(args.spellId, 90, CL.count:format(args.spellName, visionsCount))
+		else
+			self:Bar("berserk", 150, 26662)
+		end
 	end
 end
 
