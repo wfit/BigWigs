@@ -143,6 +143,14 @@ function argsVirtuals.spellIcon(args)
 	return icons[args.spellId]
 end
 
+function argsVirtuals.sourceKey(args)
+	return (args.spellId or 0) .. ":" .. (args.sourceGUID or "")
+end
+
+function argsVirtuals.destKey(args)
+	return (args.spellId or 0) .. ":" .. (args.destGUID or "")
+end
+
 -------------------------------------------------------------------------------
 -- Core module functionality
 -- @section core
