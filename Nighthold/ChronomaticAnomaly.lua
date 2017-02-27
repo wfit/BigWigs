@@ -14,6 +14,8 @@ mod.instanceId = 1530
 -- Locals
 --
 
+local Hud = FS.Hud
+
 local normalPhase = 0
 local fastPhase = 0
 local slowPhase = 0
@@ -222,7 +224,7 @@ function mod:GetOptions()
 		"stages", -- Speed: Slow / Normal / Fast
 		{206607, "TANK"}, -- Chronometric Particles
 		{206609, "INFOBOX"}, -- Time Release
-		{206617, "SAY"}, -- Time Bomb
+		{206617, "SAY", "HUD"}, -- Time Bomb
 		219815, -- Temporal Orb
 		207871, -- Vortex (standing in stuff)
 		212099, -- Temporal Charge
@@ -244,6 +246,7 @@ function mod:OnBossEnable()
 	self:Log("SPELL_AURA_REMOVED", "TimeReleaseRemoved", 206609)
 	self:Log("SPELL_CAST_SUCCESS", "TimeReleaseSuccess", 206610)
 	self:Log("SPELL_AURA_APPLIED", "TimeBomb", 206617)
+	self:Log("SPELL_AURA_REMOVED", "TimeBombRemoved", 206617)
 	self:Log("SPELL_CAST_SUCCESS", "TemporalOrb", 219815)
 	self:Log("SPELL_AURA_APPLIED", "VortexDamage", 207871)
 	self:Log("SPELL_PERIODIC_DAMAGE", "VortexDamage", 207871)
@@ -467,10 +470,25 @@ do
 			end
 		end
 
+		if self:Hud(args.spellId) then
+			local unit = args.destUnit
+			local timebomb = self:SpellName(206617)
+			local timer = Hud:DrawTimer(unit, 50, -1):SetColor(141, 235, 241, 0.8):Register(args.destKey)
+			function timer:Progress()
+				local _, _, _, _, _, duration, expires = UnitDebuff(unit, timebomb)
+				if not duration then return 0 end
+				return 1 - (expires - GetTime()) / duration
+			end
+		end
+
 		if self:Me(args.destGUID) then
 			self:Say(args.spellId)
 			timeBombCountdown(self)
 		end
+	end
+
+	function mod:TimeBombRemoved(args)
+		Hud:RemoveObject(args.destKey)
 	end
 end
 
