@@ -19,6 +19,8 @@ mod.instanceId = 1530
 -- Locals
 --
 
+local Hud = FS.Hud
+
 local heroicTimers = {
 	-- Annihilate
 	[212492] = {8, 45, 40, 44, 38, 37, 33, 47, 41, 44, 38, 37},
@@ -67,7 +69,7 @@ function mod:GetOptions()
 
 		--[[ Master of Frost ]]--
 		{212531, "SAY", "FLASH"}, -- Pre Mark of Frost
-		{212587, "SAY", "FLASH", "PROXIMITY"}, -- Mark of Frost
+		{212587, "SAY", "FLASH", "PROXIMITY", "HUD"}, -- Mark of Frost
 		{212647, "SAY", "INFOBOX"}, -- Frostbitten
 		212530, -- Replicate: Mark of Frost
 		{212735, "SAY"}, -- Detonate: Mark of Frost
@@ -312,6 +314,11 @@ do
 		end
 
 		updateProximity(self)
+
+		if self:Hud(212587) then
+			local key = self:HudKey(212587, args.destGUID)
+			Hud:DrawTimer(args.destGUID, 50, 5):SetColor(240, 74, 76):Register(key)
+		end
 	end
 
 	local list = mod:NewTargetList()
@@ -340,6 +347,10 @@ do
 		end
 
 		updateProximity(self)
+
+		if self:Hud(args.spellId) then
+			Hud:DrawTimer(args.destGUID, 50, 1.5):SetColor(151, 235, 234):Register(args.destKey, true)
+		end
 	end
 end
 
@@ -356,6 +367,7 @@ function mod:MarkOfFrostRemoved(args)
 	end
 
 	updateProximity(self)
+	Hud:RemoveObject(args.destKey)
 end
 
 function mod:Frostbitten(args)
@@ -373,6 +385,12 @@ function mod:Frostbitten(args)
 	end
 
 	self:SetInfoByTable(args.spellId, frostbittenStacks)
+
+	if self:Hud(212587) then
+		local key = self:HudKey(212587, args.destGUID)
+		Hud:DrawTimer(args.destGUID, 50, 1.5):SetColor(151, 235, 234):Register(key, true)
+		Hud:DrawText(args.destGUID, amount):Register(key)
+	end
 end
 
 function mod:FrostbittenRemoved(args)
