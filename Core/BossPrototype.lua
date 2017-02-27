@@ -76,6 +76,7 @@ end
 
 local Token = FS.Token
 local Roster = FS.Roster
+local Hud = FS.Hud
 
 -------------------------------------------------------------------------------
 -- Debug
@@ -1277,6 +1278,7 @@ do
 	checkFlag = function(self, key, flag)
 		if key == false then return true end -- Allow optionless abilities
 		if type(key) == "nil" then core:Print(format(nilKeyError, self.moduleName)) return end
+		if type(key) == "string" then return self:GetOption(key) end
 		if type(flag) ~= "number" then core:Print(format(invalidFlagError, self.moduleName, type(flag), tostring(flag))) return end
 		if silencedOptions[key] then return end
 		if type(self.db) ~= "table" then local msg = format(noDBError, self.moduleName) core:Print(msg) error(msg) return end
@@ -2188,3 +2190,11 @@ end
 
 function argsVirtuals.sourceUnit(args) return boss:UnitId(args.sourceGUID) end
 function argsVirtuals.destUnit(args) return boss:UnitId(args.destGUID) end
+
+--- Enter HUD context
+-- @param key the option key
+-- @param fn the function to execute
+function boss:Hud(key, fn)
+	if not checkFlag(self, key, C.HUD) then return end
+	fn(Hud)
+end

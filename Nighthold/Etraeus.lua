@@ -128,7 +128,7 @@ function mod:GetOptions()
 		--[[ General ]]--
 		"stages",
 		221875, -- Nether Traversal
-		{205408, "FLASH", "PULSE"}, -- Grand Conjunction
+		{205408, "FLASH", "PULSE", "HUD"}, -- Grand Conjunction
 		marks,
 
 		--[[ Stage One ]]--
