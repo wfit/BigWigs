@@ -473,7 +473,7 @@ do
 		if self:Hud(args.spellId) then
 			local unit = args.destUnit
 			local timebomb = self:SpellName(206617)
-			local timer = Hud:DrawTimer(unit, 50, -1):SetColor(141, 235, 241, 0.8):Register(args.destKey)
+			local timer = Hud:DrawTimer(unit, 50):SetColor(141, 235, 241, 0.8):Register(args.destKey)
 			function timer:Progress()
 				local _, _, _, _, _, duration, expires = UnitDebuff(unit, timebomb)
 				if not duration then return 0 end
