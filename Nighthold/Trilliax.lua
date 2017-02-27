@@ -18,6 +18,8 @@ mod.instanceId = 1530
 -- Locals
 --
 
+local Hud = FS.Hud
+
 local phase = 1 -- 1 = Cleaner, 2 = Maniac, 3 = Caretaker
 local imprintCount = 1
 local bondTable = {}
@@ -58,7 +60,7 @@ function mod:GetOptions()
 
 		-- Cleaner
 		206788, -- Toxic Slice
-		{211615, "SAY", "PROXIMITY"}, -- Sterilize
+		{211615, "SAY", "PROXIMITY", "HUD"}, -- Sterilize
 		206820, -- Cleansing Rage
 
 		-- Maniac
@@ -219,6 +221,11 @@ do
 			self:ScheduleTimer("TargetMessage", 0.1, args.spellId, list, "Important", "Warning")
 		end
 
+		if self:Hud(args.spellId) then
+			-- 40 sec + 5 sec pre-debuff
+			Hud:DrawTimer(args.destGUID, 50, 45):SetColor(120, 152, 242):Register("sterilize" .. args.destGUID)
+		end
+
 		if self:Me(args.destGUID) then
 			self:OpenProximity(args.spellId, 7)
 			self:TargetBar(args.spellId, 45, args.destName)
@@ -228,6 +235,7 @@ do
 end
 
 function mod:SterilizeRemoved(args)
+	Hud:RemoveObject("sterilize" .. args.destGUID)
 	if self:Me(args.destGUID) then
 		self:CloseProximity(211615)
 	end
