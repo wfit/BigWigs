@@ -88,7 +88,7 @@ function mod:GetOptions()
 		216027, -- Nether Zone
 
 		--[[ Sightless Watcher ]]--
-		{216024, "SAY"}, -- Volatile Wound
+		{216024, "SAY", "ME_ONLY"}, -- Volatile Wound
 	}, {
 		[206480] = -13552, -- Stage One
 		[206365] = -13553, -- Stage Two
@@ -137,7 +137,8 @@ function mod:OnEngage()
 	illusionaryNightCount = 1
 	wipe(volaSayTimer)
 	addWaveCount = 1
-
+	addsKilled = 0
+	wipe(essenceTargets)
 	self:Bar("adds", timers["adds"][addWaveCount], CL.count:format(L.adds, addWaveCount), 212552) -- 212552 = Wraith Walk, inv_helm_plate_raiddeathknight_p_01, id 1100041
 	if GetLocale() ~= "enUS" and L.adds_yell1 == "Underlings! Get in here!" then -- Not translated
 		self:ScheduleTimer("CHAT_MSG_MONSTER_YELL", timers["adds"][addWaveCount], "timer")
@@ -316,57 +317,43 @@ end
 
 --[[ Sightless Watcher ]]--
 do
-	--local list = mod:NewTargetList()
-	local remaining = 8
+	local sayTimers = {}
+	local function cancelSay(self)
+		if sayTimers[1] then
+			for i = #sayTimers, 1, -1 do
+				self:CancelTimer(sayTimers[i])
+				sayTimers[i] = nil
+			end
+		end
+	end
+
+	local list = mod:NewTargetList()
 	function mod:VolatileWound(args)
-		local stacks = args.amount or 1
-		--[[list[#list+1] = args.destName
-		if #list == 1 then
-			self:ScheduleTimer("TargetMessage", 0.5, args.spellId, list, "Urgent", "Alarm", nil, nil, self:Dispeller("magic"))
-		end
-		if self:Me(args.destGUID) then
-			self:Say(args.spellId)
-			self:TargetBar(args.spellId, 8, args.destName)
-			self:ScheduleTimer("Say", 5, args.spellId, 3, true)
-			self:ScheduleTimer("Say", 6, args.spellId, 2, true)
-			self:ScheduleTimer("Say", 7, args.spellId, 1, true)
-		end
-		]]--
-		if self:Me(args.destGUID) then
-			if stacks == 1 then
-				self:Say(args.spellId)
-			end
-			for _,timer in pairs(volaSayTimer) do
-				self:CancelTimer(timer)
-			end
-			wipe(volaSayTimer)
-			for i = 1, 3 do
-				if remaining-i > 0 then
-					volaSayTimer[#volaSayTimer+1] = self:ScheduleTimer("Say", remaining-i, args.spellId, i, true)
+		if UnitIsPlayer(args.destName) then
+			if self:Me(args.destGUID) then
+				if not args.amount then
+					self:TargetMessage(args.spellId, args.destName, "Personal", "Alarm")
+				elseif args.amount % 2 == 0 then
+					self:StackMessage(args.spellId, args.destName, args.amount, "Personal", "Alarm")
+				end
+				self:TargetBar(args.spellId, 8, args.destName)
+				cancelSay(self)
+				sayTimers[1] = self:ScheduleTimer("Say", 5, args.spellId, 3, true)
+				sayTimers[2] = self:ScheduleTimer("Say", 6, args.spellId, 2, true)
+				sayTimers[3] = self:ScheduleTimer("Say", 7, args.spellId, 1, true)
+			elseif not args.amount then -- 1 stack
+				list[#list+1] = args.destName
+				if #list == 1 then
+					self:ScheduleTimer("TargetMessage", 0.5, args.spellId, list, "Urgent", "Alarm")
 				end
 			end
 		end
 	end
 
 	function mod:VolatileWoundRemoved(args)
-		self:StopBar(args.spellId, args.destName)
 		if self:Me(args.destGUID) then
-			for _,timer in pairs(volaSayTimer) do
-				self:CancelTimer(timer)
-			end
-			wipe(volaSayTimer)
-		end
-	end
-end
-
---[[ Echoes of the Void ]]--
-do
-	local prev = 0
-	function mod:EchoesOfTheVoidDamage(args)
-		local t = GetTime()
-		if self:Me(args.destGUID) and t-prev > 1.5 then
-			prev = t
-			self:Message(args.spellId, "Personal", "Alert", CL.underyou:format(args.spellName))
+			cancelSay(self)
+			self:StopBar(args.spellId, args.destName)
 		end
 	end
 end

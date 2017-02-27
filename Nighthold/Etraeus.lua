@@ -25,10 +25,10 @@ local witnessCount = 1
 local gravPullCount = 1
 local timers = {
 	-- Icy Ejection, SPELL_CAST_SUCCESS, timers vary a lot (+-2s)
-	[206936] = {25, 35, 6, 6, 48, 2, 2},
+	[206936] = { 25, 35, 6, 6, 48, 2, 2 },
 
 	-- Fel Ejection, SPELL_CAST_SUCCESS
-	[205649] = {17, 4, 4, 2, 10, 3.5, 3.5, 32, 4, 3.5, 3.5, 3.5, 22, 7.5, 17.5, 1, 2, 1.5},
+	[205649] = { 17, 4, 4, 2, 10, 3.5, 3.5, 32, 4, 3.5, 3.5, 3.5, 22, 7.5, 17.5, 1, 2, 1.5 },
 
 	-- Grand Conjunction, SPELL_CAST_START
 	[205408] = {
@@ -45,11 +45,76 @@ local timers = {
 	[216909] = { 21.4, 42.1, 57.9 },
 }
 
+local defaultIcons = {
+	[205429] = 205429,
+	[205445] = 205445,
+	[216345] = 216345,
+	[216344] = 216344,
+}
+local icons = defaultIcons
+
+local replacementIcons = {
+	[205429] = 227498, -- Yellow/Orange
+	[205445] = 227491, -- Red
+	[216345] = 227500, -- Green
+	[216344] = 227499, -- Blue
+}
+
+local redIcon = 189030
+local greenIcon = 189032
+
+--------------------------------------------------------------------------------
+-- Upvalues
+--
+
+local tDeleteItem = tDeleteItem
+
 --------------------------------------------------------------------------------
 -- Localization
 --
 
 local L = mod:GetLocale()
+if L then
+	L.yourSign = "Your sign"
+	L.with = "with"
+	L[205429] = "|T1391538:15:15:0:0:64:64:4:60:4:60|t|cFFFFDD00Crab|r"
+	L[205445] = "|T1391537:15:15:0:0:64:64:4:60:4:60|t|cFFFF0000Wolf|r"
+	L[216345] = "|T1391536:15:15:0:0:64:64:4:60:4:60|t|cFF00FF00Hunter|r"
+	L[216344] = "|T1391535:15:15:0:0:64:64:4:60:4:60|t|cFF00DDFFDragon|r"
+
+	-- XXX replace with core option
+	L.nameplate_requirement = "This feature is currently only supported by KuiNameplates. Mythic only."
+
+	L.custom_off_icy_ejection_nameplates = "Show {206936} on friendly nameplates" -- Icy Ejection
+	L.custom_off_icy_ejection_nameplates_desc = L.nameplate_requirement
+
+	L.custom_on_fel_ejection_nameplates = "Show {205649} on friendly nameplates" -- Fel Ejection
+	L.custom_on_fel_ejection_nameplates_desc = L.nameplate_requirement
+
+	L.custom_on_gravitational_pull_nameplates = "Show {214335} on friendly nameplates" -- Gravitational Pull
+	L.custom_on_gravitational_pull_nameplates_desc = L.nameplate_requirement
+
+	L.custom_on_grand_conjunction_nameplates = "Show {205408} on friendly nameplates" -- Grand Conjunction
+	L.custom_on_grand_conjunction_nameplates_desc = L.nameplate_requirement
+
+	-- Do no replace this options below
+	L.custom_off_gc_replacement_icons = "Use brighter icons for {205408}"
+	L.custom_off_gc_replacement_icons_desc = "Replace the nameplate icons used by Grand Conjunction for better visibility:"
+
+	L.custom_off_gc_redgreen_icons = "Only use red and green icons for {205408}"
+	L.custom_off_gc_redgreen_icons_desc = "Change the nameplate icons for matching star signs to |T876914:15:15:0:0:64:64:4:60:4:60|t and non matching star signs to |T876915:15:15:0:0:64:64:4:60:4:60|t."
+end
+
+do -- Create the description string for the replacement icons
+	local s = ""
+	local tex = "|T%s:15:15:0:0:64:64:4:60:4:60|t"
+	for k, v in pairs(replacementIcons) do
+		local _, _, kicon = GetSpellInfo(k)
+		local _, _, vicon = GetSpellInfo(v)
+		s = s .. "\n" .. tex:format(kicon) .. " => " .. tex:format(vicon)
+	end
+	L.custom_off_gc_replacement_icons_desc = L.custom_off_gc_replacement_icons_desc .. s
+end
 
 --------------------------------------------------------------------------------
 -- Initialization
@@ -93,6 +158,14 @@ function mod:GetOptions()
 		216909, -- World Devouring Force
 		BEWARE,
 		--{217046, "SAY", "FLASH"} -- Devouring Remnant
+
+		--[[ Mythic Upstream ]] --
+		"custom_off_icy_ejection_nameplates",
+		"custom_on_fel_ejection_nameplates",
+		"custom_on_gravitational_pull_nameplates",
+		"custom_on_grand_conjunction_nameplates",
+		"custom_off_gc_replacement_icons",
+		"custom_off_gc_redgreen_icons",
 	}, {
 		["stages"] = "general",
 		[206464] = -13033, -- Stage One
@@ -136,6 +209,7 @@ function mod:OnBossEnable()
 	self:Log("SPELL_CAST_START", "FelNova", 206517)
 	self:Log("SPELL_CAST_SUCCESS", "FelEjection", 205649)
 	self:Log("SPELL_AURA_APPLIED", "FelEjectionApplied", 205649)
+	self:Log("SPELL_AURA_REMOVED", "FelEjectionRemoved", 205649)
 
 	--[[ Stage Four ]]--
 	self:Log("SPELL_CAST_START", "VoidNova", 207439)
@@ -153,8 +227,15 @@ function mod:OnBossEnable()
 	--self:Log("SPELL_AURA_APPLIED", "DevouringRemnant", 217046)
 
 	if self:Mythic() then
-		-- Experimenting with using callbacks for nameplate addons
-		self:ShowFriendlyNameplates()
+		if self:GetOption("custom_off_icy_ejection_nameplates") or -- XXX maybe add these to ShowFriendlyNameplates?
+				self:GetOption("custom_on_fel_ejection_nameplates") or
+				self:GetOption("custom_on_gravitational_pull_nameplates") or
+				self:GetOption("custom_on_grand_conjunction_nameplates") then
+
+			-- Experimenting with using callbacks for nameplate addons
+			self:ShowFriendlyNameplates()
+			self:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED") -- see comment above the function for explanation
+		end
 	end
 end
 
@@ -168,6 +249,15 @@ function mod:OnEngage()
 	self:Bar(221875, self:Mythic() and 60 or 20) -- Nether Traversal
 	if self:Mythic() then
 		self:Bar(205408, timers[205408][phase][grandConjunctionCount]) -- Grand Conjunction
+	end
+	starSignTables = {
+		[205429] = {},
+		[205445] = {},
+		[216345] = {},
+		[216344] = {},
+	}
+	if self:GetOption("custom_off_gc_replacement_icons") then
+		icons = replacementIcons
 	end
 end
 
@@ -323,6 +413,10 @@ function mod:GravitationalPull(args)
 	if phase == 3 then
 		self:SetIcon(marks, args.destUnit, 8)
 	end
+
+	if self:GetOption("custom_on_gravitational_pull_nameplates") then
+		self:AddPlate(args.spellId, args.destName, remaining)
+	end
 end
 
 function mod:GravitationalPullRemoved(args)
@@ -333,11 +427,15 @@ function mod:GravitationalPullRemoved(args)
 			gravPullSayTimers[i] = nil
 		end
 	end
+	self:RemovePlate(args.spellId, args.destName)
 end
 
 function mod:IcyEjection(args)
-	ejectionCount = ejectionCount + 1
-	self:CDBar(args.spellId, timers[args.spellId][ejectionCount] or 30, CL.count:format(args.spellName, ejectionCount))
+	self:StopBar(CL.count:format(args.spellName, ejectionCount))
+	if phase == 2 then -- Prevent starting the bar in phase transition
+		ejectionCount = ejectionCount + 1
+		self:CDBar(args.spellId, timers[args.spellId][ejectionCount] or 30, CL.count:format(args.spellName, ejectionCount))
+	end
 end
 
 do
@@ -359,6 +457,10 @@ do
 			self:ScheduleTimer("WarnIcyEjection", 8, args.spellName, args.spellId, 2)
 			self:ScheduleTimer("WarnIcyEjection", 9, args.spellName, args.spellId, 1)
 		end
+
+		if self:GetOption("custom_off_icy_ejection_nameplates") then
+			self:AddPlate(args.spellId, args.destName, 8)
+		end
 	end
 
 	function mod:WarnIcyEjection(spellName, spellId, count)
@@ -372,6 +474,7 @@ function mod:IcyEjectionRemoved(args)
 	if self:Me(args.destGUID) then
 		self:CloseProximity(args.spellId)
 	end
+	self:RemovePlate(args.spellId, args.destName)
 end
 
 function mod:FrigidNova(args)
@@ -403,8 +506,11 @@ function mod:FelNova(args)
 end
 
 function mod:FelEjection(args)
-	ejectionCount = ejectionCount + 1
-	self:CDBar(args.spellId, timers[args.spellId][ejectionCount] or 30, CL.count:format(args.spellName, ejectionCount))
+	self:StopBar(CL.count:format(args.spellName, ejectionCount))
+	if phase == 3 then -- Prevent starting the bar in phase transition
+		ejectionCount = ejectionCount + 1
+		self:CDBar(args.spellId, timers[args.spellId][ejectionCount] or 30, CL.count:format(args.spellName, ejectionCount))
+	end
 end
 
 do
@@ -425,6 +531,14 @@ do
 			self:TargetBar(args.spellId, 8, args.destName)
 			self:ScheduleTimer("Message", 8, args.spellId, "Positive", "Info", CL.removed:format(args.spellName))
 		end
+
+		if self:GetOption("custom_on_fel_ejection_nameplates") then
+			self:AddPlate(args.spellId, args.destName, 8)
+		end
+	end
+
+	function mod:FelEjectionRemoved(args)
+		self:RemovePlate(args.spellId, args.destName)
 	end
 end
 
