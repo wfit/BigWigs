@@ -144,14 +144,6 @@ function argsVirtuals.spellIcon(args)
 	return icons[args.spellId]
 end
 
-function argsVirtuals.sourceKey(args)
-	return (args.spellId or 0) .. ":" .. (args.sourceGUID or "")
-end
-
-function argsVirtuals.destKey(args)
-	return (args.spellId or 0) .. ":" .. (args.destGUID or "")
-end
-
 -------------------------------------------------------------------------------
 -- Core module functionality
 -- @section core
@@ -2195,4 +2187,16 @@ function argsVirtuals.destUnit(args) return boss:UnitId(args.destGUID) end
 -- @param key the option key
 function boss:Hud(key)
 	return checkFlag(self, key, C.HUD)
+end
+
+function boss:HudKey(spellId, guid)
+	return (spellId or 0) .. ":" .. (guid or "")
+end
+
+function argsVirtuals.sourceKey(args)
+	return boss:HudKey(args.spellId, args.sourceGUID)
+end
+
+function argsVirtuals.destKey(args)
+	return boss:HudKey(args.spellId, args.destGUID)
 end
