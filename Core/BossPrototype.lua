@@ -2191,10 +2191,8 @@ end
 function argsVirtuals.sourceUnit(args) return boss:UnitId(args.sourceGUID) end
 function argsVirtuals.destUnit(args) return boss:UnitId(args.destGUID) end
 
---- Enter HUD context
+--- Check HUD option
 -- @param key the option key
--- @param fn the function to execute
-function boss:Hud(key, fn)
-	if not checkFlag(self, key, C.HUD) then return end
-	fn(Hud)
+function boss:Hud(key)
+	return checkFlag(self, key, C.HUD)
 end
