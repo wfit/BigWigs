@@ -17,6 +17,8 @@ mod.instanceId = 1530
 -- Locals
 --
 
+local Hud = FS.Hud
+
 local nextPhaseSoon = 80
 local phase = 1
 local callOfNightCheck
@@ -35,7 +37,7 @@ function mod:GetOptions()
 		bossMarker,
 
 		--[[ Arcanist Tel'arn ]]--
-		{218809, "SAY", "FLASH", "PROXIMITY"}, -- Call of Night
+		{218809, "SAY", "FLASH", "PROXIMITY", "HUD"}, -- Call of Night
 		callOfTheNightMarker,
 		{218503, "TANK"}, -- Recursive Strikes
 		218438, -- Controlled Chaos
@@ -215,6 +217,10 @@ do
 			self:Bar(args.spellId, (self:Mythic() and (phase == 2 and 55 or phase == 3 and 35 or 65)) or self:Easy() and 71.5 or 50)
 		end
 
+		if self:Hud(args.spellId) then
+			Hud:DrawTimer(args.destGUID, 50, 45):SetColor(197, 124, 199):Register(args.destKey)
+		end
+
 		if self:GetOption(callOfTheNightMarker) then
 			local icon = table.remove(iconsUnused, 1)
 			if icon then -- At least one icon unused
@@ -242,6 +248,8 @@ do
 				self:OpenProximity(args.spellId, 8, proxList, true)
 			end
 		end
+
+		Hud:RemoveObject(args.destKey)
 
 		if self:GetOption(callOfTheNightMarker) then
 			local icon = GetRaidTargetIndex(args.destUnit)
