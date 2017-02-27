@@ -160,12 +160,12 @@ function mod:GetOptions()
 		--{217046, "SAY", "FLASH"} -- Devouring Remnant
 
 		--[[ Mythic Upstream ]] --
-		"custom_off_icy_ejection_nameplates",
+		--[["custom_off_icy_ejection_nameplates",
 		"custom_on_fel_ejection_nameplates",
 		"custom_on_gravitational_pull_nameplates",
 		"custom_on_grand_conjunction_nameplates",
 		"custom_off_gc_replacement_icons",
-		"custom_off_gc_redgreen_icons",
+		"custom_off_gc_redgreen_icons",]]
 	}, {
 		["stages"] = "general",
 		[206464] = -13033, -- Stage One
