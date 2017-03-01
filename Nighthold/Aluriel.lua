@@ -45,6 +45,10 @@ local isInfoOpen = false
 local markOfFrostOnMe = nil
 local searingBrandOnMe = nil
 
+local primaryMoFColor = { 112, 221, 255 }
+local alternateMoFColor = { 193, 255, 112 }
+local markColors = {}
+
 --------------------------------------------------------------------------------
 -- Upvalues
 --
@@ -166,6 +170,7 @@ function mod:OnEngage()
 	wipe(frostbittenStacks)
 	wipe(mobCollector)
 	wipe(proxList)
+	wipe(markColors)
 	markOfFrostOnMe = nil
 	searingBrandOnMe = nil
 
@@ -317,11 +322,14 @@ do
 
 		if self:Hud(212587) then
 			local key = self:HudKey(212587, args.destGUID)
-			Hud:DrawTimer(args.destGUID, 50, 5):SetColor(240, 74, 76):Register(key)
+			Hud:DrawTimer(args.destGUID, 50, 5):SetColor(255, 86, 86):Register(key)
 		end
 	end
 
 	local list = mod:NewTargetList()
+	local last = 0
+	local color = primaryMoFColor
+
 	function mod:MarkOfFrostApplied(args)
 		list[#list+1] = args.destName
 		if #list == 1 then
@@ -349,7 +357,12 @@ do
 		updateProximity(self)
 
 		if self:Hud(args.spellId) then
-			Hud:DrawTimer(args.destGUID, 50, 1.5):SetColor(151, 235, 234):Register(args.destKey, true)
+			if GetTime() - last > 0.1 then
+				last = GetTime()
+				color = color == primaryMoFColor and alternateMoFColor or primaryMoFColor
+			end
+			markColors[args.destGUID] = color
+			Hud:DrawTimer(args.destGUID, 50, 1.5):SetColor(unpack(color)):Register(args.destKey, true)
 		end
 	end
 end
@@ -388,7 +401,8 @@ function mod:Frostbitten(args)
 
 	if self:Hud(212587) then
 		local key = self:HudKey(212587, args.destGUID)
-		Hud:DrawTimer(args.destGUID, 50, 1.5):SetColor(151, 235, 234):Register(key, true)
+		local color = markColors[args.destGUID] or primaryMoFColor
+		Hud:DrawTimer(args.destGUID, 50, 1.5):SetColor(unpack(color)):Register(key, true)
 		Hud:DrawText(args.destGUID, amount):Register(key)
 	end
 end
