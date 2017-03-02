@@ -14,6 +14,8 @@ mod.instanceId = 1530
 -- Locals
 --
 
+local Hud = FS.Hud
+
 local phase = 1
 local mobCollector = {}
 local gravPullSayTimers = {}
@@ -62,6 +64,15 @@ local replacementIcons = {
 
 local redIcon = 189030
 local greenIcon = 189032
+
+local starSignsColor = {
+	[205429] = {255, 255, 50 }, -- Crab / Yellow
+	[205445] = {255, 50, 50}, -- Wolf / Red
+	[216345] = {50, 255, 50}, -- Hunter / Green
+	[216344] = {50, 50, 255}, -- Dragon / Blue
+	["same"] = {50, 255, 50},
+	["other"] = {255, 50, 50}
+}
 
 --------------------------------------------------------------------------------
 -- Upvalues
@@ -122,6 +133,7 @@ end
 
 local marks = mod:AddTokenOption { "marks", "Automatically set raid target icons", promote = true }
 local BEWARE = mod:AddCustomOption { "beware", "BEWARE World-Devouring Force", default = true }
+local diff_starsigns = mod:AddCustomOption { "diff_starsigns", "Display Star Signs HUD as Green / Red based on your own sign" }
 
 function mod:GetOptions()
 	return {
@@ -129,6 +141,7 @@ function mod:GetOptions()
 		"stages",
 		221875, -- Nether Traversal
 		{205408, "FLASH", "PULSE", "HUD"}, -- Grand Conjunction
+		diff_starsigns,
 		marks,
 
 		--[[ Stage One ]]--
@@ -328,35 +341,54 @@ function mod:NetherTraversal(args)
 end
 
 --[[ Grand Conjunction ]] --
-function mod:GrandConjunction(args)
-	self:Message(args.spellId, "Attention", "Long", CL.casting:format(args.spellName))
-	grandConjunctionCount = grandConjunctionCount + 1
-	self:Bar(args.spellId, timers[args.spellId][phase][grandConjunctionCount])
-end
-
-function mod:StarSignApplied(args)
-	self:AddPlate(args.spellId, args.destName, 10)
-	if self:Me(args.destGUID) then
-		self:ScheduleTimer("WarnStarSign", 5, args.spellName, args.spellId)
-		self:ScheduleTimer("WarnStarSign", 7.5, args.spellName, args.spellId)
-	end
-end
-
-function mod:StarSignRemoved(args)
-	self:RemovePlate(args.spellId, args.destName)
-end
-
 do
-	local msg = {
-		[205429] = "{rt2}", -- Crab / Circle
-		[205445] = "{rt7}", -- Wolf / Cross
-		[216345] = "{rt4}", -- Hunter / Green
-		[216344] = "{rt5}", -- Dragon / Moon
-	}
-	function mod:WarnStarSign(spellName, spellId)
-		if UnitDebuff("player", spellName) and msg[spellId] then
-			self:Say(false, msg[spellId], true, "YELL")
+	local mySign
+
+	function mod:GrandConjunction(args)
+		self:Message(args.spellId, "Attention", "Long", CL.casting:format(args.spellName))
+		mySign = nil
+		grandConjunctionCount = grandConjunctionCount + 1
+		self:Bar(args.spellId, timers[args.spellId][phase][grandConjunctionCount])
+	end
+
+	function mod:StarSignApplied(args)
+		self:AddPlate(args.spellId, args.destName, 10)
+		if self:Hud(205408) then
+			local me = self:Me(args.destGUID)
+			local sign = args.spellId
+			if me then mySign = sign end
+
+			-- Create object
+			local obj = me and Hud:DrawTimer(args.destGUID, 50, 10) or Hud:DrawArea(args.destGUID, 50)
+
+			-- Color management
+			if self:GetOption(diff_starsigns) then
+				local function set_color()
+					local color = starSignsColor[mySign == sign and "same" or "other"]
+					obj:SetColor(unpack(color))
+				end
+				if mySign then
+					set_color()
+				else
+					function obj:OnUpdate()
+						if mySign ~= nil then
+							set_color()
+							obj.OnUpdate = nil
+						end
+					end
+				end
+			else
+				obj:SetColor(unpack(starSignsColor[args.spellId]))
+			end
+
+			-- Register
+			obj:Register(args.destKey, true)
 		end
+	end
+
+	function mod:StarSignRemoved(args)
+		self:RemovePlate(args.spellId, args.destName)
+		Hud:RemoveObject(args.destKey)
 	end
 end
 
