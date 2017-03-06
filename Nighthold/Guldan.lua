@@ -452,7 +452,7 @@ end
 function mod:CHAT_MSG_MONSTER_YELL(event, msg)
 	if msg:find(L.firstTransi) then
 		self:FirstTransition()
-	elseif msg:find(L.demonWithinStart) then
+	elseif msg:find(L.demonWithinStart) and self:Mythic() then
 		self:MythicRolePlayEvent()
 	end
 end
