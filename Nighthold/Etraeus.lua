@@ -133,6 +133,7 @@ end
 
 local marks = mod:AddTokenOption { "marks", "Automatically set raid target icons", promote = true }
 local BEWARE = mod:AddCustomOption { "beware", "BEWARE World-Devouring Force", default = true }
+local tex_starsigns = mod:AddCustomOption { "tex_starsigns", "Display Star Signs spell texture on HUD" }
 local diff_starsigns = mod:AddCustomOption { "diff_starsigns", "Display Star Signs HUD as Green / Red based on your own sign" }
 
 function mod:GetOptions()
@@ -141,6 +142,7 @@ function mod:GetOptions()
 		"stages",
 		221875, -- Nether Traversal
 		{205408, "FLASH", "PULSE", "HUD"}, -- Grand Conjunction
+		tex_starsigns,
 		diff_starsigns,
 		marks,
 
@@ -360,7 +362,6 @@ do
 
 			-- Create object
 			local obj = me and Hud:DrawTimer(args.destGUID, 50, 10) or Hud:DrawArea(args.destGUID, 50)
-			local tex = Hud:DrawTexture(args.destGUID, 50, args.spellIcon)
 
 			-- Color management
 			if self:GetOption(diff_starsigns) then
@@ -384,7 +385,11 @@ do
 
 			-- Register
 			obj:Register(args.destKey, true)
-			tex:Register(args.destKey)
+
+			-- Texture
+			if self:GetOption(tex_starsigns) then
+				Hud:DrawTexture(args.destGUID, 50, args.spellIcon):Register(args.destKey)
+			end
 		end
 	end
 
