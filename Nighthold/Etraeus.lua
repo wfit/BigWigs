@@ -360,6 +360,7 @@ do
 
 			-- Create object
 			local obj = me and Hud:DrawTimer(args.destGUID, 50, 10) or Hud:DrawArea(args.destGUID, 50)
+			local tex = Hud:DrawTexture(args.destGUID, 50, args.spellIcon)
 
 			-- Color management
 			if self:GetOption(diff_starsigns) then
@@ -383,6 +384,7 @@ do
 
 			-- Register
 			obj:Register(args.destKey, true)
+			tex:Register(args.destKey)
 		end
 	end
 
