@@ -69,7 +69,7 @@ local starSignsColor = {
 	[205429] = {255, 255, 50 }, -- Crab / Yellow
 	[205445] = {255, 50, 50}, -- Wolf / Red
 	[216345] = {50, 255, 50}, -- Hunter / Green
-	[216344] = {50, 50, 255}, -- Dragon / Blue
+	[216344] = {128, 128, 255}, -- Dragon / Blue
 	["same"] = {50, 255, 50},
 	["other"] = {255, 50, 50}
 }
