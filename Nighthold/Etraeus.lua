@@ -650,11 +650,9 @@ do
 		self:Message(args.spellId, "Attention", "Warning", CL.casting:format(args.spellName))
 		--self:Bar(args.spellId, 4, CL.cast:format(args.spellName))
 		devourCount = devourCount + 1
-		if timers[216909][devourCount] then
-			self:CDBar(args.spellId, timers[216909][devourCount])
-			if self:GetOption(BEWARE) then
-				self:ScheduleTimer(warnOeil, timers[216909][devourCount] - 4, self, args.spellId)
-			end
+		self:CDBar(args.spellId, timers[216909][devourCount])
+		if timers[216909][devourCount] and self:GetOption(BEWARE) then
+			self:ScheduleTimer(warnOeil, timers[216909][devourCount] - 4, self, args.spellId)
 		end
 	end
 end
