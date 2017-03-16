@@ -44,7 +44,7 @@ local timers = {
 	[206517] = { 51.4, 48, 51 },
 
 	-- World-Devouring Force,SPELL_CAST_START
-	[216909] = { 21.4, 42.1, 57.9 },
+	[216909] = { 21.4, 42.1, 57.9, 52.2 },
 }
 
 local defaultIcons = {
