@@ -218,7 +218,7 @@ do
 		end
 
 		if self:Hud(args.spellId) then
-			Hud:DrawTimer(args.destGUID, 50, 45):SetColor(197, 124, 199):Register(args.destKey)
+			Hud:DrawTimer(args.destGUID, 75, 45):SetColor(197, 124, 199):Register(args.destKey)
 		end
 
 		if self:GetOption(callOfTheNightMarker) then
