@@ -12,7 +12,7 @@ local mod, CL = BigWigs:NewBoss("Skorpyron", 1088, 1706)
 if not mod then return end
 mod:RegisterEnableMob(102263)
 mod.engageId = 1849
-mod.respawnTime = 30 -- moves into room at 30, ~35 till he is in position
+mod.respawnTime = 40 -- moves into room at 30, ~40 till he is in position
 mod.instanceId = 1530
 
 --------------------------------------------------------------------------------
@@ -116,7 +116,7 @@ do
 
 	function mod:Shockwave(args)
 		self:Message(args.spellId, "Important", "Alarm", CL.casting:format(args.spellName))
-		self:Bar(args.spellId, 3, CL.cast:format(args.spellName))
+		self:CastBar(args.spellId, 3)
 		self:CDBar(args.spellId, 58) -- can be delayed by up to 3s
 		self:CDBar(204372, 11) -- Call of the Scorpid (time to _start)
 		self:CDBar(204471, 24) -- Focused Blast (time to _success)
@@ -144,7 +144,7 @@ end
 
 function mod:ExoskeletalVulnerabilityApplied(args)
 	self:Message(args.spellId, "Positive", "Info")
-	self:Bar(args.spellId, 14, CL.cast:format(self:SpellName(160734))) -- 160734 = Vulnerability
+	self:CastBar(args.spellId, 14, 160734, args.spellId) -- 160734 = Vulnerability
 	self:CDBar(204471, 21.5) -- Focused Blast (time to _success), 14+7.5
 	self:CDBar(204372, 22.5) -- Call of the Scorpid, 14+8.5
 end
@@ -156,7 +156,7 @@ end
 
 function mod:FocusedBlast(args)
 	self:Message(args.spellId, "Urgent", "Alert")
-	self:Bar(args.spellId, 4, CL.cast:format(args.spellName))
+	self:CastBar(args.spellId, 4)
 	self:CDBar(args.spellId, 30)
 end
 

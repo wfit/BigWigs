@@ -1,4 +1,3 @@
-if not IsTestBuild() then return end -- XXX dont load on live
 
 --------------------------------------------------------------------------------
 -- TODO List:
@@ -23,9 +22,7 @@ local phase = 1
 local consumingHungerCounter = 1
 local slicingTornadoCounter = 1
 local waveCounter = 1
-
-local inkCounter = 1
-local timersBefoulingInkP3 = {12.4, 31.6, 31.6, 37.6, 31.6, 34.1}
+local dreadSharkCounter = 1
 
 
 --------------------------------------------------------------------------------
@@ -52,10 +49,13 @@ function mod:GetOptions()
 		232745, -- Devouring Maw
 		232913, -- Befouling Ink
 		232827, -- Crashing Wave
+		239436, -- Dread Shark
+		239362, -- Delicious Bufferfish
 	},{
 		["stages"] = "general",
 		[232722] = -14591,
 		[232746] = -14605,
+		[239436] = "mythic",
 	}
 end
 
@@ -64,6 +64,7 @@ function mod:OnBossEnable()
 	self:RegisterUnitEvent("UNIT_SPELLCAST_SUCCEEDED", nil, "boss1", "boss2", "boss3", "boss4", "boss5")
 	self:Log("SPELL_AURA_APPLIED", "HydraShot", 230139)
 	self:Log("SPELL_AURA_REMOVED", "HydraShotRemoved", 230139)
+	self:Log("SPELL_CAST_START", "BurdenofPainCast", 230201)
 	self:Log("SPELL_CAST_SUCCESS", "BurdenofPain", 230201)
 
 	-- Stage One: Ten Thousand Fangs
@@ -75,32 +76,50 @@ function mod:OnBossEnable()
 	self:Log("SPELL_CAST_SUCCESS", "DevouringMaw", 232745)
 	self:Log("SPELL_CAST_START", "BefoulingInk", 232756) -- Summon Ossunet = Befouling Ink incoming
 	self:Log("SPELL_CAST_START", "CrashingWave", 232827)
+
+	-- Mythic
+	self:Log("SPELL_AURA_APPLIED", "DeliciousBufferfish", 239362, 239375)
+	self:Log("SPELL_AURA_REMOVED", "DeliciousBufferfishRemoved", 239362, 239375)
 end
 
 function mod:OnEngage()
 	phase = 1
 	consumingHungerCounter = 1
 	slicingTornadoCounter = 1
-	inkCounter = 1
 	waveCounter = 1
+	dreadSharkCounter = 1
 
 	self:Bar(230358, 10.5) -- Thundering Shock
-	self:Bar(230201, 17.9) -- Burden of Pain
-	self:Bar(230384, 20.2) -- Consuming Hunger
-	self:Bar(230139, 25) -- Hydra Shot
+	self:Bar(230201, 15.5) -- Burden of Pain
+	self:Bar(230384, 20.5) -- Consuming Hunger
+	if not self:LFR() then
+		self:Bar(230139, 25) -- Hydra Shot
+	end
 	self:Bar(232722, 30.3) -- Slicing Tornado
-	self:Berserk(480) -- Normal mode testing - Slicing Tornado spam
+	self:Berserk(self:LFR() and 540 or 480) -- Confirmed LFR + Normal
 end
 
 --------------------------------------------------------------------------------
 -- Event Handlers
 --
 function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
-	if spellId == 239423 then -- Dread Shark // Stage 2 + Stage 3 // Alternative for Stage 3: 240435
-		phase = phase + 1
+	if spellId == 239423 then -- Dread Shark // Stage 2 + Stage 3
+		dreadSharkCounter = dreadSharkCounter + 1
+		if not self:Mythic() then
+			phase = dreadSharkCounter
+		elseif dreadSharkCounter == 2 then
+			self:Message(239436, "Urgent", "Warning")
+			phase = 2
+		elseif dreadSharkCounter == 4 then
+			self:Message(239436, "Urgent", "Warning")
+			phase = 3
+		else
+			self:Message(239436, "Urgent", "Warning")
+			return -- No phase change yet
+		end
+
 		consumingHungerCounter = 1
 		slicingTornadoCounter = 1
-		inkCounter = 1
 		waveCounter = 1
 
 		self:Message("stages", "Neutral", "Long", CL.stage:format(phase), false)
@@ -111,21 +130,23 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 			self:StopBar(230384) -- Consuming Hunger
 
 			self:Bar(232913, 11) -- Befouling Ink
-			self:Bar(230139, 25.5) -- Hydra Shot
-			self:Bar(230201, 29.2) -- Burden of Pain
+			if not self:LFR() then
+				self:Bar(230139, 25.5) -- Hydra Shot
+			end
+			self:Bar(230201, 25.6) -- Burden of Pain
 			self:Bar(232827, 30.4) -- Crashing Wave
-			self:Bar(232745, 42.2) -- Devouring Maw
+			self:Bar(232745, 42) -- Devouring Maw
 		elseif phase == 3 then
 			self:StopBar(232913) -- Befouling Ink
-			self:StopBar(230139) -- Hydra Shot
-			self:StopBar(230201) -- Burden of Pain
 			self:StopBar(232827) -- Crashing Wave
 			self:StopBar(232745) -- Devouring Maw
 
-			self:Bar(232913, timersBefoulingInkP3[inkCounter]) -- Befouling Ink
+			self:CDBar(232913, 11) -- Befouling Ink
+			self:Bar(230201, 25.6) -- Burden of Pain
 			self:Bar(232827, 27.5) -- Crashing Wave
-			self:Bar(230201, 30.4) -- Burden of Pain
-			self:Bar(230139, 31.6) -- Hydra Shot
+			if not self:LFR() then
+				self:Bar(230139, 31.6) -- Hydra Shot
+			end
 			self:Bar(230384, 35.2) -- Consuming Hunger
 			self:Bar(232722, 49.8) -- Slicing Tornado
 		end
@@ -133,12 +154,12 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 end
 
 do
-	local list, iconsUnused = mod:NewTargetList(), {1,2,3,4} -- Targets: 1 Normal, 3 Heroic, ?? Mythic
+	local list, iconsUnused = mod:NewTargetList(), {1,2,3,4} -- Targets: LFR: 0, 1 Normal, 3 Heroic, 4 Mythic
 	function mod:HydraShot(args)
 		list[#list+1] = args.destName
 		if #list == 1 then
 			self:ScheduleTimer("TargetMessage", 0.1, args.spellId, list, "Important", "Warning", nil, nil, true)
-			self:Bar(args.spellId, 6, CL.casting:format(args.spellName))
+			self:CastBar(args.spellId, 6)
 			self:Bar(args.spellId, phase == 2 and 30 or 40)
 		end
 		if self:GetOption(hydraShotMarker) then
@@ -161,11 +182,13 @@ do
 	end
 end
 
+function mod:BurdenofPainCast(args)
+	self:Message(args.spellId, "Attention", "Alert", CL.casting:format(args.spellName))
+end
+
 function mod:BurdenofPain(args)
 	self:TargetMessage(args.spellId, args.destName, "Urgent", "Warning")
-	self:TargetBar(args.spellId, 20, args.destName)
 	self:Bar(args.spellId, 28)
-
 	if self:Me(args.destGUID) then
 		self:Flash(args.spellId)
 	end
@@ -173,35 +196,46 @@ end
 
 function mod:SlicingTornado(args)
 	slicingTornadoCounter = slicingTornadoCounter + 1
-	self:Message(args.spellId, "Important", "Warning", args.spellName)
+	self:Message(args.spellId, "Important", "Warning")
 	self:Bar(args.spellId, phase == 3 and (slicingTornadoCounter % 2 == 0 and 44.9 or 55.9) or 61.5) -- -- XXX Need more p3 data.
 end
 
 function mod:ThunderingShock(args)
-	self:Message(args.spellId, "Important", "Warning", args.spellName)
+	self:Message(args.spellId, "Important", "Warning")
 	self:Bar(args.spellId, 32.8)
 end
 
 function mod:ConsumingHunger(args)
 	consumingHungerCounter = consumingHungerCounter + 1
-	self:Message(args.spellId, "Attention", "Alert", args.spellName)
+	self:Message(args.spellId, "Attention", "Alert")
 	self:Bar(args.spellId, phase == 3 and (consumingHungerCounter % 2 == 0 and 31.5 or 37.5) or 34) -- XXX Need more p3 data.
 end
 
 function mod:DevouringMaw(args)
-	self:Message(args.spellId, "Important", "Warning", args.spellName)
+	self:Message(args.spellId, "Important", "Warning")
 	self:Bar(args.spellId, 42)
 end
 
 function mod:BefoulingInk(args)
-	inkCounter = inkCounter + 1
-	self:Message(232913, "Attention", "Info", L.incoming:format(self:SpellName(232913))) -- Befouling Ink incoming!
-	self:Bar(232913, phase == 3 and timersBefoulingInkP3[inkCounter] or 42) -- XXX need more data in p3
+	self:Message(232913, "Attention", "Info", CL.incoming:format(self:SpellName(232913))) -- Befouling Ink incoming!
+	self:Bar(232913, phase == 3 and 34 or 42) -- XXX 34~37 in P3
 end
 
 function mod:CrashingWave(args)
 	waveCounter = waveCounter + 1
-	self:Message(args.spellId, "Important", "Warning", args.spellName)
-	self:Bar(args.spellId, 4, CL.casting:format(args.spellName))
+	self:Message(args.spellId, "Important", "Warning")
+	self:CastBar(args.spellId, 4)
 	self:Bar(args.spellId, phase == 3 and (waveCounter == 2 and 55.5 or 42) or 42) -- XXX need more data in p3
+end
+
+function mod:DeliciousBufferfish(args)
+	if self:Me(args.destGUID) then
+		self:TargetMessage(args.spellId, args.destName, "Personal", "Positive")
+	end
+end
+
+function mod:DeliciousBufferfishRemoved(args)
+	if self:Me(args.destGUID) then
+		self:TargetMessage(args.spellId, args.destName, "Personal", "Alert", CL.removed:format(args.spellName))
+	end
 end
