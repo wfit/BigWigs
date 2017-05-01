@@ -108,8 +108,8 @@ function mod:OnBossEnable()
 	self:Log("SPELL_AURA_APPLIED", "FeastOfBlood", 208230)
 	self:Log("SPELL_AURA_APPLIED_DOSE", "FeastOfBlood", 208230)
 	self:Log("SPELL_CAST_START", "EchoesOfTheVoid", 213531)
-	self:Log("SPELL_DAMAGE", "EchoesOfTheVoidDamage", 213534)
-	self:Log("SPELL_MISSED", "EchoesOfTheVoidDamage", 213534)
+	--self:Log("SPELL_DAMAGE", "EchoesOfTheVoidDamage", 213534)
+	--self:Log("SPELL_MISSED", "EchoesOfTheVoidDamage", 213534)
 	self:RegisterEvent("CHAT_MSG_MONSTER_YELL")
 
 	--[[ Stage Two ]]--
