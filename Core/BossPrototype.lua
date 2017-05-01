@@ -1738,8 +1738,6 @@ do
 			return autotimers(self, key, label)
 		elseif length < 0 then
 			return
-		elseif self.missing and self.missing[key] then
-			self.missing[key] = nil
 		end
 		if checkFlag(self, key, C.BAR) then
 			self:SendMessage("BigWigs_StartBar", self, key, label, length, icons[icon or textType == "number" and text or key])
@@ -1762,8 +1760,6 @@ do
 			return autotimers(self, key, label)
 		elseif length < 0 then
 			return
-		elseif self.missing and self.missing[key] then
-			self.missing[key] = nil
 		end
 		if checkFlag(self, key, C.BAR) then
 			self:SendMessage("BigWigs_StartBar", self, key, label, length, icons[icon or textType == "number" and text or key], true)
@@ -1805,11 +1801,7 @@ do
 	-- @param[opt] text the bar text (if nil, key is used)
 	-- @param[opt] icon the bar icon (spell id or texture name)
 	function boss:CastBar(key, length, text, icon)
-		if type(length) ~= "number" or length == 0 then
-			core:Print(format(badBar, key))
-			return
-		end
-
+		if type(length) ~= "number" then core:Print(format(msg, key)) return end
 		local textType = type(text)
 		if checkFlag(self, key, C.BAR) then
 			self:SendMessage("BigWigs_StartBar", self, key, format(L.cast, textType == "string" and text or spells[text or key]), length, icons[icon or textType == "number" and text or key])
