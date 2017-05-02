@@ -363,10 +363,10 @@ do
 				elementalsAlive[guid] = nil
 				if mob == SLOW_ELEMENTAL then
 					slowZoneCount = slowZoneCount + 1
-					self:Bar(slow_zone_despawn, 60, CL.count:format(L.slowZoneDespawn, slowZoneCount), 207013)
+					self:Bar(slow_zone_despawn, 70, CL.count:format(L.slowZoneDespawn, slowZoneCount), 207013)
 				elseif mob == FAST_ELEMENTAL then
 					fastZoneCount = fastZoneCount + 1
-					self:Bar(fast_zone_despawn, 30, CL.count:format(L.fastZoneDespawn, fastZoneCount), 207011)
+					self:Bar(fast_zone_despawn, 35, CL.count:format(L.fastZoneDespawn, fastZoneCount), 207011)
 				end
 			end
 		end
@@ -532,23 +532,13 @@ function mod:ConflexiveBurst(args)
 end
 
 do
-	local messages = {"FAST", "NORMAL", "SLOW"}
-
 	local playerList = mod:NewTargetList()
 	function mod:ConflexiveBurstApplied(args)
 		playerList[#playerList + 1] = args.destName
 
 		if self:Me(args.destGUID) then
-			--self:Flash(209597)
-			--self:Say(209597)
-			self:Say(209597, messages[#playerList])
-			self:Emphasized(false, messages)
-			self:Emit("ELISANDE_CONFLEXIVE_ATTRIBUTION", messages[#playerList])
-			if #playerList == 1 then
-				self:Pulse(false, 207011)
-			elseif #playerList == 3 then
-				self:Pulse(false, 207013)
-			end
+			self:Flash(209597)
+			self:Say(209597)
 			-- Need to constantly update because of fast/slow time
 			--local _, _, _, _, _, _, expires = UnitDebuff("player", args.spellName)
 			--local t = expires - GetTime()
