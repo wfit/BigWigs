@@ -19,6 +19,8 @@ mod.instanceId = 1530
 -- Locals
 --
 
+local Hud = FS.Hud
+
 local engageTime = 0
 local arcanoslashCount = 1
 
@@ -42,7 +44,7 @@ function mod:GetOptions()
 	return {
 		--[[ General ]]--
 		{204275, "TANK"}, -- Arcanoslash
-		204316, -- Shockwave
+		{204316, "HUD"}, -- Shockwave
 		204448, -- Chitinous Exoskeleton
 		204459, -- Exoskeletal Vulnerability
 		204372, -- Call of the Scorpid
@@ -121,6 +123,22 @@ do
 		self:CDBar(204372, 11) -- Call of the Scorpid (time to _start)
 		self:CDBar(204471, 24) -- Focused Blast (time to _success)
 		checkForBrokenShard()
+		if self:Hud(args.spellId) then
+			local spinner = Hud:DrawSpinner("player", 60, 3)
+			local disc = Hud:DrawArea("player", 60)
+			function spinner:OnUpdate()
+				if UnitDebuff("player", name) then
+					spinner:SetColor(0, 0.8, 0, 0.5)
+					disc:SetColor(0, 0, 0, 0)
+				else
+					spinner:SetColor(1, 0.5, 0, 1)
+					disc:SetColor(1, 0.5, 0, 0.5)
+				end
+			end
+			function spinner:OnRemove()
+				disc:Remove()
+			end
+		end
 	end
 
 	function mod:ShockwaveSuccess(args)
