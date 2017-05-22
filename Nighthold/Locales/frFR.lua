@@ -52,20 +52,6 @@ if L then
 	L[205445] = "|T1391537:15:15:0:0:64:64:4:60:4:60|t|cFFFF0000Loup|r"
 	L[216345] = "|T1391536:15:15:0:0:64:64:4:60:4:60|t|cFF00FF00Chasseur|r"
 	L[216344] = "|T1391535:15:15:0:0:64:64:4:60:4:60|t|cFF00DDFFDragon|r"
-
-	L.nameplate_requirement = "Cette fonctionnalité est actuellement uniquement supportée par KuiNameplates. Mythique uniquement."
-
-	L.custom_off_icy_ejection_nameplates = "Afficher {206936} sur les barres d'info des unités amicales" -- Icy Ejection
-	L.custom_off_icy_ejection_nameplates_desc = L.nameplate_requirement
-
-	L.custom_on_fel_ejection_nameplates = "Afficher {205649} sur les barres d'info des unités amicales" -- Fel Ejection
-	L.custom_on_fel_ejection_nameplates_desc = L.nameplate_requirement
-
-	L.custom_on_gravitational_pull_nameplates = "Afficher {214335} sur les barres d'info des unités amicales" -- Gravitational Pull
-	L.custom_on_gravitational_pull_nameplates_desc = L.nameplate_requirement
-
-	L.custom_on_grand_conjunction_nameplates = "Afficher {205408} sur les barres d'info des unités amicales" -- Grand Conjunction
-	L.custom_on_grand_conjunction_nameplates_desc = L.nameplate_requirement
 end
 
 L = BigWigs:NewBossLocale("Grand Magistrix Elisande", "frFR")
@@ -75,6 +61,7 @@ if L then
 	L.ring_yell = "Que le torrent du temps vous emporte !"
 	L.orb_yell = "Le temps est parfois… explosif."
 
+	--L.slowTimeZone = "Slow Time Zone"
 	L.fastTimeZone = "Zone de temps accéléré"
 
 	--L.boss_active = "Elisande Active"
@@ -84,11 +71,14 @@ end
 
 L = BigWigs:NewBossLocale("Gul'dan", "frFR")
 if L then
+	--L.warmup_trigger = "Have you forgotten" -- Have you forgotten your humiliation on the Broken Shore? How your precious high king was bent and broken before me? Will you beg for your lives as he did, whimpering like some worthless dog?
+
 	L.empowered = "(E) %s" -- (E) Eye of Gul'dan
 	L.gains = "Gul'dan obtient %s"
 	--L.p4_mythic_start_yell = "Time to return the demon hunter's soul to his body... and deny the Legion's master a host!"
 
 	L.nightorb_desc = "Invoque un orbe de nuit, faisant apparaître une zone temporelle une fois détruit."
+	--L.timeStopZone = "Time Stop Zone"
 
 	L.manifest_desc = "Invoque un fragment d'âme d'Azzinoth, faisant apparaître une Essence démononiaque une fois détruit."
 
@@ -116,14 +106,16 @@ if L then
 	L.jarin = "Astrologue Jarin"
 
 	--[[ Aluriel to Telarn ]]--
+	L.defender = "Défenseur astral"
 	L.weaver = "Tisserand de la Garde crépusculaire"
 	L.archmage = "Archimage shal’dorei"
 	L.manasaber = "Sabre-de-mana domestiqué"
+	L.naturalist = "Naturaliste shal’dorei"
 
-	--[[ Aluriel to Krosos ]]--
+	--[[ Aluriel to Krosus ]]--
 	L.infernal = "Infernal incendiaire"
 
 	--[[ Aluriel to Tichondrius ]]--
+	L.chaosmage = "Mage du chaos gangrelige"
 	L.watcher = "Guetteur des abîmes"
 end
-

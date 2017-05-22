@@ -909,7 +909,7 @@ do
 		self[self.targetEventFunc](self, event, unit.."target")
 	end
 	--- Register a set of events commonly used for raid marking functionality and pass the unit to a designated function.
-	-- UPDATE_MOUSEOVER_UNIT, UNIT_TARGET, NAME_PLATE_UNIT_ADDED.
+	-- UPDATE_MOUSEOVER_UNIT, UNIT_TARGET, NAME_PLATE_UNIT_ADDED, FORBIDDEN_NAME_PLATE_UNIT_ADDED.
 	-- @param func callback function, passed (event, unit)
 	function boss:RegisterTargetEvents(func)
 		if self[func] then
@@ -917,6 +917,7 @@ do
 			self:RegisterEvent("UPDATE_MOUSEOVER_UNIT")
 			self:RegisterEvent("UNIT_TARGET")
 			self:RegisterEvent("NAME_PLATE_UNIT_ADDED", func)
+			self:RegisterEvent("FORBIDDEN_NAME_PLATE_UNIT_ADDED", func)
 		end
 	end
 	--- Unregister the events registered by `RegisterTargetEvents`.
@@ -924,6 +925,7 @@ do
 		self:UnregisterEvent("UPDATE_MOUSEOVER_UNIT")
 		self:UnregisterEvent("UNIT_TARGET")
 		self:UnregisterEvent("NAME_PLATE_UNIT_ADDED")
+		self:UnregisterEvent("FORBIDDEN_NAME_PLATE_UNIT_ADDED")
 	end
 end
 
@@ -1389,27 +1391,33 @@ end
 -- @section nameplates
 --
 
---- Toggle showing friendly nameplates to the enabled state.
-function boss:ShowFriendlyNameplates()
-	self:SendMessage("BigWigs_EnableFriendlyNameplates", self)
-end
-
---- Toggle showing friendly nameplates to the disabled state.
-function boss:HideFriendlyNameplates()
-	self:SendMessage("BigWigs_DisableFriendlyNameplates", self)
-end
-
---- Toggle showing friendly nameplates to the enabled state.
-function boss:ShowHostileNameplates()
+--- Toggle showing hostile nameplates to the enabled state.
+function boss:ShowPlates()
 	self:SendMessage("BigWigs_EnableHostileNameplates", self)
 end
 
---- Toggle showing friendly nameplates to the disabled state.
-function boss:HideHostileNameplates()
+--- Toggle showing hostile nameplates to the disabled state.
+function boss:HidePlates()
 	self:SendMessage("BigWigs_DisableHostileNameplates", self)
 end
 
---- Add aura to nameplate.
+--- Add icon to hostile nameplate.
+-- @param spellId the associated spell id
+-- @param guid the hostile unit guid
+-- @param[opt] duration the duration of the aura
+-- @param[opt] desaturate true if the texture should be desaturated
+function boss:AddPlateIcon(spellId, guid, duration, desaturate)
+	self:SendMessage("BigWigs_AddNameplateIcon", self, guid, icons[spellId], duration, desaturate)
+end
+
+--- Remove icon from hostile nameplate.
+-- @param spellId the associated spell id, passing nil removes all icons
+-- @param guid the hostile unit guid
+function boss:RemovePlateIcon(spellId, guid)
+	self:SendMessage("BigWigs_RemoveNameplateIcon", self, guid, spellId and icons[spellId])
+end
+
+--- Add aura to nameplate. [DEPRECATED, removed in 7.2]
 -- @param spellId the associated spell id
 -- @param playerName the affected player
 -- @param[opt] duration the duration of the aura
@@ -1419,7 +1427,7 @@ function boss:AddPlate(spellId, playerName, duration, isHostile, desaturate)
 	self:SendMessage("BigWigs_ShowNameplateAura", self, playerName, icons[spellId], duration, desaturate, isHostile)
 end
 
---- Remove aura from nameplate.
+--- Remove aura from nameplate. [DEPRECATED, removed in 7.2]
 -- @param spellId the associated spell id, passing nil removes all icons
 -- @param playerName the affected player
 -- @param[opt] isHostile if the unit is a hostile nameplate, in which case playerName should be treated as a GUID
@@ -1784,6 +1792,22 @@ do
 			end
 		elseif not checkFlag(self, key, C.ME_ONLY) and checkFlag(self, key, C.BAR) then
 			self:SendMessage("BigWigs_StartBar", self, key, format(L.other, textType == "string" and text or spells[text or key], gsub(player, "%-.+", "*")), length, icons[icon or textType == "number" and text or key])
+		end
+	end
+
+	--- Display a cast bar.
+	-- @param key the option key
+	-- @param length the bar duration in seconds
+	-- @param[opt] text the bar text (if nil, key is used)
+	-- @param[opt] icon the bar icon (spell id or texture name)
+	function boss:CastBar(key, length, text, icon)
+		if type(length) ~= "number" then core:Print(format(msg, key)) return end
+		local textType = type(text)
+		if checkFlag(self, key, C.BAR) then
+			self:SendMessage("BigWigs_StartBar", self, key, format(L.cast, textType == "string" and text or spells[text or key]), length, icons[icon or textType == "number" and text or key])
+		end
+		if checkFlag(self, key, C.COUNTDOWN) then
+			self:SendMessage("BigWigs_StartEmphasize", self, key, textType == "string" and text or spells[text or key], length)
 		end
 	end
 end
