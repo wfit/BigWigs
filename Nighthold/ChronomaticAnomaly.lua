@@ -470,25 +470,17 @@ do
 			end
 		end
 
-		if self:Hud(args.spellId) then
-			local unit = args.destUnit
-			local timebomb = self:SpellName(206617)
-			local timer = Hud:DrawTimer(unit, 50):SetColor(141, 235, 241, 0.8):Register(args.destKey)
-			function timer:Progress()
-				local _, _, _, _, _, duration, expires = UnitDebuff(unit, timebomb)
-				if not duration then return 0 end
-				return 1 - (expires - GetTime()) / duration
-			end
-		end
-
 		if self:Me(args.destGUID) then
+			if self:Hud(args.spellId) then
+				Hud:DrawTimer("player", 60, 206617):SetColor(141, 235, 241, 0.8)
+			end
 			self:Say(args.spellId)
 			timeBombCountdown(self)
 		end
 	end
 
 	function mod:TimeBombRemoved(args)
-		Hud:RemoveObject(args.destKey)
+		--Hud:RemoveObject(args.destKey)
 	end
 end
 

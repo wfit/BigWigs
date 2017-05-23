@@ -278,7 +278,6 @@ end
 
 function mod:OnBossDisable()
 	wipe(mobCollector)
-	self:HideFriendlyNameplates()
 end
 
 --------------------------------------------------------------------------------
@@ -361,7 +360,7 @@ do
 			if me then mySign = sign end
 
 			-- Create object
-			local obj = me and Hud:DrawTimer(args.destGUID, 50, 10) or Hud:DrawArea(args.destGUID, 50)
+			local obj = me and Hud:DrawTimer(args.destGUID, 50, 15) or Hud:DrawArea(args.destGUID, 50)
 
 			-- Color management
 			if self:GetOption(diff_starsigns) then
