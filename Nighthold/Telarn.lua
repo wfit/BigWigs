@@ -18,7 +18,6 @@ local Hud = FS.Hud
 
 local nextPhaseSoon = 80
 local phase = 1
-local callOfNightCheck
 
 --------------------------------------------------------------------------------
 -- Initialization
@@ -106,13 +105,6 @@ function mod:OnEngage()
 		self:Bar(218774, 45) -- Summon Plasma Spheres, to _start
 		self:Bar(218809, 55) -- Call of Night, to _start
 		self:Bar(218927, 65) -- Grace of Nature, to _start
-	end
-end
-
-function mod:OnBossDisable()
-	if callOfNightCheck then
-		self:CancelTimer(callOfNightCheck)
-		callOfNightCheck = nil
 	end
 end
 
@@ -215,7 +207,39 @@ do
 		end
 
 		if self:Hud(args.spellId) then
-			Hud:DrawTimer(args.destGUID, 75, 45):SetColor(197, 124, 199):Register(args.destKey)
+			local timer = Hud:DrawTimer(args.destGUID, 75, 45):SetColor(255, 225, 0):Register(args.destKey)
+			local t, callOfNight = GetTime(), args.spellName
+			function timer:OnUpdate()
+				local status = 0 -- Not soaked
+				for unit in mod:IterateGroup() do
+					if not UnitIsUnit(unit, "player") and mod:Range(unit) <= 5 then
+						if UnitDebuff(unit, callOfNight) then
+							status = 2 -- Marks together
+							break
+						else
+							status = 1
+						end
+					end
+				end
+
+				if status == 0 then
+					self:SetColor(155, 247, 27)
+				elseif status == 1 then
+					self:SetColor(255, 225, 0)
+				elseif status == 2 then
+					self:SetColor(255, 102, 0)
+				end
+
+				local now = GetTime()
+				if now - t > 1 and status ~= 1 then
+					if status == 0 then
+						self:Say(false, "SOAK", false, "YELL")
+					elseif status == 2 then
+						self:Say(false, "SPREAD", false, "YELL")
+					end
+					t = now
+				end
+			end
 		end
 
 		if self:GetOption(callOfTheNightMarker) then
@@ -231,10 +255,6 @@ do
 			isOnMe = nil
 			self:CloseProximity(args.spellId)
 			self:StopBar(args.spellId, args.destName)
-			if callOfNightCheck then
-				self:CancelTimer(callOfNightCheck)
-				callOfNightCheck = nil
-			end
 		end
 
 		tDeleteItem(proxList, args.destName)
@@ -254,21 +274,6 @@ do
 				table.insert(iconsUnused, icon)
 				SetRaidTarget(args.destUnit, 0)
 			end
-		end
-	end
-
-	local function isSoaked()
-		for unit in mod:IterateGroup() do
-			if not UnitIsUnit(unit, "player") and mod:Range(unit) <= 5 then
-				return true
-			end
-		end
-		return false
-	end
-
-	function mod:CallOfNightCheck()
-		if not isSoaked() then
-			self:Say(false, "SOAK", false, "YELL")
 		end
 	end
 end
