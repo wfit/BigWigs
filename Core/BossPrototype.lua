@@ -1705,7 +1705,6 @@ function boss:TimersCheckpoint(key)
 	end
 end
 
-
 function boss:OnDisableAutoTimersSummary()
 	if not next(self.autoTimersSummary) then return end
 	core:Print("|cffffffffAuto-Timers summary:")
@@ -1730,17 +1729,19 @@ do
 	-- @param[opt] icon the bar icon (spell id or texture name)
 	function boss:Bar(key, length, text, icon)
 		local textType = type(text)
-		local label = textType == "string" and text or spells[text or key]
+		local msg = textType == "string" and text or spells[text or key]
+
 		if not length then
-			return autotimers(self, key, label)
+			return autotimers(self, key, msg)
 		elseif length < 0 then
 			return
 		end
+
 		if checkFlag(self, key, C.BAR) then
-			self:SendMessage("BigWigs_StartBar", self, key, label, length, icons[icon or textType == "number" and text or key])
+			self:SendMessage("BigWigs_StartBar", self, key, msg, length, icons[icon or textType == "number" and text or key])
 		end
 		if checkFlag(self, key, C.COUNTDOWN) then
-			self:SendMessage("BigWigs_StartEmphasize", self, key, label, length)
+			self:SendMessage("BigWigs_StartEmphasize", self, key, msg, length)
 		end
 	end
 
@@ -1752,17 +1753,19 @@ do
 	-- @param[opt] icon the bar icon (spell id or texture name)
 	function boss:CDBar(key, length, text, icon)
 		local textType = type(text)
-		local label = textType == "string" and text or spells[text or key]
+		local msg = textType == "string" and text or spells[text or key]
+
 		if not length then
-			return autotimers(self, key, label)
+			return autotimers(self, key, msg)
 		elseif length < 0 then
 			return
 		end
+
 		if checkFlag(self, key, C.BAR) then
-			self:SendMessage("BigWigs_StartBar", self, key, label, length, icons[icon or textType == "number" and text or key], true)
+			self:SendMessage("BigWigs_StartBar", self, key, msg, length, icons[icon or textType == "number" and text or key], true)
 		end
 		if checkFlag(self, key, C.COUNTDOWN) then
-			self:SendMessage("BigWigs_StartEmphasize", self, key, label, length)
+			self:SendMessage("BigWigs_StartEmphasize", self, key, msg, length)
 		end
 	end
 
@@ -1800,11 +1803,12 @@ do
 	function boss:CastBar(key, length, text, icon)
 		if type(length) ~= "number" then core:Print(format(msg, key)) return end
 		local textType = type(text)
+		local msg = format(L.cast, textType == "string" and text or spells[text or key])
 		if checkFlag(self, key, C.BAR) then
-			self:SendMessage("BigWigs_StartBar", self, key, format(L.cast, textType == "string" and text or spells[text or key]), length, icons[icon or textType == "number" and text or key])
+			self:SendMessage("BigWigs_StartBar", self, key, msg, length, icons[icon or textType == "number" and text or key])
 		end
 		if checkFlag(self, key, C.COUNTDOWN) then
-			self:SendMessage("BigWigs_StartEmphasize", self, key, textType == "string" and text or spells[text or key], length)
+			self:SendMessage("BigWigs_StartEmphasize", self, key, msg, length)
 		end
 	end
 end

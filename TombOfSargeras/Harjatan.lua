@@ -16,8 +16,8 @@ mod.respawnTime = 30
 -- Locals
 --
 
-local dischargeComing = nil
-local drawInCasting = nil
+local rageCounter = 0
+local roarCounter = 0
 
 --------------------------------------------------------------------------------
 -- Localization
@@ -28,10 +28,6 @@ if L then
 	L.custom_on_fixate_plates = "Fixate icon on Enemy Nameplate"
 	L.custom_on_fixate_plates_desc = "Show an icon on the target nameplate that is fixating on you.\nRequires the use of Enemy Nameplates. This feature is currently only supported by KuiNameplates."
 	L.custom_on_fixate_plates_icon = 234128
-
-	L.darkscale_taskmaster = "Darkscale Taskmaster (Heroic, Mythic)"
-	L.darkscale_taskmaster_desc = "Summons a Darkscale Taskmaster from the throne."
-	L.darkscale_taskmaster_icon = 233951
 end
 
 --------------------------------------------------------------------------------
@@ -46,7 +42,6 @@ function mod:GetOptions()
 		232061, -- Draw In
 		233429, -- Frigid Blows
 		232174, -- Frosty Discharge
-		"darkscale_taskmaster", -- Darkscale Taskmaster
 		{231729, "SAY", "FLASH"}, -- Aqueous Burst
 		{234128, "SAY", "FLASH"}, -- Driven Assault
 		"custom_on_fixate_plates",
@@ -90,15 +85,16 @@ function mod:OnBossEnable()
 end
 
 function mod:OnEngage()
+	roarCounter = 1
+	rageCounter = 1
+
 	self:Bar(232192, 17.5) -- Commanding Roar
 	self:Bar(231854, 21) -- Unchecked Rage
 	self:Bar(232061, 60) -- Draw In
-	if self:Heroic() or self:Mythic() then
-		self:Bar("darkscale_taskmaster", 41.6, self:SpellName(-14725), L.darkscale_taskmaster_icon) -- Darkscale Taskmaster
-	end
 	if self:Mythic() then
 		self:Bar(240319, 30) -- Hatching
 	end
+	self:Berserk(360) -- Confirmed Mythic
 end
 
 function mod:OnBossDisable()
@@ -112,18 +108,17 @@ end
 --
 function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 	if spellId == 232192 then -- Commanding Roar
+		roarCounter = roarCounter + 1
 		self:Message(spellId, "Important", "Alert", spellName)
-		self:Bar(spellId, 32.8)
-	elseif spellId == 241736 then -- Darkscale Taskmaster
-		self:Message("darkscale_taskmaster", "Attention", "Alert", CL.incoming:format(self:SpellName(-14725)), L.darkscale_taskmaster_icon)
-		self:Bar("darkscale_taskmaster", 60.5, self:SpellName(-14725), L.darkscale_taskmaster_icon) -- Darkscale Taskmaster
+		if roarCounter == 2 then
+			self:Bar(spellId, 32.8)
+		end
 	end
 end
 
 function mod:RAID_BOSS_WHISPER(event, msg)
 	if msg:find("240319", nil, true) then -- Hatching
 		self:Message(240319, "Important", "Warning")
-		self:Bar(240319, 41.5)
 	end
 end
 
@@ -133,32 +128,16 @@ function mod:JaggedAbrasion(args)
 end
 
 function mod:UncheckedRage(args)
+	rageCounter = rageCounter + 1
 	self:Message(args.spellId, "Urgent", "Warning")
-	self:Bar(args.spellId, 20.5)
+	if rageCounter <= 3 then
+		self:Bar(args.spellId, 20.5)
+	end
 end
 
 function mod:DrawIn(args)
-	drawInCasting = true
 	self:Message(args.spellId, "Important", "Alert", CL.casting:format(args.spellName))
 	self:CastBar(args.spellId, 10)
-end
-
-function mod:DrawInSuccess(args)
-	if not dischargeComing then
-		self:Bar(args.spellId, 50.5)
-	end
-	dischargeComing = nil
-	drawInCasting = nil
-end
-
-function mod:FrigidBlowsApplied(args)
-	if drawInCasting then
-		dischargeComing = true
-		-- Cooldowns resetting after Frost Discharge now
-		self:StopBar(232192) -- Commanding Roar
-		self:StopBar(231854) -- Unchecked Rage
-		self:StopBar(240319) -- Hatching
-	end
 end
 
 function mod:FrigidBlows(args)
@@ -169,6 +148,8 @@ function mod:FrigidBlows(args)
 end
 
 function mod:FrostyDischarge(args)
+	roarCounter = 1
+	rageCounter = 1
 	self:Message(args.spellId, "Urgent", "Warning", args.spellName)
 	self:Bar(232192, 18.2)	-- Commanding Roar
 	self:Bar(231854, 21.4) -- Unchecked Rage
