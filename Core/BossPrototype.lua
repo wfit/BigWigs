@@ -223,6 +223,10 @@ function boss:OnEnable(isWipe)
 	self:RegisterMessage("BW_NET_MSG")
 	self:RegisterMessage("BigWigs_BossComm_Sync")
 
+	if GSSC then
+		GSSC:RegisterFilter(self)
+	end
+
 	if IsEncounterInProgress() and not isWipe then -- Safety. ENCOUNTER_END might fire whilst IsEncounterInProgress is still true and engage a module.
 		self:CheckForEncounterEngage("NoEngage") -- Prevent engaging if enabling during a boss fight (after a DC)
 	end
@@ -287,6 +291,10 @@ function boss:OnDisable(isWipe)
 	wipe(self.autoTimers)
 	wipe(self.autoTimersLabels)
 	wipe(self.autoTimersSummary)
+
+	if GSSC then
+		GSSC:UnregisterFilter(self)
+	end
 
 	if not isWipe then
 		self:SendMessage("BigWigs_OnBossDisable", self)
@@ -2218,7 +2226,7 @@ function boss:HudKey(spellId, guid)
 end
 
 -- SmartColor™
-function boss:SmartColorSet(guid, r, g, b, targets)
+function boss:SmartColorSet(key, guid, r, g, b, targets)
 	if type(guid) == "number" then
 		targets = b
 		b = g
@@ -2231,21 +2239,25 @@ function boss:SmartColorSet(guid, r, g, b, targets)
 	if r > 1 then r = r / 255 end
 	if g > 1 then g = g / 255 end
 	if b > 1 then b = b / 255 end
-	FS:Send("GSSC", { action = "set", guid = guid, color = { r = r, g = g, b = b } }, targets)
+	FS:Send("GSSC", { action = "set", guid = guid, key = key, color = { r = r, g = g, b = b } }, targets)
 end
 
-function boss:SmartColorUnset(guid, targets)
+function boss:SmartColorUnset(key, guid, targets)
 	if type(guid) == "table" then
 		targets = guid
 		guid = nil
 	end
 	if not guid then guid = myGUID end
 	if UnitExists(guid) then guid = UnitGUID(guid) end
-	FS:Send("GSSC", { action = "unset", guid = guid }, targets)
+	FS:Send("GSSC", { action = "unset", guid = guid, key = key }, targets)
 end
 
-function boss:SmartColorUnsetAll(targets)
-	FS:Send("GSSC", { action = "unsetall" }, targets)
+function boss:SmartColorUnsetAll(key, targets)
+	FS:Send("GSSC", { action = "unsetall", key = key }, targets)
+end
+
+function boss:SmartColorFilter(key)
+	return checkFlag(self, key, C.SMARTCOLOR)
 end
 
 -- Virtual args
