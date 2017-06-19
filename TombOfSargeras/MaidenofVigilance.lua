@@ -27,6 +27,8 @@ local infusionCounter = 0
 -- Localization
 --
 
+local Hud = FS.Hud
+
 local L = mod:GetLocale()
 if L then
 
@@ -38,7 +40,7 @@ end
 function mod:GetOptions()
 	return {
 		"berserk",
-		240209, -- Unstable Soul
+		{240209, "FLASH", "HUD"}, -- Unstable Soul
 		241593, -- Aegwynn's Ward
 		{235271, "PROXIMITY"}, -- Infusion
 		241635, -- Hammer of Creation
@@ -107,6 +109,21 @@ end
 function mod:UnstableSoul(args)
 	if self:Me(args.destGUID) then
 		self:TargetMessage(args.spellId, args.destName, "Personal", "Alarm")
+		self:Flash(args.spellId)
+		if self:Hud(args.spellId) then
+			local timer = Hud:DrawTimer("player", 50, args.spellId):SetColor(1, 0.5, 0)
+			local label = Hud:DrawText("player", ""):SetFont(26, "Fira Mono Medium")
+			function timer:OnUpdate()
+				local left = self:TimeLeft() - 1.5
+				label:SetText(left > 0 and ("%2.1f"):format(left) or "JUMP")
+				if left < 0 then
+					self:SetColor(0, 1, 0)
+				end
+			end
+			function timer:OnRemove()
+				label:Remove()
+			end
+		end
 	end
 end
 
