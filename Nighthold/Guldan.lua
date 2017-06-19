@@ -242,6 +242,7 @@ end
 
 function mod:OnBossEnable()
 	self:RegisterUnitEvent("UNIT_SPELLCAST_SUCCEEDED", nil, "boss1", "boss2", "boss3", "boss4", "boss5")
+	self:RegisterUnitEvent("UNIT_TARGET", "TankMarker", "boss1")
 
 	--[[ Stage One ]]--
 	self:Log("SPELL_CAST_START", "LiquidHellfire", 206219, 206220)
@@ -352,15 +353,13 @@ function mod:OnEngage()
 	else
 		self:CDBar(206514, self:Timer(206514, felEffluxCount))
 	end
+end
 
+function mod:TankMarker()
 	if self:GetOption(tanks_marker) then
-		local marked = 0
-		for unit in self:IterateGroup() do
-			if self:Tank(unit) then
-				self:SetIcon(tanks_marker, unit, 7 - marked)
-				marked = marked + 1
-				if marked == 2 then break end
-			end
+		if UnitExists("boss1") and UnitExists("boss1target") and
+				UnitThreatSituation("boss1target", "boss1") > 1 then
+			self:SetIcon(tanks_marker, "boss1target", 6)
 		end
 	end
 end
@@ -368,7 +367,7 @@ end
 function mod:OnBossDisable()
 	if self:GetOption(tanks_marker) then
 		for unit in self:IterateGroup() do
-			if self:Tank(unit) then
+			if GetRaidTargetIndex(unit) == 6 then
 				self:SetIcon(tanks_marker, unit, 0)
 			end
 		end
