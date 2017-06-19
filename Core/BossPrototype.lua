@@ -223,6 +223,10 @@ function boss:OnEnable(isWipe)
 	self:RegisterMessage("BW_NET_MSG")
 	self:RegisterMessage("BigWigs_BossComm_Sync")
 
+	if SmartColor then
+		SmartColor:RegisterFilter(self)
+	end
+
 	if IsEncounterInProgress() and not isWipe then -- Safety. ENCOUNTER_END might fire whilst IsEncounterInProgress is still true and engage a module.
 		self:CheckForEncounterEngage("NoEngage") -- Prevent engaging if enabling during a boss fight (after a DC)
 	end
@@ -287,6 +291,10 @@ function boss:OnDisable(isWipe)
 	wipe(self.autoTimers)
 	wipe(self.autoTimersLabels)
 	wipe(self.autoTimersSummary)
+
+	if SmartColor then
+		SmartColor:UnregisterFilter(self)
+	end
 
 	if not isWipe then
 		self:SendMessage("BigWigs_OnBossDisable", self)
@@ -1266,7 +1274,7 @@ do
 	local nilKeyError      = "Module %s tried to check the bitflags for a nil option key."
 	local invalidFlagError = "Module %s tried to check for an invalid flag type %q (%q). Flags must be bits."
 	local noDBError        = "Module %s does not have a .db property, which is weird."
-	checkFlag = function(self, key, flag)
+	checkFlag = function(self, key, flag, quiet)
 		if key == false then return true end -- Allow optionless abilities
 		if type(key) == "nil" then core:Print(format(nilKeyError, self.moduleName)) return end
 		if type(flag) ~= "number" then core:Print(format(invalidFlagError, self.moduleName, type(flag), tostring(flag))) return end
@@ -1274,7 +1282,9 @@ do
 		if type(self.db) ~= "table" then local msg = format(noDBError, self.moduleName) core:Print(msg) error(msg) return end
 		if type(self.db.profile[key]) ~= "number" then
 			if not self.toggleDefaults[key] then
-				core:Print(format(noDefaultError, self.moduleName, key))
+				if not quiet then
+					core:Print(format(noDefaultError, self.moduleName, key))
+				end
 				return
 			end
 			if debug then
@@ -2217,6 +2227,42 @@ function boss:HudKey(spellId, guid)
 	return (spellId or 0) .. ":" .. (guid or "")
 end
 
+-- SmartColor™
+function boss:SmartColorSet(key, guid, r, g, b, targets)
+	if type(guid) == "number" then
+		targets = b
+		b = g
+		g = r
+		r = guid
+		guid = nil
+	end
+	if not guid then guid = myGUID end
+	if UnitExists(guid) then guid = UnitGUID(guid) end
+	if r > 1 then r = r / 255 end
+	if g > 1 then g = g / 255 end
+	if b > 1 then b = b / 255 end
+	FS:Send("SMARTCOLOR", { action = "set", guid = guid, key = key, color = { r = r, g = g, b = b } }, targets)
+end
+
+function boss:SmartColorUnset(key, guid, targets)
+	if type(guid) == "table" then
+		targets = guid
+		guid = nil
+	end
+	if not guid then guid = myGUID end
+	if UnitExists(guid) then guid = UnitGUID(guid) end
+	FS:Send("SMARTCOLOR", { action = "unset", guid = guid, key = key }, targets)
+end
+
+function boss:SmartColorUnsetAll(key, targets)
+	FS:Send("SMARTCOLOR", { action = "unsetall", key = key }, targets)
+end
+
+function boss:SmartColorFilter(key)
+	return checkFlag(self, key, C.SMARTCOLOR, true)
+end
+
+-- Virtual args
 function argsVirtuals.sourceKey(args)
 	return boss:HudKey(args.spellId, args.sourceGUID)
 end
