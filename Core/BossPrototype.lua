@@ -1274,7 +1274,7 @@ do
 	local nilKeyError      = "Module %s tried to check the bitflags for a nil option key."
 	local invalidFlagError = "Module %s tried to check for an invalid flag type %q (%q). Flags must be bits."
 	local noDBError        = "Module %s does not have a .db property, which is weird."
-	checkFlag = function(self, key, flag)
+	checkFlag = function(self, key, flag, quiet)
 		if key == false then return true end -- Allow optionless abilities
 		if type(key) == "nil" then core:Print(format(nilKeyError, self.moduleName)) return end
 		if type(flag) ~= "number" then core:Print(format(invalidFlagError, self.moduleName, type(flag), tostring(flag))) return end
@@ -1282,7 +1282,9 @@ do
 		if type(self.db) ~= "table" then local msg = format(noDBError, self.moduleName) core:Print(msg) error(msg) return end
 		if type(self.db.profile[key]) ~= "number" then
 			if not self.toggleDefaults[key] then
-				core:Print(format(noDefaultError, self.moduleName, key))
+				if not quiet then
+					core:Print(format(noDefaultError, self.moduleName, key))
+				end
 				return
 			end
 			if debug then
@@ -2257,7 +2259,7 @@ function boss:SmartColorUnsetAll(key, targets)
 end
 
 function boss:SmartColorFilter(key)
-	return checkFlag(self, key, C.SMARTCOLOR)
+	return checkFlag(self, key, C.SMARTCOLOR, true)
 end
 
 -- Virtual args
