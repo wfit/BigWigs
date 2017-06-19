@@ -223,8 +223,8 @@ function boss:OnEnable(isWipe)
 	self:RegisterMessage("BW_NET_MSG")
 	self:RegisterMessage("BigWigs_BossComm_Sync")
 
-	if GSSC then
-		GSSC:RegisterFilter(self)
+	if SmartColor then
+		SmartColor:RegisterFilter(self)
 	end
 
 	if IsEncounterInProgress() and not isWipe then -- Safety. ENCOUNTER_END might fire whilst IsEncounterInProgress is still true and engage a module.
@@ -292,8 +292,8 @@ function boss:OnDisable(isWipe)
 	wipe(self.autoTimersLabels)
 	wipe(self.autoTimersSummary)
 
-	if GSSC then
-		GSSC:UnregisterFilter(self)
+	if SmartColor then
+		SmartColor:UnregisterFilter(self)
 	end
 
 	if not isWipe then
@@ -2241,7 +2241,7 @@ function boss:SmartColorSet(key, guid, r, g, b, targets)
 	if r > 1 then r = r / 255 end
 	if g > 1 then g = g / 255 end
 	if b > 1 then b = b / 255 end
-	FS:Send("GSSC", { action = "set", guid = guid, key = key, color = { r = r, g = g, b = b } }, targets)
+	FS:Send("SMARTCOLOR", { action = "set", guid = guid, key = key, color = { r = r, g = g, b = b } }, targets)
 end
 
 function boss:SmartColorUnset(key, guid, targets)
@@ -2251,11 +2251,11 @@ function boss:SmartColorUnset(key, guid, targets)
 	end
 	if not guid then guid = myGUID end
 	if UnitExists(guid) then guid = UnitGUID(guid) end
-	FS:Send("GSSC", { action = "unset", guid = guid, key = key }, targets)
+	FS:Send("SMARTCOLOR", { action = "unset", guid = guid, key = key }, targets)
 end
 
 function boss:SmartColorUnsetAll(key, targets)
-	FS:Send("GSSC", { action = "unsetall", key = key }, targets)
+	FS:Send("SMARTCOLOR", { action = "unsetall", key = key }, targets)
 end
 
 function boss:SmartColorFilter(key)
