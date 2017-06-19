@@ -154,7 +154,7 @@ do
 		if self:Me(args.destGUID) then
 			self:TargetMessage(235271, args.destName, "Personal", "Warning", args.spellName, args.spellId)
 			self:OpenProximity(235271, 5, lightList) -- Avoid people with Light debuff
-			self:Flash(235271, 241870) -- Right
+			self:Flash(235271, 241868) -- Left
 		end
 	end
 
@@ -164,7 +164,7 @@ do
 		if self:Me(args.destGUID) then
 			self:TargetMessage(235271, args.destName, "Personal", "Warning", args.spellName, args.spellId)
 			self:OpenProximity(235271, 5, felList) -- Avoid people with Fel debuff
-			self:Flash(235271, 241868) -- Left
+			self:Flash(235271, 241870) -- Right
 		end
 	end
 end
