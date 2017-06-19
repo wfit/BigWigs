@@ -2217,6 +2217,38 @@ function boss:HudKey(spellId, guid)
 	return (spellId or 0) .. ":" .. (guid or "")
 end
 
+-- SmartColor™
+function boss:SmartColorSet(guid, r, g, b, targets)
+	if type(guid) == "number" then
+		targets = b
+		b = g
+		g = r
+		r = guid
+		guid = nil
+	end
+	if not guid then guid = myGUID end
+	if UnitExists(guid) then guid = UnitGUID(guid) end
+	if r > 1 then r = r / 255 end
+	if g > 1 then g = g / 255 end
+	if b > 1 then b = b / 255 end
+	FS:Send("GSSC", { action = "set", guid = guid, color = { r = r, g = g, b = b } }, targets)
+end
+
+function boss:SmartColorUnset(guid, targets)
+	if type(guid) == "table" then
+		targets = guid
+		guid = nil
+	end
+	if not guid then guid = myGUID end
+	if UnitExists(guid) then guid = UnitGUID(guid) end
+	FS:Send("GSSC", { action = "unset", guid = guid }, targets)
+end
+
+function boss:SmartColorUnsetAll(targets)
+	FS:Send("GSSC", { action = "unsetall" }, targets)
+end
+
+-- Virtual args
 function argsVirtuals.sourceKey(args)
 	return boss:HudKey(args.spellId, args.sourceGUID)
 end
