@@ -42,7 +42,7 @@ function mod:GetOptions()
 		"berserk",
 		{240209, "FLASH", "HUD"}, -- Unstable Soul
 		--241593, -- Aegwynn's Ward
-		{235271, "PROXIMITY"}, -- Infusion
+		{235271, "PROXIMITY", "FLASH", "PULSE"}, -- Infusion
 		241635, -- Hammer of Creation
 		241636, -- Hammer of Obliteration
 		235267, -- Mass Instability
@@ -154,6 +154,7 @@ do
 		if self:Me(args.destGUID) then
 			self:TargetMessage(235271, args.destName, "Personal", "Warning", args.spellName, args.spellId)
 			self:OpenProximity(235271, 5, lightList) -- Avoid people with Light debuff
+			self:Flash(235271, 241870) -- Right
 		end
 	end
 
@@ -163,6 +164,7 @@ do
 		if self:Me(args.destGUID) then
 			self:TargetMessage(235271, args.destName, "Personal", "Warning", args.spellName, args.spellId)
 			self:OpenProximity(235271, 5, felList) -- Avoid people with Fel debuff
+			self:Flash(235271, 241868) -- Left
 		end
 	end
 end
