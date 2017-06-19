@@ -33,7 +33,7 @@ function mod:GetOptions()
 		bossMarker,
 
 		--[[ Arcanist Tel'arn ]]--
-		{218809, "SAY", "FLASH", "PROXIMITY", "HUD"}, -- Call of Night
+		{218809, "SAY", "FLASH", "PROXIMITY", "HUD", "SMARTCOLOR"}, -- Call of Night
 		callOfTheNightMarker,
 		{218503, "TANK"}, -- Recursive Strikes
 		218438, -- Controlled Chaos
@@ -203,9 +203,11 @@ do
 			self:Bar(args.spellId, (self:Mythic() and (phase == 2 and 55 or phase == 3 and 35 or 65)) or self:Easy() and 71.5 or 50)
 		end
 
-		if self:Me(args.destGUID) and self:Hud(args.spellId) then
-			local timer = Hud:DrawTimer(args.destGUID, 75, 45):SetColor(255, 225, 0):Register(args.destKey)
+		if self:Me(args.destGUID) then
+			local spellId = args.spellId
+			local timer = Hud:DrawTimer(args.destGUID, 75, 45):SetColor(255, 225, 0, self:Hud(spellId) and 1 or 0):Register(args.destKey)
 			local t, callOfNight = GetTime(), args.spellName
+			local lastStatus = -1
 			function timer:OnUpdate()
 				local status = 0 -- Not soaked
 				for unit in mod:IterateGroup() do
@@ -219,12 +221,18 @@ do
 					end
 				end
 
-				if status == 0 then
-					self:SetColor(155, 247, 27)
-				elseif status == 1 then
-					self:SetColor(255, 225, 0)
-				elseif status == 2 then
-					self:SetColor(255, 102, 0)
+				if status ~= lastStatus then
+					lastStatus = status
+					if status == 0 then
+						self:SetColor(155, 247, 27)
+						self:SmartColorSet(spellId, args.destGUID, 155, 247, 27)
+					elseif status == 1 then
+						self:SetColor(255, 225, 0)
+						self:SmartColorSet(spellId, args.destGUID, 255, 225, 0)
+					elseif status == 2 then
+						self:SetColor(255, 102, 0)
+						self:SmartColorSet(spellId, args.destGUID, 255, 102, 0)
+					end
 				end
 
 				local now = GetTime()
@@ -236,6 +244,9 @@ do
 					end
 					t = now
 				end
+			end
+			function timer:OnRemove()
+				self:SmartColorUnset(spellId, args.destGUID)
 			end
 		end
 
