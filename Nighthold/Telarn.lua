@@ -225,13 +225,13 @@ do
 					lastStatus = status
 					if status == 0 then
 						self:SetColor(155, 247, 27)
-						self:SmartColorSet(spellId, args.destGUID, 155, 247, 27)
+						mod:SmartColorSet(spellId, args.destGUID, 155, 247, 27)
 					elseif status == 1 then
 						self:SetColor(255, 225, 0)
-						self:SmartColorSet(spellId, args.destGUID, 255, 225, 0)
+						mod:SmartColorSet(spellId, args.destGUID, 255, 225, 0)
 					elseif status == 2 then
 						self:SetColor(255, 102, 0)
-						self:SmartColorSet(spellId, args.destGUID, 255, 102, 0)
+						mod:SmartColorSet(spellId, args.destGUID, 255, 102, 0)
 					end
 				end
 
@@ -246,7 +246,7 @@ do
 				end
 			end
 			function timer:OnRemove()
-				self:SmartColorUnset(spellId, args.destGUID)
+				mod:SmartColorUnset(spellId, args.destGUID)
 			end
 		end
 
