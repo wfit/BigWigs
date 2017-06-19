@@ -108,15 +108,19 @@ end
 
 function mod:UnstableSoul(args)
 	if self:Me(args.destGUID) then
-		self:TargetMessage(args.spellId, args.destName, "Personal", "Alarm")
-		self:Flash(args.spellId)
-		if self:Hud(args.spellId) then
-			local timer = Hud:DrawTimer("player", 50, args.spellId):SetColor(1, 0.5, 0)
+		local spellId = args.spellId
+		self:TargetMessage(spellId, args.destName, "Personal", "Alarm")
+		self:Flash(spellId)
+		if self:Hud(spellId) then
+			local timer = Hud:DrawTimer("player", 50, spellId):SetColor(1, 0.5, 0)
 			local label = Hud:DrawText("player", ""):SetFont(26, "Fira Mono Medium")
+			local soundPlayed = false
 			function timer:OnUpdate()
 				local left = self:TimeLeft() - 1.5
 				label:SetText(left > 0 and ("%2.1f"):format(left) or "JUMP")
-				if left < 0 then
+				if left < 0 and not soundPlayed then
+					soundPlayed = true
+					self:PlaySound(spellId, "Alert")
 					self:SetColor(0, 1, 0)
 				end
 			end
