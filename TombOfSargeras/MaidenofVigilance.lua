@@ -41,7 +41,7 @@ function mod:GetOptions()
 	return {
 		"berserk",
 		{240209, "FLASH", "HUD"}, -- Unstable Soul
-		241593, -- Aegwynn's Ward
+		--241593, -- Aegwynn's Ward
 		{235271, "PROXIMITY"}, -- Infusion
 		241635, -- Hammer of Creation
 		241636, -- Hammer of Obliteration
@@ -61,7 +61,7 @@ end
 function mod:OnBossEnable()
 	-- General
 	self:Log("SPELL_AURA_APPLIED", "UnstableSoul", 240209) -- Unstable Soul
-	self:Log("SPELL_AURA_APPLIED", "AegwynnsWardApplied", 241593) -- Aegwynn's Ward
+	--self:Log("SPELL_AURA_APPLIED", "AegwynnsWardApplied", 241593) -- Aegwynn's Ward
 
 	-- Stage One: Divide and Conquer
 	self:Log("SPELL_CAST_START", "Infusion", 235271) -- Infusion
