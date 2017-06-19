@@ -191,9 +191,6 @@ do
 			self:Say(args.spellId)
 			self:OpenProximity(args.spellId, 8, proxList) -- don't stand near others with the debuff
 			self:TargetBar(args.spellId, 45, args.destName)
-			if not callOfNightCheck then
-				callOfNightCheck = self:ScheduleRepeatingTimer("CallOfNightCheck", 1.5)
-			end
 		end
 
 		if not isOnMe then
@@ -206,7 +203,7 @@ do
 			self:Bar(args.spellId, (self:Mythic() and (phase == 2 and 55 or phase == 3 and 35 or 65)) or self:Easy() and 71.5 or 50)
 		end
 
-		if self:Hud(args.spellId) then
+		if self:Me(args.destGUID) and self:Hud(args.spellId) then
 			local timer = Hud:DrawTimer(args.destGUID, 75, 45):SetColor(255, 225, 0):Register(args.destKey)
 			local t, callOfNight = GetTime(), args.spellName
 			function timer:OnUpdate()
