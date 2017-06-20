@@ -136,12 +136,18 @@ end
 
 do
 	local proxList = {}
+	local rangeCheck
+	local lastStatus = -1
 
 	function mod:EchoingAnguishApplied(args)
 		proxList[#proxList+1] = args.destName
 		if self:Me(args.destGUID) then
 			self:Flash(args.spellId)
 			self:Say(args.spellId)
+
+			-- Check dispell staus
+			rangeCheck = self:ScheduleRepeatingTimer("CheckAnguishRange", 0.2, args.spellId)
+			self:CheckAnguishRange()
 		end
 		self:OpenProximity(args.spellId, 8, proxList) -- Don't stand near others if they have the debuff
 	end
@@ -152,6 +158,31 @@ do
 			self:CloseProximity(args.spellId)
 		else
 			self:OpenProximity(args.spellId, 8, proxList) -- Refresh list
+		end
+		if self:Me(args.destGUID) then
+			self:CancelTimer(rangeCheck)
+			self:SmartColorUnset(args.spellId)
+			lastStatus = -1
+		end
+	end
+
+	function mod:CheckAnguishRange(spellId)
+		local status = 1
+		for unit in mod:IterateGroup() do
+			if not UnitIsUnit(unit, "player") and mod:Range(unit) <= 8 then
+				status = 0
+				break
+			end
+		end
+		if status ~= lastStatus then
+			lastStatus = status
+			if status == 0 then
+				-- Cannot be dispelled
+				self:SmartColorSet(spellId, 1, 0.5, 0)
+			elseif status == 1 then
+				-- Can be dispelled
+				self:SmartColorSet(spellId, 0.2, 1, 0.2)
+			end
 		end
 	end
 end
