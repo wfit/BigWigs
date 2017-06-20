@@ -40,7 +40,7 @@ function mod:GetOptions()
 	return {
 		"stages",
 		"berserk",
-		230139, -- Hydra Shot
+		{230139, "FLASH", "PULSE"}, -- Hydra Shot
 		hydraShotMarker,
 		{230201, "FLASH"}, -- Burden of Pain
 		232722, -- Slicing Tornado
@@ -154,7 +154,7 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 end
 
 do
-	local list, iconsUnused = mod:NewTargetList(), {1,2,3,4} -- Targets: LFR: 0, 1 Normal, 3 Heroic, 4 Mythic
+	local list = mod:NewTargetList() -- Targets: LFR: 0, 1 Normal, 3 Heroic, 4 Mythic
 	function mod:HydraShot(args)
 		list[#list+1] = args.destName
 		if #list == 1 then
@@ -162,20 +162,18 @@ do
 			self:CastBar(args.spellId, 6)
 			self:Bar(args.spellId, phase == 2 and 30 or 40)
 		end
+		if self:Me(args.destGUID) then
+			self:Flash(args.spellId, #list)
+		end
 		if self:GetOption(hydraShotMarker) then
-			local icon = iconsUnused[1]
-			if icon then
-				SetRaidTarget(args.destName, icon)
-				tDeleteItem(iconsUnused, icon)
-			end
+			SetRaidTarget(args.destName, #list)
 		end
 	end
 
 	function mod:HydraShotRemoved(args)
 		if self:GetOption(hydraShotMarker) then
 			local icon = GetRaidTargetIndex(args.destName)
-			if icon > 0 and icon < 5 and not tContains(iconsUnused, icon) then
-				table.insert(iconsUnused, icon)
+			if icon > 0 and icon < 5 then
 				SetRaidTarget(args.destName, 0)
 			end
 		end
