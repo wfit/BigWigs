@@ -45,7 +45,7 @@ function mod:GetOptions()
 		{230201, "FLASH"}, -- Burden of Pain
 		232722, -- Slicing Tornado
 		230358, -- Thundering Shock
-		230384, -- Consuming Hunger
+		{230384, "FLASH"}, -- Consuming Hunger
 		232745, -- Devouring Maw
 		232913, -- Befouling Ink
 		232827, -- Crashing Wave
@@ -71,6 +71,7 @@ function mod:OnBossEnable()
 	self:Log("SPELL_CAST_START", "SlicingTornado", 232722)
 	self:Log("SPELL_CAST_START", "ThunderingShock", 230358)
 	self:Log("SPELL_CAST_START", "ConsumingHunger", 230384)
+	self:Log("SPELL_AURA_APPLIED", "MurlocAttached", 234459) -- Need Check
 
 	-- Stage Two: Terrors of the Deep
 	self:Log("SPELL_CAST_SUCCESS", "DevouringMaw", 232745)
@@ -207,6 +208,12 @@ function mod:ConsumingHunger(args)
 	consumingHungerCounter = consumingHungerCounter + 1
 	self:Message(args.spellId, "Attention", "Alert")
 	self:Bar(args.spellId, phase == 3 and (consumingHungerCounter % 2 == 0 and 31.5 or 37.5) or 34) -- XXX Need more p3 data.
+end
+
+function mod:MurlocAttached(args)
+	if phase == 1 and self:Me(args.destGUID) then
+		self:Flash(230384)
+	end
 end
 
 function mod:DevouringMaw(args)
