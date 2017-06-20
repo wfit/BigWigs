@@ -35,7 +35,7 @@ local L = mod:GetLocale()
 -- Initialization
 --
 
-local hydraShotMarker = mod:AddMarkerOption(false, "player", 1, 230139, 1, 2, 3, 4)
+local hydraShotMarker = mod:AddMarkerOption(true, "player", 1, 230139, 1, 2, 3, 4)
 function mod:GetOptions()
 	return {
 		"stages",
