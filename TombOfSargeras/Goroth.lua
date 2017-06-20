@@ -45,11 +45,13 @@ end
 -- Initialization
 --
 
+local shatteringStarMarker = mod:AddMarkerOption(true, "player", 1, 233279, 1)
 function mod:GetOptions()
 	return {
 		{231363, "TANK", "SAY"}, -- Burning Armor
 		{"cometSpike", "SAY"}, -- Crashing Comet / Infernal Spike
 		{233279, "FLASH", "SAY"}, -- Shattering Star
+		shatteringStarMarker,
 		233062, -- Infernal Burning
 		234346, -- Fel Eruption
 		238588, -- Rain of Brimstone
@@ -64,6 +66,7 @@ function mod:OnBossEnable()
 
 	self:Log("SPELL_AURA_APPLIED", "BurningArmor", 231363)
 	self:Log("SPELL_AURA_APPLIED", "ShatteringStarDebuff", 233272)
+	self:Log("SPELL_AURA_REMOVED", "ShatteringStarDebuffRemoved", 233272)
 	self:Log("SPELL_CAST_START", "InfernalBurning", 233062)
 
 	-- Fel Pool
@@ -161,6 +164,15 @@ function mod:ShatteringStarDebuff(args)
 	if self:Me(args.destGUID) then
 		self:Say(233279)
 		self:Flash(233279)
+	end
+	if self:Option(shatteringStarMarker) then
+		SetRaidTarget(args.destName, 1)
+	end
+end
+
+function mod:ShatteringStarDebuffRemoved(args)
+	if self:Option(shatteringStarMarker) then
+		SetRaidTarget(args.destName, 0)
 	end
 end
 
