@@ -27,6 +27,8 @@ local infusionCounter = 0
 -- Localization
 --
 
+local Hud = FS.Hud
+
 local L = mod:GetLocale()
 if L then
 
@@ -38,9 +40,9 @@ end
 function mod:GetOptions()
 	return {
 		"berserk",
-		240209, -- Unstable Soul
-		241593, -- Aegwynn's Ward
-		{235271, "PROXIMITY"}, -- Infusion
+		{240209, "FLASH", "HUD"}, -- Unstable Soul
+		--241593, -- Aegwynn's Ward
+		{235271, "PROXIMITY", "FLASH", "PULSE"}, -- Infusion
 		241635, -- Hammer of Creation
 		241636, -- Hammer of Obliteration
 		235267, -- Mass Instability
@@ -59,7 +61,7 @@ end
 function mod:OnBossEnable()
 	-- General
 	self:Log("SPELL_AURA_APPLIED", "UnstableSoul", 240209) -- Unstable Soul
-	self:Log("SPELL_AURA_APPLIED", "AegwynnsWardApplied", 241593) -- Aegwynn's Ward
+	--self:Log("SPELL_AURA_APPLIED", "AegwynnsWardApplied", 241593) -- Aegwynn's Ward
 
 	-- Stage One: Divide and Conquer
 	self:Log("SPELL_CAST_START", "Infusion", 235271) -- Infusion
@@ -106,7 +108,26 @@ end
 
 function mod:UnstableSoul(args)
 	if self:Me(args.destGUID) then
-		self:TargetMessage(args.spellId, args.destName, "Personal", "Alarm")
+		local spellId = args.spellId
+		self:TargetMessage(spellId, args.destName, "Personal", "Alarm")
+		self:Flash(spellId)
+		if self:Hud(spellId) then
+			local timer = Hud:DrawTimer("player", 50, spellId):SetColor(1, 0.5, 0)
+			local label = Hud:DrawText("player", ""):SetFont(26, "Fira Mono Medium")
+			local soundPlayed = false
+			function timer:OnUpdate()
+				local left = self:TimeLeft() - 1.5
+				label:SetText(left > 0 and ("%2.1f"):format(left) or "JUMP")
+				if left < 0 and not soundPlayed then
+					soundPlayed = true
+					self:PlaySound(spellId, "Alert")
+					self:SetColor(0, 1, 0)
+				end
+			end
+			function timer:OnRemove()
+				label:Remove()
+			end
+		end
 	end
 end
 
@@ -133,6 +154,7 @@ do
 		if self:Me(args.destGUID) then
 			self:TargetMessage(235271, args.destName, "Personal", "Warning", args.spellName, args.spellId)
 			self:OpenProximity(235271, 5, lightList) -- Avoid people with Light debuff
+			self:Flash(235271, 241868) -- Left
 		end
 	end
 
@@ -142,6 +164,7 @@ do
 		if self:Me(args.destGUID) then
 			self:TargetMessage(235271, args.destName, "Personal", "Warning", args.spellName, args.spellId)
 			self:OpenProximity(235271, 5, felList) -- Avoid people with Fel debuff
+			self:Flash(235271, 241870) -- Right
 		end
 	end
 end
