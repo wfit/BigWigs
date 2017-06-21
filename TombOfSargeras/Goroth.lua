@@ -51,7 +51,7 @@ function mod:GetOptions()
 	return {
 		{231363, "TANK", "SAY"}, -- Burning Armor
 		"cometSpike", -- Crashing Comet / Infernal Spike
-		{230345, "FLASH", "SAY"}, -- Crashing Comet
+		{232249, "FLASH", "SAY"}, -- Crashing Comet
 		{233279, "FLASH", "SAY"}, -- Shattering Star
 		shatteringStarMarker,
 		233062, -- Infernal Burning
@@ -67,7 +67,7 @@ function mod:OnBossEnable()
 	self:RegisterUnitEvent("UNIT_SPELLCAST_SUCCEEDED", nil, "boss1")
 
 	self:Log("SPELL_AURA_APPLIED", "BurningArmor", 231363)
-	self:Log("SPELL_AURA_APPLIED", "CrashingComet", 230345)
+	self:Log("SPELL_AURA_APPLIED", "CrashingComet", 232249)
 	self:Log("SPELL_AURA_APPLIED", "ShatteringStarDebuff", 233272)
 	self:Log("SPELL_AURA_REMOVED", "ShatteringStarDebuffRemoved", 233272)
 	self:Log("SPELL_CAST_START", "InfernalBurning", 233062)
