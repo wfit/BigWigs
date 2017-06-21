@@ -133,7 +133,7 @@ function mod:UnstableSoul(args)
 				label:SetText(left > 0 and ("%2.1f"):format(left) or "JUMP")
 				if left < 0 and not soundPlayed then
 					soundPlayed = true
-					self:PlaySound(spellId, "Alert")
+					mod:PlaySound(spellId, "Alert")
 					self:SetColor(0, 1, 0)
 				end
 			end
