@@ -208,12 +208,12 @@ end
 
 function mod:Blowback(args)
 	phase = 2
-	side = (side == 1) and 2 or 1
 	self:Message(args.spellId, "Important", "Warning")
 end
 
 function mod:TitanicBulwarkApplied(args)
 	shieldActive = true
+	side = (side == 1) and 2 or 1
 end
 
 function mod:TitanicBulwarkRemoved(args)
