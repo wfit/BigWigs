@@ -129,7 +129,7 @@ function mod:UnstableSoul(args)
 			local label = Hud:DrawText("player", ""):SetFont(26, "Fira Mono Medium")
 			local soundPlayed = false
 			function timer:OnUpdate()
-				local left = self:TimeLeft() - 2
+				local left = self:TimeLeft() - 1.5
 				label:SetText(left > 0 and ("%2.1f"):format(left) or "JUMP")
 				if left < 0 and not soundPlayed then
 					soundPlayed = true
