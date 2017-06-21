@@ -80,6 +80,7 @@ end
 function mod:OnBossEnable()
 	-- General
 	self:Log("SPELL_AURA_APPLIED", "UnstableSoul", 235117) -- Unstable Soul
+	self:Log("SPELL_AURA_REMOVED", "UnstableSoulRemoved", 235117) -- Unstable Soul
 	--self:Log("SPELL_AURA_APPLIED", "AegwynnsWardApplied", 241593) -- Aegwynn's Ward
 
 	-- Stage One: Divide and Conquer
@@ -143,23 +144,37 @@ function mod:UnstableSoul(args)
 		local spellId = args.spellId
 		self:TargetMessage(spellId, args.destName, "Personal", "Alarm")
 		self:Flash(spellId)
+
 		if self:Hud(spellId) then
-			local timer = Hud:DrawTimer("player", 50, spellId):SetColor(1, 0.5, 0)
-			local label = Hud:DrawText("player", ""):SetFont(26, "Fira Mono Medium")
-			local soundPlayed = false
+			local _, _, _, _, _, _, expires = UnitDebuff("player", args.spellName)
+			local remaining = expires - GetTime()
+
+			local timer = Hud:DrawTimer("player", 50, remaining - 1.75):SetColor(1, 0.5, 0):Register("UnstableSoulHUD", true)
+			local label = Hud:DrawText("player", ""):SetFont(26, "Fira Mono Medium"):Register("UnstableSoulHUD")
+			local done = false
+
 			function timer:OnUpdate()
-				local left = self:TimeLeft() - 1.5
-				label:SetText(left > 0 and ("%2.1f"):format(left) or "JUMP")
-				if left < 0 and not soundPlayed then
-					soundPlayed = true
-					mod:PlaySound(spellId, "Alert")
-					self:SetColor(0, 1, 0)
+				if not done then
+					local left = self:TimeLeft()
+					label:SetText(("%2.1f"):format(left))
 				end
 			end
-			function timer:OnRemove()
-				label:Remove()
+
+			function timer:OnDone()
+				if not done then
+					done = true
+					mod:PlaySound(spellId, "Info")
+					timer:SetColor(0, 1, 0)
+					label:SetText("JUMP!")
+				end
 			end
 		end
+	end
+end
+
+function mod:UnstableSoulRemoved(args)
+	if self:Me(args.destGUID) then
+		Hud:RemoveObject("UnstableSoulHUD")
 	end
 end
 
