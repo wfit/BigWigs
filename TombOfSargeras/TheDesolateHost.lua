@@ -48,7 +48,7 @@ function mod:GetOptions()
 		236507, -- Quietus
 		{235924, "SAY"}, -- Spear of Anguish
 		235907, -- Collapsing Fissure
-		{238570, "SAY"}, -- Tormented Cries
+		{238570, "SAY", "FLASH"}, -- Tormented Cries
 		235927, -- Rupturing Slam
 		{236513, "INFOBOX"}, -- Bonecage Armor
 		236131, -- Wither
@@ -282,6 +282,7 @@ function mod:TormentedCriesApplied(args)
 	self:TargetMessage(238570, args.destName, "Urgent", "Alarm")
 	if self:Me(args.destGUID) then
 		self:Say(238570)
+		self:Flash(238570)
 	end
 end
 
