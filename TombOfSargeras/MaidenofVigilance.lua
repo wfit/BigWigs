@@ -26,6 +26,7 @@ local hammerofObliterationCounter = 0
 local infusionCounter = 0
 
 local side = 1
+local color = -1
 local direction = {
 	[1] = {
 		fel = 241868, -- Left
@@ -49,12 +50,18 @@ end
 -- Initialization
 --
 
+local tank_marker = mod:AddCustomOption { "tank_marker", "Set markers matching infusion on tank players", default = true }
+local infusion_only_swap = mod:AddCustomOption { "infusion_only_swap", "Only display Infusion Pulse icon when not matching your current side", default = true }
+local infusion_icons_pulse = mod:AddCustomOption { "infusion_icons_pulse", "Use Infusion icons instead of arrows for Pulse", default = false }
 function mod:GetOptions()
 	return {
 		"berserk",
 		{235117, "FLASH", "HUD"}, -- Unstable Soul
 		--241593, -- Aegwynn's Ward
 		{235271, "PROXIMITY", "FLASH", "PULSE"}, -- Infusion
+		tank_marker,
+		infusion_only_swap,
+		infusion_icons_pulse,
 		241635, -- Hammer of Creation
 		241636, -- Hammer of Obliteration
 		235267, -- Mass Instability
@@ -99,6 +106,7 @@ end
 function mod:OnEngage()
 	phase = 1
 	side = 1
+	color = -1
 	shieldActive = false
 
 	massInstabilityCounter = 0
@@ -113,6 +121,17 @@ function mod:OnEngage()
 	self:Bar(237722, 41.0) -- Blowback
 	self:Bar(234891, 43.5) -- Wrath of the Creators
 	self:Berserk(480) -- Confirmed Heroic
+end
+
+function mod:OnBossDisable()
+	if self:GetOption(tank_marker) then
+		for unit in self:IterateGroup() do
+			local icon = GetRaidTargetIndex(unit)
+			if icon and self:Tank(unit) and (icon == 1 or icon == 4) then
+				SetRaidTarget(unit, 0)
+			end
+		end
+	end
 end
 
 --------------------------------------------------------------------------------
@@ -167,7 +186,13 @@ do
 		if self:Me(args.destGUID) then
 			self:TargetMessage(235271, args.destName, "Personal", "Warning", args.spellName, args.spellId)
 			self:OpenProximity(235271, 5, lightList) -- Avoid people with Light debuff
-			self:Flash(235271, direction[side].fel) -- Left
+			if color ~= 1 or not self:GetOption(infusion_only_swap) then
+				self:Flash(235271, self:GetOption(infusion_icons_pulse) and args.spellId or direction[side].fel) -- Left
+				color = 1
+			end
+		end
+		if self:GetOption(tank_marker) and self:Tank(args.destName) then
+			SetRaidTarget(args.destName, 4)
 		end
 	end
 
@@ -177,7 +202,13 @@ do
 		if self:Me(args.destGUID) then
 			self:TargetMessage(235271, args.destName, "Personal", "Warning", args.spellName, args.spellId)
 			self:OpenProximity(235271, 5, felList) -- Avoid people with Fel debuff
-			self:Flash(235271, direction[side].light) -- Right
+			if color ~= 2 or not self:GetOption(infusion_only_swap) then
+				self:Flash(235271, self:GetOption(infusion_icons_pulse) and args.spellId or direction[side].light) -- Right
+				color = 2
+			end
+		end
+		if self:GetOption(tank_marker) and self:Tank(args.destName) then
+			SetRaidTarget(args.destName, 1)
 		end
 	end
 end
