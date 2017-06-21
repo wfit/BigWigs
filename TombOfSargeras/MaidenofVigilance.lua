@@ -16,6 +16,8 @@ mod.respawnTime = 30 -- XXX Unconfirmed
 -- Locals
 --
 
+local Hud = FS.Hud
+
 local phase = 1
 local shieldActive = false
 local massInstabilityCounter = 0
@@ -23,11 +25,21 @@ local hammerofCreationCounter = 0
 local hammerofObliterationCounter = 0
 local infusionCounter = 0
 
+local side = 1
+local direction = {
+	[1] = {
+		fel = 241868, -- Left
+		light = 241870 -- Right
+	},
+	[2] = {
+		fel = 241870, -- Right
+		light = 241868 -- Left
+	}
+}
+
 --------------------------------------------------------------------------------
 -- Localization
 --
-
-local Hud = FS.Hud
 
 local L = mod:GetLocale()
 if L then
@@ -86,6 +98,7 @@ end
 
 function mod:OnEngage()
 	phase = 1
+	side = 1
 	shieldActive = false
 
 	massInstabilityCounter = 0
@@ -154,7 +167,7 @@ do
 		if self:Me(args.destGUID) then
 			self:TargetMessage(235271, args.destName, "Personal", "Warning", args.spellName, args.spellId)
 			self:OpenProximity(235271, 5, lightList) -- Avoid people with Light debuff
-			self:Flash(235271, 241868) -- Left
+			self:Flash(235271, direction[side].fel) -- Left
 		end
 	end
 
@@ -164,7 +177,7 @@ do
 		if self:Me(args.destGUID) then
 			self:TargetMessage(235271, args.destName, "Personal", "Warning", args.spellName, args.spellId)
 			self:OpenProximity(235271, 5, felList) -- Avoid people with Fel debuff
-			self:Flash(235271, 241870) -- Right
+			self:Flash(235271, direction[side].light) -- Right
 		end
 	end
 end
@@ -195,6 +208,7 @@ end
 
 function mod:Blowback(args)
 	phase = 2
+	side = (side == 1) and 2 or 1
 	self:Message(args.spellId, "Important", "Warning")
 end
 
