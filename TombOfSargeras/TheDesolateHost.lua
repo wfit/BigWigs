@@ -34,6 +34,7 @@ local updateProximity = nil
 
 local L = mod:GetLocale()
 if L then
+	L.infobox_title = "The Desolate Host"
 	L.infobox_players = "Players"
 end
 --------------------------------------------------------------------------------
@@ -138,7 +139,7 @@ function mod:OnEngage()
 	tormentedCriesCounter = 1
 	wailingSoulsCounter = 1
 
-	self:OpenInfo("infobox")
+	self:OpenInfo("infobox", L.infobox_title)
 	self:SetInfo("infobox", 1, self:SpellName(55336)) -- Bone Armor (Shorter Text)
 	self:SetInfo("infobox", 2, boneArmorCounter)
 	self:SetInfo("infobox", 6, L.infobox_players)
