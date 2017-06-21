@@ -171,13 +171,13 @@ function mod:ShatteringStarDebuff(args)
 		self:Say(233279)
 		self:Flash(233279)
 	end
-	if self:Option(shatteringStarMarker) then
+	if self:GetOption(shatteringStarMarker) then
 		SetRaidTarget(args.destName, 1)
 	end
 end
 
 function mod:ShatteringStarDebuffRemoved(args)
-	if self:Option(shatteringStarMarker) then
+	if self:GetOption(shatteringStarMarker) then
 		SetRaidTarget(args.destName, 0)
 	end
 end
