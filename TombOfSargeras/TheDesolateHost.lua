@@ -52,7 +52,7 @@ function mod:GetOptions()
 		235927, -- Rupturing Slam
 		{236513, "INFOBOX"}, -- Bonecage Armor
 		236131, -- Wither
-		236459, -- Soulbind
+		{236459, "FLASH"}, -- Soulbind
 		soulBindMarker,
 		236072, -- Wailing Souls
 		236515, -- Shattering Scream
@@ -327,6 +327,9 @@ do
 			if self:GetOption(soulBindMarker) then
 				SetRaidTarget(args.destName, 3)
 			end
+		end
+		if self:Me(args.destGUID) then
+			self:Flash(args.spellId)
 		end
 	end
 
