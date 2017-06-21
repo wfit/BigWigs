@@ -41,7 +41,7 @@ end
 -- Initialization
 --
 
-local soulBindMarker = mod:AddMarkerOption(false, "player", 3, 236459, 3,4)
+local soulBindMarker = mod:AddMarkerOption(true, "player", 3, 236459, 3,4)
 function mod:GetOptions()
 	return {
 		"infobox",
