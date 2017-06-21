@@ -17,6 +17,8 @@ mod.respawnTime = 25
 -- Locals
 --
 
+local Hud = FS.Hud
+
 local timersHeroic = {
 	[234057] = {7, 40, 35.2, 47.3, 40, 35}, -- Unbound Chaos
 	[239207] = {15, 42.6, 59.5, 60, 42.5, 42.4}, -- Touch of Sargeras
@@ -55,7 +57,7 @@ function mod:GetOptions()
 		{236604, "SAY", "FLASH"}, -- Shadowy Blades
 		{236494, "TANK"}, -- Desolate
 		236528, -- Ripple of Darkness
-		233856, -- Cleansing Protocol
+		{233856, "HUD"}, -- Cleansing Protocol
 		233556, -- Corrupted Matrix
 		{239739, "FLASH", "SAY"}, -- Dark Mark
 		235572, -- Rupture Realities
@@ -91,6 +93,8 @@ function mod:OnBossEnable()
 
 	-- Maiden of Valor
 	self:Log("SPELL_CAST_START", "CleansingProtocol", 233856) -- Cleansing Protocol
+	self:Log("SPELL_AURA_APPLIED", "CleansingProtocolApplied", 241008) -- Cleansing Protocol
+	self:Log("SPELL_AURA_REMOVED", "CleansingProtocolRemoved", 241008) -- Cleansing Protocol
 	self:Log("SPELL_AURA_APPLIED", "Malfunction", 233739) -- Malfunction
 
 	-- Containment Pylon
@@ -230,6 +234,43 @@ end
 function mod:CleansingProtocol(args)
 	self:Message(args.spellId, "Urgent", "Alarm", CL.casting:format(args.spellName))
 	self:CastBar(args.spellId, 18)
+end
+
+do
+	function mod:CleansingProtocolApplied(args)
+		if self:Hud(233856) then
+			local maiden = args.destGUID
+			local spellName = args.spellName
+			local shieldMax = false
+
+			local shield = Hud:DrawSpinner(maiden, 80):Register("MaidenCleaningProtocolHUD", true)
+			local cast = Hud:DrawClock(maiden, 80)
+			local text = Hud:DrawText(maiden, "")
+
+			function shield:Progress()
+				local _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, absorb, _, _ = UnitBuff("boss2", spellName)
+				if not absorb then return 0 end
+				if not shieldMax then shieldMax = absorb end
+				text:SetText(FS:FormatNumber(absorb))
+				return (shieldMax - absorb) / shieldMax
+			end
+
+			function cast:Progress()
+				local _, _, _, _, startTime, endTime = UnitCastingInfo("boss2")
+				if not startTime then return 0 end
+				return ((GetTime() * 1000) - startTime) / (endTime - startTime)
+			end
+
+			function shield:OnRemove()
+				cast:Remove()
+				text:Remove()
+			end
+		end
+	end
+
+	function mod:CleansingProtocolRemoved(args)
+		Hud:RemoveObject("MaidenCleaningProtocolHUD")
+	end
 end
 
 function mod:Malfunction(args)

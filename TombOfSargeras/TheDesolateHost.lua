@@ -48,11 +48,11 @@ function mod:GetOptions()
 		236507, -- Quietus
 		{235924, "SAY"}, -- Spear of Anguish
 		235907, -- Collapsing Fissure
-		{238570, "SAY"}, -- Tormented Cries
+		{238570, "SAY", "FLASH"}, -- Tormented Cries
 		235927, -- Rupturing Slam
 		{236513, "INFOBOX"}, -- Bonecage Armor
 		236131, -- Wither
-		236459, -- Soulbind
+		{236459, "FLASH"}, -- Soulbind
 		soulBindMarker,
 		236072, -- Wailing Souls
 		236515, -- Shattering Scream
@@ -282,6 +282,7 @@ function mod:TormentedCriesApplied(args)
 	self:TargetMessage(238570, args.destName, "Urgent", "Alarm")
 	if self:Me(args.destGUID) then
 		self:Say(238570)
+		self:Flash(238570)
 	end
 end
 
@@ -327,6 +328,9 @@ do
 			if self:GetOption(soulBindMarker) then
 				SetRaidTarget(args.destName, 3)
 			end
+		end
+		if self:Me(args.destGUID) then
+			self:Flash(args.spellId)
 		end
 	end
 
