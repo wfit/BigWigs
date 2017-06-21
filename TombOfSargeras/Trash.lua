@@ -24,6 +24,7 @@ mod:RegisterEnableMob(
 	--[[ Harjatan -> Mistress Sassz'ine ]]--
 
 	--[[ Sisters of the Moon -> The Desolate Host ]]--
+	120777 -- Guardian Sentry
 
 	--[[ Pre Maiden of Vigilance ]]--
 
@@ -58,6 +59,7 @@ function mod:GetOptions()
 		--[[ Harjatan -> Mistress Sassz'ine ]]--
 
 		--[[ Sisters of the Moon -> The Desolate Host ]]--
+		{240735, "SAY", "FLASH"}, -- Polymorph Bomb
 
 		--[[ Pre Maiden of Vigilance ]]--
 
@@ -95,6 +97,7 @@ function mod:OnBossEnable()
 
 
 	--[[ Sisters of the Moon -> The Desolate Host ]]--
+	self:Log("SPELL_AURA_APPLIED", "PolymorphBomb", 240735)
 
 
 	--[[ Pre Maiden of Vigilance ]]--
@@ -139,7 +142,19 @@ end
 
 
 --[[ Sisters of the Moon -> The Desolate Host ]]--
+function mod:PolymorphBomb(args)
+	if self:Me(args.destGUID) then
+		self:TargetMessage(args.spellId, args.destName, "Important", "Warning")
+		self:Say(args.spellId)
+		self:Flash(args.spellId)
 
+		local _, _, _, _, _, _, expires = UnitDebuff("player", args.spellName)
+		local remaining = expires - GetTime()
+		self:ScheduleTimer("Say", remaining - 3, args.spellId, 3, true)
+		self:ScheduleTimer("Say", remaining - 2, args.spellId, 2, true)
+		self:ScheduleTimer("Say", remaining - 1, args.spellId, 1, true)
+	end
+end
 
 --[[ Pre Maiden of Vigilance ]]--
 
