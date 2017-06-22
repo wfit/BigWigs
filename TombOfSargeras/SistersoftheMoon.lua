@@ -52,7 +52,7 @@ function mod:GetOptions()
 		236697, -- Deadly Screech
 		236603, -- Rapid Shot
 		{233263, "PROXIMITY"}, -- Embrace of the Eclipse
-		236519, -- Moon Burn
+		{236519, "FLASH"}, -- Moon Burn
 		236712, -- Lunar Beacon
 		{239264, "TANK"}, -- Lunar Fire
 	},{
@@ -275,6 +275,9 @@ do
 		playerList[#playerList+1] = args.destName
 		if #playerList == 1 then
 			self:ScheduleTimer("TargetMessage", 0.1, args.spellId, playerList, "Attention", "Alert")
+		end
+		if self:Me(args.destGUID) then
+			self:Flash(args.spellId)
 		end
 	end
 end
