@@ -65,14 +65,14 @@ function mod:GetOptions()
 		241635, -- Hammer of Creation
 		241636, -- Hammer of Obliteration
 		235267, -- Mass Instability
-		237722, -- Blowback
+		248812, -- Blowback
 		235028, -- Titanic Bulwark
 		234891, -- Wrath of the Creators
 		239153, -- Spontaneous Fragmentation
 	},{
 		["berserk"] = "general",
 		[235271] = -14974, -- Stage One: Divide and Conquer
-		[237722] = -14975, -- Stage Two: Watcher's Wrath
+		[248812] = -14975, -- Stage Two: Watcher's Wrath
 		[239153] = "mythic",
 	}
 end
@@ -92,7 +92,7 @@ function mod:OnBossEnable()
 	self:Log("SPELL_CAST_START", "MassInstability", 235267) -- Mass Instability
 
 	-- Stage Two: Watcher's Wrath
-	self:Log("SPELL_CAST_SUCCESS", "Blowback", 237722) -- Blowback
+	self:Log("SPELL_CAST_SUCCESS", "Blowback", 248812) -- Blowback
 	self:Log("SPELL_AURA_APPLIED", "TitanicBulwarkApplied", 235028) -- Titanic Bulwark
 	self:Log("SPELL_AURA_REMOVED", "TitanicBulwarkRemoved", 235028) -- Titanic Bulwark
 	self:Log("SPELL_CAST_SUCCESS", "WrathoftheCreators", 234891) -- Wrath of the Creators
@@ -119,7 +119,7 @@ function mod:OnEngage()
 	self:Bar(241635, 14.0) -- Hammer of Creation
 	self:Bar(235267, 22.0) -- Mass Instability
 	self:Bar(241636, 32.0) -- Hammer of Obliteration
-	self:Bar(237722, 42.5) -- Blowback
+	self:Bar(248812, 42.5) -- Blowback
 	self:Bar(234891, 43.5) -- Wrath of the Creators
 	self:Berserk(480) -- Confirmed Heroic
 end
@@ -289,7 +289,7 @@ function mod:WrathoftheCreatorsInterrupted(args)
 	self:Bar(241635, 14) -- Hammer of Creation
 	self:Bar(235267, 22) -- Mass Instability
 	self:Bar(241636, 32) -- Hammer of Obliteration
-	self:Bar(237722, 81) -- Blowback
+	self:Bar(248812, 81) -- Blowback
 	self:Bar(234891, 83.5) -- Wrath of the Creators
 end
 
