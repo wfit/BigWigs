@@ -36,7 +36,6 @@ end
 
 function mod:GetOptions()
 	return {
-		"berserk",
 		{231998, "TANK"}, -- Jagged Abrasion
 		231854, -- Unchecked Rage
 		232192, -- Commanding Roar
@@ -47,7 +46,8 @@ function mod:GetOptions()
 		{234128, "SAY", "FLASH"}, -- Driven Assault
 		"custom_on_fixate_plates",
 		240319, -- Hatching
-		{241600, "SAY", "FLASH"} -- Sickly Fixate
+		{241600, "SAY", "FLASH"}, -- Sickly Fixate
+		"berserk",
 	},{
 		[231998] = "general",
 		[231729] = -14555,

@@ -10,7 +10,7 @@ local mod, CL = BigWigs:NewBoss("Maiden of Vigilance", 1147, 1897)
 if not mod then return end
 mod:RegisterEnableMob(118289) -- Maiden of Vigilance
 mod.engageId = 2052
-mod.respawnTime = 30 -- XXX Unconfirmed
+mod.respawnTime = 30
 
 --------------------------------------------------------------------------------
 -- Locals
@@ -53,6 +53,7 @@ end
 local tank_marker = mod:AddCustomOption { "tank_marker", "Set markers matching infusion on tank players", default = true }
 local infusion_only_swap = mod:AddCustomOption { "infusion_only_swap", "Only display Infusion Pulse icon when not matching your current side", default = true }
 local infusion_icons_pulse = mod:AddCustomOption { "infusion_icons_pulse", "Use Infusion icons instead of arrows for Pulse", default = false }
+local infusion_grace_countdown = mod:AddCustomOption { "infusion_grace_countdown", "Play Countdown sound until grace period after infusion is over", default = false }
 function mod:GetOptions()
 	return {
 		"berserk",
@@ -62,17 +63,18 @@ function mod:GetOptions()
 		tank_marker,
 		infusion_only_swap,
 		infusion_icons_pulse,
+		infusion_grace_countdown,
 		241635, -- Hammer of Creation
 		241636, -- Hammer of Obliteration
 		235267, -- Mass Instability
-		237722, -- Blowback
+		248812, -- Blowback
 		235028, -- Titanic Bulwark
 		234891, -- Wrath of the Creators
 		239153, -- Spontaneous Fragmentation
 	},{
 		["berserk"] = "general",
 		[235271] = -14974, -- Stage One: Divide and Conquer
-		[237722] = -14975, -- Stage Two: Watcher's Wrath
+		[248812] = -14975, -- Stage Two: Watcher's Wrath
 		[239153] = "mythic",
 	}
 end
@@ -87,12 +89,12 @@ function mod:OnBossEnable()
 	self:Log("SPELL_CAST_START", "Infusion", 235271) -- Infusion
 	self:Log("SPELL_AURA_APPLIED", "FelInfusion", 235240, 240219) -- Fel Infusion
 	self:Log("SPELL_AURA_APPLIED", "LightInfusion", 235213, 240218) -- Light Infusion
-	self:Log("SPELL_CAST_SUCCESS", "HammerofCreation", 241635) -- Hammer of Creation
-	self:Log("SPELL_CAST_SUCCESS", "HammerofObliteration", 241636) -- Hammer of Obliteration
-	self:Log("SPELL_CAST_SUCCESS", "MassInstability", 235267) -- Mass Instability
+	self:Log("SPELL_CAST_START", "HammerofCreation", 241635) -- Hammer of Creation
+	self:Log("SPELL_CAST_START", "HammerofObliteration", 241636) -- Hammer of Obliteration
+	self:Log("SPELL_CAST_START", "MassInstability", 235267) -- Mass Instability
 
 	-- Stage Two: Watcher's Wrath
-	self:Log("SPELL_CAST_SUCCESS", "Blowback", 237722) -- Blowback
+	self:Log("SPELL_CAST_SUCCESS", "Blowback", 248812) -- Blowback
 	self:Log("SPELL_AURA_APPLIED", "TitanicBulwarkApplied", 235028) -- Titanic Bulwark
 	self:Log("SPELL_AURA_REMOVED", "TitanicBulwarkRemoved", 235028) -- Titanic Bulwark
 	self:Log("SPELL_CAST_SUCCESS", "WrathoftheCreators", 234891) -- Wrath of the Creators
@@ -117,9 +119,9 @@ function mod:OnEngage()
 
 	self:Bar(235271, 2.0) -- Infusion
 	self:Bar(241635, 14.0) -- Hammer of Creation
-	self:Bar(235267, 24.0) -- Mass Instability
+	self:Bar(235267, 22.0) -- Mass Instability
 	self:Bar(241636, 32.0) -- Hammer of Obliteration
-	self:Bar(237722, 41.0) -- Blowback
+	self:Bar(248812, 42.5) -- Blowback
 	self:Bar(234891, 43.5) -- Wrath of the Creators
 	self:Berserk(480) -- Confirmed Heroic
 end
@@ -185,8 +187,8 @@ function mod:AegwynnsWardApplied(args)
 end
 
 function mod:Infusion(args)
-	infusionCounter = infusionCounter + 1
 	self:Message(args.spellId, "Neutral", "Info", CL.casting:format(args.spellName))
+	infusionCounter = infusionCounter + 1
 	if infusionCounter == 2 then
 		self:Bar(args.spellId, 38.0)
 	end
@@ -205,6 +207,9 @@ do
 				self:Flash(235271, self:GetOption(infusion_icons_pulse) and args.spellId or direction[side].fel) -- Left
 				color = 1
 			end
+			if self:GetOption(infusion_grace_countdown) then
+				self:PlayInfusionCountdown()
+			end
 		end
 		if self:GetOption(tank_marker) and self:Tank(args.destName) then
 			SetRaidTarget(args.destName, 4)
@@ -221,34 +226,44 @@ do
 				self:Flash(235271, self:GetOption(infusion_icons_pulse) and args.spellId or direction[side].light) -- Right
 				color = 2
 			end
+			if self:GetOption(infusion_grace_countdown) then
+				self:PlayInfusionCountdown()
+			end
 		end
 		if self:GetOption(tank_marker) and self:Tank(args.destName) then
 			SetRaidTarget(args.destName, 1)
 		end
 	end
+
+	function mod:PlayInfusionCountdown()
+		self:SendMessage("BigWigs_PlayCountdownNumber", nil, 5)
+		for i = 4, 1, -1 do
+			self:ScheduleTimer("SendMessage", 5 - i, "BigWigs_PlayCountdownNumber", nil, i)
+		end
+	end
 end
 
 function mod:HammerofCreation(args)
-	hammerofCreationCounter = hammerofCreationCounter + 1
 	self:Message(args.spellId, "Urgent", "Alert")
+	hammerofCreationCounter = hammerofCreationCounter + 1
 	if hammerofCreationCounter == 2 then
 		self:Bar(args.spellId, 36)
 	end
 end
 
 function mod:HammerofObliteration(args)
-	hammerofObliterationCounter = hammerofObliterationCounter + 1
 	self:Message(args.spellId, "Urgent", "Alert")
+	hammerofObliterationCounter = hammerofObliterationCounter + 1
 	if hammerofObliterationCounter == 2 then
 		self:Bar(args.spellId, 36)
 	end
 end
 
 function mod:MassInstability(args)
-	massInstabilityCounter = massInstabilityCounter + 1
 	self:Message(args.spellId, "Attention", "Alert")
+	massInstabilityCounter = massInstabilityCounter + 1
 	if massInstabilityCounter == 2 then
-		self:Bar(args.spellId, 36.0)
+		self:Bar(args.spellId, 36)
 	end
 end
 
@@ -285,11 +300,11 @@ function mod:WrathoftheCreatorsInterrupted(args)
 	hammerofObliterationCounter = 1
 	infusionCounter = 1
 
-	self:Bar(235271, 2.0) -- Infusion
-	self:Bar(241635, 14.0) -- Hammer of Creation
-	self:Bar(235267, 22.0) -- Mass Instability
-	self:Bar(241636, 32.0) -- Hammer of Obliteration
-	self:Bar(237722, 81) -- Blowback
+	self:Bar(235271, 2) -- Infusion
+	self:Bar(241635, 14) -- Hammer of Creation
+	self:Bar(235267, 22) -- Mass Instability
+	self:Bar(241636, 32) -- Hammer of Obliteration
+	self:Bar(248812, 81) -- Blowback
 	self:Bar(234891, 83.5) -- Wrath of the Creators
 end
 
