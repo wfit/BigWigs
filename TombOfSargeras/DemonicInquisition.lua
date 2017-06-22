@@ -183,7 +183,7 @@ do
 
 			-- Check dispell staus
 			rangeCheck = self:ScheduleRepeatingTimer("CheckAnguishRange", 0.2, args.spellId)
-			self:CheckAnguishRange()
+			self:CheckAnguishRange(args.spellId)
 		end
 		self:OpenProximity(args.spellId, 8, proxList) -- Don't stand near others if they have the debuff
 	end
