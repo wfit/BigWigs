@@ -326,7 +326,3 @@ function mod:TaintedEssence(args)
 		self:StackMessage(args.spellId, args.destName, amount, "Urgent", "Warning")
 	end
 end
-
-function mod:RainoftheDestroyer(args)
-	self:Message(args.spellId, "Important", "Warning")
-end
