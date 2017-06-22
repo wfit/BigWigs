@@ -1,4 +1,6 @@
 
+-- GLOBALS: tContains, tDeleteItem
+
 --------------------------------------------------------------------------------
 -- TODO List:
 
@@ -24,9 +26,10 @@ local massInstabilityCounter = 0
 local hammerofCreationCounter = 0
 local hammerofObliterationCounter = 0
 local infusionCounter = 0
+local mySide = 0
+local lightList, felList = {}, {}
 
-local side = 1
-local color = -1
+local bossSide = 1
 local direction = {
 	[1] = {
 		fel = 241868, -- Left
@@ -44,7 +47,10 @@ local direction = {
 
 local L = mod:GetLocale()
 if L then
-
+	L.infusionChanged = "Infusion CHANGED: %s"
+	L.sameInfusion = "Same Infusion: %s"
+	L.fel = "Fel"
+	L.light = "Light"
 end
 --------------------------------------------------------------------------------
 -- Initialization
@@ -87,8 +93,8 @@ function mod:OnBossEnable()
 
 	-- Stage One: Divide and Conquer
 	self:Log("SPELL_CAST_START", "Infusion", 235271) -- Infusion
-	self:Log("SPELL_AURA_APPLIED", "FelInfusion", 235240, 240219) -- Fel Infusion
-	self:Log("SPELL_AURA_APPLIED", "LightInfusion", 235213, 240218) -- Light Infusion
+	self:Log("SPELL_AURA_APPLIED", "FelInfusion", 235240, 240219) -- Heroic, Normal
+	self:Log("SPELL_AURA_APPLIED", "LightInfusion", 235213, 240218) -- Heroic, Normal
 	self:Log("SPELL_CAST_START", "HammerofCreation", 241635) -- Hammer of Creation
 	self:Log("SPELL_CAST_START", "HammerofObliteration", 241636) -- Hammer of Obliteration
 	self:Log("SPELL_CAST_START", "MassInstability", 235267) -- Mass Instability
@@ -108,9 +114,11 @@ end
 
 function mod:OnEngage()
 	phase = 1
-	side = 1
-	color = -1
 	shieldActive = false
+	mySide = 0
+	bossSide = 1
+	wipe(lightList)
+	wipe(felList)
 
 	massInstabilityCounter = 0
 	hammerofCreationCounter = 0
@@ -187,7 +195,7 @@ function mod:AegwynnsWardApplied(args)
 end
 
 function mod:Infusion(args)
-	self:Message(args.spellId, "Neutral", "Info", CL.casting:format(args.spellName))
+	self:Message(args.spellId, "Neutral", nil, CL.casting:format(args.spellName))
 	infusionCounter = infusionCounter + 1
 	if infusionCounter == 2 then
 		self:Bar(args.spellId, 38.0)
@@ -195,21 +203,28 @@ function mod:Infusion(args)
 end
 
 do
-	local lightList, felList = {}, {}
-
-	function mod:FelInfusion(args)
-		felList[#felList+1] = args.destName
-		tDeleteItem(lightList, args.destName)
-		if self:Me(args.destGUID) then
-			self:TargetMessage(235271, args.destName, "Personal", "Warning", args.spellName, args.spellId)
-			self:OpenProximity(235271, 5, lightList) -- Avoid people with Light debuff
-			if color ~= 1 or not self:GetOption(infusion_only_swap) then
-				self:Flash(235271, self:GetOption(infusion_icons_pulse) and args.spellId or direction[side].fel) -- Left
-				color = 1
-			end
+	local function checkSide(self, newSide, key)
+		local sideString = (newSide == 235240 or newSide == 240219) and L.fel or L.light
+		if mySide ~= newSide then
+			self:Message(235271, "Important", "Warning", L.infusionChanged:format(sideString), newSide)
+			self:Flash(235271, self:GetOption(infusion_icons_pulse) and newSide or direction[bossSide][key])
 			if self:GetOption(infusion_grace_countdown) then
 				self:PlayInfusionCountdown()
 			end
+		else
+			self:Message(235271, "Important", "Info", L.sameInfusion:format(sideString), newSide)
+		end
+		mySide = newSide
+	end
+
+	function mod:FelInfusion(args)
+		if not tContains(felList, args.destName) then
+			felList[#felList+1] = args.destName
+		end
+		tDeleteItem(lightList, args.destName)
+		if self:Me(args.destGUID) then
+			self:OpenProximity(235271, 5, lightList) -- Avoid people with Light debuff
+			checkSide(self, args.spellId, "fel")
 		end
 		if self:GetOption(tank_marker) and self:Tank(args.destName) then
 			SetRaidTarget(args.destName, 4)
@@ -217,18 +232,13 @@ do
 	end
 
 	function mod:LightInfusion(args)
-		lightList[#lightList+1] = args.destName
+		if not tContains(lightList, args.destName) then
+			lightList[#lightList+1] = args.destName
+		end
 		tDeleteItem(felList, args.destName)
 		if self:Me(args.destGUID) then
-			self:TargetMessage(235271, args.destName, "Personal", "Warning", args.spellName, args.spellId)
 			self:OpenProximity(235271, 5, felList) -- Avoid people with Fel debuff
-			if color ~= 2 or not self:GetOption(infusion_only_swap) then
-				self:Flash(235271, self:GetOption(infusion_icons_pulse) and args.spellId or direction[side].light) -- Right
-				color = 2
-			end
-			if self:GetOption(infusion_grace_countdown) then
-				self:PlayInfusionCountdown()
-			end
+			checkSide(self, args.spellId, "light")
 		end
 		if self:GetOption(tank_marker) and self:Tank(args.destName) then
 			SetRaidTarget(args.destName, 1)
@@ -274,7 +284,7 @@ end
 
 function mod:TitanicBulwarkApplied(args)
 	shieldActive = true
-	side = (side == 1) and 2 or 1
+	bossSide = (bossSide == 1) and 2 or 1
 end
 
 function mod:TitanicBulwarkRemoved(args)
