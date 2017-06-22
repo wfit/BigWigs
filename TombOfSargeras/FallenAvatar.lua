@@ -110,7 +110,6 @@ function mod:OnBossEnable()
 	self:Log("SPELL_CAST_START", "TaintedMatrix", 240623) -- Tainted Matrix
 	self:Log("SPELL_AURA_APPLIED", "TaintedEssence", 240728) -- Desolate
 	self:Log("SPELL_AURA_APPLIED_DOSE", "TaintedEssence", 240728) -- Desolate
-	self:Log("SPELL_CAST_SUCCESS", "RainoftheDestroyer", 234418) -- Rain of the Destroyer
 end
 
 function mod:OnEngage()
@@ -243,9 +242,9 @@ do
 			local spellName = args.spellName
 			local shieldMax = false
 
-			local shield = Hud:DrawSpinner(maiden, 80):Register("MaidenCleaningProtocolHUD", true)
-			local cast = Hud:DrawClock(maiden, 80)
-			local text = Hud:DrawText(maiden, "")
+			local cast = Hud:DrawSpinner(maiden, 80):Register("MaidenCleaningProtocolHUD", true)
+			local shield = Hud:DrawClock(maiden, 80):Register("MaidenCleaningProtocolHUD")
+			local text = Hud:DrawText(maiden, ""):Register("MaidenCleaningProtocolHUD")
 
 			function shield:Progress()
 				local _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, absorb, _, _ = UnitBuff("boss2", spellName)
@@ -259,11 +258,6 @@ do
 				local _, _, _, _, startTime, endTime = UnitCastingInfo("boss2")
 				if not startTime then return 0 end
 				return ((GetTime() * 1000) - startTime) / (endTime - startTime)
-			end
-
-			function shield:OnRemove()
-				cast:Remove()
-				text:Remove()
 			end
 		end
 	end

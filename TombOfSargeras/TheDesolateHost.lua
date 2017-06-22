@@ -56,7 +56,7 @@ function mod:GetOptions()
 		{236459, "FLASH"}, -- Soulbind
 		soulBindMarker,
 		236072, -- Wailing Souls
-		236515, -- Shattering Scream
+		{236515, "SAY", "FLASH"}, -- Shattering Scream
 		236361, -- Spirit Chains
 		236542, -- Sundering Doom
 		236544, -- Doomed Sundering
@@ -93,7 +93,8 @@ function mod:OnBossEnable()
 	self:Log("SPELL_AURA_REMOVED", "SoulbindRemoved", 236459) -- Soulbind
 	self:Log("SPELL_CAST_SUCCESS", "WailingSouls", 236072) -- Wailing Souls
 	-- Adds
-	self:Log("SPELL_AURA_APPLIED", "ShatteringScream", 236515) -- Shattering Scream
+	self:Log("SPELL_AURA_APPLIED", "ShatteringScreamApplied", 235969) -- Shattering Scream (Initial debuff)
+	self:Log("SPELL_AURA_APPLIED", "ShatteringScream", 236515) -- Shattering Scream (Stacks debuff)
 	self:Log("SPELL_AURA_APPLIED", "SpiritChains", 236361) -- Spirit Chains
 
 	-- Tormented Souls
@@ -354,8 +355,18 @@ function mod:WailingSouls(args)
 	self:CastBar(args.spellId, 60)
 end
 
+function mod:ShatteringScreamApplied(args)
+	if boneArmorCounter > 0 and self:Me(args.destGUID) then
+		self:TargetMessage(236515, args.destName, "Attention", "Warning")
+		self:Say(236515)
+		self:Flash(236515)
+	end
+end
+
 function mod:ShatteringScream(args)
-	self:TargetMessage(args.spellId, args.destName, "Attention", "Warning")
+	if boneArmorCounter < 1 then
+		self:StackMessage(args.spellId, args.destName, args.amount or 1, "Important", "Warning")
+	end
 end
 
 function mod:SpiritChains(args)
