@@ -53,6 +53,7 @@ end
 local tank_marker = mod:AddCustomOption { "tank_marker", "Set markers matching infusion on tank players", default = true }
 local infusion_only_swap = mod:AddCustomOption { "infusion_only_swap", "Only display Infusion Pulse icon when not matching your current side", default = true }
 local infusion_icons_pulse = mod:AddCustomOption { "infusion_icons_pulse", "Use Infusion icons instead of arrows for Pulse", default = false }
+local infusion_grace_countdown = mod:AddCustomOption { "infusion_grace_countdown", "Play Countdown sound until grace period after infusion is over", default = false }
 function mod:GetOptions()
 	return {
 		"berserk",
@@ -62,6 +63,7 @@ function mod:GetOptions()
 		tank_marker,
 		infusion_only_swap,
 		infusion_icons_pulse,
+		infusion_grace_countdown,
 		241635, -- Hammer of Creation
 		241636, -- Hammer of Obliteration
 		235267, -- Mass Instability
@@ -205,6 +207,9 @@ do
 				self:Flash(235271, self:GetOption(infusion_icons_pulse) and args.spellId or direction[side].fel) -- Left
 				color = 1
 			end
+			if self:GetOption(infusion_grace_countdown) then
+				self:PlayInfusionCountdown()
+			end
 		end
 		if self:GetOption(tank_marker) and self:Tank(args.destName) then
 			SetRaidTarget(args.destName, 4)
@@ -221,9 +226,19 @@ do
 				self:Flash(235271, self:GetOption(infusion_icons_pulse) and args.spellId or direction[side].light) -- Right
 				color = 2
 			end
+			if self:GetOption(infusion_grace_countdown) then
+				self:PlayInfusionCountdown()
+			end
 		end
 		if self:GetOption(tank_marker) and self:Tank(args.destName) then
 			SetRaidTarget(args.destName, 1)
+		end
+	end
+
+	function mod:PlayInfusionCountdown()
+		self:SendMessage("BigWigs_PlayCountdownNumber", nil, 5)
+		for i = 4, 1, -1 do
+			self:ScheduleTimer("SendMessage", 5 - i, "BigWigs_PlayCountdownNumber", nil, i)
 		end
 	end
 end
