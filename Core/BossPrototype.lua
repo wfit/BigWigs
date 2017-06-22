@@ -1355,7 +1355,7 @@ end
 
 function boss:OpenInfo(key, title)
 	if checkFlag(self, key, C.INFOBOX) then
-		self:SendMessage("BigWigs_ShowInfoBox", self, title or spells[key])
+		self:SendMessage("BigWigs_ShowInfoBox", self, title or (type(key) == "number" and spells[key]))
 	end
 end
 
