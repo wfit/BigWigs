@@ -43,7 +43,7 @@ function mod:GetOptions()
 		{233431, "SAY"}, -- Calcified Quills
 		233441, -- Bone Saw
 		239401, -- Pangs of Guilt
-		{233983, "FLASH", "SAY", "PROXIMITY"}, -- Echoing Anguish
+		{233983, "FLASH", "SAY", "PROXIMITY", "SMARTCOLOR"}, -- Echoing Anguish
 		233895, -- Suffocating Dark
 		234015, -- Tormenting Burst
 		235230, -- Fel Squall
