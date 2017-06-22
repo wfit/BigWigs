@@ -151,13 +151,13 @@ function mod:UnstableSoul(args)
 			local _, _, _, _, _, _, expires = UnitDebuff("player", args.spellName)
 			local remaining = expires - GetTime()
 
-			local timer = Hud:DrawTimer("player", 50, remaining - 1.75):SetColor(1, 0.5, 0):Register("UnstableSoulHUD", true)
+			local timer = Hud:DrawSpinner("player", 50, remaining - 1.75):SetColor(1, 0.5, 0):Register("UnstableSoulHUD")
 			local label = Hud:DrawText("player", ""):SetFont(26, "Fira Mono Medium"):Register("UnstableSoulHUD")
 			local done = false
 
 			function timer:OnUpdate()
 				if not done then
-					local left = self:TimeLeft()
+					local left = timer:TimeLeft()
 					label:SetText(("%2.1f"):format(left))
 				end
 			end
