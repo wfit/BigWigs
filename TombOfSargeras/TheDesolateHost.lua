@@ -51,7 +51,7 @@ function mod:GetOptions()
 		"infobox",
 		{239006, "PROXIMITY"}, -- Dissonance
 		236507, -- Quietus
-		{235924, "SAY"}, -- Spear of Anguish
+		{235924, "SAY", "FLASH"}, -- Spear of Anguish
 		235907, -- Collapsing Fissure
 		{238570, "SAY", "ICON", "FLASH"}, -- Tormented Cries
 		235927, -- Rupturing Slam
@@ -236,6 +236,7 @@ function mod:SpearofAnguish(args)
 	self:TargetMessage(args.spellId, args.destName, "Urgent", "Alarm", nil, nil, true)
 	if self:Me(args.destGUID) then
 		self:Say(args.spellId)
+		self:Flash(args.spellId)
 	end
 	local t = 21
 	if self:BarTimeLeft(238570) < 20.5 and self:BarTimeLeft(238570) > 0 then -- Tormented Cries
