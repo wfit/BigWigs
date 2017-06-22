@@ -50,7 +50,7 @@ local L = mod:GetLocale()
 -- Initialization
 --
 
-local darkMarkIcons = mod:AddMarkerOption(false, "player", 6, 239739, 6, 4, 3)
+local darkMarkIcons = mod:AddMarkerOption(true, "player", 6, 239739, 6, 4, 3)
 function mod:GetOptions()
 	return {
 		"stages",
