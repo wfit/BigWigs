@@ -46,7 +46,7 @@ function mod:GetOptions()
 		{236547, "TANK"}, -- Moon Glaive
 		{236550, "TANK"}, -- Discorporate
 		236480,	-- Glaive Storm
-		{236305, "SAY", "ICON"}, -- Incorporeal Shot
+		{236305, "SAY", "ICON", "FLASH"}, -- Incorporeal Shot
 		{236442, "SAY"}, -- Twilight Volley
 		236694, -- Call Moontalon
 		236697, -- Deadly Screech
@@ -190,6 +190,7 @@ function mod:IncorporealShotApplied(args)
 	self:TargetBar(args.spellId, 6, args.destName)
 	if self:Me(args.destGUID) then
 		self:Say(args.spellId)
+		self:Flash(args.spellId)
 	end
 	self:PrimaryIcon(args.spellId, args.destName)
 	self:CDBar(args.spellId, 54.7)
