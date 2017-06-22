@@ -124,10 +124,10 @@ end
 --
 -- General
 function mod:RAID_BOSS_WHISPER(_, msg)
-	if msg:find("238430") then -- Bursting Dreadflame
-		self:Message(238430, "Personal", "Alarm", CL.you:format(self:SpellName(238430)))
-		self:Flash(238430)
-		self:Say(238430)
+	if msg:find("238429") then -- Bursting Dreadflame
+		self:Message(238429, "Personal", "Alarm", CL.you:format(self:SpellName(238429)))
+		self:Flash(238429)
+		self:Say(238429)
 	end
 end
 
