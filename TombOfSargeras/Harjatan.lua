@@ -36,7 +36,6 @@ end
 
 function mod:GetOptions()
 	return {
-		"berserk",
 		{231998, "TANK"}, -- Jagged Abrasion
 		231854, -- Unchecked Rage
 		232192, -- Commanding Roar
