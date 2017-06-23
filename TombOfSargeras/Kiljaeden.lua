@@ -49,7 +49,7 @@ function mod:GetOptions()
 		{meteors_impact, "COUNTDOWN"},
 		{236710, "SAY", "FLASH"}, -- Shadow Reflection: Erupting
 		{238430, "SAY", "FLASH"}, -- Bursting Dreadflame
-		{238505, "SAY"}, -- Focused Dreadflame
+		{238505, "SAY", "FLASH"}, -- Focused Dreadflame
 		{236378, "SAY", "FLASH"}, -- Shadow Reflection: Wailing
 		236555, -- Deceiver's Veil
 		zoom_minimap,
@@ -130,6 +130,10 @@ function mod:CHAT_MSG_RAID_BOSS_EMOTE(_, msg, sender, _, _, target)
 	if msg:find("238502") then -- Focused Dreadflame Target
 		self:TargetMessage(238505, target, "Attention", "Alarm")
 		self:TargetBar(238505, 5, target)
+		if self:Me(target) then
+			self:Say(238505)
+			self:Flash(238505)
+		end
 	elseif msg:find("235059") then -- Rupturing Singularity
 		singularityCount = singularityCount + 1
 		self:Message(235059, "Urgent", "Warning")
