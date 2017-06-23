@@ -40,7 +40,7 @@ function mod:GetOptions()
 		"altpower",
 		233104, -- Torment
 		233426, -- Scythe Sweep
-		{233431, "SAY"}, -- Calcified Quills
+		{233431, "SAY", "FLASH"}, -- Calcified Quills
 		233441, -- Bone Saw
 		239401, -- Pangs of Guilt
 		{233983, "FLASH", "SAY", "PROXIMITY", "SMARTCOLOR"}, -- Echoing Anguish
@@ -144,6 +144,7 @@ do
 		self:TargetMessage(233431, name, "Urgent", "Alert", nil, nil, true)
 		if self:Me(guid) then
 			self:Say(233431)
+			self:Flash(233431)
 		end
 	end
 	function mod:CalcifiedQuills(args)
