@@ -51,9 +51,9 @@ function mod:GetOptions()
 		"infobox",
 		{239006, "PROXIMITY"}, -- Dissonance
 		236507, -- Quietus
-		{235924, "SAY"}, -- Spear of Anguish
+		{235924, "SAY", "FLASH"}, -- Spear of Anguish
 		235907, -- Collapsing Fissure
-		{238570, "SAY", "FLASH"}, -- Tormented Cries
+		{238570, "SAY", "ICON", "FLASH"}, -- Tormented Cries
 		235927, -- Rupturing Slam
 		{236513, "INFOBOX"}, -- Bonecage Armor
 		236131, -- Wither
@@ -86,6 +86,7 @@ function mod:OnBossEnable()
 	self:Log("SPELL_AURA_APPLIED", "SpearofAnguish", 235924) -- Spear of Anguish
 	self:Log("SPELL_CAST_START", "TormentedCries", 238570) -- Tormented Cries
 	self:Log("SPELL_AURA_APPLIED", "TormentedCriesApplied", 238018) -- Tormented Cries (Debuff)
+	self:Log("SPELL_AURA_REMOVED", "TormentedCriesRemoved", 238018) -- Tormented Cries (Debuff)
 	-- Adds
 	self:Log("SPELL_CAST_START", "RupturingSlam", 235927) -- Rupturing Slam
 	self:Log("SPELL_AURA_APPLIED", "BonecageArmor", 236513) -- Bonecage Armor
@@ -127,7 +128,10 @@ function mod:OnEngage()
 			end
 		end
 	end
-	updateProximity(self)
+
+	if not self:Easy() then -- No Dissonance in LFR/Normal
+		updateProximity(self)
+	end
 
 	phase = 1
 	boneArmorCounter = 0
@@ -178,8 +182,8 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 		self:Bar(235924, 6) -- Spear of Anguish
 		self:Bar(236459, 10.2) -- Soulbind
 
-		self:CDBar(236542, 17.1) -- Sundering Doom
-		self:CDBar(236544, 28.5) -- Doomed Sundering
+		self:CDBar(236542, 17) -- Sundering Doom
+		self:CDBar(236544, 28) -- Doomed Sundering
 	end
 end
 
@@ -204,7 +208,9 @@ do
 			myRealm = 1
 			self:Message(239006, "Neutral", "Info", self:SpellName(-14857), false) -- Dissonance // Spirit Realm
 		end
-		updateProximity(self)
+		if not self:Easy() then -- No Dissonance in LFR/Normal
+			updateProximity(self)
+		end
 		updateInfoBox()
 	end
 
@@ -215,7 +221,9 @@ do
 			myRealm = 0 -- Corporeal Realm
 			self:Message(239006, "Neutral", "Info", self:SpellName(-14856), false) -- Dissonance // Corporeal Realm
 		end
-		updateProximity(self)
+		if not self:Easy() then -- No Dissonance in LFR/Normal
+			updateProximity(self)
+		end
 		updateInfoBox()
 	end
 end
@@ -228,6 +236,7 @@ function mod:SpearofAnguish(args)
 	self:TargetMessage(args.spellId, args.destName, "Urgent", "Alarm", nil, nil, true)
 	if self:Me(args.destGUID) then
 		self:Say(args.spellId)
+		self:Flash(args.spellId)
 	end
 	local t = 21
 	if self:BarTimeLeft(238570) < 20.5 and self:BarTimeLeft(238570) > 0 then -- Tormented Cries
@@ -251,6 +260,11 @@ function mod:TormentedCriesApplied(args)
 		self:Say(238570)
 		self:Flash(238570)
 	end
+	self:PrimaryIcon(238570, args.destName)
+end
+
+function mod:TormentedCriesRemoved(args)
+	self:PrimaryIcon(238570)
 end
 
 do
@@ -349,13 +363,13 @@ end
 
 function mod:SunderingDoom(args)
 	self:Message(args.spellId, "Important", "Warning")
-	self:Bar(args.spellId, 25)
+	self:Bar(args.spellId, self:Easy() and 26.5 or 25)
 	self:CastBar(args.spellId, 4)
 end
 
 function mod:DoomedSundering(args)
 	self:Message(args.spellId, "Important", "Warning")
-	self:Bar(args.spellId, 25)
+	self:Bar(args.spellId, self:Easy() and 26.5 or 25)
 	self:CastBar(args.spellId, 4)
 end
 

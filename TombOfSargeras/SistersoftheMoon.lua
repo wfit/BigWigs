@@ -46,13 +46,13 @@ function mod:GetOptions()
 		{236547, "TANK"}, -- Moon Glaive
 		{236550, "TANK"}, -- Discorporate
 		236480,	-- Glaive Storm
-		{236305, "SAY", "ICON"}, -- Incorporeal Shot
+		{236305, "SAY", "ICON", "FLASH"}, -- Incorporeal Shot
 		{236442, "SAY"}, -- Twilight Volley
 		236694, -- Call Moontalon
 		236697, -- Deadly Screech
 		236603, -- Rapid Shot
 		{233263, "PROXIMITY"}, -- Embrace of the Eclipse
-		236519, -- Moon Burn
+		{236519, "FLASH"}, -- Moon Burn
 		236712, -- Lunar Beacon
 		{239264, "TANK"}, -- Lunar Fire
 	},{
@@ -190,6 +190,7 @@ function mod:IncorporealShotApplied(args)
 	self:TargetBar(args.spellId, 6, args.destName)
 	if self:Me(args.destGUID) then
 		self:Say(args.spellId)
+		self:Flash(args.spellId)
 	end
 	self:PrimaryIcon(args.spellId, args.destName)
 	self:CDBar(args.spellId, 54.7)
@@ -274,6 +275,9 @@ do
 		playerList[#playerList+1] = args.destName
 		if #playerList == 1 then
 			self:ScheduleTimer("TargetMessage", 0.1, args.spellId, playerList, "Attention", "Alert")
+		end
+		if self:Me(args.destGUID) then
+			self:Flash(args.spellId)
 		end
 	end
 end
