@@ -38,12 +38,15 @@ local L = mod:GetLocale()
 --
 
 local zoom_minimap = mod:AddCustomOption { "zoom_minimap", "Zoom minimap during Deceiver's Veil", default = true }
+local meteors_impact = mod:AddCustomOption { "meteors_landing", "Armageddon Meteors Impact", default = true,
+	configurable = true, icon = 87701, desc = "Countdown until meteors impact during Armageddon" }
 function mod:GetOptions()
 	return {
 		"stages",
 		{239932, "TANK"}, -- Felclaws
 		235059, -- Rupturing Singularity
 		240910, -- Armageddon
+		{meteors_impact, "COUNTDOWN"},
 		{236710, "SAY", "FLASH"}, -- Shadow Reflection: Erupting
 		{238430, "SAY", "FLASH"}, -- Bursting Dreadflame
 		{238505, "SAY"}, -- Focused Dreadflame
@@ -170,7 +173,7 @@ function mod:Armageddon(args)
 	else
 		self:Bar(args.spellId, phase == 1 and 54)
 	end
-	self:Bar(args.spellId, 9, self:SpellName(182580), args.spellId) -- Meteor Impact
+	self:Bar(meteors_impact, 9, self:SpellName(182580), args.spellId) -- Meteor Impact
 end
 
 do
