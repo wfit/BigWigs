@@ -286,8 +286,8 @@ function mod:TitanicBulwarkApplied(args)
 	shieldActive = true
 	bossSide = (bossSide == 1) and 2 or 1
 	if self:Hud(args.spellId) then
-		local cast = Hud:DrawSpinner(args.destGUID, 80, 50):Register(args.destKey, true)
-		local shield = Hud:DrawClock(args.destGUID, 80):Register(args.destKey)
+		local cast = Hud:DrawClock(args.destGUID, 80, 50):Register(args.destKey, true)
+		local shield = Hud:DrawSpinner(args.destGUID, 80):Register(args.destKey)
 		local text = Hud:DrawText(args.destGUID, ""):Register(args.destKey)
 
 		local unit = args.destUnit

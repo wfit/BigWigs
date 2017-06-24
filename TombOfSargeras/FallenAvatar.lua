@@ -242,8 +242,8 @@ do
 			local spellName = args.spellName
 			local shieldMax = false
 
-			local cast = Hud:DrawSpinner(maiden, 80):Register("MaidenCleaningProtocolHUD", true)
-			local shield = Hud:DrawClock(maiden, 80):Register("MaidenCleaningProtocolHUD")
+			local cast = Hud:DrawClock(maiden, 80):Register("MaidenCleaningProtocolHUD", true)
+			local shield = Hud:DrawSpinner(maiden, 80):Register("MaidenCleaningProtocolHUD")
 			local text = Hud:DrawText(maiden, ""):Register("MaidenCleaningProtocolHUD")
 
 			function shield:Progress()
