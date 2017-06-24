@@ -74,7 +74,7 @@ function mod:GetOptions()
 		241636, -- Hammer of Obliteration
 		235267, -- Mass Instability
 		248812, -- Blowback
-		235028, -- Titanic Bulwark
+		{235028, "HUD"}, -- Titanic Bulwark
 		234891, -- Wrath of the Creators
 		239153, -- Spontaneous Fragmentation
 	},{
@@ -159,7 +159,7 @@ function mod:UnstableSoul(args)
 			local _, _, _, _, _, _, expires = UnitDebuff("player", args.spellName)
 			local remaining = expires - GetTime()
 
-			local timer = Hud:DrawSpinner("player", 50, remaining - 1.75):SetColor(1, 0.5, 0):Register("UnstableSoulHUD")
+			local timer = Hud:DrawTimer("player", 50, remaining - 1.75):SetColor(1, 0.5, 0):Register("UnstableSoulHUD")
 			local label = Hud:DrawText("player", ""):SetFont(26, "Fira Mono Medium"):Register("UnstableSoulHUD")
 			local done = false
 
@@ -173,7 +173,7 @@ function mod:UnstableSoul(args)
 			function timer:OnDone()
 				if not done then
 					done = true
-					mod:PlaySound(spellId, "Info")
+					mod:PlaySound(false, "Info")
 					timer:SetColor(0, 1, 0)
 					label:SetText("JUMP!")
 				end
@@ -285,11 +285,32 @@ end
 function mod:TitanicBulwarkApplied(args)
 	shieldActive = true
 	bossSide = (bossSide == 1) and 2 or 1
+	if self:Hud(args.spellId) then
+		local cast = Hud:DrawClock(args.destGUID, 80, 50):Register(args.destKey, true)
+		local shield = Hud:DrawSpinner(args.destGUID, 80):Register(args.destKey)
+		local text = Hud:DrawText(args.destGUID, ""):Register(args.destKey)
+
+		local unit = args.destUnit
+		local spellName = args.spellName
+		local shieldMax = false
+		function shield:Progress()
+			local _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, absorb, _, _ = UnitBuff(unit, spellName)
+			if not absorb then return 0 end
+			if not shieldMax then shieldMax = absorb end
+			text:SetText(FS:FormatNumber(absorb))
+			return (shieldMax - absorb) / shieldMax
+		end
+
+		function cast:OnRemove()
+			shield:SetColor(1, 0, 0)
+		end
+	end
 end
 
 function mod:TitanicBulwarkRemoved(args)
 	shieldActive = false
 	self:Message(args.spellId, "Positive", "Info", CL.removed:format(args.spellName))
+	Hud:RemoveObject(args.destKey)
 end
 
 function mod:WrathoftheCreators(args)
