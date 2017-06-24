@@ -17,6 +17,8 @@ mod.respawnTime = 30 -- XXX Unconfirmed
 -- Locals
 --
 
+local Hud = FS.Hud
+
 local phase = 1
 local intermissionPhase = nil
 local singularityCount = 1
@@ -56,7 +58,7 @@ function mod:GetOptions()
 		{239932, "TANK"}, -- Felclaws
 		235059, -- Rupturing Singularity
 		240910, -- Armageddon
-		{meteors_impact, "COUNTDOWN"},
+		{meteors_impact, "COUNTDOWN", "HUD"},
 		{236710, "SAY", "FLASH"}, -- Shadow Reflection: Erupting
 		{238430, "SAY", "FLASH"}, -- Bursting Dreadflame
 		{238505, "SAY", "ICON", "FLASH"}, -- Focused Dreadflame
@@ -64,7 +66,7 @@ function mod:GetOptions()
 		236555, -- Deceiver's Veil
 		zoom_minimap,
 		{241721, "SAY"}, -- Illidan's Sightless Gaze
-		238999, -- Darkness of a Thousand Souls
+		{238999, "HUD"}, -- Darkness of a Thousand Souls
 		-15543, -- Demonic Obelisk
 		243982, -- Tear Rift
 		244856, -- Flaming Orb
@@ -196,6 +198,15 @@ function mod:Armageddon(args)
 		self:Bar(args.spellId, phase == 1 and 54)
 	end
 	self:Bar(meteors_impact, 9, self:SpellName(182580), args.spellId) -- Meteor Impact
+	if self:Hud(meteors_impact) then
+		local debuff = UnitDebuff("player", self:SpellName(234310))
+		local spinner = Hud:DrawSpinner("player", 50, 9)
+		if debuff then
+			spinner:SetColor(1, 0.5, 0)
+		else
+			spinner:SetColor(0.5, 1, 0.5)
+		end
+	end
 end
 
 do
@@ -358,6 +369,21 @@ function mod:DarknessofaThousandSouls(args)
 	self:Bar(args.spellId, 90, L.darkness)
 	self:CastBar(args.spellId, 9, L.darkness)
 	self:StartObeliskTimer(obeliskCount == 1 and 24 or 28)
+	if self:Hud(args.spellId) then
+		local offset = 1.5
+		local timer = Hud:DrawTimer("player", 50, 9 - offset):SetColor(1, 0.5, 0)
+		local label = Hud:DrawText("player", "Wait")
+
+		function timer:OnDone()
+			mod:PlaySound(false, "Info")
+			timer:SetColor(0, 1, 0)
+			label:SetText("GO!")
+			C_Timer.After(offset, function()
+				timer:Remove()
+				label:Remove()
+			end)
+		end
+	end
 end
 
 function mod:StartObeliskTimer(t)

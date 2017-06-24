@@ -17,6 +17,8 @@ mod.respawnTime = 15
 -- Locals
 --
 
+local Hud = FS.Hud
+
 local stageOne = mod:SpellName(-15498)
 local stageTwo = mod:SpellName(-15510)
 local stageThree = mod:SpellName(-15519)
@@ -53,7 +55,7 @@ function mod:GetOptions()
 		236694, -- Call Moontalon
 		236697, -- Deadly Screech
 		236603, -- Rapid Shot
-		{233263, "PROXIMITY"}, -- Embrace of the Eclipse
+		{233263, "PROXIMITY", "HUD"}, -- Embrace of the Eclipse
 		{236519, "FLASH"}, -- Moon Burn
 		236712, -- Lunar Beacon
 		{239264, "TANK"}, -- Lunar Fire
@@ -145,7 +147,7 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 			self:Bar(236694, 7.3) -- Call Moontalon
 			self:Bar(236442, 11) -- Twilight Volley
 			self:Bar(236603, 15.8) -- Rapid Shot
-			
+
 			if self:Easy() and nextUltimateTimer > 0 then
 				self:Bar(233263, nextUltimateTimer) -- Embrace of the Eclipse
 			elseif nextUltimateTimer > 0 then
@@ -163,7 +165,7 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 			self:Bar(239264, 11) -- Lunar Fire
 			self:Bar(236442, 15.8) -- Twilight Volley
 			self:Bar(236712, 18.2) -- Lunar Beacon
-			
+
 			if self:Easy() and nextUltimateTimer > 0 then
 				self:Bar(236480, nextUltimateTimer) -- Glaive Storm
 			elseif nextUltimateTimer > 0 then
@@ -277,12 +279,29 @@ function mod:EmbraceoftheEclipseApplied(args)
 	if self:Me(args.destGUID) then
 		self:OpenProximity(args.spellId, 8)
 	end
+	if self:Hud(args.spellId) then
+		local cast = Hud:DrawClock(args.destGUID, 80, 12):Register(args.destKey, true)
+		local shield = Hud:DrawSpinner(args.destGUID, 80):Register(args.destKey)
+		local text = Hud:DrawText(args.destGUID, ""):Register(args.destKey)
+
+		local unit = args.destUnit
+		local spellName = args.spellName
+		local shieldMax = false
+		function shield:Progress()
+			local _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, absorb, _, _ = UnitBuff(unit, spellName)
+			if not absorb then return 0 end
+			if not shieldMax then shieldMax = absorb end
+			text:SetText(FS:FormatNumber(absorb))
+			return (shieldMax - absorb) / shieldMax
+		end
+	end
 end
 
 function mod:EmbraceoftheEclipseRemoved(args)
 	if self:Me(args.destGUID) then
 		self:CloseProximity(args.spellId)
 	end
+	Hud:RemoveObject(args.destKey)
 end
 
 function mod:MoonBurn(args)
