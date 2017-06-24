@@ -17,6 +17,8 @@ mod.respawnTime = 30 -- XXX Unconfirmed
 -- Locals
 --
 
+local Hud = FS.Hud
+
 local phase = 1
 local intermissionPhase = nil
 local singularityCount = 1
@@ -56,7 +58,7 @@ function mod:GetOptions()
 		{239932, "TANK"}, -- Felclaws
 		235059, -- Rupturing Singularity
 		240910, -- Armageddon
-		{meteors_impact, "COUNTDOWN"},
+		{meteors_impact, "COUNTDOWN", "HUD"},
 		{236710, "SAY", "FLASH"}, -- Shadow Reflection: Erupting
 		{238430, "SAY", "FLASH"}, -- Bursting Dreadflame
 		{238505, "SAY", "ICON", "FLASH"}, -- Focused Dreadflame
@@ -196,6 +198,15 @@ function mod:Armageddon(args)
 		self:Bar(args.spellId, phase == 1 and 54)
 	end
 	self:Bar(meteors_impact, 9, self:SpellName(182580), args.spellId) -- Meteor Impact
+	if self:Hud(meteors_impact) then
+		local debuff = UnitDebuff("player", self:SpellName(234310))
+		local spinner = Hud:DrawSpinner("player", 50, 9)
+		if debuff then
+			spinner:SetColor(1, 0.5, 0)
+		else
+			spinner:SetColor(0.5, 1, 0.5)
+		end
+	end
 end
 
 do
