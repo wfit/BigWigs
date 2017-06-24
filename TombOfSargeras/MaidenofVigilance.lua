@@ -159,7 +159,7 @@ function mod:UnstableSoul(args)
 			local _, _, _, _, _, _, expires = UnitDebuff("player", args.spellName)
 			local remaining = expires - GetTime()
 
-			local timer = Hud:DrawSpinner("player", 50, remaining - 1.75):SetColor(1, 0.5, 0):Register("UnstableSoulHUD")
+			local timer = Hud:DrawTimer("player", 50, remaining - 1.75):SetColor(1, 0.5, 0):Register("UnstableSoulHUD")
 			local label = Hud:DrawText("player", ""):SetFont(26, "Fira Mono Medium"):Register("UnstableSoulHUD")
 			local done = false
 
@@ -173,7 +173,7 @@ function mod:UnstableSoul(args)
 			function timer:OnDone()
 				if not done then
 					done = true
-					mod:PlaySound(spellId, "Info")
+					mod:PlaySound(false, "Info")
 					timer:SetColor(0, 1, 0)
 					label:SetText("JUMP!")
 				end
