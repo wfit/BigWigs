@@ -29,6 +29,7 @@ local burstingDreadflameCount = 1
 local felclawsCount = 1
 local flamingOrbCount = 1
 local obeliskCount = 1
+local darknessCount = 1
 local focusWarned = {}
 local phaseTwoTimersHeroic = {
 	-- Rupturing Singularity
@@ -135,6 +136,7 @@ function mod:OnEngage()
 	felclawsCount = 1
 	flamingOrbCount = 1
 	obeliskCount = 1
+	darknessCount = 1
 	wipe(focusWarned)
 
 	self:Message("stages", "Positive", "Long", self:SpellName(-14921), false) -- Stage One: The Betrayer
@@ -391,7 +393,7 @@ function mod:DarknessofaThousandSouls(args)
 	self:Bar(args.spellId, 90, L.darkness)
 	self:CastBar(args.spellId, 9, L.darkness)
 	self:StartObeliskTimer(obeliskCount == 1 and 25 or 28)
-	if self:Hud(args.spellId) then
+	if darknessCount > 1 and self:Hud(args.spellId) then
 		local offset = 1.5
 		local timer = Hud:DrawTimer("player", 50, 9 - offset):SetColor(1, 0.5, 0)
 		local label = Hud:DrawText("player", "Wait")
@@ -406,6 +408,7 @@ function mod:DarknessofaThousandSouls(args)
 			end)
 		end
 	end
+	darknessCount = darknessCount + 1
 end
 
 function mod:StartObeliskTimer(t)
