@@ -65,7 +65,7 @@ function mod:GetOptions()
 		"berserk",
 		{235117, "FLASH", "HUD"}, -- Unstable Soul
 		--241593, -- Aegwynn's Ward
-		{235271, "PROXIMITY", "FLASH", "PULSE"}, -- Infusion
+		{235271, "PROXIMITY", "FLASH", "PULSE", "SAY"}, -- Infusion
 		tank_marker,
 		infusion_only_swap,
 		infusion_icons_pulse,
@@ -89,7 +89,7 @@ function mod:OnBossEnable()
 	-- General
 	self:Log("SPELL_AURA_APPLIED", "UnstableSoul", 235117) -- Unstable Soul
 	self:Log("SPELL_AURA_REMOVED", "UnstableSoulRemoved", 235117) -- Unstable Soul
-	--self:Log("SPELL_AURA_APPLIED", "AegwynnsWardApplied", 241593) -- Aegwynn's Ward
+	--self:Log("SPELL_AURA_APPLIED", "AegwynnsWardApplied", 241593, 236420) -- Aegwynn's Ward, Heroic, Normal
 
 	-- Stage One: Divide and Conquer
 	self:Log("SPELL_CAST_START", "Infusion", 235271) -- Infusion
@@ -151,15 +151,15 @@ end
 
 function mod:UnstableSoul(args)
 	if self:Me(args.destGUID) then
-		local spellId = args.spellId
-		self:TargetMessage(spellId, args.destName, "Personal", "Alarm")
-		self:Flash(spellId)
+		self:TargetMessage(args.spellId, args.destName, "Personal", "Alarm")
+		self:Flash(args.spellId)
 
-		if self:Hud(spellId) then
-			local _, _, _, _, _, _, expires = UnitDebuff("player", args.spellName)
-			local remaining = expires - GetTime()
+		local _, _, _, _, _, _, expires = UnitDebuff(args.destName, args.spellName)
+		local remaining = expires - GetTime() - 1.75
+		self:TargetBar(args.spellId, remaining, args.destName)
 
-			local timer = Hud:DrawTimer("player", 50, remaining - 1.75):SetColor(1, 0.5, 0):Register("UnstableSoulHUD")
+		if self:Hud(args.spellId) then
+			local timer = Hud:DrawTimer("player", 50, remaining):SetColor(1, 0.5, 0):Register("UnstableSoulHUD")
 			local label = Hud:DrawText("player", ""):SetFont(26, "Fira Mono Medium"):Register("UnstableSoulHUD")
 			local done = false
 
@@ -179,11 +179,29 @@ function mod:UnstableSoul(args)
 				end
 			end
 		end
+
+		if self:MobId(args.sourceGUID) ~= 118289 then
+			local fel = self:SpellName(235240)
+			local light = self:SpellName(235213)
+			local amFel = UnitDebuff("player", fel)
+			local amLight = UnitDebuff("player", light)
+			for unit in mod:IterateGroup() do
+				-- Range should be 3 yd, but cannot check less than 5 yd
+				if not UnitIsUnit(unit, "player") and not UnitIsDead(unit) and mod:Range(unit) <= 5 then
+					if amFel and UnitDebuff(unit, light) then
+						self:Say(false, "I ({rt4}) may have walked over " .. UnitName(unit) .. " ({rt1}", true, "RAID")
+					elseif amLight and UnitDebuff(unit, fel) then
+						self:Say(false, "I ({rt1}) may have walked over " .. UnitName(unit) .. " ({rt4}", true, "RAID")
+					end
+				end
+			end
+		end
 	end
 end
 
 function mod:UnstableSoulRemoved(args)
 	if self:Me(args.destGUID) then
+		self:StopBar(args.spellId, args.destName)
 		Hud:RemoveObject("UnstableSoulHUD")
 	end
 end
@@ -208,6 +226,9 @@ do
 		if mySide ~= newSide then
 			self:Message(235271, "Important", "Warning", L.infusionChanged:format(sideString), newSide)
 			self:Flash(235271, self:GetOption(infusion_icons_pulse) and newSide or direction[bossSide][key])
+			if mySide ~= 0 then
+				self:Say(235271, (key == "light") and "{rt1}" or "{rt4}", true)
+			end
 			if self:GetOption(infusion_grace_countdown) then
 				self:PlayInfusionCountdown()
 			end

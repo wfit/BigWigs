@@ -21,11 +21,11 @@ local L = BigWigsAPI:GetLocale("BigWigs: Common")
 local UnitAffectingCombat, UnitIsPlayer, UnitGUID, UnitPosition, UnitIsConnected = UnitAffectingCombat, UnitIsPlayer, UnitGUID, UnitPosition, UnitIsConnected
 local UnitExists, UnitIsUnit, UnitName = UnitExists, UnitIsUnit, UnitName
 local SetRaidTarget = SetRaidTarget
-local EJ_GetSectionInfo, GetSpellInfo, GetSpellTexture, IsSpellKnown = EJ_GetSectionInfo, GetSpellInfo, GetSpellTexture, IsSpellKnown
+local EJ_GetSectionInfo, GetSpellInfo, GetSpellTexture, GetTime, IsSpellKnown = EJ_GetSectionInfo, GetSpellInfo, GetSpellTexture, GetTime, IsSpellKnown
 local UnitGroupRolesAssigned = UnitGroupRolesAssigned
 local SendChatMessage, GetInstanceInfo = BigWigsLoader.SendChatMessage, BigWigsLoader.GetInstanceInfo
 local format, find, gsub, band = string.format, string.find, string.gsub, bit.band
-local type, next, tonumber = type, next, tonumber
+local select, type, next, tonumber = select, type, next, tonumber
 local core = BigWigs
 local C = core.C
 local pName = UnitName("player")
@@ -279,6 +279,7 @@ function boss:OnDisable(isWipe)
 		wipe(self.syncmsg_debounce)
 	end
 
+	self.sayCountdowns = nil
 	self.scheduledMessages = nil
 	self.scheduledScans = nil
 	self.scheduledScansCounter = nil
@@ -825,6 +826,7 @@ do
 		-- Engage
 		if self.isEngaged then return end
 		self.isEngaged = true
+		self.sayCountdowns = {}
 
 		if debug then dbg(self, ":Engage") end
 
@@ -1344,7 +1346,6 @@ function boss:SetInfo(key, line, text)
 	if checkFlag(self, key, C.INFOBOX) then
 		self:SendMessage("BigWigs_SetInfoBoxLine", self, line, text)
 	end
-
 end
 
 function boss:SetInfoByTable(key, tbl)
@@ -1440,26 +1441,6 @@ end
 -- @param[opt] isHostile if the unit is a hostile nameplate, in which case playerName should be treated as a GUID
 function boss:RemovePlate(spellId, playerName, isHostile)
 	self:SendMessage("BigWigs_HideNameplateAura", self, playerName, spellId and icons[spellId], isHostile)
-end
-
--------------------------------------------------------------------------------
--- Auras.
--- @section auras
---
-
---- Fire aura callbacks. Used for things like nameplates.
--- @param spellId the associated spell id
--- @param playerGUID the affected player GUID
--- @param[opt] duration the duration of the aura
-function boss:AuraApplied(spellId, playerGUID, duration)
-	self:SendMessage("BigWigs_ShowNameplateAura", self, playerGUID, icons[spellId], duration)
-end
-
---- Stop the aura.
--- @param spellId the associated spell id
--- @param playerGUID the affected player GUID
-function boss:AuraRemoved(spellId, playerGUID)
-	self:SendMessage("BigWigs_HideNameplateAura", self, playerGUID, icons[spellId])
 end
 
 -------------------------------------------------------------------------------
@@ -1947,6 +1928,32 @@ function boss:Say(key, msg, directPrint, channel)
 		SendChatMessage(msg, channel)
 	else
 		SendChatMessage(format(L.on, msg and (type(msg) == "number" and spells[msg] or msg) or spells[key], pName), channel)
+	end
+end
+
+--- Start a countdown using say messages.
+-- @param key the option key
+-- @param targetTime the time the countdown should expire at
+-- @param[opt] startAt When to start sending messages in say, default value is at 3 seconds remaining
+function boss:SayCountdown(key, targetTime, startAt)
+	if not checkFlag(self, key, C.SAY) then return end -- XXX implement a dedicated option for 7.3
+	local remaining = targetTime - GetTime()
+	local tbl = {}
+	for i = 1, (startAt or 3) do
+		tbl[i] = self:ScheduleTimer(SendChatMessage, remaining-i, i, "SAY")
+	end
+	self.sayCountdowns[key] = tbl
+end
+
+--- Cancel a countdown using say messages.
+-- @param key the option key
+function boss:CancelSayCountdown(key)
+	if not checkFlag(self, key, C.SAY) then return end
+	local tbl = self.sayCountdowns[key]
+	if tbl then
+		for i = 1, #tbl do
+			self:CancelTimer(tbl[i])
+		end
 	end
 end
 
