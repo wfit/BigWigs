@@ -208,7 +208,7 @@ do
 	function mod:CheckAnguishRange(spellId)
 		local status = 1
 		for unit in mod:IterateGroup() do
-			if not UnitIsUnit(unit, "player") and mod:Range(unit) <= 8 and not UnitIsDead(unit) then
+			if not UnitIsUnit(unit, "player") and not UnitIsDead(unit) and mod:Range(unit) <= 8 then
 				status = 0
 				break
 			end
