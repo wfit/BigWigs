@@ -97,6 +97,8 @@ function mod:OnBossEnable()
 	self:Log("SPELL_CAST_SUCCESS", "EmbraceoftheEclipse", 233263) -- Embrace of the Eclipse
 	self:Log("SPELL_AURA_APPLIED", "EmbraceoftheEclipseApplied", 233263) -- Embrace of the Eclipse
 	self:Log("SPELL_AURA_REMOVED", "EmbraceoftheEclipseRemoved", 233263) -- Embrace of the Eclipse
+	self:Log("SPELL_AURA_APPLIED", "EmbraceoftheEclipseBossApplied", 233264) -- Embrace of the Eclipse
+	self:Log("SPELL_AURA_REMOVED", "EmbraceoftheEclipseBossRemoved", 233264) -- Embrace of the Eclipse
 	self:Log("SPELL_CAST_SUCCESS", "MoonBurn", 236518) -- Moon Burn
 	self:Log("SPELL_AURA_APPLIED", "MoonBurnApplied", 236519) -- Moon Burn
 	-- Stage Three: Wrath of Elune
@@ -279,7 +281,16 @@ function mod:EmbraceoftheEclipseApplied(args)
 	if self:Me(args.destGUID) then
 		self:OpenProximity(args.spellId, 8)
 	end
-	if self:Hud(args.spellId) and not UnitIsPlayer(args.destUnit) then
+end
+
+function mod:EmbraceoftheEclipseRemoved(args)
+	if self:Me(args.destGUID) then
+		self:CloseProximity(args.spellId)
+	end
+end
+
+function mod:EmbraceoftheEclipseBossApplied(args)
+	if self:Hud(233263) then
 		local cast = Hud:DrawClock(args.destGUID, 80, 12):Register(args.destKey, true)
 		local shield = Hud:DrawSpinner(args.destGUID, 80):Register(args.destKey)
 		local text = Hud:DrawText(args.destGUID, ""):Register(args.destKey)
@@ -297,10 +308,7 @@ function mod:EmbraceoftheEclipseApplied(args)
 	end
 end
 
-function mod:EmbraceoftheEclipseRemoved(args)
-	if self:Me(args.destGUID) then
-		self:CloseProximity(args.spellId)
-	end
+function mod:EmbraceoftheEclipseBossRemoved(args)
 	Hud:RemoveObject(args.destKey)
 end
 
