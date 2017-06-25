@@ -213,6 +213,10 @@ function mod:Armageddon(args)
 		else
 			spinner:SetColor(0.5, 1, 0.5)
 		end
+		function spinner:OnDone()
+			mod:PlaySound(false, "Info")
+			spinner:Remove()
+		end
 	end
 	armageddonCount = armageddonCount + 1
 	local timer = nil
