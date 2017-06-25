@@ -73,7 +73,7 @@ function mod:GetOptions()
 		{238505, "SAY", "ICON", "FLASH"}, -- Focused Dreadflame
 		{236378, "SAY", "FLASH"}, -- Shadow Reflection: Wailing
 		zoom_minimap,
-		{241721, "SAY"}, -- Illidan's Sightless Gaze
+		241721, -- Illidan's Sightless Gaze
 		{238999, "HUD"}, -- Darkness of a Thousand Souls
 		-15543, -- Demonic Obelisk
 		243982, -- Tear Rift
@@ -382,7 +382,6 @@ end
 function mod:IllidansSightlessGaze(args)
 	if self:Me(args.destGUID) then
 		self:Message(args.spellId, "Personal", "Long")
-		self:Say(args.spellId)
 	end
 end
 
