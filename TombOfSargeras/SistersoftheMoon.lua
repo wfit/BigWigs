@@ -279,7 +279,7 @@ function mod:EmbraceoftheEclipseApplied(args)
 	if self:Me(args.destGUID) then
 		self:OpenProximity(args.spellId, 8)
 	end
-	if self:Hud(args.spellId) then
+	if self:Hud(args.spellId) and not UnitIsPlayer(args.destUnit) then
 		local cast = Hud:DrawClock(args.destGUID, 80, 12):Register(args.destKey, true)
 		local shield = Hud:DrawSpinner(args.destGUID, 80):Register(args.destKey)
 		local text = Hud:DrawText(args.destGUID, ""):Register(args.destKey)
