@@ -62,6 +62,8 @@ end
 local zoom_minimap = mod:AddCustomOption { "zoom_minimap", "Zoom minimap during Deceiver's Veil", default = true }
 local meteors_impact = mod:AddCustomOption { "meteors_landing", "Armageddon Meteors Impact", default = true,
 	configurable = true, icon = 87701, desc = "Countdown until meteors impact during Armageddon" }
+local obelisks_explosion = mod:AddCustomOption { "obelisks_explosion", "Demonic Obelisks Explosion", default = true,
+	configurable = true, icon = 87701, desc = "Countdown until Demonic Obelisks explosion" }
 function mod:GetOptions()
 	return {
 		"stages",
@@ -77,6 +79,7 @@ function mod:GetOptions()
 		241721, -- Illidan's Sightless Gaze
 		{238999, "HUD"}, -- Darkness of a Thousand Souls
 		-15543, -- Demonic Obelisk
+		{obelisks_explosion, "COUNTDOWN"},
 		243982, -- Tear Rift
 		244856, -- Flaming Orb
 		{237590, "SAY", "FLASH"}, -- Shadow Reflection: Hopeless
@@ -414,7 +417,7 @@ end
 function mod:StartObeliskTimer(t)
 	self:Bar(-15543, t)
 	self:ScheduleTimer("Message", t, -15543, "Attention", "Info", CL.spawned:format(self:SpellName(-15543)))
-	self:ScheduleTimer("Bar", t, -15543, 13, L.obeliskExplosion)
+	self:ScheduleTimer("Bar", t, obelisks_explosion, 13, L.obeliskExplosion, 239785)
 	obeliskCount = obeliskCount + 1
 	if obeliskCount % 2 == 0 then
 		self:ScheduleTimer("StartObeliskTimer", t, 36)
