@@ -15,6 +15,7 @@ plugin.defaultDB = {
 	blockGarrison = true,
 	blockGuildChallenge = true,
 	blockSpellErrors = true,
+	hideQuestTracker = true,
 }
 
 --------------------------------------------------------------------------------
@@ -86,6 +87,12 @@ plugin.pluginOptions = {
 			width = "full",
 			order = 5,
 		},
+		hideQuestTracker = {
+			type = "toggle",
+			name = L.hideQuestTracker,
+			width = "full",
+			order = 6,
+		},
 	},
 }
 
@@ -145,6 +152,9 @@ do
 		if self.db.profile.blockSpellErrors then
 			KillEvent(UIErrorsFrame, "UI_ERROR_MESSAGE")
 		end
+		if self.db.profile.hideQuestTracker then
+			ObjectiveTracker_Collapse()
+		end
 	end
 
 	function plugin:BigWigs_OnBossWin()
@@ -163,6 +173,10 @@ do
 		end
 		if self.db.profile.blockSpellErrors then
 			RestoreEvent(UIErrorsFrame, "UI_ERROR_MESSAGE")
+		end
+		if self.db.profile.hideQuestTracker then
+			ObjectiveTracker_Expand()
+			ObjectiveTracker_Update()
 		end
 	end
 end
