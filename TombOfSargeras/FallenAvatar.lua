@@ -278,15 +278,13 @@ do
 			local spellName = args.spellName
 			local shieldMax = false
 
-			local cast = Hud:DrawClock(maiden, 80):Register("MaidenCleaningProtocolHUD", true)
-			local shield = Hud:DrawSpinner(maiden, 80):Register("MaidenCleaningProtocolHUD")
-			local text = Hud:DrawText(maiden, ""):Register("MaidenCleaningProtocolHUD")
+			local cast = Hud:DrawClock(maiden, 80):Register("MaidenCleaningProtocolHUD", true):SetOffset(0, -100)
+			local shield = Hud:DrawSpinner(maiden, 80):Register("MaidenCleaningProtocolHUD"):SetOffset(0, -100)
 
 			function shield:Progress()
 				local _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, absorb, _, _ = UnitBuff("boss2", spellName)
 				if not absorb then return 0 end
 				if not shieldMax then shieldMax = absorb end
-				text:SetText(FS:FormatNumber(absorb))
 				return (shieldMax - absorb) / shieldMax
 			end
 

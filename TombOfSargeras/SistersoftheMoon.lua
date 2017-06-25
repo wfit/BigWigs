@@ -291,9 +291,8 @@ end
 
 function mod:EmbraceoftheEclipseBossApplied(args)
 	if self:Hud(233263) then
-		local cast = Hud:DrawClock(args.destGUID, 80, 12):Register(args.destKey, true)
+		local cast = Hud:DrawClock(args.destGUID, 60, 12):Register(args.destKey, true)
 		local shield = Hud:DrawSpinner(args.destGUID, 80):Register(args.destKey)
-		local text = Hud:DrawText(args.destGUID, ""):Register(args.destKey)
 
 		local unit = args.destUnit
 		local spellName = args.spellName
@@ -302,7 +301,6 @@ function mod:EmbraceoftheEclipseBossApplied(args)
 			local _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, absorb, _, _ = UnitBuff(unit, spellName)
 			if not absorb then return 0 end
 			if not shieldMax then shieldMax = absorb end
-			text:SetText(FS:FormatNumber(absorb))
 			return (shieldMax - absorb) / shieldMax
 		end
 	end
