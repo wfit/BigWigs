@@ -23,6 +23,7 @@
 ## Dependencies: FS_Core, FS_UpdaterStatus
 ## OptionalDeps: Ace3, LibCandyBar-3.0, LibSharedMedia-3.0, LibSink-2.0, LibDBIcon-1.0, LibDDI-1.0, LibChatAnims, LibDualSpec-1.0, FS_SmartColor
 ## SavedVariables: BigWigs3DB, BigWigs3IconDB, BigWigsStatisticsDB
+## X-FS-Addon: 1
 
 embeds.xml
 API.lua
