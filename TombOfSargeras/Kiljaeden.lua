@@ -211,9 +211,9 @@ function mod:Armageddon(args)
 	self:Message(args.spellId, "Important", "Warning", CL.count:format(args.spellName, armageddonCount))
 	self:Bar(meteors_impact, 9, CL.count:format(self:SpellName(182580), armageddonCount), args.spellId) -- Meteor Impact
 	if self:Hud(meteors_impact) then
-		local debuff = UnitDebuff("player", self:SpellName(234310))
+		local debuff, _, _, _, _, _, expires = UnitDebuff("player", self:SpellName(234310))
 		local spinner = Hud:DrawSpinner("player", 50, 9)
-		if debuff then
+		if debuff and (expires - GetTime()) > 9 then
 			spinner:SetColor(1, 0.5, 0)
 		else
 			spinner:SetColor(0.5, 1, 0.5)
