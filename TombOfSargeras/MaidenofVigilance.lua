@@ -41,6 +41,8 @@ local direction = {
 	}
 }
 
+local massInstabilityGrace = 0
+
 --------------------------------------------------------------------------------
 -- Localization
 --
@@ -180,7 +182,7 @@ function mod:UnstableSoul(args)
 			end
 		end
 
-		if self:MobId(args.sourceGUID) ~= 118289 then
+		if self:MobId(args.sourceGUID) == 118289 and GetTime() > massInstabilityGrace then
 			local fel = self:SpellName(235240)
 			local light = self:SpellName(235213)
 			local amFel = UnitDebuff("player", fel)
@@ -293,6 +295,7 @@ end
 function mod:MassInstability(args)
 	self:Message(args.spellId, "Attention", "Alert")
 	massInstabilityCounter = massInstabilityCounter + 1
+	massInstabilityGrace = GetTime() + 5
 	if massInstabilityCounter == 2 then
 		self:Bar(args.spellId, 36)
 	end
