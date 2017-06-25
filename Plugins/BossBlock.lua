@@ -154,7 +154,7 @@ do
 		if self.db.profile.blockSpellErrors then
 			KillEvent(UIErrorsFrame, "UI_ERROR_MESSAGE")
 		end
-		if self.db.profile.hideQuestTracker then
+		if self.db.profile.hideQuestTracker and IsInRaid() then
 			questTrackerWasCollapsed = ObjectiveTrackerFrame.collapsed
 			if not questTrackerWasCollapsed then
 				ObjectiveTracker_Collapse()
@@ -179,7 +179,7 @@ do
 		if self.db.profile.blockSpellErrors then
 			RestoreEvent(UIErrorsFrame, "UI_ERROR_MESSAGE")
 		end
-		if self.db.profile.hideQuestTracker and not questTrackerWasCollapsed then
+		if self.db.profile.hideQuestTracker and not questTrackerWasCollapsed and IsInRaid() then
 			ObjectiveTracker_Expand()
 			ObjectiveTracker_Update()
 		end
