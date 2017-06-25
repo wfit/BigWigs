@@ -151,15 +151,15 @@ end
 
 function mod:UnstableSoul(args)
 	if self:Me(args.destGUID) then
-		local spellId = args.spellId
-		self:TargetMessage(spellId, args.destName, "Personal", "Alarm")
-		self:Flash(spellId)
+		self:TargetMessage(args.spellId, args.destName, "Personal", "Alarm")
+		self:Flash(args.spellId)
 
-		if self:Hud(spellId) then
-			local _, _, _, _, _, _, expires = UnitDebuff("player", args.spellName)
-			local remaining = expires - GetTime()
+		local _, _, _, _, _, _, expires = UnitDebuff(args.destName, args.spellName)
+		local remaining = expires - GetTime() - 1.75
+		self:TargetBar(args.spellId, remaining, args.destName)
 
-			local timer = Hud:DrawTimer("player", 50, remaining - 1.75):SetColor(1, 0.5, 0):Register("UnstableSoulHUD")
+		if self:Hud(args.spellId) then
+			local timer = Hud:DrawTimer("player", 50, remaining):SetColor(1, 0.5, 0):Register("UnstableSoulHUD")
 			local label = Hud:DrawText("player", ""):SetFont(26, "Fira Mono Medium"):Register("UnstableSoulHUD")
 			local done = false
 
@@ -184,6 +184,7 @@ end
 
 function mod:UnstableSoulRemoved(args)
 	if self:Me(args.destGUID) then
+		self:StopBar(args.spellId, args.destName)
 		Hud:RemoveObject("UnstableSoulHUD")
 	end
 end
