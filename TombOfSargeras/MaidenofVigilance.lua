@@ -65,7 +65,7 @@ function mod:GetOptions()
 		"berserk",
 		{235117, "FLASH", "HUD"}, -- Unstable Soul
 		--241593, -- Aegwynn's Ward
-		{235271, "PROXIMITY", "FLASH", "PULSE"}, -- Infusion
+		{235271, "PROXIMITY", "FLASH", "PULSE", "SAY"}, -- Infusion
 		tank_marker,
 		infusion_only_swap,
 		infusion_icons_pulse,
@@ -209,6 +209,9 @@ do
 		if mySide ~= newSide then
 			self:Message(235271, "Important", "Warning", L.infusionChanged:format(sideString), newSide)
 			self:Flash(235271, self:GetOption(infusion_icons_pulse) and newSide or direction[bossSide][key])
+			if mySide ~= 0 then
+				self:Say(235271, (key == "light") and "{rt1}" or "{rt4}", true)
+			end
 			if self:GetOption(infusion_grace_countdown) then
 				self:PlayInfusionCountdown()
 			end
