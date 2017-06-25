@@ -155,7 +155,7 @@ function mod:UnstableSoul(args)
 		self:Flash(args.spellId)
 
 		local _, _, _, _, _, _, expires = UnitDebuff(args.destName, args.spellName)
-		local remaining = expires - GetTime() - 1.75
+		local remaining = expires - GetTime() - 2
 		self:TargetBar(args.spellId, remaining, args.destName)
 
 		if self:Hud(args.spellId) then
