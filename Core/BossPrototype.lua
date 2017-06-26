@@ -295,6 +295,7 @@ function boss:OnDisable(isWipe)
 
 	if SmartColor then
 		SmartColor:UnregisterFilter(self)
+		SmartColor:UnsetAll()
 	end
 
 	if not isWipe then
