@@ -294,18 +294,8 @@ do
 			local spellName = args.spellName
 			local shieldMax = false
 
-			local cast = Hud:DrawClock(maiden, 80):Register("MaidenCleaningProtocolHUD", true):SetOffset(0, -100)
-			local shield = Hud:DrawSpinner(maiden, 80):Register("MaidenCleaningProtocolHUD"):SetOffset(0, -100)
-
-			function cast:OnUpdate()
-				if shield:Progress() > cast:Progress() then
-					cast:SetColor(0.2, 1, 0.2, 0.8)
-					shield:SetColor(0.2, 1, 0.2, 0.8)
-				else
-					cast:SetColor(1, 0.5, 0, 0.8)
-					shield:SetColor(1, 0.5, 0, 0.8)
-				end
-			end
+			local cast = Hud:DrawClock(maiden, 80):Register("MaidenCleaningProtocolHUD", true)
+			local shield = Hud:DrawSpinner(maiden, 80):Register("MaidenCleaningProtocolHUD")
 
 			function shield:Progress()
 				local _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, absorb, _, _ = UnitBuff("boss2", spellName)

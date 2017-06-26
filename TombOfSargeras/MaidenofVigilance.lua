@@ -321,18 +321,8 @@ function mod:TitanicBulwarkApplied(args)
 	shieldActive = true
 	bossSide = (bossSide == 1) and 2 or 1
 	if self:Hud(args.spellId) then
-		local cast = Hud:DrawClock(args.destGUID, 80, 50):Register(args.destKey, true):SetOffset(0, -100)
-		local shield = Hud:DrawSpinner(args.destGUID, 80):Register(args.destKey):SetOffset(0, -100)
-
-		function cast:OnUpdate()
-			if shield:Progress() > cast:Progress() then
-				cast:SetColor(0.2, 1, 0.2, 0.8)
-				shield:SetColor(0.2, 1, 0.2, 0.8)
-			else
-				cast:SetColor(1, 0.5, 0, 0.8)
-				shield:SetColor(1, 0.5, 0, 0.8)
-			end
-		end
+		local cast = Hud:DrawClock(args.destGUID, 80, 50):Register(args.destKey, true)
+		local shield = Hud:DrawSpinner(args.destGUID, 80):Register(args.destKey)
 
 		local unit = args.destUnit
 		local spellName = args.spellName
