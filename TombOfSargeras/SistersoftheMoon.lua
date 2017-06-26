@@ -55,7 +55,7 @@ function mod:GetOptions()
 		236694, -- Call Moontalon
 		236697, -- Deadly Screech
 		236603, -- Rapid Shot
-		{233263, "PROXIMITY", "HUD"}, -- Embrace of the Eclipse
+		{233263, "PROXIMITY"}, -- Embrace of the Eclipse
 		{236519, "FLASH"}, -- Moon Burn
 		236712, -- Lunar Beacon
 		237351, -- Lunar Barrage
@@ -98,8 +98,6 @@ function mod:OnBossEnable()
 	self:Log("SPELL_CAST_SUCCESS", "EmbraceoftheEclipse", 233263) -- Embrace of the Eclipse
 	self:Log("SPELL_AURA_APPLIED", "EmbraceoftheEclipseApplied", 233263) -- Embrace of the Eclipse
 	self:Log("SPELL_AURA_REMOVED", "EmbraceoftheEclipseRemoved", 233263) -- Embrace of the Eclipse
-	self:Log("SPELL_AURA_APPLIED", "EmbraceoftheEclipseBossApplied", 233264) -- Embrace of the Eclipse
-	self:Log("SPELL_AURA_REMOVED", "EmbraceoftheEclipseBossRemoved", 233264) -- Embrace of the Eclipse
 	self:Log("SPELL_CAST_SUCCESS", "MoonBurn", 236518) -- Moon Burn
 	self:Log("SPELL_AURA_APPLIED", "MoonBurnApplied", 236519) -- Moon Burn
 	-- Stage Three: Wrath of Elune
@@ -291,37 +289,6 @@ function mod:EmbraceoftheEclipseRemoved(args)
 	if self:Me(args.destGUID) then
 		self:CloseProximity(args.spellId)
 	end
-end
-
-function mod:EmbraceoftheEclipseBossApplied(args)
-	if self:Hud(233263) then
-		local cast = Hud:DrawClock(args.destGUID, 60, 12):Register(args.destKey, true)
-		local shield = Hud:DrawSpinner(args.destGUID, 80):Register(args.destKey)
-
-		function cast:OnUpdate()
-			if shield:Progress() > cast:Progress() then
-				cast:SetColor(0.2, 1, 0.2, 0.8)
-				shield:SetColor(0.2, 1, 0.2, 0.8)
-			else
-				cast:SetColor(1, 0.5, 0, 0.8)
-				shield:SetColor(1, 0.5, 0, 0.8)
-			end
-		end
-
-		local unit = args.destUnit
-		local spellName = args.spellName
-		local shieldMax = false
-		function shield:Progress()
-			local _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, absorb, _, _ = UnitBuff(unit, spellName)
-			if not absorb then return 0 end
-			if not shieldMax then shieldMax = absorb end
-			return (shieldMax - absorb) / shieldMax
-		end
-	end
-end
-
-function mod:EmbraceoftheEclipseBossRemoved(args)
-	Hud:RemoveObject(args.destKey)
 end
 
 function mod:MoonBurn(args)
