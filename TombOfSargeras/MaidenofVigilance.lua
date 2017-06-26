@@ -191,9 +191,9 @@ function mod:UnstableSoul(args)
 				-- Range should be 3 yd, but cannot check less than 5 yd
 				if not UnitIsUnit(unit, "player") and not UnitIsDead(unit) and mod:Range(unit) <= 5 then
 					if amFel and UnitDebuff(unit, light) then
-						self:Say(false, "I ({rt4}) may have walked over " .. UnitName(unit) .. " ({rt1}", true, "RAID")
+						self:Say(false, "I ({rt4}) may have walked over " .. UnitName(unit) .. " ({rt1})", true, "RAID")
 					elseif amLight and UnitDebuff(unit, fel) then
-						self:Say(false, "I ({rt1}) may have walked over " .. UnitName(unit) .. " ({rt4}", true, "RAID")
+						self:Say(false, "I ({rt1}) may have walked over " .. UnitName(unit) .. " ({rt4})", true, "RAID")
 					end
 				end
 			end
