@@ -265,6 +265,7 @@ do
 		end
 		playerList[#playerList+1] = args.destName
 		if #playerList == 1 then
+			self:Bar(args.spellId, 8, CL.adds)
 			if phase == 2 then
 				self:Bar(args.spellId, 112, L.reflectionErupting)
 			end
@@ -366,6 +367,7 @@ do
 		end
 		playerList[#playerList+1] = args.destName
 		if #playerList == 1 then
+			self:Bar(args.spellId, 7, CL.add)
 			self:Bar(args.spellId, 114, L.reflectionWailing)
 			self:ScheduleTimer("TargetMessage", 0.1, args.spellId, playerList, "Urgent", "Alert", L.reflectionWailing)
 		end

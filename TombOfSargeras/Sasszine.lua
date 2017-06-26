@@ -102,7 +102,7 @@ function mod:OnEngage()
 		self:Bar(230139, 25) -- Hydra Shot
 	end
 	self:Bar(232722, 30.3) -- Slicing Tornado
-	self:Berserk(self:LFR() and 540 or 480) -- Confirmed LFR + Normal
+	self:Berserk(self:LFR() and 540 or 480)
 end
 
 --------------------------------------------------------------------------------
@@ -228,7 +228,7 @@ do
 	function mod:ConsumingHungerApplied(args)
 		list[#list+1] = args.destName
 		if #list == 1 then
-			self:ScheduleTimer("TargetMessage", 0.1, args.spellId, list, "Attention", "Alert", nil, nil, true)
+			self:ScheduleTimer("TargetMessage", 0.1, 230384, list, "Attention", "Alert", nil, nil, true)
 		end
 	end
 end
