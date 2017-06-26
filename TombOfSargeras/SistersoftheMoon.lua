@@ -58,6 +58,7 @@ function mod:GetOptions()
 		{233263, "PROXIMITY", "HUD"}, -- Embrace of the Eclipse
 		{236519, "FLASH"}, -- Moon Burn
 		236712, -- Lunar Beacon
+		237351, -- Lunar Barrage
 		{239264, "TANK"}, -- Lunar Fire
 	},{
 		["stages"] = "general",
@@ -104,6 +105,9 @@ function mod:OnBossEnable()
 	-- Stage Three: Wrath of Elune
 	self:Log("SPELL_CAST_START", "LunarBeacon", 236712) -- Lunar Beacon
 	self:Log("SPELL_AURA_APPLIED", "LunarBeaconApplied", 236712) -- Lunar Beacon (Debuff)
+	self:Log("SPELL_AURA_APPLIED", "GroundEffectDamage", 237351) -- Lunar Barrage
+	self:Log("SPELL_PERIODIC_DAMAGE", "GroundEffectDamage", 237351)
+	self:Log("SPELL_PERIODIC_MISSED", "GroundEffectDamage", 237351)
 	self:Log("SPELL_CAST_SUCCESS", "LunarFire", 239264) -- Lunar Fire
 	self:Log("SPELL_AURA_APPLIED", "LunarFireApplied", 239264) -- Lunar Fire
 	self:Log("SPELL_AURA_APPLIED_DOSE", "LunarFireApplied", 239264) -- Lunar Fire
@@ -346,6 +350,17 @@ function mod:LunarBeaconApplied(args)
 		self:ScheduleTimer("Say", 3, args.spellId, 3, true)
 		self:ScheduleTimer("Say", 4, args.spellId, 2, true)
 		self:ScheduleTimer("Say", 5, args.spellId, 1, true)
+	end
+end
+
+do
+	local prev = 0
+	function mod:GroundEffectDamage(args)
+		local t = GetTime()
+		if self:Me(args.destGUID) and t-prev > 1.5 then
+			prev = t
+			self:Message(args.spellId, "Personal", "Alert", CL.underyou:format(args.spellName))
+		end
 	end
 end
 

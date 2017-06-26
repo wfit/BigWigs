@@ -42,6 +42,7 @@ function mod:GetOptions()
 		{230139, "FLASH", "PULSE"}, -- Hydra Shot
 		hydraShotMarker,
 		{230201, "TANK", "FLASH"}, -- Burden of Pain
+		230959, -- Concealing Murk
 		232722, -- Slicing Tornado
 		230358, -- Thundering Shock
 		{230384, "FLASH"}, -- Consuming Hunger
@@ -66,10 +67,15 @@ function mod:OnBossEnable()
 	self:Log("SPELL_CAST_START", "BurdenofPainCast", 230201)
 	self:Log("SPELL_CAST_SUCCESS", "BurdenofPain", 230201)
 
+	self:Log("SPELL_AURA_APPLIED", "GroundEffectDamage", 230959) -- Concealing Murk
+	self:Log("SPELL_PERIODIC_DAMAGE", "GroundEffectDamage", 230959)
+	self:Log("SPELL_PERIODIC_MISSED", "GroundEffectDamage", 230959)
+
 	-- Stage One: Ten Thousand Fangs
 	self:Log("SPELL_CAST_START", "SlicingTornado", 232722)
 	self:Log("SPELL_CAST_START", "ThunderingShock", 230358)
 	self:Log("SPELL_CAST_START", "ConsumingHunger", 230384, 234661) -- Stage 1 id + Stage 3 id
+	self:Log("SPELL_AURA_APPLIED", "ConsumingHungerApplied", 230384, 234661)
 	self:Log("SPELL_AURA_APPLIED", "MurlocAttached", 234459) -- Need Check
 
 	-- Stage Two: Terrors of the Deep
@@ -190,6 +196,17 @@ function mod:BurdenofPain(args)
 	end
 end
 
+do
+	local prev = 0
+	function mod:GroundEffectDamage(args)
+		local t = GetTime()
+		if self:Me(args.destGUID) and t-prev > 1.5 then
+			prev = t
+			self:Message(args.spellId, "Personal", "Alert", CL.underyou:format(args.spellName))
+		end
+	end
+end
+
 function mod:SlicingTornado(args)
 	slicingTornadoCounter = slicingTornadoCounter + 1
 	self:Message(args.spellId, "Important", "Warning")
@@ -203,8 +220,17 @@ end
 
 function mod:ConsumingHunger(args)
 	consumingHungerCounter = consumingHungerCounter + 1
-	self:Message(230384, "Attention", "Alert")
 	self:Bar(230384, phase == 3 and (consumingHungerCounter == 2 and 47 or 42) or 34) -- XXX Need more p3 data.
+end
+
+do
+	local list = mod:NewTargetList()
+	function mod:ConsumingHungerApplied(args)
+		list[#list+1] = args.destName
+		if #list == 1 then
+			self:ScheduleTimer("TargetMessage", 0.1, args.spellId, list, "Attention", "Alert", nil, nil, true)
+		end
+	end
 end
 
 function mod:MurlocAttached(args)
