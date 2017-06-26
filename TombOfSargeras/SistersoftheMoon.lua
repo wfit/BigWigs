@@ -298,6 +298,16 @@ function mod:EmbraceoftheEclipseBossApplied(args)
 		local cast = Hud:DrawClock(args.destGUID, 60, 12):Register(args.destKey, true)
 		local shield = Hud:DrawSpinner(args.destGUID, 80):Register(args.destKey)
 
+		function cast:OnUpdate()
+			if shield:Progress() > cast:Progress() then
+				cast:SetColor(0.2, 1, 0.2, 0.8)
+				shield:SetColor(0.2, 1, 0.2, 0.8)
+			else
+				cast:SetColor(1, 0.5, 0, 0.8)
+				shield:SetColor(1, 0.5, 0, 0.8)
+			end
+		end
+
 		local unit = args.destUnit
 		local spellName = args.spellName
 		local shieldMax = false

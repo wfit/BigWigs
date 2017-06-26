@@ -169,21 +169,14 @@ function mod:UnstableSoul(args)
 
 		if self:Hud(args.spellId) then
 			local timer = Hud:DrawTimer("player", 50, remaining):SetColor(1, 0.5, 0):Register("UnstableSoulHUD")
-			local label = Hud:DrawText("player", ""):SetFont(26, "Fira Mono Medium"):Register("UnstableSoulHUD")
+			local label = Hud:DrawText("player", "Wait"):Register("UnstableSoulHUD")
 			local done = false
-
-			function timer:OnUpdate()
-				if not done then
-					local left = timer:TimeLeft()
-					label:SetText(("%2.1f"):format(left))
-				end
-			end
 
 			function timer:OnDone()
 				if not done then
 					done = true
 					mod:PlaySound(false, "Info")
-					timer:SetColor(0, 1, 0)
+					timer:SetColor(0.2, 1, 0.2)
 					label:SetText("JUMP!")
 				end
 			end
@@ -330,6 +323,16 @@ function mod:TitanicBulwarkApplied(args)
 	if self:Hud(args.spellId) then
 		local cast = Hud:DrawClock(args.destGUID, 80, 50):Register(args.destKey, true):SetOffset(0, -100)
 		local shield = Hud:DrawSpinner(args.destGUID, 80):Register(args.destKey):SetOffset(0, -100)
+
+		function cast:OnUpdate()
+			if shield:Progress() > cast:Progress() then
+				cast:SetColor(0.2, 1, 0.2, 0.8)
+				shield:SetColor(0.2, 1, 0.2, 0.8)
+			else
+				cast:SetColor(1, 0.5, 0, 0.8)
+				shield:SetColor(1, 0.5, 0, 0.8)
+			end
+		end
 
 		local unit = args.destUnit
 		local spellName = args.spellName
