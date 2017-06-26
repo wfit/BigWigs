@@ -205,13 +205,14 @@ do
 
 		if self:Me(args.destGUID) then
 			local spellId = args.spellId
-			local timer = Hud:DrawTimer(args.destGUID, 75, 45):SetColor(255, 225, 0, self:Hud(spellId) and 1 or 0):Register(args.destKey)
+			local opacity = self:Hud(spellId) and 0.75 or 0
+			local timer = Hud:DrawTimer(args.destGUID, 75, 45):SetColor(1, 1, 1, opacity):Register(args.destKey)
 			local t, callOfNight = GetTime(), args.spellName
 			local lastStatus = -1
 			function timer:OnUpdate()
 				local status = 0 -- Not soaked
 				for unit in mod:IterateGroup() do
-					if not UnitIsUnit(unit, "player") and mod:Range(unit) <= 5 then
+					if not UnitIsUnit(unit, "player") and not UnisIsDead(unit) and mod:Range(unit) <= 5 then
 						if UnitDebuff(unit, callOfNight) then
 							status = 2 -- Marks together
 							break
@@ -224,29 +225,29 @@ do
 				if status ~= lastStatus then
 					lastStatus = status
 					if status == 0 then
-						self:SetColor(155, 247, 27)
-						mod:SmartColorSet(spellId, args.destGUID, 155, 247, 27)
+						self:SetColor(1, 0.5, 0, opacity)
+						mod:SmartColorSet(spellId, 1, 0.5, 0)
 					elseif status == 1 then
-						self:SetColor(255, 225, 0)
-						mod:SmartColorSet(spellId, args.destGUID, 255, 225, 0)
+						self:SetColor(0.2, 1, 0.2, opacity)
+						mod:SmartColorSet(spellId, 0.2, 1, 0.2)
 					elseif status == 2 then
-						self:SetColor(255, 102, 0)
-						mod:SmartColorSet(spellId, args.destGUID, 255, 102, 0)
+						self:SetColor(1, 0, 0, opacity)
+						mod:SmartColorSet(spellId, 1, 0, 0)
 					end
 				end
 
 				local now = GetTime()
 				if now - t > 1 and status ~= 1 then
 					if status == 0 then
-						self:Say(false, "SOAK", false, "YELL")
+						mod:Say(false, "SOAK", false, "YELL")
 					elseif status == 2 then
-						self:Say(false, "SPREAD", false, "YELL")
+						mod:Say(false, "SPREAD", false, "YELL")
 					end
 					t = now
 				end
 			end
 			function timer:OnRemove()
-				mod:SmartColorUnset(spellId, args.destGUID)
+				mod:SmartColorUnset(spellId)
 			end
 		end
 
