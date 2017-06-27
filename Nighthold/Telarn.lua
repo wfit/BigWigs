@@ -212,7 +212,7 @@ do
 			function timer:OnUpdate()
 				local status = 0 -- Not soaked
 				for unit in mod:IterateGroup() do
-					if not UnitIsUnit(unit, "player") and not UnisIsDead(unit) and mod:Range(unit) <= 5 then
+					if not UnitIsUnit(unit, "player") and not UnitIsDead(unit) and mod:Range(unit) <= 5 then
 						if UnitDebuff(unit, callOfNight) then
 							status = 2 -- Marks together
 							break
