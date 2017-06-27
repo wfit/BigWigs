@@ -57,7 +57,7 @@ function mod:GetOptions()
 		236603, -- Rapid Shot
 		{233263, "PROXIMITY"}, -- Embrace of the Eclipse
 		{236519, "FLASH"}, -- Moon Burn
-		236712, -- Lunar Beacon
+		{236712, "SAY", "FLASH"}, -- Lunar Beacon
 		237351, -- Lunar Barrage
 		{239264, "TANK"}, -- Lunar Fire
 	},{
@@ -325,6 +325,7 @@ do
 		self:TargetMessage(236712, name, "Attention", "Alert")
 		if self:Me(guid) then
 			self:Say(236712)
+			self:Flash(236712)
 		end
 	end
 	function mod:LunarBeacon(args)
