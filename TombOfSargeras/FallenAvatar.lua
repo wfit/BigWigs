@@ -243,6 +243,7 @@ do
 end
 
 function mod:TouchofSargeras(args)
+	self:StopBar(CL.count:format(args.spellName, touchofSargerasCounter))
 	self:Message(args.spellId, "Attention", "Alert", CL.incoming:format(CL.count:format(args.spellName, touchofSargerasCounter)))
 	self:Bar(args.spellId, 10.5, L.touch_impact)
 	touchofSargerasCounter = touchofSargerasCounter + 1
@@ -336,15 +337,10 @@ do
 		if self:Me(args.destGUID) then
 			self:Flash(args.spellId)
 			self:Say(args.spellId, CL.count:format(args.spellName, #list)) -- Announce which mark you have
-
-			local _, _, _, _, _, _, expires = UnitDebuff(args.destName, args.spellName)
-			local remaining = expires-GetTime()
-			self:ScheduleTimer("Say", remaining-3, args.spellId, 3, true)
-			self:ScheduleTimer("Say", remaining-2, args.spellId, 2, true)
-			self:ScheduleTimer("Say", remaining-1, args.spellId, 1, true)
+			self:SayCountdown(args.spellId, 6)
 		end
 		if #list == 1 then
-			self:ScheduleTimer("TargetMessage", 0.1, args.spellId, list, "Attention", "Alarm")
+			self:ScheduleTimer("TargetMessage", 0.3, args.spellId, list, "Attention", "Alarm")
 			darkMarkCounter = darkMarkCounter + 1
 			self:Bar(args.spellId, 34, CL.count:format(args.spellName, darkMarkCounter))
 		end
@@ -358,6 +354,9 @@ do
 	end
 
 	function mod:DarkMarkRemoved(args)
+		if self:Me(args.destGUID) then
+			self:CancelSayCountdown(args.spellId)
+		end
 		if self:GetOption(darkMarkIcons) then
 			SetRaidTarget(args.destName, 0)
 		end

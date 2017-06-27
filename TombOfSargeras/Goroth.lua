@@ -44,7 +44,7 @@ function mod:GetOptions()
 	return {
 		{231363, "TANK", "SAY"}, -- Burning Armor
 		233514, -- Infernal Spike
-		{230345, "FLASH", "SAY"}, -- Crashing Comet
+		{232249, "FLASH", "SAY"}, -- Crashing Comet
 		{233279, "FLASH", "SAY"}, -- Shattering Star
 		shatteringStarMarker,
 		233062, -- Infernal Burning
@@ -82,7 +82,7 @@ function mod:OnEngage()
 	wipe(cometWarned)
 
 	self:Bar(233514, 4.8) -- Infernal Spike
-	self:Bar(230345, 8.5) -- Crashing Comet
+	self:Bar(232249, 8.5) -- Crashing Comet
 	self:Bar(231363, 10) -- Burning Armor
 	self:Bar(233279, shatteringTimers[shatteringCounter], CL.count:format(self:SpellName(233279), 1)) -- Shattering Star
 	self:Bar(233062, 54) -- Infernal Burning
@@ -102,7 +102,7 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 	elseif spellId == 232249 then -- Crashing Comet
 		cometCounter = cometCounter + 1
 		wipe(cometWarned)
-		self:Bar(230345, cometCounter == 7 and 20 or cometCounter == 10 and 25 or 18.3)
+		self:Bar(232249, cometCounter == 7 and 20 or cometCounter == 10 and 25 or 18.3)
 	elseif spellId == 233285 then -- Rain of Brimstone
 		rainCounter = rainCounter + 1
 		self:Message(238588, "Urgent", "Warning", CL.incoming:format(spellName))
@@ -127,23 +127,24 @@ do
 	local list = mod:NewTargetList()
 	function mod:UNIT_AURA(event, unit)
 		-- There are 2 debuffs. The first has no CLEU, the second does.
-		local name, _, _, _, _, _, expires, _, _, _, spellId = UnitDebuff(unit, self:SpellName(232249)) -- Crashing Comet debuff ID
-		local n = self:UnitName(unit)
-		if name and not cometWarned[n] and spellId == 232249 then
-			list[#list+1] = n
-			cometWarned[n] = true
-			if #list == 1 then
-				self:ScheduleTimer("TargetMessage", 0.2, 230345, list, "Important", "Warning")
-			end
+		local _, _, _, _, _, _, expires, _, _, _, spellId = UnitDebuff(unit, self:SpellName(232249)) -- Crashing Comet debuff ID
 
-			if unit == "player" then
-				self:Say(230345)
-				self:Flash(230345)
+		if spellId == 232249 then
+			local n = self:UnitName(unit)
+			if not cometWarned[n] then
+				cometWarned[n] = true
+				list[#list+1] = n
+				if #list == 1 then
+					self:ScheduleTimer("TargetMessage", 0.3, spellId, list, "Important", "Warning")
+				end
 
-				local remaining = expires-GetTime()
-				self:ScheduleTimer("Say", remaining-3, 230345, 3, true)
-				self:ScheduleTimer("Say", remaining-2, 230345, 2, true)
-				self:ScheduleTimer("Say", remaining-1, 230345, 1, true)
+				if unit == "player" then
+					self:Say(spellId)
+					self:Flash(spellId)
+
+					local remaining = expires-GetTime()
+					self:SayCountdown(spellId, remaining)
+				end
 			end
 		end
 	end

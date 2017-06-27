@@ -246,7 +246,7 @@ do
 				self:PlayInfusionCountdown()
 			end
 		else
-			self:Message(235271, "Important", "Info", L.sameInfusion:format(sideString), newSide)
+			self:Message(235271, "Positive", "Info", L.sameInfusion:format(sideString), newSide)
 		end
 		mySide = newSide
 	end

@@ -101,8 +101,9 @@ function mod:OnBossEnable()
 	self:Log("SPELL_CAST_SUCCESS", "MoonBurn", 236518) -- Moon Burn
 	self:Log("SPELL_AURA_APPLIED", "MoonBurnApplied", 236519) -- Moon Burn
 	-- Stage Three: Wrath of Elune
-	self:Log("SPELL_CAST_START", "LunarBeacon", 236712) -- Lunar Beacon
 	self:Log("SPELL_AURA_APPLIED", "LunarBeaconApplied", 236712) -- Lunar Beacon (Debuff)
+	self:Log("SPELL_AURA_REMOVED", "LunarBeaconRemoved", 236712) -- Lunar Beacon (Debuff)
+	self:Log("SPELL_CAST_START", "LunarBeacon", 236712) -- Lunar Beacon
 	self:Log("SPELL_AURA_APPLIED", "GroundEffectDamage", 237351) -- Lunar Barrage
 	self:Log("SPELL_PERIODIC_DAMAGE", "GroundEffectDamage", 237351)
 	self:Log("SPELL_PERIODIC_MISSED", "GroundEffectDamage", 237351)
@@ -300,7 +301,7 @@ do
 	function mod:MoonBurnApplied(args)
 		playerList[#playerList+1] = args.destName
 		if #playerList == 1 then
-			self:ScheduleTimer("TargetMessage", 0.1, args.spellId, playerList, "Attention", "Alert")
+			self:ScheduleTimer("TargetMessage", 0.3, args.spellId, playerList, "Attention", "Alert")
 		end
 		if self:Me(args.destGUID) then
 			self:Flash(args.spellId)
@@ -309,6 +310,17 @@ do
 end
 
 do
+	function mod:LunarBeaconApplied(args)
+		if self:Me(args.destGUID) then
+			self:SayCountdown(args.spellId, 6)
+		end
+	end
+	function mod:LunarBeaconRemoved(args)
+		if self:Me(args.destGUID) then
+			self:CancelSayCountdown(args.spellId)
+		end
+	end
+
 	local function printTarget(self, name, guid)
 		self:TargetMessage(236712, name, "Attention", "Alert")
 		if self:Me(guid) then
@@ -319,14 +331,6 @@ do
 		self:GetBossTarget(printTarget, 0.5, args.sourceGUID) -- Faster than waiting for debuff/cast end
 		lunarBeaconCounter = lunarBeaconCounter + 1
 		self:Bar(args.spellId, lunarBeaconCounter == 2 and 21.9 or 35) -- XXX Need Data longer than 4 casts
-	end
-end
-
-function mod:LunarBeaconApplied(args)
-	if self:Me(args.destGUID) then -- XXX Get debuff Duration
-		self:ScheduleTimer("Say", 3, args.spellId, 3, true)
-		self:ScheduleTimer("Say", 4, args.spellId, 2, true)
-		self:ScheduleTimer("Say", 5, args.spellId, 1, true)
 	end
 end
 
