@@ -46,7 +46,7 @@ local L = mod:GetLocale()
 function mod:GetOptions()
 	return {
 		"stages",
-		{236330, "HUD"}, -- Astral Vulnerability
+		{236330}, -- Astral Vulnerability
 		{236541, "SAY", "ICON"}, -- Twilight Glaive
 		{236547, "TANK"}, -- Moon Glaive
 		{236550, "TANK"}, -- Discorporate
@@ -78,7 +78,6 @@ function mod:OnBossEnable()
 	-- Mythic
 	self:Log("SPELL_AURA_APPLIED", "AstralVulnerabilityApplied", 236330) -- Astral Vulnerability
 	self:Log("SPELL_AURA_APPLIED_DOSE", "AstralVulnerabilityApplied", 236330) -- Astral Vulnerability
-	self:Log("SPELL_AURA_REMOVED", "AstralVulnerabilityRemoved", 236330) -- Astral Vulnerability
 
 	-- Huntress Kasparian
 	self:Log("SPELL_AURA_APPLIED", "TwilightGlaiveApplied", 237561) -- Twilight Glaive
@@ -191,25 +190,8 @@ function mod:AstralVulnerabilityApplied(args)
 	if self:Me(args.destGUID) then
 		local amount = args.amount or 1
 		if amount > 3 then
-			self:StackMessage(args.spellId, args.destName, amount, "Urgent", amount > 4 and "Warning")
+			self:StackMessage(args.spellId, args.sourceName, amount, "Urgent", amount > 4 and "Warning")
 		end
-		if self:Hud(args.spellId) then
-			Hud:DrawSpinner("player", 42, 2):SetColor(1, 1, 1, 0.6):Register("AstralVulnerabilityTimer", true)
-			if amount == 3 then
-				Hud:DrawSpinner("player", 50):SetColor(0.5, 0.5, 0):Register("AstralVulnerabilityWarn", true)
-			elseif amount == 4 then
-				Hud:DrawSpinner("player", 50):SetColor(1, 0.3, 0, 0.6):Register("AstralVulnerabilityWarn", true)
-			elseif amount >= 5 then
-				Hud:DrawSpinner("player", 50):SetColor(1, 0, 0, 1):Register("AstralVulnerabilityWarn", true)
-			end
-		end
-	end
-end
-
-function mod:AstralVulnerabilityRemoved(args)
-	if self:Me(args.destGUID) then
-		Hud:RemoveObject("AstralVulnerabilityTimer")
-		Hud:RemoveObject("AstralVulnerabilityWarn")
 	end
 end
 
