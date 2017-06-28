@@ -345,6 +345,8 @@ end
 do
 	function mod:LunarBeaconApplied(args)
 		if self:Me(args.destGUID) then
+			--self:Say(args.spellId)
+			-- Should be handled by printTarget below
 			self:SayCountdown(args.spellId, 6)
 		end
 	end
