@@ -40,6 +40,8 @@ local L = mod:GetLocale()
 --
 
 local shatteringStarMarker = mod:AddMarkerOption(true, "player", 1, 233279, 1)
+local meteors_impact = mod:AddCustomOption { "meteors_impact", "Rain of Brimstone meteors impact", default = true,
+	configurable = true, icon = 206433, desc = "Countdown until meteors impact during Rain of Brimstone" }
 function mod:GetOptions()
 	return {
 		{231363, "TANK", "SAY"}, -- Burning Armor
@@ -50,6 +52,7 @@ function mod:GetOptions()
 		233062, -- Infernal Burning
 		234346, -- Fel Eruption
 		238588, -- Rain of Brimstone
+		{meteors_impact, "COUNTDOWN"}
 	},{
 		[231363] = "general",
 		[238588] = "mythic",
@@ -107,7 +110,7 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 		rainCounter = rainCounter + 1
 		self:Message(238588, "Urgent", "Warning", CL.incoming:format(spellName))
 		self:Bar(238588, rainCounter == 5 and 68 or 60, CL.count:format(spellName, rainCounter))
-		self:Bar(238588, 8, self:SpellName(182580), 238588) -- Meteor Impact
+		self:Bar(meteors_impact, 8, self:SpellName(182580), 206433) -- Meteor Impact
 	end
 end
 
