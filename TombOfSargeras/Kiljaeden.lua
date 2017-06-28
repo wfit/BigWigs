@@ -67,6 +67,7 @@ local obelisks_explosion = mod:AddCustomOption { "obelisks_explosion", "Demonic 
 function mod:GetOptions()
 	return {
 		"stages",
+		"berserk",
 		{239932, "TANK"}, -- Felclaws
 		235059, -- Rupturing Singularity
 		240910, -- Armageddon
@@ -155,6 +156,7 @@ function mod:OnEngage()
 	self:Bar(236710, 20, L.reflectionErupting) -- Shadow Reflection: Erupting
 	self:Bar(239932, 25) -- Fel Claws
 	self:Bar(235059, 58, CL.count:format(self:SpellName(235059), singularityCount)) -- Rupturing Singularity
+	self:Berserk(600)
 end
 
 --------------------------------------------------------------------------------
