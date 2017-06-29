@@ -295,15 +295,47 @@ function mod:EmbraceoftheEclipse(args)
 	nextUltimate = GetTime() + 54.7
 end
 
-function mod:EmbraceoftheEclipseApplied(args)
-	if self:Me(args.destGUID) then
-		self:OpenProximity(args.spellId, 8)
-	end
-end
+do
+	local colorUpdater
+	local lastStatus = -1
 
-function mod:EmbraceoftheEclipseRemoved(args)
-	if self:Me(args.destGUID) then
-		self:CloseProximity(args.spellId)
+	function mod:EmbraceoftheEclipseApplied(args)
+		if self:Me(args.destGUID) then
+			self:OpenProximity(args.spellId, 8)
+			lastStatus = -1
+			colorUpdater = self:ScheduleRepeatingTimer("CheckShieldStatus", 0.2, args.spellId, args.spellName)
+			self:CheckShieldStatus(args.spellId, args.spellName)
+		end
+	end
+
+	function mod:EmbraceoftheEclipseRemoved(args)
+		if self:Me(args.destGUID) then
+			self:CloseProximity(args.spellId)
+			self:CancelTimer(colorUpdater)
+			self:SmartColorUnset(args.spellId)
+		end
+	end
+
+	function mod:CheckShieldStatus(spellId, spellName)
+		local amount = select(17, UnitDebuff("player", spellName))
+		if amount then
+			local status = 0
+			if amount > 500000 then
+				status = 2
+			elseif amount > 100000 then
+				status = 1
+			end
+			if status ~= lastStatus then
+				lastStatus = status
+				if status == 0 then
+					self:SmartColorSet(spellId, 0.2, 0.8, 0.2)
+				elseif status == 1 then
+					self:SmartColorSet(spellId, 1, 0.5, 0)
+				elseif status == 2 then
+					self:SmartColorSet(spellId, 1, 0.2, 0.2)
+				end
+			end
+		end
 	end
 end
 
