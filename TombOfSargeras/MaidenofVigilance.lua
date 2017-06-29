@@ -93,8 +93,8 @@ end
 
 function mod:OnBossEnable()
 	-- General
-	self:Log("SPELL_AURA_APPLIED", "UnstableSoul", 235117) -- Unstable Soul
-	self:Log("SPELL_AURA_REMOVED", "UnstableSoulRemoved", 235117) -- Unstable Soul
+	self:Log("SPELL_AURA_APPLIED", "UnstableSoul", 243276, 235117) -- Mythic, Others
+	self:Log("SPELL_AURA_REMOVED", "UnstableSoulRemoved", 243276, 235117) -- Mythic, Others
 	--self:Log("SPELL_AURA_APPLIED", "AegwynnsWardApplied", 241593, 236420) -- Aegwynn's Ward, Heroic, Normal
 	self:Log("SPELL_AURA_APPLIED", "GroundEffectDamage", 238028, 238408) -- Light Remanence, Fel Remanence
 	self:Log("SPELL_PERIODIC_DAMAGE", "GroundEffectDamage", 238028, 238408)
@@ -160,14 +160,14 @@ end
 
 function mod:UnstableSoul(args)
 	if self:Me(args.destGUID) then
-		self:TargetMessage(args.spellId, args.destName, "Personal", "Alarm")
-		self:Flash(args.spellId)
+		self:TargetMessage(235117, args.destName, "Personal", "Alarm")
+		self:Flash(235117)
 
 		local _, _, _, _, _, _, expires = UnitDebuff(args.destName, args.spellName)
 		local remaining = expires - GetTime() - 2
-		self:TargetBar(args.spellId, remaining, args.destName)
+		self:TargetBar(235117, remaining, args.destName)
 
-		if self:Hud(args.spellId) then
+		if self:Hud(235117) then
 			local timer = Hud:DrawTimer("player", 50, remaining):SetColor(1, 0.5, 0):Register("UnstableSoulHUD")
 			local label = Hud:DrawText("player", "Wait"):Register("UnstableSoulHUD")
 			local done = false
@@ -203,7 +203,7 @@ end
 
 function mod:UnstableSoulRemoved(args)
 	if self:Me(args.destGUID) then
-		self:StopBar(args.spellId, args.destName)
+		self:StopBar(args.spellName, args.destName)
 		Hud:RemoveObject("UnstableSoulHUD")
 	end
 end

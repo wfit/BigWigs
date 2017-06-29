@@ -208,6 +208,7 @@ function boss:OnEnable(isWipe)
 	if debug then dbg(self, isWipe and "OnEnable() via Wipe()" or "OnEnable()") end
 
 	updateData(self)
+	self.sayCountdowns = {}
 
 	-- Update enabled modules list
 	for i = #enabledModules, 1, -1 do
@@ -827,7 +828,6 @@ do
 		-- Engage
 		if self.isEngaged then return end
 		self.isEngaged = true
-		self.sayCountdowns = {}
 
 		if debug then dbg(self, ":Engage") end
 
