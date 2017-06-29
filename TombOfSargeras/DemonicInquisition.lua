@@ -213,7 +213,7 @@ do
 	local function printTarget(self, name, guid)
 		self:TargetMessage(233431, name, "Urgent", "Alert", nil, nil, true)
 		if self:Me(guid) then
-			self:Say(233431)
+			self:Say(233431, nil, nil, "YELL")
 			self:Flash(233431)
 		end
 	end
