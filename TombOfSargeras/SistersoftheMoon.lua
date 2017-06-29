@@ -56,7 +56,7 @@ function mod:GetOptions()
 		236694, -- Call Moontalon
 		236697, -- Deadly Screech
 		236603, -- Rapid Shot
-		{233263, "PROXIMITY"}, -- Embrace of the Eclipse
+		{233263, "PROXIMITY", "SMARTCOLOR"}, -- Embrace of the Eclipse
 		{236519, "FLASH"}, -- Moon Burn
 		{236712, "SAY", "FLASH"}, -- Lunar Beacon
 		237351, -- Lunar Barrage
