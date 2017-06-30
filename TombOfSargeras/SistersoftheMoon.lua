@@ -189,7 +189,9 @@ end
 function mod:AstralVulnerabilityApplied(args)
 	if self:Me(args.destGUID) then
 		local amount = args.amount or 1
-		self:StackMessage(args.spellId, args.sourceName, amount, amount > 4 and "Urgent" or "Personal", amount > 4 and "Warning")
+		if amount > 4 then
+			self:StackMessage(args.spellId, args.destName, amount, "Urgent" or "Personal", "Warning")
+		end
 	end
 end
 
