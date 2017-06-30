@@ -106,8 +106,9 @@ function mod:OnBossEnable()
 	self:Log("SPELL_AURA_REMOVED", "SoulbindRemoved", 236459)
 	self:Log("SPELL_CAST_SUCCESS", "WailingSouls", 236072)
 	-- Adds
-	self:Log("SPELL_AURA_APPLIED", "ShatteringScreamApplied", 235969)
+	self:Log("SPELL_CAST_SUCCESS", "ShatteringScreamSuccess", 235969)
 	self:Log("SPELL_AURA_APPLIED", "ShatteringScream", 236515)
+	self:Log("SPELL_AURA_APPLIED_DOSE", "ShatteringScream", 236515)
 	self:Log("SPELL_AURA_APPLIED", "SpiritChains", 236361)
 
 	-- Tormented Souls
@@ -303,12 +304,20 @@ do
 end
 
 function mod:BonecageArmor(args)
+	if self:Mythic() then
+		local id = self:ModId(args.destGUID)
+		if id == 118715 or id == 119938 then return end
+	end
 	boneArmorCounter = boneArmorCounter + 1
 	self:Message(args.spellId, "Important", "Alert", CL.count:format(args.spellName, boneArmorCounter))
 	self:SetInfo("infobox", 2, boneArmorCounter)
 end
 
 function mod:BonecageArmorRemoved(args)
+	if self:Mythic() then
+		local id = self:ModId(args.destGUID)
+		if id == 118715 or id == 119938 then return end
+	end
 	boneArmorCounter = boneArmorCounter - 1
 	self:Message(args.spellId, "Positive", "Info", L.armor_remaining:format(args.spellName, boneArmorCounter))
 	self:SetInfo("infobox", 2, boneArmorCounter)
@@ -370,11 +379,13 @@ function mod:WailingSouls(args)
 	self:CastBar(args.spellId, 60)
 end
 
-function mod:ShatteringScreamApplied(args)
-	if boneArmorCounter > 0 and self:Me(args.destGUID) then
+function mod:ShatteringScreamSuccess(args)
+	if boneArmorCounter > 0 then
 		self:TargetMessage(236515, args.destName, "Attention", "Warning")
-		self:Say(236515)
-		self:Flash(236515)
+		if self:Me(args.destGUID) then
+			self:Say(236515)
+			self:Flash(236515)
+		end
 	end
 end
 
