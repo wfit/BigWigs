@@ -164,7 +164,7 @@ function mod:UnstableSoul(args)
 		self:Flash(235117)
 
 		local _, _, _, _, _, _, expires = UnitDebuff(args.destName, args.spellName)
-		local remaining = expires - GetTime() - 1.75
+		local remaining = expires - GetTime() - 1.5
 		self:TargetBar(235117, remaining, args.destName)
 
 		if self:Hud(235117) then
