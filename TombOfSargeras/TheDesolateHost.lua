@@ -33,6 +33,10 @@ local wailingSoulsCounter = 1
 local boneArmorCounter = 0
 local updateProximity = nil
 
+local fallenPriestesses = {}
+local priestressIcons = { 1, 2, 5 }
+local nextPriestressIcon = 1
+
 --------------------------------------------------------------------------------
 -- Localization
 --
@@ -48,10 +52,13 @@ end
 -- Initialization
 --
 
-local soulBindMarker = mod:AddMarkerOption(true, "player", 3, 236459, 3,4)
+local soulBindMarker = mod:AddMarkerOption(true, "player", 3, 236459, 3, 4)
+local tanksMarker = mod:AddMarkerOption(true, "npc", 6, -14884, 6, 7, 8)
+local priestessMarker = mod:AddMarkerOption(false, "npc", 1, -14956, 1, 2, 5)
 function mod:GetOptions()
 	return {
 		"infobox",
+		tanksMarker,
 		{239006, "PROXIMITY"}, -- Dissonance
 		236507, -- Quietus
 		{235924, "SAY", "FLASH"}, -- Spear of Anguish
@@ -64,6 +71,7 @@ function mod:GetOptions()
 		soulBindMarker,
 		236072, -- Wailing Souls
 		{236515, "SAY", "FLASH"}, -- Shattering Scream
+		priestessMarker,
 		236361, -- Spirit Chains
 		236542, -- Sundering Doom
 		236544, -- Doomed Sundering
@@ -138,6 +146,8 @@ function mod:OnEngage()
 		end
 	end
 
+	nextPriestressIcon = 1
+
 	if not self:Easy() then -- No Dissonance in LFR/Normal
 		updateProximity(self)
 	end
@@ -164,6 +174,32 @@ function mod:OnEngage()
 	end
 	self:CDBar(236072, 60) -- Wailing Souls
 	self:CDBar(238570, 120) -- Tormented Cries
+
+	if self:GetOption(tanksMarker) then
+		local marks = { 8, 7, 6 }
+		for unit in self:IterateGroup() do
+			if self:Tank(unit) then
+				SetRaidTarget(unit, table.remove(marks))
+				if #marks < 1 then break end
+			end
+		end
+	end
+
+	if self:GetOption(priestessMarker) then
+		self:RegisterTargetEvents("MarkPriestess")
+		self:ScheduleTimer("UnregisterTargetEvents", 10)
+	end
+end
+
+function mod:OnBossDisable()
+	wipe(fallenPriestesses)
+	if self:GetOption(tanksMarker) then
+		for unit in self:IterateGroup() do
+			if self:Tank(unit) then
+				SetRaidTarget(unit, 0)
+			end
+		end
+	end
 end
 
 --------------------------------------------------------------------------------
@@ -377,6 +413,22 @@ function mod:WailingSouls(args)
 		self:Bar(args.spellId, 120)
 	end
 	self:CastBar(args.spellId, 60)
+	if self:GetOption(priestessMarker) then
+		self:ScheduleTimer("RegisterTargetEvents", 60, "MarkPriestess")
+		self:ScheduleTimer("UnregisterTargetEvents", 70)
+	end
+end
+
+function mod:MarkPriestess(event, unit)
+	local guid = UnitGUID(unit)
+	if self:MobId(guid) == 118729 and not fallenPriestesses[guid] then
+		fallenPriestesses[guid] = true
+		SetRaidTarget(unit, priestressIcons[nextPriestressIcon])
+		nextPriestressIcon = nextPriestressIcon + 1
+		if nextPriestressIcon > #priestressIcons then
+			nextPriestressIcon = 1
+		end
+	end
 end
 
 function mod:ShatteringScreamSuccess(args)
