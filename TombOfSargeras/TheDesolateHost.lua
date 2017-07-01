@@ -390,8 +390,9 @@ function mod:ShatteringScreamSuccess(args)
 end
 
 function mod:ShatteringScream(args)
-	if boneArmorCounter < 1 then
-		self:StackMessage(args.spellId, args.destName, args.amount or 1, "Important", "Warning")
+	local amount = args.amount or 1
+	if amount > 2 then
+		self:Say(args.spellId, amount, true)
 	end
 end
 
