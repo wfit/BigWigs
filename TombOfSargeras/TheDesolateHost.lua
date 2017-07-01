@@ -38,6 +38,7 @@ local priestressIcons = { 1, 2, 5 }
 local nextPriestressIcon = 1
 
 local nextAddsSpawn = 1
+local nextAddsTimer
 local addsSpawn = {
 	{"Adds Up (2)", 181437},
 	{"Adds Down (2)", 212552},
@@ -194,7 +195,7 @@ function mod:OnEngage()
 
 	if self:GetOption("adds") then
 		self:Bar("adds", 60, addsSpawn[nextAddsSpawn][1], addsSpawn[nextAddsSpawn][2])
-		self:ScheduleTimer("AddsSpawn", 60)
+		nextAddsTimer = self:ScheduleTimer("AddsSpawn", 60)
 	end
 
 	if self:GetOption(tanksMarker) then
@@ -239,6 +240,9 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 	elseif spellId == 239978 then -- Soul Palour // Phase 2
 		phase = 2
 
+		self:CancelTimer(nextAddsTimer)
+		self:StopBar(addsSpawn[nextAddsSpawn][1]) -- Adds spawn
+
 		self:StopBar(236072) -- Wailing Souls
 		self:StopBar(238570) -- Tormented Cries
 		self:StopBar(CL.cast:format(self:SpellName(236072))) -- <cast: Wailing Souls>
@@ -259,7 +263,7 @@ function mod:AddsSpawn()
 	nextAddsSpawn = nextAddsSpawn + 1
 	if addsSpawn[nextAddsSpawn] then
 		self:Bar("adds", 60, addsSpawn[nextAddsSpawn][1], addsSpawn[nextAddsSpawn][2])
-		self:ScheduleTimer("AddsSpawn", 60)
+		nextAddsTimer = self:ScheduleTimer("AddsSpawn", 60)
 	end
 end
 
