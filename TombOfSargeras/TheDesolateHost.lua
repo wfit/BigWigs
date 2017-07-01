@@ -37,6 +37,18 @@ local fallenPriestesses = {}
 local priestressIcons = { 1, 2, 5 }
 local nextPriestressIcon = 1
 
+local nextAddsSpawn = 1
+local addsSpawn = {
+	{"Adds Up (2)", 181437},
+	{"Adds Down (2)", 212552},
+	{"Adds Up (3): 2x Templars", 181437},
+	{"Adds Down (3): 3x Priestess", 212552},
+	{"Adds Up (4)", 181437},
+	{"Adds Down (4)", 212552},
+	{"Adds Up 5)", 181437},
+	{"Adds Down (5)", 212552},
+}
+
 --------------------------------------------------------------------------------
 -- Localization
 --
@@ -47,6 +59,9 @@ if L then
 	L.infobox_players = "Players"
 	L.armor_remaining = "%s Remaining (%d)" -- Bonecage Armor Remaining (#)
 	L.tormentingCriesSay = "Cries" -- Tormenting Cries (short say)
+
+	L.adds = CL.adds
+	L.adds_desc = "Timers and warnings for the add spawns."
 end
 --------------------------------------------------------------------------------
 -- Initialization
@@ -60,14 +75,15 @@ function mod:GetOptions()
 		"infobox",
 		tanksMarker,
 		{239006, "PROXIMITY"}, -- Dissonance
+		{236459, "FLASH"}, -- Soulbind
 		236507, -- Quietus
 		{235924, "SAY", "FLASH"}, -- Spear of Anguish
 		235907, -- Collapsing Fissure
 		{238570, "SAY", "ICON", "FLASH"}, -- Tormented Cries
+		"adds",
 		235927, -- Rupturing Slam
 		{236513, "INFOBOX"}, -- Bonecage Armor
 		236131, -- Wither
-		{236459, "FLASH"}, -- Soulbind
 		soulBindMarker,
 		236072, -- Wailing Souls
 		{236515, "SAY", "FLASH"}, -- Shattering Scream
@@ -78,9 +94,9 @@ function mod:GetOptions()
 		236548, -- Torment
 	},{
 		["infobox"] = "general",
-		[235933] = -14856,-- Corporeal Realm
-		[235927] = CL.adds,-- Adds
-		[236340] = -14857,-- Spirit Realm
+		[236507] = -14856,-- Corporeal Realm
+		["adds"] = CL.adds,-- Adds
+		[236131] = -14857,-- Spirit Realm
 		[236515] = CL.adds,-- Adds
 		[236542] = -14970, -- Tormented Souls
 	}
@@ -147,6 +163,7 @@ function mod:OnEngage()
 	end
 
 	nextPriestressIcon = 1
+	nextAddsSpawn = 1
 
 	if not self:Easy() then -- No Dissonance in LFR/Normal
 		updateProximity(self)
@@ -174,6 +191,11 @@ function mod:OnEngage()
 	end
 	self:CDBar(236072, 60) -- Wailing Souls
 	self:CDBar(238570, 120) -- Tormented Cries
+
+	if self:GetOption("adds") then
+		self:Bar("adds", 60, addsSpawn[nextAddsSpawn][1], addsSpawn[nextAddsSpawn][2])
+		self:ScheduleTimer("AddsSpawn", 60)
+	end
 
 	if self:GetOption(tanksMarker) then
 		local marks = { 8, 7, 6 }
@@ -229,6 +251,15 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 
 		self:CDBar(236542, 17) -- Sundering Doom
 		self:CDBar(236544, 28) -- Doomed Sundering
+	end
+end
+
+function mod:AddsSpawn()
+	self:Message("adds", "Neutral", "Info", addsSpawn[nextAddsSpawn][1], addsSpawn[nextAddsSpawn][2])
+	nextAddsSpawn = nextAddsSpawn + 1
+	if addsSpawn[nextAddsSpawn] then
+		self:Bar("adds", 60, addsSpawn[nextAddsSpawn][1], addsSpawn[nextAddsSpawn][2])
+		self:ScheduleTimer("AddsSpawn", 60)
 	end
 end
 
