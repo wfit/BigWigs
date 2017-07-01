@@ -477,9 +477,11 @@ function mod:ShatteringScreamSuccess(args)
 end
 
 function mod:ShatteringScream(args)
-	local amount = args.amount or 1
-	if amount > 2 then
-		self:Say(args.spellId, amount, true)
+	if self:Me(args.destGUID) then
+		local amount = args.amount or 1
+		if amount > 2 then
+			self:Say(args.spellId, amount, true)
+		end
 	end
 end
 
