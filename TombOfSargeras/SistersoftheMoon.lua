@@ -361,8 +361,11 @@ end
 
 do
 	function mod:LunarBeaconApplied(args)
+		self:TargetMessage(236712, name, "Attention", "Alert")
 		if self:Me(args.destGUID) then
+			self:Flash(236712)
 			self:SayCountdown(args.spellId, 6)
+			self:Say(236712)
 		end
 	end
 	function mod:LunarBeaconRemoved(args)
@@ -371,15 +374,7 @@ do
 		end
 	end
 
-	local function printTarget(self, name, guid)
-		self:TargetMessage(236712, name, "Attention", "Alert")
-		if self:Me(guid) then
-			self:Say(236712)
-			self:Flash(236712)
-		end
-	end
 	function mod:LunarBeacon(args)
-		self:GetBossTarget(printTarget, 0.5, args.sourceGUID) -- Faster than waiting for debuff/cast end
 		lunarBeaconCounter = lunarBeaconCounter + 1
 		self:Bar(args.spellId, lunarBeaconCounter == 2 and 21.9 or 35) -- XXX Need Data longer than 4 casts
 	end
