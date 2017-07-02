@@ -113,6 +113,7 @@ function mod:OnBossEnable()
 	self:Log("SPELL_AURA_APPLIED", "GroundEffectDamage", 236011, 238018, 235907) -- Tormented Cries (x2), Collapsing Fissure
 	self:Log("SPELL_PERIODIC_DAMAGE", "GroundEffectDamage", 236011, 238018, 235907) -- Tormented Cries (x2), Collapsing Fissure
 	self:Log("SPELL_PERIODIC_MISSED", "GroundEffectDamage", 236011, 238018, 235907) -- Tormented Cries (x2), Collapsing Fissure
+	self:Log("SPELL_DAMAGE", "GroundEffectDamage", 239006, 239007) -- Dissonance
 
 
 	-- Corporeal Realm
