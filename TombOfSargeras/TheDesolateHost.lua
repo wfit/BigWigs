@@ -377,7 +377,7 @@ end
 
 function mod:BonecageArmor(args)
 	if self:Mythic() then
-		local id = self:ModId(args.destGUID)
+		local id = self:MobId(args.destGUID)
 		if id == 118715 or id == 119938 then return end
 	end
 	boneArmorCounter = boneArmorCounter + 1
@@ -387,7 +387,7 @@ end
 
 function mod:BonecageArmorRemoved(args)
 	if self:Mythic() then
-		local id = self:ModId(args.destGUID)
+		local id = self:MobId(args.destGUID)
 		if id == 118715 or id == 119938 then return end
 	end
 	boneArmorCounter = boneArmorCounter - 1
