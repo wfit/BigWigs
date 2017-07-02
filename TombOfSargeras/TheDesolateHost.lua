@@ -314,9 +314,10 @@ do
 	function mod:GroundEffectDamage(args)
 		local t = GetTime()
 		if self:Me(args.destGUID) and t-prev > 1.5 then
+			if args.spellId == 239007 then args.spellId = 239006 end -- Dissonance
+			if args.spellId == 236011 or args.spellId == 238018 then args.spellId = 238570 end -- Tormented Cries
 			prev = t
-			local spellId = (args.spellId == 236011 or args.spellId == 238018) and 238570 or args.spellId -- Tormented Cries
-			self:Message(spellId, "Personal", "Alert", CL.underyou:format(args.spellName))
+			self:Message(args.spellId, "Personal", "Alert", CL.underyou:format(args.spellName))
 		end
 	end
 end
