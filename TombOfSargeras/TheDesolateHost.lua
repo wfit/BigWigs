@@ -41,13 +41,13 @@ local nextAddsSpawn = 1
 local nextAddsTimer
 local addsSpawn = {
 	{"Adds Up (2)", 181437},
-	{"Adds Down (2)", 212552},
+	{"Adds Down (2)", 100082},
 	{"Adds Up (3): 2x Templars", 181437},
-	{"Adds Down (3): 3x Priestess", 212552},
+	{"Adds Down (3): 3x Priestess", 100082},
 	{"Adds Up (4)", 181437},
-	{"Adds Down (4)", 212552},
+	{"Adds Down (4)", 100082},
 	{"Adds Up 5)", 181437},
-	{"Adds Down (5)", 212552},
+	{"Adds Down (5)", 100082},
 }
 
 --------------------------------------------------------------------------------
