@@ -105,6 +105,9 @@ function mod:OnEngage()
 	if not self:LFR() then
 		self:Bar(230139, 25, CL.count:format(self:SpellName(230139), hydraShotCounter)) -- Hydra Shot
 	end
+	if self:Mythic() then
+		self:Bar(239362, 12) -- Bufferfish
+	end
 	self:Bar(232722, 30.3) -- Slicing Tornado
 	self:Berserk(self:LFR() and 540 or 480)
 end
@@ -118,9 +121,11 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 		if not self:Mythic() then
 			phase = dreadSharkCounter
 		elseif dreadSharkCounter == 3 or dreadSharkCounter == 5 then
+			self:Bar(239362, 22) -- Bufferfish
 			self:Message(239436, "Urgent", "Warning")
 			phase = phase+1
 		else
+			self:Bar(239362, 22) -- Bufferfish
 			self:Message(239436, "Urgent", "Warning")
 			return -- No phase change yet
 		end
