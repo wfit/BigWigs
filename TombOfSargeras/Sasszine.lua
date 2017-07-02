@@ -79,7 +79,6 @@ function mod:OnBossEnable()
 	self:Log("SPELL_CAST_START", "ThunderingShock", 230358)
 	self:Log("SPELL_CAST_START", "ConsumingHunger", 230384, 234661) -- Stage 1 id + Stage 3 id
 	self:Log("SPELL_AURA_APPLIED", "ConsumingHungerApplied", 230384, 234661)
-	self:Log("SPELL_AURA_APPLIED", "MurlocAttached", 234459) -- Need Check
 
 	-- Stage Two: Terrors of the Deep
 	self:Log("SPELL_CAST_SUCCESS", "DevouringMaw", 232745)
@@ -237,14 +236,11 @@ do
 	function mod:ConsumingHungerApplied(args)
 		list[#list+1] = args.destName
 		if #list == 1 then
-		self:ScheduleTimer("TargetMessage", 0.3, 230384, list, "Attention", "Alert", nil, nil, true)
+			self:ScheduleTimer("TargetMessage", 0.3, 230384, list, "Attention", "Alert", nil, nil, true)
 		end
-	end
-end
-
-function mod:MurlocAttached(args)
-	if phase == 1 and self:Me(args.destGUID) then
-		self:Flash(230384)
+		if phase == 1 and self:Me(args.destGUID) then
+			self:Flash(230384)
+		end
 	end
 end
 
