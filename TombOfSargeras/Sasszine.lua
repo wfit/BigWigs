@@ -27,6 +27,8 @@ local burdenCounter = 1
 local hydraShotCounter = 1
 local slicingTimersP3 = {0, 39.0, 34.1, 42.6}
 
+local nextDreadSharkSoon = 87
+
 --------------------------------------------------------------------------------
 -- Localization
 --
@@ -38,6 +40,7 @@ local L = mod:GetLocale()
 --
 
 local hydraShotMarker = mod:AddMarkerOption(true, "player", 1, 230139, 1, 2, 3, 4)
+local drop_fish = mod:AddCustomOption { "drop_fish", "Display a Pulse alert if you have a Bufferfish 2% before sharks", default = false }
 function mod:GetOptions()
 	return {
 		"stages",
@@ -53,6 +56,7 @@ function mod:GetOptions()
 		232913, -- Befouling Ink
 		232827, -- Crashing Wave
 		239436, -- Dread Shark
+		drop_fish,
 		239362, -- Delicious Bufferfish
 	},{
 		["stages"] = "general",
@@ -107,6 +111,8 @@ function mod:OnEngage()
 	end
 	if self:Mythic() then
 		self:Bar(239362, 12) -- Bufferfish
+		nextDreadSharkSoon = 87
+		self:RegisterUnitEvent("UNIT_HEALTH_FREQUENT", nil, "boss1")
 	end
 	self:Bar(232722, 30.3) -- Slicing Tornado
 	self:Berserk(self:LFR() and 540 or 480)
@@ -163,6 +169,20 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 
 			self:Bar(230384, 40.1) -- Consuming Hunger
 			self:Bar(232722, 57.2) -- Slicing Tornado
+		end
+	end
+end
+
+function mod:UNIT_HEALTH_FREQUENT(unit)
+	local hp = UnitHealth(unit) / UnitHealthMax(unit) * 100
+	if hp < nextDreadSharkSoon then
+		self:Message(239436, "Neutral", "Long", CL.soon:format(self:SpellName(239436)), false)
+		if self:GetOption(drop_fish) and UnitDebuff("player", self:SpellName(239362)) then
+			self:Pulse(false, 142225)
+		end
+		nextDreadSharkSoon = nextDreadSharkSoon - 15
+		if nextDreadSharkSoon < 0 then
+			self:UnregisterUnitEvent("UNIT_HEALTH_FREQUENT", unit)
 		end
 	end
 end
