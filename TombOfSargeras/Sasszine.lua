@@ -24,6 +24,7 @@ local slicingTornadoCounter = 1
 local waveCounter = 1
 local dreadSharkCounter = 1
 local burdenCounter = 1
+local hydraShotCounter = 1
 local slicingTimersP3 = {0, 39.0, 34.1, 42.6}
 
 --------------------------------------------------------------------------------
@@ -97,12 +98,13 @@ function mod:OnEngage()
 	waveCounter = 1
 	dreadSharkCounter = 1
 	burdenCounter = 1
+	hydraShotCounter = 1
 
 	self:Bar(230358, 10.5) -- Thundering Shock
 	self:Bar(230201, 15.5, CL.count:format(self:SpellName(230201), burdenCounter)) -- Burden of Pain
 	self:Bar(230384, 20.5) -- Consuming Hunger
 	if not self:LFR() then
-		self:Bar(230139, 25) -- Hydra Shot
+		self:Bar(230139, 25, CL.count:format(self:SpellName(230139), hydraShotCounter)) -- Hydra Shot
 	end
 	self:Bar(232722, 30.3) -- Slicing Tornado
 	self:Berserk(self:LFR() and 540 or 480)
@@ -138,7 +140,7 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 
 			self:Bar(232913, 11) -- Befouling Ink
 			if not self:LFR() then
-				self:Bar(230139, 15.9) -- Hydra Shot
+				self:Bar(230139, 15.9, CL.count:format(self:SpellName(230139), hydraShotCounter)) -- Hydra Shot
 			end
 			self:Bar(230201, 25.6, CL.count:format(self:SpellName(230201), burdenCounter)) -- Burden of Pain
 			self:Bar(232827, 32.5) -- Crashing Wave
@@ -152,7 +154,7 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 			self:Bar(230201, 25.6, CL.count:format(self:SpellName(230201), burdenCounter)) -- Burden of Pain
 			self:Bar(232827, 32.5) -- Crashing Wave
 			if not self:LFR() then
-				self:Bar(230139, 31.6) -- Hydra Shot
+				self:Bar(230139, 31.6, CL.count:format(self:SpellName(230139), hydraShotCounter)) -- Hydra Shot
 			end
 
 			self:Bar(230384, 40.1) -- Consuming Hunger
@@ -167,8 +169,9 @@ do
 		list[#list+1] = args.destName
 		if #list == 1 then
 			self:ScheduleTimer("TargetMessage", 0.3, args.spellId, list, "Important", "Warning", nil, nil, true)
-			self:CastBar(args.spellId, 6)
-			self:Bar(args.spellId, phase == 2 and 30 or 40)
+			self:CastBar(args.spellId, 6, CL.count:format(args.spellName, hydraShotCounter))
+			hydraShotCounter = hydraShotCounter + 1
+			self:Bar(args.spellId, phase == 2 and 30 or 40, CL.count:format(args.spellName, hydraShotCounter))
 		end
 		if self:Me(args.destGUID) then
 			self:Flash(args.spellId, #list)
