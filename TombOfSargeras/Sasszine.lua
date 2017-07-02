@@ -214,7 +214,7 @@ end
 
 function mod:SlicingTornado(args)
 	slicingTornadoCounter = slicingTornadoCounter + 1
-	self:Message(args.spellId, "Important", "Warning")
+	self:Message(args.spellId, "Important", "Long")
 	if self:Mythic() then
 		self:Bar(args.spellId, phase == 3 and slicingTimersP3[slicingTornadoCounter] or 45) -- -- XXX Need more p3 data.
 	else
@@ -223,7 +223,7 @@ function mod:SlicingTornado(args)
 end
 
 function mod:ThunderingShock(args)
-	self:Message(args.spellId, "Important", "Warning")
+	self:Message(args.spellId, "Important", "Info")
 	self:Bar(args.spellId, 36) -- was 32.8, not confirmed
 end
 
@@ -249,7 +249,7 @@ function mod:MurlocAttached(args)
 end
 
 function mod:DevouringMaw(args)
-	self:Message(234621, "Important", "Warning")
+	self:Message(234621, "Important", "Long")
 	self:Bar(234621, 41.5)
 end
 
@@ -273,6 +273,6 @@ end
 
 function mod:DeliciousBufferfishRemoved(args)
 	if self:Me(args.destGUID) then
-		self:TargetMessage(args.spellId, args.destName, "Personal", "Alert", CL.removed:format(args.spellName))
+		self:TargetMessage(args.spellId, args.destName, "Personal", "Info", CL.removed:format(args.spellName))
 	end
 end
