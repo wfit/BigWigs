@@ -57,7 +57,7 @@ function mod:GetOptions()
 		234621, -- Devouring Maw
 		232913, -- Befouling Ink
 		232827, -- Crashing Wave
-		{239436, "FLASH"}, -- Dread Shark
+		{239436, "FLASH", "PULSE"}, -- Dread Shark
 		239362, -- Delicious Bufferfish
 	},{
 		["stages"] = "general",
