@@ -186,7 +186,7 @@ function mod:UNIT_HEALTH_FREQUENT(unit)
 	if hp < nextDreadSharkSoon then
 		self:Message(239436, "Neutral", "Info", CL.soon:format(self:SpellName(239436)), false)
 		if UnitDebuff("player", self:SpellName(239362)) then
-			self:Pulse(239436)
+			self:Flash(239436)
 		end
 		sharkVerySoon = true
 		nextDreadSharkSoon = nextDreadSharkSoon - 15
@@ -300,7 +300,7 @@ end
 function mod:DeliciousBufferfish(args)
 	if self:Me(args.destGUID) then
 		if sharkVerySoon then
-			self:Pulse(239436)
+			self:Flash(239436)
 		end
 		self:TargetMessage(239362, args.destName, "Personal", "Positive")
 	end
