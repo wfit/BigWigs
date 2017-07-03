@@ -200,6 +200,13 @@ do
 	local list = mod:NewTargetList()
 	function mod:HydraShot(args)
 		list[#list+1] = args.destName
+
+		-- Don't forget to add the SAY flag to HS if bringing this back
+		--[[
+		if self:Me(args.destGUID)then
+			self:Say(args.spellId, not self:Easy() and CL.count_rticon:format(args.spellName, #list, #list))
+		end]]
+
 		if #list == 1 then
 			self:ScheduleTimer("TargetMessage", 0.3, args.spellId, list, "Important", "Warning", nil, nil, true)
 			self:CastBar(args.spellId, 6, CL.count:format(args.spellName, hydraShotCounter))
