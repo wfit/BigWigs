@@ -30,6 +30,7 @@ local mawCounter = 1
 local slicingTimersP3 = {0, 39.0, 34.1, 42.6}
 
 local nextDreadSharkSoon = 87
+local sharkVerySoon = false
 
 --------------------------------------------------------------------------------
 -- Localization
@@ -42,7 +43,6 @@ local L = mod:GetLocale()
 --
 
 local hydraShotMarker = mod:AddMarkerOption(true, "player", 1, 230139, 1, 2, 3, 4)
-local drop_fish = mod:AddCustomOption { "drop_fish", "Display a Pulse alert if you have a Bufferfish 2% before sharks", default = false }
 function mod:GetOptions()
 	return {
 		"stages",
@@ -57,8 +57,7 @@ function mod:GetOptions()
 		234621, -- Devouring Maw
 		232913, -- Befouling Ink
 		232827, -- Crashing Wave
-		239436, -- Dread Shark
-		drop_fish,
+		{239436, "FLASH"}, -- Dread Shark
 		239362, -- Delicious Bufferfish
 	},{
 		["stages"] = "general",
@@ -133,10 +132,12 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 		elseif dreadSharkCounter == 3 or dreadSharkCounter == 5 then
 			self:Bar(239362, 22) -- Bufferfish
 			self:Message(239436, "Urgent", "Warning")
+			sharkVerySoon = false
 			phase = phase+1
 		else
 			self:Bar(239362, 22) -- Bufferfish
 			self:Message(239436, "Urgent", "Warning")
+			sharkVerySoon = false
 			return -- No phase change yet
 		end
 
@@ -183,10 +184,11 @@ end
 function mod:UNIT_HEALTH_FREQUENT(unit)
 	local hp = UnitHealth(unit) / UnitHealthMax(unit) * 100
 	if hp < nextDreadSharkSoon then
-		self:Message(239436, "Neutral", "Long", CL.soon:format(self:SpellName(239436)), false)
-		if self:GetOption(drop_fish) and UnitDebuff("player", self:SpellName(239362)) then
-			self:Pulse(false, 142225)
+		self:Message(239436, "Neutral", "Info", CL.soon:format(self:SpellName(239436)), false)
+		if UnitDebuff("player", self:SpellName(239362)) then
+			self:Pulse(239436)
 		end
+		sharkVerySoon = true
 		nextDreadSharkSoon = nextDreadSharkSoon - 15
 		if nextDreadSharkSoon < 0 then
 			self:UnregisterUnitEvent("UNIT_HEALTH_FREQUENT", unit)
@@ -297,6 +299,9 @@ end
 
 function mod:DeliciousBufferfish(args)
 	if self:Me(args.destGUID) then
+		if sharkVerySoon then
+			self:Pulse(239436)
+		end
 		self:TargetMessage(239362, args.destName, "Personal", "Positive")
 	end
 end
