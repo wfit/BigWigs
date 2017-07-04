@@ -47,6 +47,21 @@ local direction = {
 
 local massInstabilityGrace = 0
 
+local soakerLabel = {
+	["1-1"] = "Fel Melee Extérieur",
+	["1-2"] = "Fel Melee Centre",
+	["1-3"] = "Fel Melee Intérieur",
+	["2-1"] = "Fel Ranged Extérieur",
+	["2-2"] = "Fel Ranged Centre",
+	["2-3"] = "Fel Ranged Intérieur",
+	["3-1"] = "Light Melee Extérieur",
+	["3-2"] = "Light Melee Centre",
+	["3-3"] = "Light Melee Intérieur",
+	["4-1"] = "Light Ranged Extérieur",
+	["4-2"] = "Light Ranged Centre",
+	["4-3"] = "Light Ranged Intérieur",
+}
+
 --------------------------------------------------------------------------------
 -- Localization
 --
@@ -159,6 +174,92 @@ function mod:OnBossDisable()
 			end
 		end
 	end
+	self:Emit("MAIDEN_SOAKERS", nil)
+	self:Emit("MAIDEN_ROLE", nil, nil)
+end
+
+function mod:GenMythicSoakers()
+	-- Load players by groups
+	local groups = {}
+	for i = 1, MAX_RAID_GROUPS do groups[i] = {} end
+	for i = 1, GetNumGroupMembers() do
+		local unit = "raid" .. i
+		local _, _, subgroup, _, _, _, _, _, isDead = GetRaidRosterInfo(i)
+		if not isDead then table.insert(groups[subgroup], unit) end
+	end
+
+	-- Linearize roster
+	local roster = {}
+	for _, subgroup in ipairs(groups) do
+		for _, unit in ipairs(subgroup) do
+			table.insert(roster, unit)
+		end
+	end
+
+	-- Colors name
+	local fel = self:SpellName(235240)
+	local light = self:SpellName(235213)
+
+	-- Roles
+	local tank = function(unit) return self:Tank(unit) end
+	local melee = function(unit) return self:Melee(unit) and self:Damager(unit) end
+	local ranged = function(unit) return self:Ranged(unit) and self:Damager(unit) end
+	local healer = function(unit) return self:Healer(unit) end
+
+	-- Ordering
+	local ranged_order = { ranged, healer, tank, melee }
+	local melee_order = { tank, melee, ranged, healer }
+
+	-- Picker
+	local picked = {}
+	local function pick(count, color, roles)
+		local list = {}
+		for _, filter in ipairs(roles) do
+			for _, unit in ipairs(roster) do
+				if #list == count then return list end
+				if not picked[unit] and UnitDebuff(unit, color) and filter(unit) then
+					picked[unit] = true
+					table.insert(list, unit)
+				end
+			end
+		end
+		return list
+	end
+
+	-- Soaking ranged light on the fel side
+	local fel_ranged = pick(3, light, ranged_order)
+
+	-- Soaking ranged fel on the light side
+	local light_ranged = pick(3, fel, ranged_order)
+
+	-- Soaking melee fel
+	local fel_melee = pick(3, fel, melee_order)
+
+	-- Soaking melee light
+	local light_melee = pick(3, light, melee_order)
+
+	-- Combined soakers list
+	local soakers = {
+		fel_melee,
+		fel_ranged,
+		light_melee,
+		light_ranged
+	}
+	self:Emit("MAIDEN_SOAKERS", soakers)
+
+	-- Player role
+	local myRole, myIcon
+	for i, group in ipairs(soakers) do
+		for j, unit in ipairs(group) do
+			if UnitIsUnit("player", unit) then
+				myRole = i .. "-" .. j
+				myIcon = i < 3 and self.icons[235240] or self.icons[235213]
+				break
+			end
+		end
+		if myRole then break end
+	end
+	self:Emit("MAIDEN_ROLE", myRole and soakerLabel[myRole], myIcon)
 end
 
 --------------------------------------------------------------------------------
@@ -250,6 +351,9 @@ function mod:Infusion(args)
 	if infusionCounter == 2 then
 		self:Bar(args.spellId, 38.0)
 	end
+	if self:Mythic() then
+		self:ScheduleTimer("GenMythicSoakers", 3.5)
+	end
 end
 
 do
@@ -257,7 +361,7 @@ do
 		local sideString = (newSide == 235240 or newSide == 240219) and L.fel or L.light
 		if mySide ~= newSide then
 			self:Message(235271, "Important", "Warning", L.infusionChanged:format(sideString), newSide)
-			self:Flash(235271, self:GetOption(infusion_icons_pulse) and newSide or direction[bossSide][key])
+			self:Flash(235271, (self:GetOption(infusion_icons_pulse) or self:Mythic()) and newSide or direction[bossSide][key])
 			if mySide ~= 0 then
 				self:Say(235271, (key == "light") and "{rt1}" or "{rt4}", true)
 			end
