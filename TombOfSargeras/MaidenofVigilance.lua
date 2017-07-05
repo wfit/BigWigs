@@ -250,18 +250,20 @@ function mod:GenMythicSoakers()
 	self:Emit("MAIDEN_SOAKERS", soakers)
 
 	-- Player role
-	local myRole, myIcon
-	for i, group in ipairs(soakers) do
-		for j, unit in ipairs(group) do
-			if UnitIsUnit("player", unit) then
-				myRole = i .. "-" .. j
-				myIcon = i < 3 and self.icons[235240] or self.icons[235213]
-				break
+	local function selfAttribs()
+		for i, group in ipairs(soakers) do
+			for j, unit in ipairs(group) do
+				if UnitIsUnit("player", unit) then
+					local side = (i < 3) and (bossSide == 1 and "<" or ">") or (bossSide == 1 and ">" or "<")
+					local direction = ""
+					for i = 1, 4 - j do direction = direction .. side end
+					return (soakerLabel[i .. "-" .. j] .. "\n" .. direction),
+					       (i < 3 and mod.icons[235240] or mod.icons[235213])
+				end
 			end
 		end
-		if myRole then break end
 	end
-	self:Emit("MAIDEN_ROLE", myRole and soakerLabel[myRole], myIcon)
+	self:Emit("MAIDEN_ROLE", selfAttribs())
 end
 
 --------------------------------------------------------------------------------
