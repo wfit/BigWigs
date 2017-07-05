@@ -27,8 +27,8 @@ local burdenCounter = 1
 local hydraShotCounter = 1
 local shockCounter = 1
 local mawCounter = 1
-local slicingTimersP3 = {0, 39.0, 34.1, 42.6}
-local hungerTimersP3 = {0, 31.7, 41.3, 36.6}
+local slicingTimersP3 = {0, 39.0, 34.1, 43.8}
+local hungerTimersP3 = {0, 31.7, 41.3, 31.6}
 local waveTimersP3 = {0, 39.0, 32.8, 43}
 
 local nextDreadSharkSoon = 87
