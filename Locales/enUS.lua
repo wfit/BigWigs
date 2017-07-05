@@ -121,7 +121,7 @@ L.INFOBOX_desc = L.infobox_desc
 L.HUD = "HUD"
 L.HUD_desc = "Display HUD indicators bound to unit nameplates"
 L.SMARTCOLOR = "SmartColor™"
-L.SMARTCOLOR_desc = "Enable Grid SmartColor™ for this ability"
+L.SMARTCOLOR_desc = "Enable SmartColor™ for this ability"
 
 L.advanced = "Advanced options"
 L.back = "<< Back"
