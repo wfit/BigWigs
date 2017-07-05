@@ -278,7 +278,7 @@ end
 function mod:CallMoontalon(args)
 	self:Message(args.spellId, "Urgent", "Alert", CL.incoming:format(self:SpellName(-15064))) -- Moontalon
 	screechCounter = 1
-	self:Bar(args.spellId, 146.9)
+	self:Bar(args.spellId, 54)
 end
 
 function mod:DeadlyScreech(args)
@@ -376,7 +376,7 @@ do
 
 	function mod:LunarBeacon(args)
 		lunarBeaconCounter = lunarBeaconCounter + 1
-		self:Bar(args.spellId, lunarBeaconCounter == 2 and 21.9 or 35) -- XXX Need Data longer than 4 casts
+		self:Bar(args.spellId, lunarBeaconCounter == 2 and 21.9 or 31.7) -- XXX Need Data longer than 4 casts
 	end
 end
 
