@@ -188,7 +188,7 @@ end
 function mod:UNIT_HEALTH_FREQUENT(unit)
 	local hp = UnitHealth(unit) / UnitHealthMax(unit) * 100
 	if hp < nextDreadSharkSoon then
-		self:Message(239436, "Neutral", "Info", CL.soon:format(self:SpellName(239436)), false)
+		self:Message(239436, "Neutral", "Beware", CL.soon:format(self:SpellName(239436)), false)
 		if UnitDebuff("player", self:SpellName(239362)) then
 			self:Flash(239436)
 		end
