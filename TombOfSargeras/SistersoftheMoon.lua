@@ -361,7 +361,7 @@ end
 
 do
 	function mod:LunarBeaconApplied(args)
-		self:TargetMessage(236712, name, "Attention", "Alert")
+		self:TargetMessage(236712, args.destName, "Attention", "Alert")
 		if self:Me(args.destGUID) then
 			self:Flash(236712)
 			self:SayCountdown(args.spellId, 6)
