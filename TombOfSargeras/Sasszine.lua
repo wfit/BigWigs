@@ -49,7 +49,7 @@ function mod:GetOptions()
 	return {
 		"stages",
 		"berserk",
-		{230139, "FLASH", "PULSE"}, -- Hydra Shot
+		{230139, "SAY", "FLASH", "PULSE"}, -- Hydra Shot
 		hydraShotMarker,
 		{230201, "TANK", "FLASH"}, -- Burden of Pain
 		230959, -- Concealing Murk
@@ -220,6 +220,7 @@ do
 		end
 		if self:Me(args.destGUID) then
 			self:Flash(args.spellId, #list)
+			self:Say(args.spellId, "{rt" .. #list .. "}", true, "YELL")
 		end
 		if self:GetOption(hydraShotMarker) then -- Targets: LFR: 0, 1 Normal, 3 Heroic, 4 Mythic
 			SetRaidTarget(args.destName, #list)
