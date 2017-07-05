@@ -81,7 +81,8 @@ end
 
 local tank_marker = mod:AddCustomOption { "tank_marker", "Set markers matching infusion on tank players", default = true }
 local infusion_only_swap = mod:AddCustomOption { "infusion_only_swap", "Only display Infusion Pulse icon when not matching your current side", default = true }
-local infusion_icons_pulse = mod:AddCustomOption { "infusion_icons_pulse", "Use Infusion icons instead of arrows for Pulse", default = false }
+local infusion_icons_pulse = mod:AddCustomOption { "infusion_icons_pulse", "Use Infusion icons instead of arrows for Pulse", desc = "This option is always active in Mythic difficulty", default = false }
+local infusion_no_mm_pulse = mod:AddCustomOption { "infusion_no_mm_pulse", "Do not show Pulse in Mythic difficulty", default = false }
 local infusion_grace_countdown = mod:AddCustomOption { "infusion_grace_countdown", "Play Countdown sound until grace period after infusion is over", default = false }
 function mod:GetOptions()
 	return {
@@ -92,6 +93,7 @@ function mod:GetOptions()
 		tank_marker,
 		infusion_only_swap,
 		infusion_icons_pulse,
+		infusion_no_mm_pulse,
 		infusion_grace_countdown,
 		241635, -- Hammer of Creation
 		238028, -- Light Remanence
@@ -361,7 +363,9 @@ do
 		local sideString = (newSide == 235240 or newSide == 240219) and L.fel or L.light
 		if mySide ~= newSide then
 			self:Message(235271, "Important", "Warning", L.infusionChanged:format(sideString), newSide)
-			self:Flash(235271, (self:GetOption(infusion_icons_pulse) or self:Mythic()) and newSide or direction[bossSide][key])
+			if not mod:GetOption(infusion_no_mm_pulse) then
+				self:Flash(235271, (self:GetOption(infusion_icons_pulse) or self:Mythic()) and newSide or direction[bossSide][key])
+			end
 			if mySide ~= 0 then
 				self:Say(235271, (key == "light") and "{rt1}" or "{rt4}", true)
 			end
