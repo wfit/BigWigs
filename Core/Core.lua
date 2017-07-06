@@ -99,7 +99,8 @@ function addon:ENCOUNTER_START(event, id, name, diff, size)
 		self:ENCOUNTER_END(event, encounter, encounterName, difficulty, raidSize, 0)
 	end
 
-	self:Print(("|cffffffffEngaging |cff64b4ff%s |cff999999(%i, %i, %i, %s)"):format(name, id, diff, size, event))
+	local zone = select(4, UnitPosition("player")) or -1
+	self:Print(("|cffffffffEngaging |cff64b4ff%s |cff999999(%i, %i, %i, %i, %s)"):format(name, id, diff, size, zone, event))
 	encounterInProgress = true
 	self:UnregisterEvent("INSTANCE_ENCOUNTER_ENGAGE_UNIT")
 
