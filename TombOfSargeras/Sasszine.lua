@@ -148,6 +148,7 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 
 		consumingHungerCounter = 1
 		slicingTornadoCounter = 1
+		waveCounter = 1
 		hydraShotCounter = 1
 		burdenCounter = 1
 
@@ -169,8 +170,6 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 			self:StopBar(232913) -- Befouling Ink
 			self:StopBar(CL.count:format(self:SpellName(232827), waveCounter)) -- Crashing Wave
 			self:StopBar(234621) -- Devouring Maw
-
-			waveCounter = 1
 
 			self:CDBar(232913, 11) -- Befouling Ink
 			self:Bar(230201, 25.6, CL.count:format(self:SpellName(230201), burdenCounter)) -- Burden of Pain
