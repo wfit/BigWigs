@@ -355,9 +355,9 @@ function mod:Infusion(args)
 	if infusionCounter == 2 then
 		self:Bar(args.spellId, 38.0)
 	end
-	if self:Mythic() then
+	--if self:Mythic() then
 		self:ScheduleTimer("GenMythicSoakers", 3.5)
-	end
+	--end
 end
 
 do
@@ -365,7 +365,7 @@ do
 		local sideString = (newSide == 235240 or newSide == 240219) and L.fel or L.light
 		if mySide ~= newSide then
 			self:Message(235271, "Important", "Warning", L.infusionChanged:format(sideString), newSide)
-			if not mod:GetOption(infusion_no_mm_pulse) then
+			if not self:Mythic() or not mod:GetOption(infusion_no_mm_pulse) then
 				self:Flash(235271, (self:GetOption(infusion_icons_pulse) or self:Mythic()) and newSide or direction[bossSide][key])
 			end
 			if mySide ~= 0 then
