@@ -1081,22 +1081,22 @@ end
 
 --- Check if your talent tree role is TANK or MELEE.
 -- @return boolean
-function boss:Melee(unit)
+function boss:Melee(unit, strict)
 	local role = self:Role(unit)
 	if role == "none" and not unit then
-		return myRole == "TANK" or myDamagerRole == "MELEE"
+		return (not strict and myRole == "TANK") or myDamagerRole == "MELEE"
 	end
-	return role == "melee" or role == "tank"
+	return role == "melee" or (not strict and role == "tank")
 end
 
 --- Check if your talent tree role is HEALER or RANGED.
 -- @return boolean
-function boss:Ranged(unit)
+function boss:Ranged(unit, strict)
 	local role = self:Role(unit)
 	if role == "none" and not unit then
-		return myRole == "HEALER" or myDamagerRole == "RANGED"
+		return (not strict and myRole == "HEALER") or myDamagerRole == "RANGED"
 	end
-	return role == "ranged" or role == "healer"
+	return role == "ranged" or (not strict and role == "healer")
 end
 
 --- Check if your talent tree role is TANK.
