@@ -209,6 +209,7 @@ do
 		if self:Me(args.destGUID)then
 			self:Say(args.spellId, not self:Easy() and CL.count_rticon:format(args.spellName, #list, #list))
 		end]]
+		local icon = (#list == 4) and 6 or #list
 
 		if #list == 1 then
 			self:StopBar(CL.count:format(args.spellName, hydraShotCounter))
@@ -218,11 +219,11 @@ do
 			self:Bar(args.spellId, self:Mythic() and ((phase == 3 and hydraShotCounter <= 4 and 31.5) or 30.4) or phase == 2 and 30 or 40, CL.count:format(args.spellName, hydraShotCounter))
 		end
 		if self:Me(args.destGUID) then
-			self:Flash(args.spellId, #list)
-			self:Say(false, "{rt" .. #list .. "}", true, "YELL")
+			self:Flash(args.spellId, icon)
+			self:Say(false, "{rt" .. icon .. "}", true, "YELL")
 		end
 		if self:GetOption(hydraShotMarker) then -- Targets: LFR: 0, 1 Normal, 3 Heroic, 4 Mythic
-			SetRaidTarget(args.destName, #list)
+			SetRaidTarget(args.destName, icon)
 		end
 	end
 
