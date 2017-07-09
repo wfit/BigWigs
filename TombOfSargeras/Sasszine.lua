@@ -145,6 +145,7 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 
 		self:StopBar(CL.count:format(self:SpellName(230139), hydraShotCounter)) -- Hydra Shot
 		self:StopBar(CL.count:format(self:SpellName(230201), burdenCounter)) -- Burden of Pain
+		self:StopBar(CL.count:format(self:SpellName(232827), waveCounter)) -- Crashing Wave
 
 		consumingHungerCounter = 1
 		slicingTornadoCounter = 1
@@ -168,7 +169,6 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 			self:Bar(234621, 41.7) -- Devouring Maw
 		elseif phase == 3 then
 			self:StopBar(232913) -- Befouling Ink
-			self:StopBar(CL.count:format(self:SpellName(232827), waveCounter)) -- Crashing Wave
 			self:StopBar(234621) -- Devouring Maw
 
 			self:CDBar(232913, 11) -- Befouling Ink
