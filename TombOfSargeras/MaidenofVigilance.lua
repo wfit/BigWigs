@@ -355,9 +355,9 @@ function mod:Infusion(args)
 	if infusionCounter == 2 then
 		self:Bar(args.spellId, 38.0)
 	end
-	--if self:Mythic() then
-		self:ScheduleTimer("GenMythicSoakers", 3.5)
-	--end
+	if self:Mythic() then
+		self:ScheduleTimer("GenMythicSoakers", 3.2)
+	end
 end
 
 do
