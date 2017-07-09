@@ -32,6 +32,7 @@ local lunarFireCounter = 1
 local lunarBeaconCounter = 1
 
 local nextUltimate = 0
+local vulnerabilitiesCount = 0
 
 --------------------------------------------------------------------------------
 -- Localization
@@ -43,10 +44,12 @@ local L = mod:GetLocale()
 -- Initialization
 --
 
+local print_purges = mod:AddCustomOption { "print_purges", "Print Astral Purge in chat", icon = 234998, default = true }
 function mod:GetOptions()
 	return {
 		"stages",
 		{236330}, -- Astral Vulnerability
+		print_purges,
 		{236541, "SAY", "ICON"}, -- Twilight Glaive
 		{236547, "TANK"}, -- Moon Glaive
 		{236550, "TANK"}, -- Discorporate
@@ -78,6 +81,7 @@ function mod:OnBossEnable()
 	-- Mythic
 	self:Log("SPELL_AURA_APPLIED", "AstralVulnerabilityApplied", 236330) -- Astral Vulnerability
 	self:Log("SPELL_AURA_APPLIED_DOSE", "AstralVulnerabilityApplied", 236330) -- Astral Vulnerability
+	self:Log("SPELL_AURA_REMOVED", "AstralVulnerabilityRemoved", 236330) -- Astral Vulnerability
 
 	-- Huntress Kasparian
 	self:Log("SPELL_AURA_APPLIED", "TwilightGlaiveApplied", 237561) -- Twilight Glaive
@@ -116,6 +120,8 @@ function mod:OnBossEnable()
 	self:Log("SPELL_CAST_SUCCESS", "LunarFire", 239264) -- Lunar Fire
 	self:Log("SPELL_AURA_APPLIED", "LunarFireApplied", 239264) -- Lunar Fire
 	self:Log("SPELL_AURA_APPLIED_DOSE", "LunarFireApplied", 239264) -- Lunar Fire
+
+	self:Log("SPELL_DAMAGE", "AstralPurge", 234998)
 end
 
 function mod:OnEngage()
@@ -125,6 +131,7 @@ function mod:OnEngage()
 	twilightGlaiveCounter = 1
 	rapidShotCounter = 1
 	lunarBeaconCounter = 1
+	vulnerabilitiesCount = 0
 
 	nextUltimate = GetTime() + 48.3
 
@@ -189,9 +196,16 @@ end
 function mod:AstralVulnerabilityApplied(args)
 	if self:Me(args.destGUID) then
 		local amount = args.amount or 1
+		vulnerabilitiesCount = amount
 		if amount > 4 then
 			self:StackMessage(args.spellId, args.destName, amount, "Urgent" or "Personal", "Warning")
 		end
+	end
+end
+
+function mod:AstralVulnerabilityRemoved(args)
+	if self:Me(args.destGUID) then
+		vulnerabilitiesCount = 0
 	end
 end
 
@@ -407,4 +421,10 @@ end
 function mod:LunarFireApplied(args)
 	local amount = args.amount or 1
 	self:StackMessage(args.spellId, args.destName, amount, "Important", amount > 1 and "Warning")
+end
+
+function mod:AstralPurge(args)
+	if args.sourceGUID == args.destGUID and self:GetOption(print_purges) then
+		print("Astral Purge (" .. vulnerabilitiesCount .. ") : " .. self:ColorName(args.sourceGUID))
+	end
 end
