@@ -239,8 +239,9 @@ function mod:BurdenofPainCast(args)
 	self:Message(args.spellId, "Attention", "Warning", CL.casting:format(args.spellName))
 	burdenCounter = burdenCounter + 1
 	self:Bar(args.spellId, phase == 1 and (burdenCounter == 4 and 31.5) or phase > 1 and ((burdenCounter == 2 and 30.4) or (burdenCounter == 3 and 29.2)) or 28, CL.count:format(args.spellName, burdenCounter))
-	local destName = UnitName("boss1target") or "NONE"
-	self:Emit("BURDEN_CAST_START", destName)
+	if not UnitDetailedThreatSituation("player", "boss1") then
+		self:Emit("BURDEN_CAST_START")
+	end
 end
 
 function mod:BurdenofPain(args)
