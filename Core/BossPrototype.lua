@@ -43,16 +43,16 @@ local updateData = function(module)
 
 	local tree = GetSpecialization()
 	if tree then
-		myRole = GetSpecializationRole(tree)
+		myRole = GetSpecializationRole(tree):lower()
 		myDamagerRole = nil
-		if myRole == "DAMAGER" then
-			myDamagerRole = "MELEE"
+		if myRole == "damager" then
+			myDamagerRole = "melee"
 			local _, class = UnitClass("player")
 			if
 				class == "MAGE" or class == "WARLOCK" or (class == "HUNTER" and tree ~= 3) or (class == "DRUID" and tree == 1) or
 				(class == "PRIEST" and tree == 3) or (class == "SHAMAN" and tree == 1)
 			then
-				myDamagerRole = "RANGED"
+				myDamagerRole = "ranged"
 			end
 		end
 	end
@@ -1074,22 +1074,42 @@ end
 -- @section role
 
 function boss:Role(guid)
+	local unit, groupRole
 	if not guid then
 		guid = myGUID
 	elseif UnitExists(guid) then
+		unit = guid
 		guid = UnitGUID(guid)
 	end
-	local info = Roster:GetInfo(guid)
-	return info and info.spec_role_detailed or "none"
+	if guid == myGUID then
+		return myRole == "damager" and myDamagerRole or myRole
+	else
+		if not unit then
+			unit = self:GetPlayerUnitIdByGUID(guid) or Roster:GetUnit(guid)
+		end
+		if unit then
+			groupRole = UnitGroupRolesAssigned(unit)
+			if groupRole == "TANK" then
+				return "tank"
+			elseif groupRole == "HEALER" then
+				return "healer"
+			end
+		end
+		local info = Roster:GetInfo(guid)
+		if info and info.spec_role_detailed then
+			return info.spec_role_detailed
+		elseif groupRole == "DAMAGER" then
+			return "damager"
+		else
+			return "none"
+		end
+	end
 end
 
 --- Check if your talent tree role is TANK or MELEE.
 -- @return boolean
 function boss:Melee(unit, strict)
 	local role = self:Role(unit)
-	if role == "none" and not unit then
-		return (not strict and myRole == "TANK") or myDamagerRole == "MELEE"
-	end
 	return role == "melee" or (not strict and role == "tank")
 end
 
@@ -1097,9 +1117,6 @@ end
 -- @return boolean
 function boss:Ranged(unit, strict)
 	local role = self:Role(unit)
-	if role == "none" and not unit then
-		return (not strict and myRole == "HEALER") or myDamagerRole == "RANGED"
-	end
 	return role == "ranged" or (not strict and role == "healer")
 end
 
@@ -1107,30 +1124,14 @@ end
 -- @param[opt="player"] unit check if the chosen role of another unit is set to TANK, or if that unit is listed in the MAINTANK frames.
 -- @return boolean
 function boss:Tank(unit)
-	local role = self:Role(unit)
-	if role == "none" then
-		if unit then
-			return GetPartyAssignment("MAINTANK", unit) or UnitGroupRolesAssigned(unit) == "TANK"
-		else
-			return myRole == "TANK"
-		end
-	end
-	return role == "tank"
+	return self:Role(unit) == "tank"
 end
 
 --- Check if your talent tree role is HEALER.
 -- @param[opt="player"] unit check if the chosen role of another unit is set to HEALER.
 -- @return boolean
 function boss:Healer(unit)
-	local role = self:Role(unit)
-	if role == "none" then
-		if unit then
-			return UnitGroupRolesAssigned(unit) == "HEALER"
-		else
-			return myRole == "HEALER"
-		end
-	end
-	return role == "healer"
+	return self:Role(unit) == "healer"
 end
 
 --- Check if your talent tree role is DAMAGER.
@@ -1138,14 +1139,7 @@ end
 -- @return boolean
 function boss:Damager(unit)
 	local role = self:Role(unit)
-	if role == "none" then
-		if unit then
-			return UnitGroupRolesAssigned(unit) == "DAMAGER"
-		else
-			return myDamagerRole
-		end
-	end
-	return role == "melee" or role == "ranged"
+	return role == "melee" or role == "ranged" or role == "damager"
 end
 
 do
