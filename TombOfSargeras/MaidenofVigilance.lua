@@ -276,7 +276,7 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 		orbCounter = orbCounter + 1
 		if orbCounter <= 4 and initialOrbs then
 			self:Bar(spellId, 8, CL.count:format(self:SpellName(230932), orbCounter))
-		elseif not initialOrbs then
+		elseif not initialOrbs and orbTimers[orbCounter] then
 			self:Bar(spellId, orbTimers[orbCounter], CL.count:format(self:SpellName(230932), orbCounter))
 		end
 	end
