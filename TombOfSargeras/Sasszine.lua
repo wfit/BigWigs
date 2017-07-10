@@ -33,6 +33,7 @@ local waveTimersP3 = {0, 39.0, 32.8, 43}
 
 local nextDreadSharkSoon = 87
 local sharkVerySoon = false
+local alreadySuicided = {}
 
 --------------------------------------------------------------------------------
 -- Localization
@@ -107,6 +108,8 @@ function mod:OnEngage()
 	hydraShotCounter = 1
 	shockCounter = 1
 	mawCounter = 1
+
+	wipe(alreadySuicided)
 
 	self:Bar(230358, 10.5) -- Thundering Shock
 	self:Bar(230201, 15.5, CL.count:format(self:SpellName(230201), burdenCounter)) -- Burden of Pain
@@ -201,6 +204,8 @@ end
 
 do
 	local list = mod:NewTargetList()
+	local hydraShots = {}
+
 	function mod:HydraShot(args)
 		list[#list+1] = args.destName
 
@@ -209,21 +214,29 @@ do
 		if self:Me(args.destGUID)then
 			self:Say(args.spellId, not self:Easy() and CL.count_rticon:format(args.spellName, #list, #list))
 		end]]
-		local icon = (#list == 4) and 6 or #list
 
 		if #list == 1 then
+			wipe(hydraShots)
 			self:StopBar(CL.count:format(args.spellName, hydraShotCounter))
 			self:ScheduleTimer("TargetMessage", 0.3, args.spellId, list, "Important", "Warning", nil, nil, true)
 			self:CastBar(args.spellId, 6, CL.count:format(args.spellName, hydraShotCounter))
 			hydraShotCounter = hydraShotCounter + 1
 			self:Bar(args.spellId, self:Mythic() and ((phase == 3 and hydraShotCounter <= 4 and 31.5) or 30.4) or phase == 2 and 30 or 40, CL.count:format(args.spellName, hydraShotCounter))
 		end
-		if self:Me(args.destGUID) then
-			self:Flash(args.spellId, icon)
-			self:Say(false, "{rt" .. icon .. "}", true, "YELL")
-		end
-		if self:GetOption(hydraShotMarker) then -- Targets: LFR: 0, 1 Normal, 3 Heroic, 4 Mythic
-			SetRaidTarget(args.destName, icon)
+
+		hydraShots[#list] = args.destUnit
+
+		if not self:Mythic() then
+			local icon = (#list == 4) and 6 or #list
+			if self:Me(args.destGUID) then
+				self:Flash(args.spellId, icon)
+				self:Say(false, "{rt" .. icon .. "}", true, "YELL")
+			end
+			if self:GetOption(hydraShotMarker)  then -- Targets: LFR: 0, 1 Normal, 3 Heroic, 4 Mythic
+				SetRaidTarget(args.destName, icon)
+			end
+		elseif #list == 4 then
+			self:GenMythicSoaking(args.spellId)
 		end
 	end
 
@@ -231,6 +244,209 @@ do
 		if self:GetOption(hydraShotMarker) then
 			SetRaidTarget(args.destName, 0)
 		end
+	end
+
+	function mod:GenMythicSoaking(spellId)
+		local icons = { 1, 2, 3, 6 } -- Star, Circle, Diamond, Square
+		local targets = {}
+		local unavailable = {}
+		local groups = {
+			[1] = {}, -- Tanks
+			[2] = {}, -- Melees
+			[3] = {}, -- Healers
+			[4] = {}, -- Ranged
+		}
+		local suicided = { false, false, false, false }
+
+		-- Selects prefered group based on the role of the given unit
+		local function unit_prefered_group(unit)
+			if self:Tank(unit) then
+				return 1
+			elseif self:Melee(unit, true) then
+				return 2
+			elseif self:Healer(unit) then
+				return 3
+			elseif self:Ranged(unit, true) then
+				return 4
+			end
+		end
+
+		-- Try placing each player in their prefered group.
+		-- If a group is not empty at this point, two players from the same
+		-- catergory are targets at the same time, delay attribution until a
+		-- a later time.
+		local delayed = {}
+		for _, unit in ipairs(hydraShots) do
+			local g = unit_prefered_group(unit)
+			if not targets[g] then
+				targets[g] = unit
+			else
+				table.insert(delayed, unit)
+			end
+		end
+
+		-- Place each delayed unit in the first available group
+		for _, unit in ipairs(delayed) do
+			for i = 1, 4 do
+				if not targets[i] then
+					targets[i] = unit
+					break
+				end
+			end
+		end
+
+		-- Mark targets unavailable
+		for i, unit in ipairs(targets) do
+			unavailable[UnitGUID(unit)] = true
+		end
+
+		-- Mark fishes as unavailable
+		local DeliciousBufferfish = self:SpellName(239362)
+		local fishes = {}
+		local fishesCount = 0
+		for unit in self:IterateGroup() do
+			local stacks = select(4, UnitDebuff(unit, DeliciousBufferfish))
+			if stacks then
+				unavailable[UnitGUID(unit)] = true
+				fishes[unit] = stacks
+				fishesCount = fishesCount + 1
+			end
+		end
+
+		-- Place available units in prefered groups
+		local total = 0
+		for unit in self:IterateGroup() do
+			if not unavailable[UnitGUID(unit)] and not UnitIsDead(unit) then
+				table.insert(groups[unit_prefered_group(unit)], unit)
+				total = total + 1
+			end
+		end
+
+		-- If less than 8 players are available, it is impossible to put at least 2 of them
+		-- in each group. If using fish players would allow to reach the 8 soakers, forfeit
+		-- fishes and use these players. Prefer players with the less stacks.
+		if total < 8 and (total + fishesCount) >= 8 then
+			for i = 1, (8 - total) do
+				local minStacks, minUnit = 1000, nil
+				for unit, stacks in pairs(fishes) do
+					if stacks < minStacks then
+						minStacks = stacks
+						minUnit = unit
+					end
+				end
+				fishes[minUnit] = nil
+				table.insert(groups[unit_prefered_group(minUnit)], minUnit)
+			end
+			total = 8
+		end
+
+		-- Impossible to save the 4 players, suicide time!
+		--[[if total < 8 then
+			local suicide = 4 - math.floor(total / 2)
+			local candidates = {}
+			local picked = {}
+
+			-- Pick prefered classes
+			local preferedClasses = { [2] = true, [8] = true, [12] = true } -- Paladin / Mage / Demon Hunter
+			for i, unit in ipairs(targets) do
+				local guid = UnitGUID(unit)
+				if preferedClasses[select(3, UnitClass(unit))] and not alreadySuicided[guid] then
+					table.insert(candidates, unit)
+					picked[unit] = true
+					alreadySuicided[guid] = true
+				end
+			end
+
+			-- Pick healers
+			for i, unit in ipairs(targets) do
+				if not picked[unit] and self:Healer(unit) then
+					table.insert(candidates, unit)
+					picked[unit] = true
+				end
+			end
+
+			-- Pick rest
+			for i, unit in ipairs(targets) do
+				if not picked[unit] then
+					table.insert(candidates, unit)
+				end
+			end
+
+			if suicide <= 2 then
+				-- 1 or 2 suicide, empty groups and change icons
+				local suicideIcons = { 8, 7 }
+				local function suicide_unit(unit, k)
+					for i = 1, 4 do
+						if targets[i] == unit then
+							icons[i] = suicideIcons[k]
+							suicided[i] = true
+							for u, unit in ipairs(groups[i]) do
+								for j = 1, 4 do
+									if not suicided[i] then
+										table.insert(groups[j], unit)
+									end
+								end
+							end
+							wipe(groups[i])
+						end
+					end
+				end
+				for i = 1, suicide do
+					suicide_unit(candidates[i], i)
+				end
+			elseif suicide == 3 then
+				-- Use 1 and 2 to soak 3
+
+			else
+			end
+		end]]
+
+		-- Balancing
+		if total >= 8 then
+			local ok = false
+			while not ok do
+				ok = true
+				local maxCount, maxGroup = -1, -1
+				local failedGroup = -1
+				for i = 1, 4 do
+					local count = #groups[i]
+					if count > maxCount then
+						maxCount = count
+						maxGroup = i
+					end
+					if #groups[i] < 2 then
+						ok = false
+						failedGroup = i
+					end
+				end
+				if ok then break end
+				table.insert(groups[failedGroup], table.remove(groups[maxGroup]))
+			end
+		end
+
+		-- Set raid markers
+		for i, unit in ipairs(targets) do
+			local icon = icons[i]
+			SetRaidTarget(unit, icon)
+			if self:Me(unit) then
+				self:Flash(spellId, icon)
+				self:Say(false, "{rt" .. icon .. "}", true, "YELL")
+				self:Emit("HYDRA_SHOT_ICON", self:SpellIcon(icon), false)
+			end
+		end
+
+		-- Assign
+		for i = 1, 4 do
+			local icon = icons[i]
+			for _, unit in ipairs(groups[i]) do
+				if self:Me(unit) then
+					self:Emit("HYDRA_SHOT_ICON", self:SpellIcon(icon), true)
+				end
+			end
+		end
+
+		-- Report
+		self:Emit("HYDRA_SHOT_REPORT", targets, icons, groups, suicided)
 	end
 end
 

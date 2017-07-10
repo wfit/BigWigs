@@ -997,6 +997,10 @@ function boss:SpellName(spellId)
 	return spells[spellId]
 end
 
+function boss:SpellIcon(spellId)
+	return icons[spellId]
+end
+
 --- Check if a GUID is you.
 -- @param guid player GUID
 -- @return boolean
@@ -2219,7 +2223,7 @@ function boss:UnitId(guid)
 	elseif UnitExists(guid) then
 		return guid
 	elseif guid:sub(1, 6) == "Player" then
-		return Roster:GetUnit(guid) or self:GetPlayerUnitIdByGUID(guid)
+		return self:GetPlayerUnitIdByGUID(guid) or Roster:GetUnit(guid)
 	else
 		return self:GetUnitIdByGUID(guid)
 	end
