@@ -27,7 +27,7 @@ local burdenCounter = 1
 local hydraShotCounter = 1
 local shockCounter = 1
 local mawCounter = 1
-local slicingTimersP3 = {0, 39.0, 34.1, 43.8}
+local slicingTimersP3 = {0, 39.0, 34.1, 42.6}
 local hungerTimersP3 = {0, 31.7, 41.3, 31.6}
 local waveTimersP3 = {0, 39.0, 32.8, 43}
 
@@ -146,6 +146,11 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 			return -- No phase change yet
 		end
 
+		self:StopBar(232722) -- Slicing Tornado
+		self:StopBar(230358) -- Thundering Shock
+		self:StopBar(230384) -- Consuming Hunger
+		self:StopBar(232913) -- Befouling Ink
+		self:StopBar(234621) -- Devouring Maw
 		self:StopBar(CL.count:format(self:SpellName(230139), hydraShotCounter)) -- Hydra Shot
 		self:StopBar(CL.count:format(self:SpellName(230201), burdenCounter)) -- Burden of Pain
 		self:StopBar(CL.count:format(self:SpellName(232827), waveCounter)) -- Crashing Wave
@@ -159,10 +164,6 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 		self:Message("stages", "Neutral", "Long", CL.stage:format(phase), false)
 
 		if phase == 2 then
-			self:StopBar(232722) -- Slicing Tornado
-			self:StopBar(230358) -- Thundering Shock
-			self:StopBar(230384) -- Consuming Hunger
-
 			self:Bar(232913, 11) -- Befouling Ink
 			if not self:LFR() then
 				self:Bar(230139, 15.9, CL.count:format(self:SpellName(230139), hydraShotCounter)) -- Hydra Shot
@@ -171,8 +172,6 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 			self:Bar(232827, 32.5, CL.count:format(self:SpellName(232827), waveCounter)) -- Crashing Wave
 			self:Bar(234621, 41.7) -- Devouring Maw
 		elseif phase == 3 then
-			self:StopBar(232913) -- Befouling Ink
-			self:StopBar(234621) -- Devouring Maw
 
 			self:CDBar(232913, 11) -- Befouling Ink
 			self:Bar(230201, 25.6, CL.count:format(self:SpellName(230201), burdenCounter)) -- Burden of Pain
@@ -221,7 +220,7 @@ do
 			self:ScheduleTimer("TargetMessage", 0.3, args.spellId, list, "Important", "Warning", nil, nil, true)
 			self:CastBar(args.spellId, 6, CL.count:format(args.spellName, hydraShotCounter))
 			hydraShotCounter = hydraShotCounter + 1
-			self:Bar(args.spellId, self:Mythic() and ((phase == 3 and hydraShotCounter <= 4 and 31.5) or 30.4) or phase == 2 and 30 or 40, CL.count:format(args.spellName, hydraShotCounter))
+			self:Bar(args.spellId, self:Mythic() and ((phase == 3 and hydraShotCounter <= 4 and 31.5) or 30.5) or phase == 2 and 30 or 40, CL.count:format(args.spellName, hydraShotCounter))
 		end
 
 		hydraShots[#list] = args.destUnit
