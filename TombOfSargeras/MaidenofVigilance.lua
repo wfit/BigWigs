@@ -185,22 +185,7 @@ function mod:OnBossDisable()
 end
 
 function mod:GenMythicSoakers()
-	-- Load players by groups
-	local groups = {}
-	for i = 1, MAX_RAID_GROUPS do groups[i] = {} end
-	for i = 1, GetNumGroupMembers() do
-		local unit = "raid" .. i
-		local _, _, subgroup, _, _, _, _, _, isDead = GetRaidRosterInfo(i)
-		if not isDead then table.insert(groups[subgroup], unit) end
-	end
-
-	-- Linearize roster
-	local roster = {}
-	for _, subgroup in ipairs(groups) do
-		for _, unit in ipairs(subgroup) do
-			table.insert(roster, unit)
-		end
-	end
+	local roster = self:EnumerateGroup { strict = true, alive = true }
 
 	-- Colors name
 	local fel = self:SpellName(235240)
