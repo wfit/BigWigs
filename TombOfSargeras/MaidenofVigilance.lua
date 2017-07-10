@@ -138,6 +138,10 @@ function mod:OnBossEnable()
 	self:Log("SPELL_AURA_APPLIED", "WrathoftheCreatorsApplied", 237339) -- Wrath of the Creators
 	self:Log("SPELL_AURA_APPLIED_DOSE", "WrathoftheCreatorsApplied", 237339) -- Wrath of the Creators
 	self:Log("SPELL_AURA_REMOVED", "WrathoftheCreatorsInterrupted", 234891) -- Wrath of the Creators
+
+	if self:Mythic() then
+		self:Death("UnitDied", "*")
+	end
 end
 
 function mod:OnEngage()
@@ -264,6 +268,12 @@ function mod:GenMythicSoakers()
 		end
 	end
 	self:Emit("MAIDEN_ROLE", selfAttribs())
+end
+
+function mod:UnitDied(args)
+	if not args.mobId then -- Player died
+		self:GenMythicSoakers()
+	end
 end
 
 --------------------------------------------------------------------------------
