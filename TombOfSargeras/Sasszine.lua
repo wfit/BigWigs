@@ -319,7 +319,7 @@ do
 
 		-- Place available units in prefered groups
 		local total = 0
-		for unit in self:IterateGroup { alive = true } do
+		for unit in self:IterateGroup { strict = true, alive = true } do
 			if not unavailable[UnitGUID(unit)] then
 				table.insert(groups[unit_prefered_group(unit)], unit)
 				total = total + 1
