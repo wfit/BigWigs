@@ -35,7 +35,7 @@ local enabledModules = {}
 local allowedEvents = {}
 local difficulty = 0
 local UpdateDispelStatus, UpdateInterruptStatus = nil, nil
-local myGUID, myRole, myDamagerRole = nil, nil, nil
+local myGUID, myRole, myDamagerRole, myInstanceId = nil, nil, nil, nil
 local solo = false
 local updateData = function(module)
 	myGUID = UnitGUID("player")
@@ -61,10 +61,10 @@ local updateData = function(module)
 	difficulty = diff
 
 	solo = true
-	local _, _, _, instanceId = UnitPosition("player")
+	myInstanceId = select(4, UnitPosition("player"))
 	for unit in module:IterateGroup() do
 		local _, _, _, tarInstanceId = UnitPosition(unit)
-		if tarInstanceId == instanceId and myGUID ~= UnitGUID(unit) and UnitIsConnected(unit) then
+		if tarInstanceId == myInstanceId and myGUID ~= UnitGUID(unit) and UnitIsConnected(unit) then
 			solo = false
 			break
 		end
@@ -1040,22 +1040,54 @@ do
 		"raid31", "raid32", "raid33", "raid34", "raid35", "raid36", "raid37", "raid38", "raid39", "raid40"
 	}
 	local partyList = {"player", "party1", "party2", "party3", "party4"}
-	local GetNumGroupMembers, IsInRaid = GetNumGroupMembers, IsInRaid
+	local GetNumGroupMembers, GetRaidRosterInfo, IsInRaid = GetNumGroupMembers, GetRaidRosterInfo, IsInRaid
+
+	local subgroups = {}
+	for i = 1, MAX_RAID_GROUPS do subgroups[i] = {} end
+	local gridList = {}
+
 	--- Iterate over your group.
 	-- Automatically uses "party" or "raid" tokens depending on your group type.
 	-- @return iterator
-	function boss:IterateGroup(a, ...)
-		if a ~= nil then return Roster:Iterate(a, ...) end
+	function boss:IterateGroup(limit, strict, filter, alive)
 		local num = GetNumGroupMembers() or 0
+		local inRaid = IsInRaid()
+
+		if strict and inRaid then
+			for _, subgroup in ipairs(subgroups) do wipe(subgroup) end
+			for i = 1, num do
+				local subgroup = select(3, GetRaidRosterInfo(i))
+				if subgroup then table.insert(subgroups[subgroup], "raid" .. i) end
+			end
+			for _, subgroup in ipairs(subgroups) do
+				for _, unit in ipairs(subgroup) do
+					table.insert(gridList, unit)
+				end
+			end
+		end
+
 		local i = 0
-		local size = num > 0 and num+1 or 2
+		local size = num > 0 and num + 1 or 2
+		if limit and size > limit then
+			size = limit + 1
+		end
+
 		local function iter(t)
 			i = i + 1
 			if i < size then
-				return t[i]
+				local unit = t[i]
+				if unit and filter then
+					if not UnitIsConnected(unit)
+					or (alive and UnitIsDeadOrGhost(unit))
+					or select(4, UnitPosition(unit)) ~= myInstanceId then
+						return iter(t)
+					end
+				end
+				return unit
 			end
 		end
-		return iter, IsInRaid() and raidList or partyList
+
+		return iter, (inRaid and (strict and gridList or raidList)) or partyList
 	end
 
 	function boss:GetPlayerUnitIdByGUID(guid)
