@@ -448,18 +448,16 @@ do
 			if event == "UNIT_DIED" then
 				local _, _, _, _, _, id = strsplit("-", destGUID)
 				local mobId = tonumber(id)
-				if mobId then
-					for i = #enabledModules, 1, -1 do
-						local self = enabledModules[i]
-						local m = eventMap[self][event]
-						if m and m[mobId] then
-							local func = m[mobId]
-							args.timestamp, args.mobId, args.destGUID, args.destName, args.destFlags, args.destRaidFlags = timestamp, mobId, destGUID, destName, destFlags, args.destRaidFlags
-							if type(func) == "function" then
-								func(args)
-							else
-								self[func](self, args)
-							end
+				for i = #enabledModules, 1, -1 do
+					local self = enabledModules[i]
+					local m = eventMap[self][event]
+					if m and (mobId and m[mobId] or m["*"]) then
+						local func = mobId and m[mobId] or m["*"]
+						args.timestamp, args.mobId, args.destGUID, args.destName, args.destFlags, args.destRaidFlags = timestamp, mobId, destGUID, destName, destFlags, args.destRaidFlags
+						if type(func) == "function" then
+							func(args)
+						else
+							self[func](self, args)
 						end
 					end
 				end
