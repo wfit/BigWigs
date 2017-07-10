@@ -1049,11 +1049,13 @@ do
 	--- Iterate over your group.
 	-- Automatically uses "party" or "raid" tokens depending on your group type.
 	-- @return iterator
-	function boss:IterateGroup(limit, strict, filter, alive)
+	local noOpts = {}
+	function boss:IterateGroup(opts)
+		opts = opts or noOpts
 		local num = GetNumGroupMembers() or 0
 		local inRaid = IsInRaid()
 
-		if strict and inRaid then
+		if opts.strict and inRaid then
 			for _, subgroup in ipairs(subgroups) do wipe(subgroup) end
 			for i = 1, num do
 				local subgroup = select(3, GetRaidRosterInfo(i))
@@ -1068,17 +1070,23 @@ do
 
 		local i = 0
 		local size = num > 0 and num + 1 or 2
-		if limit and size > limit then
-			size = limit + 1
+		if opts.limit and size > opts.limit then
+			size = opts.limit + 1
 		end
 
 		local function iter(t)
 			i = i + 1
 			if i < size then
 				local unit = t[i]
-				if unit and filter then
+				if unit and opts.filter then
+					local filter = opts.filter
+					if type(filter) == "string" and not self[filter](self, unit) or not filter(unit) then
+						return iter(t)
+					end
+				end
+				if unit and (opts.inside or opts.alive) then
 					if not UnitIsConnected(unit)
-					or (alive and UnitIsDeadOrGhost(unit))
+					or (opts.alive and UnitIsDeadOrGhost(unit))
 					or select(4, UnitPosition(unit)) ~= myInstanceId then
 						return iter(t)
 					end
@@ -1087,7 +1095,15 @@ do
 			end
 		end
 
-		return iter, (inRaid and (strict and gridList or raidList)) or partyList
+		return iter, (inRaid and (opts.strict and gridList or raidList)) or partyList
+	end
+
+	function boss:EnumerateGroup(...)
+		local roster = {}
+		for unit in self:IterateGroup(...) do
+			roster[#roster + 1] = unit
+		end
+		return roster
 	end
 
 	function boss:GetPlayerUnitIdByGUID(guid)
