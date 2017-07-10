@@ -1044,7 +1044,6 @@ do
 
 	local subgroups = {}
 	for i = 1, MAX_RAID_GROUPS do subgroups[i] = {} end
-	local gridList = {}
 
 	--- Iterate over your group.
 	-- Automatically uses "party" or "raid" tokens depending on your group type.
@@ -1055,12 +1054,14 @@ do
 		local num = GetNumGroupMembers() or 0
 		local inRaid = IsInRaid()
 
+		local gridList
 		if opts.strict and inRaid then
 			for _, subgroup in ipairs(subgroups) do wipe(subgroup) end
 			for i = 1, num do
 				local subgroup = select(3, GetRaidRosterInfo(i))
 				if subgroup then table.insert(subgroups[subgroup], "raid" .. i) end
 			end
+			gridList = {}
 			for _, subgroup in ipairs(subgroups) do
 				for _, unit in ipairs(subgroup) do
 					table.insert(gridList, unit)
