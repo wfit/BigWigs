@@ -45,7 +45,7 @@ local L = mod:GetLocale()
 -- Initialization
 --
 
-local hydraShotMarker = mod:AddMarkerOption(true, "player", 1, 230139, 1, 2, 3, 4)
+local hydraShotMarker = mod:AddMarkerOption(true, "player", 1, 230139, 1, 2, 3, 6)
 function mod:GetOptions()
 	return {
 		"stages",
@@ -301,14 +301,19 @@ do
 
 		-- Mark fishes as unavailable
 		local DeliciousBufferfish = self:SpellName(239362)
+		local HydraAcid = self:SpellName(234332)
 		local fishes = {}
 		local fishesCount = 0
 		for unit in self:IterateGroup() do
-			local stacks = select(4, UnitDebuff(unit, DeliciousBufferfish))
-			if stacks then
+			if UnitDebuff(unit, HydraAcid) then
 				unavailable[UnitGUID(unit)] = true
-				fishes[unit] = stacks
-				fishesCount = fishesCount + 1
+			else
+				local stacks = select(4, UnitDebuff(unit, DeliciousBufferfish))
+				if stacks then
+					unavailable[UnitGUID(unit)] = true
+					fishes[unit] = stacks
+					fishesCount = fishesCount + 1
+				end
 			end
 		end
 
