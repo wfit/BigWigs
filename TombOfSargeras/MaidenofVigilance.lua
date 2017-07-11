@@ -21,6 +21,7 @@ mod.respawnTime = 30
 
 local Hud = FS.Hud
 
+local bossActive = false
 local shieldActive = false
 local massInstabilityCounter = 0
 local hammerofCreationCounter = 0
@@ -144,6 +145,7 @@ function mod:OnBossEnable()
 end
 
 function mod:OnEngage()
+	bossActive = true
 	shieldActive = false
 	mySide = 0
 	bossSide = 1
@@ -180,9 +182,11 @@ function mod:OnBossDisable()
 	end
 	self:Emit("MAIDEN_SOAKERS", nil)
 	self:Emit("MAIDEN_ROLE", nil, nil)
+	bossActive = false
 end
 
 function mod:GenMythicSoakers()
+	if not bossActive then return end
 	local roster = self:EnumerateGroup { strict = true, alive = true }
 
 	-- Colors name
