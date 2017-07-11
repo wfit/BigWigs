@@ -21,7 +21,6 @@ mod.respawnTime = 30
 
 local Hud = FS.Hud
 
-local phase = 1
 local shieldActive = false
 local massInstabilityCounter = 0
 local hammerofCreationCounter = 0
@@ -145,7 +144,6 @@ function mod:OnBossEnable()
 end
 
 function mod:OnEngage()
-	phase = 1
 	shieldActive = false
 	mySide = 0
 	bossSide = 1
@@ -437,7 +435,6 @@ function mod:MassInstability(args)
 end
 
 function mod:Blowback(args)
-	phase = 2
 	self:Message(args.spellId, "Important", "Warning")
 end
 
@@ -481,7 +478,6 @@ function mod:WrathoftheCreatorsApplied(args)
 end
 
 function mod:WrathoftheCreatorsInterrupted(args)
-	phase = 1
 	self:Message(args.spellId, "Positive", "Long", CL.interrupted:format(args.spellName))
 	massInstabilityCounter = 1
 	hammerofCreationCounter = 1

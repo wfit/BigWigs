@@ -36,12 +36,6 @@ local sharkVerySoon = false
 local alreadySuicided = {}
 
 --------------------------------------------------------------------------------
--- Localization
---
-
-local L = mod:GetLocale()
-
---------------------------------------------------------------------------------
 -- Initialization
 --
 

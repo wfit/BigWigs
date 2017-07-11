@@ -35,12 +35,6 @@ local nextUltimate = 0
 local vulnerabilitiesCount = 0
 
 --------------------------------------------------------------------------------
--- Localization
---
-
-local L = mod:GetLocale()
-
---------------------------------------------------------------------------------
 -- Initialization
 --
 

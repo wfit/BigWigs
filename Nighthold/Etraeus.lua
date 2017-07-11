@@ -271,9 +271,6 @@ function mod:OnEngage()
 		[216345] = {},
 		[216344] = {},
 	}
-	if self:GetOption("custom_off_gc_replacement_icons") then
-		icons = replacementIcons
-	end
 end
 
 function mod:OnBossDisable()

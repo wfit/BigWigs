@@ -21,6 +21,7 @@ mod.instanceId = 1520
 --
 
 local twistingShadowsCount = 1
+local webOfPainTargets = {}
 local nextWebMark = 1
 
 --------------------------------------------------------------------------------
@@ -97,7 +98,6 @@ end
 function mod:OnEngage()
 	twistingShadowsCount = 1
 	nextWebMark = 1
-
 
 	self:Bar(215300, 6) -- Web of Pain
 	self:Bar(215443, 12) -- Necrotic Venom
