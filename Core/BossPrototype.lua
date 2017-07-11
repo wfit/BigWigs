@@ -1120,6 +1120,20 @@ end
 -- Role checking
 -- @section role
 
+local staticDamagerRole = {
+	["WARRIOR"] = "melee",
+	["PALADIN"] = "melee",
+	["HUNTER"] = "ranged", -- FIXME
+	["ROGUE"] = "melee",
+	["PRIEST"] = "ranged",
+	["DEATHKNIGHT"] = "melee",
+	--["SHAMAN"] = "melee", -- FIXME
+	["MAGE"] = "ranged",
+	["WARLOCK"] = "ranged",
+	["MONK"] = "melee",
+	--["DRUID"] = "melee", -- FIXME
+}
+
 function boss:Role(guid)
 	local unit, groupRole
 	if not guid then
@@ -1140,6 +1154,11 @@ function boss:Role(guid)
 				return "tank"
 			elseif groupRole == "HEALER" then
 				return "healer"
+			elseif groupRole == "DAMAGER" then
+				local _, class = UnitClass(unit)
+				if class and staticDamagerRole[class] then
+					return staticDamagerRole[class]
+				end
 			end
 		end
 		local info = Roster:GetInfo(guid)
