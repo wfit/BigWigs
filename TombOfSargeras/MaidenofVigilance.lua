@@ -301,7 +301,7 @@ function mod:UnstableSoul(args)
 			end
 		end
 
-		if self:MobId(args.sourceGUID) == 118289 and GetTime() > massInstabilityGrace then
+		if self:MobId(args.sourceGUID) == 118289 and GetTime() > massInstabilityGrace and InGuildParty() then
 			local fel = self:SpellName(235240)
 			local light = self:SpellName(235213)
 			local amFel = UnitDebuff("player", fel)
