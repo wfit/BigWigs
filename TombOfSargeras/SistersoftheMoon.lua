@@ -419,6 +419,6 @@ end
 
 function mod:AstralPurge(args)
 	if args.sourceGUID == args.destGUID and self:GetOption(print_purges) then
-		print("Astral Purge (" .. vulnerabilitiesCount .. ") : " .. self:ColorName(args.sourceGUID))
+		print("Astral Purge (" .. vulnerabilitiesCount .. ") : " .. self:ColorName(args.sourceName))
 	end
 end
