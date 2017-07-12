@@ -219,17 +219,17 @@ function mod:GenMythicSoakers()
 		return list
 	end
 
-	-- Soaking ranged light on the fel side
-	local fel_ranged = pick(3, light, ranged_order)
-
-	-- Soaking ranged fel on the light side
-	local light_ranged = pick(3, fel, ranged_order)
-
 	-- Soaking melee fel
 	local fel_melee = pick(3, fel, melee_order)
 
 	-- Soaking melee light
 	local light_melee = pick(3, light, melee_order)
+
+	-- Soaking ranged light on the fel side
+	local fel_ranged = pick(3, light, ranged_order)
+
+	-- Soaking ranged fel on the light side
+	local light_ranged = pick(3, fel, ranged_order)
 
 	-- Combined soakers list
 	local soakers = {
