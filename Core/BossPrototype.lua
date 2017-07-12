@@ -1136,7 +1136,6 @@ local staticDamagerRole = {
 	["MAGE"] = "ranged",
 	["WARLOCK"] = "ranged",
 	["MONK"] = "melee",
-	--["DRUID"] = "melee", -- FIXME
 }
 
 function boss:Role(guid)
@@ -1147,12 +1146,21 @@ function boss:Role(guid)
 		unit = guid
 		guid = UnitGUID(guid)
 	end
+
 	if guid == myGUID then
+		-- Player role is trivial
 		return myRole == "damager" and myDamagerRole or myRole
 	else
-		if not unit then
-			unit = self:GetPlayerUnitIdByGUID(guid) or Roster:GetUnit(guid)
+		-- Check if inspect data is available
+		local info = Roster:GetInfo(guid)
+		if info and info.spec_role_detailed then
+			return info.spec_role_detailed
 		end
+
+		-- Fetch unitid for this player
+		unit = unit or self:GetPlayerUnitIdByGUID(guid) or Roster:GetUnit(guid)
+
+		-- Group role based attribution
 		if unit then
 			groupRole = UnitGroupRolesAssigned(unit)
 			if groupRole == "TANK" then
@@ -1161,19 +1169,22 @@ function boss:Role(guid)
 				return "healer"
 			elseif groupRole == "DAMAGER" then
 				local _, class = UnitClass(unit)
-				if class and staticDamagerRole[class] then
-					return staticDamagerRole[class]
+				if class then
+					if staticDamagerRole[class] then
+						return staticDamagerRole[class]
+					elseif class == "DRUID" then
+						if select(11, UnitBuff(unit, self:SpellName(24858))) == 24858 then -- Moonkin form (filter out Affinity one)
+							return "ranged"
+						--elseif select(11, UnitBuff(unit, self:SpellName(768))) == 768 then -- Cat form (not reliable)
+							--return "melee"
+						end
+					end
 				end
 			end
 		end
-		local info = Roster:GetInfo(guid)
-		if info and info.spec_role_detailed then
-			return info.spec_role_detailed
-		elseif groupRole == "DAMAGER" then
-			return "damager"
-		else
-			return "none"
-		end
+
+		-- Unable to determine player role
+		return "none"
 	end
 end
 
