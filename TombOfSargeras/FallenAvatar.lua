@@ -180,20 +180,20 @@ end
 --
 
 do
-	local table, checks, prev, last = {}, 0, 0, nil
+	local tbl, checks, prev, last = {}, 0, 0, nil
 
-	function mod:InitCheckUnitPower(args)
-		wipe(table)
+	function mod:InitCheckUnitPower()
+		wipe(tbl)
 		checks = 0
 		last = nil
 	end
 
 	function mod:CheckUnitPower()
 		local power = UnitPower("boss1")
-		table[checks%5 + 1] = math.max(power-(last or 0), 0)
+		tbl[checks%5 + 1] = math.max(power-(last or 0), 0)
 
 		local sum = 0
-		for _,v in pairs(table) do
+		for _,v in pairs(tbl) do
 			sum = sum + v
 		end
 
@@ -237,7 +237,7 @@ do
 	end
 end
 
-function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
+function mod:UNIT_SPELLCAST_SUCCEEDED(_, spellName, _, _, spellId)
 	if spellId == 234057 then -- Unbound Chaos
 		if self:Tank() then
 			self:Message(234059, "Attention", "Alert")
@@ -358,7 +358,7 @@ do
 	end
 end
 
-function mod:Malfunction(args)
+function mod:Malfunction()
 	self:Message(233856, "Positive", "Info", CL.removed:format(self:SpellName(233856)))
 	self:StopBar(CL.cast:format(self:SpellName(233856)))
 end

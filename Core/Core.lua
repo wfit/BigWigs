@@ -594,7 +594,7 @@ do
 				proximity = C.PROXIMITY,
 				altpower = C.ALTPOWER,
 				infobox = C.INFOBOX,
-			}, {__index = function(self, key)
+			}, {__index = function()
 				return C.BAR + C.MESSAGE + C.VOICE
 			end})
 		end

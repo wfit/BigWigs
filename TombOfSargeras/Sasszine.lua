@@ -24,10 +24,11 @@ local slicingTornadoCounter = 1
 local waveCounter = 1
 local dreadSharkCounter = 1
 local burdenCounter = 1
+local slicingTimersP3 = {0, 39.0, 34.1, 42.6}
 local hydraShotCounter = 1
+
 local shockCounter = 1
 local mawCounter = 1
-local slicingTimersP3 = {0, 39.0, 34.1, 42.6}
 local hungerTimersP3 = {0, 31.7, 41.3, 31.6}
 local waveTimersP3 = {0, 39.0, 32.8, 43}
 
@@ -123,7 +124,7 @@ end
 --------------------------------------------------------------------------------
 -- Event Handlers
 --
-function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
+function mod:UNIT_SPELLCAST_SUCCEEDED(_, _, _, _, spellId)
 	if spellId == 239423 then -- Dread Shark // Stage 2 + Stage 3
 		dreadSharkCounter = dreadSharkCounter + 1
 		if not self:Mythic() then
@@ -152,11 +153,10 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 		consumingHungerCounter = 1
 		slicingTornadoCounter = 1
 		waveCounter = 1
-		hydraShotCounter = 1
 		burdenCounter = 1
+		hydraShotCounter = 1
 
 		self:Message("stages", "Neutral", "Long", CL.stage:format(phase), false)
-
 		if phase == 2 then
 			self:Bar(232913, 11) -- Befouling Ink
 			if not self:LFR() then
@@ -166,7 +166,6 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 			self:Bar(232827, 32.5, CL.count:format(self:SpellName(232827), waveCounter)) -- Crashing Wave
 			self:Bar(234621, 41.7) -- Devouring Maw
 		elseif phase == 3 then
-
 			self:CDBar(232913, 11) -- Befouling Ink
 			self:Bar(230201, 25.6, CL.count:format(self:SpellName(230201), burdenCounter)) -- Burden of Pain
 			self:Bar(232827, 32.5, CL.count:format(self:SpellName(232827), waveCounter)) -- Crashing Wave
@@ -492,7 +491,7 @@ function mod:ThunderingShock(args)
 	self:Bar(args.spellId, shockCounter == 2 and 36.5 or 32.8) -- was 32.8, not confirmed
 end
 
-function mod:ConsumingHunger(args)
+function mod:ConsumingHunger()
 	consumingHungerCounter = consumingHungerCounter + 1
 	if self:Mythic() then
 		self:Bar(230384, phase == 3 and hungerTimersP3[consumingHungerCounter] or (consumingHungerCounter == 4 and 31.6) or 34)
@@ -514,13 +513,13 @@ do
 	end
 end
 
-function mod:DevouringMaw(args)
+function mod:DevouringMaw()
 	self:Message(234621, "Important", "Long")
 	mawCounter = mawCounter + 1
 	self:Bar(234621, 42)
 end
 
-function mod:BefoulingInk(args)
+function mod:BefoulingInk()
 	self:Message(232913, "Attention", "Info", CL.incoming:format(self:SpellName(232913))) -- Befouling Ink incoming!
 	self:CDBar(232913, phase == 3 and (self:Mythic() and 25 or 32) or 42.5) -- XXX 32-34 in P3
 end
@@ -548,6 +547,6 @@ end
 
 function mod:DeliciousBufferfishRemoved(args)
 	if self:Me(args.destGUID) then
-		self:TargetMessage(239362, args.destName, "Personal", "Info", CL.removed:format(args.spellName))
+		self:Message(239362, "Personal", "Info", CL.removed:format(args.spellName))
 	end
 end

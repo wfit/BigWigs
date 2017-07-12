@@ -267,7 +267,7 @@ end
 -- Event Handlers
 --
 
-function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
+function mod:UNIT_SPELLCAST_SUCCEEDED(_, _, _, _, spellId)
 	if spellId == 239153 then -- Spontaneous Fragmentation
 		self:Message(spellId, "Attention", "Alert", self:SpellName(230932))
 		orbCounter = orbCounter + 1
@@ -442,7 +442,7 @@ function mod:Blowback(args)
 	self:Message(args.spellId, "Important", "Warning")
 end
 
-function mod:TitanicBulwarkApplied(args)
+function mod:TitanicBulwarkApplied()
 	shieldActive = true
 	bossSide = (bossSide == 1) and 2 or 1
 	if self:Hud(args.spellId) then

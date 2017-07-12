@@ -267,7 +267,7 @@ function mod:CheckBreathSoakers()
 	end
 end
 
-function mod:VolatileFoam(args)
+function mod:VolatileFoam()
 	self:Message(-14535, "Attention", nil, CL.count:format(self:SpellName(-14535), foamCount), 228810)
 	foamCount = foamCount + 1
 	local t = foamCount == 2 and 19.4 or foamCount % 3 == 1 and 17 or foamCount % 3 == 2 and 15 or 42

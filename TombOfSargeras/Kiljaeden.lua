@@ -81,7 +81,7 @@ function mod:GetOptions()
 		{meteors_impact, "COUNTDOWN", "HUD"},
 		{236710, "SAY", "FLASH"}, -- Shadow Reflection: Erupting
 		{238430, "SAY", "FLASH"}, -- Bursting Dreadflame
-		{238505, "SAY", "ICON", "FLASH"}, -- Focused Dreadflame
+		{238505, "SAY", "ICON", "FLASH", "PROXIMITY"}, -- Focused Dreadflame
 		{236378, "SAY", "FLASH"}, -- Shadow Reflection: Wailing
 		zoom_minimap,
 		241721, -- Illidan's Sightless Gaze
@@ -184,6 +184,9 @@ function mod:CHAT_MSG_RAID_BOSS_EMOTE(_, msg, _, _, _, target)
 			self:Flash(238505)
 			self:SayCountdown(238505, 5)
 		end
+		if not self:Easy() then
+			self:OpenProximity(238505, 5)
+		end
 	elseif msg:find("235059") then -- Rupturing Singularity
 		self:Message(235059, "Urgent", "Warning", CL.count:format(self:SpellName(235059), singularityCount))
 		self:Bar(235059, 9.85, CL.count:format(L.singularityImpact, singularityCount))
@@ -217,7 +220,7 @@ do
 	end
 end
 
-function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
+function mod:UNIT_SPELLCAST_SUCCEEDED(_, _, _, _, spellId)
 	if spellId == 244856 then -- Flaming Orb
 		self:Message(spellId, "Attention", "Alert")
 		flamingOrbCount = flamingOrbCount + 1
@@ -323,7 +326,7 @@ function mod:NetherGale(args)
 	self:Bar("stages", 60.2, CL.intermission, args.spellId) -- Intermission Duration
 end
 
-function mod:FocusedDreadflame(args)
+function mod:FocusedDreadflame()
 	focusedDreadflameCount = focusedDreadflameCount + 1
 	if phase == 1 and focusedDreadflameCount == 2 then
 		self:Bar(238505, 13.4)
@@ -334,8 +337,9 @@ function mod:FocusedDreadflame(args)
 	end
 end
 
-function mod:FocusedDreadflameSuccess(args)
+function mod:FocusedDreadflameSuccess()
 	self:PrimaryIcon(238505)
+	self:CloseProximity(238505)
 end
 
 do
@@ -360,7 +364,7 @@ do
 	end
 end
 
-function mod:NetherGaleRemoved(args)
+function mod:NetherGaleRemoved() -- Stage 2
 	intermissionPhase = nil
 	phase = 2
 	self:Message("stages", "Positive", "Long", self:SpellName(-15229), false) -- Stage Two: Reflected Souls
@@ -405,7 +409,7 @@ do
 end
 
 -- Intermission: Deceiver's Veil
-function mod:DeceiversVeilCast(args)
+function mod:DeceiversVeilCast()
 	self:Message("stages", "Positive", "Long", self:SpellName(-15394), false) -- Intermission: Deceiver's Veil
 	self:StopBar(CL.count:format(self:SpellName(240910), armageddonCount)) -- Armageddon
 	self:StopBar(L.reflectionErupting) -- Shadow Reflection: Erupting
@@ -417,7 +421,7 @@ function mod:DeceiversVeilCast(args)
 	mod:ZoomMinimap()
 end
 
-function mod:DeceiversVeilRemoved(args)
+function mod:DeceiversVeilRemoved() -- Stage 3
 	phase = 3
 	burstingDreadflameCount = 1
 	self:Message("stages", "Positive", "Long", self:SpellName(-15255), false) -- Stage Three: Darkness of A Thousand Souls
@@ -431,6 +435,7 @@ function mod:DeceiversVeilRemoved(args)
 	self:Bar(238505, 80) -- Focused Dreadflame
 	mod:ResetMinimap()
 end
+
 
 function mod:IllidansSightlessGaze(args)
 	if self:Me(args.destGUID) then
