@@ -195,8 +195,8 @@ function mod:GenMythicSoakers()
 
 	-- Roles
 	local tank = function(unit) return self:Tank(unit) end
-	local melee = function(unit) return self:Melee(unit) and self:Damager(unit) end
-	local ranged = function(unit) return self:Ranged(unit) and self:Damager(unit) end
+	local melee = function(unit) return self:Melee(unit, true) end
+	local ranged = function(unit) return self:Ranged(unit, true) end
 	local healer = function(unit) return self:Healer(unit) end
 
 	-- Ordering
@@ -247,9 +247,11 @@ function mod:GenMythicSoakers()
 				if UnitIsUnit("player", unit) then
 					local side = (i < 3) and (bossSide == 1 and "<" or ">") or (bossSide == 1 and ">" or "<")
 					local direction = ""
+					local unusual = (i % 2 == 1 and mod:Ranged()) or (i % 2 == 0 and mod:Melee())
 					for i = 1, 4 - j do direction = direction .. side end
 					return (soakerLabel[i .. "-" .. j] .. "\n" .. direction),
-					       (i < 3 and mod.icons[235240] or mod.icons[235213])
+					       (i < 3 and mod.icons[235240] or mod.icons[235213]),
+					       unusual
 				end
 			end
 		end
