@@ -1113,6 +1113,11 @@ do
 				return unit
 			end
 		end
+		local name, realm = select(6, GetPlayerInfoByGUID(guid))
+		if name then
+			if realm and #realm > 0 then name = name .. "-" .. realm end
+			if UnitExists(name) then return name end
+		end
 	end
 end
 
