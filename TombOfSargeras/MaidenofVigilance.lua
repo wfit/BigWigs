@@ -444,7 +444,7 @@ function mod:Blowback(args)
 	self:Message(args.spellId, "Important", "Warning")
 end
 
-function mod:TitanicBulwarkApplied()
+function mod:TitanicBulwarkApplied(args)
 	shieldActive = true
 	bossSide = (bossSide == 1) and 2 or 1
 	if self:Hud(args.spellId) then
