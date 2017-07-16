@@ -320,8 +320,7 @@ end
 do
 	local wraps = {}
 	local wrapCount = 8
-	function mod:MarkShadowWrap(event, unit)
-		local guid = UnitGUID(unit)
+	function mod:MarkShadowWrap(event, unit, guid)
 		if wraps[guid] then
 			SetRaidTarget(unit, wraps[guid])
 			wraps[guid] = nil
@@ -437,9 +436,9 @@ function mod:ArcanicRelease(args)
 end
 
 function mod:ArcanicReleaseRemoved(args)
+	self:StopBar(args.spellName, args.destName)
 	if self:Me(args.destGUID) then
 		self:CloseProximity(args.spellId)
-		self:StopBar(args.spellId, args.destName)
 	end
 end
 

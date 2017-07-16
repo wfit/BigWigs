@@ -34,6 +34,10 @@ if L then
 
 	L.custom_on_stop_timers = "Toujours afficher les barres de capacité"
 	L.custom_on_stop_timers_desc = "L'Avatar déchu décide aléatoirement quel capacité hors cooldown il utilise ensuite. Quand cette option est activée, les barres de ces capacités resteront à l'écran."
+
+	L.energy_leak = "Fuite d'énergie"
+	L.energy_leak_desc = "Affiche une alerte quand de l'énergie a fuité vers le boss en phase 1."
+	L.energy_leak_msg = "Fuite d'énergie ! (%d)"
 end
 
 L = BigWigs:NewBossLocale("Kil'jaeden", "frFR")
@@ -51,6 +55,8 @@ L = BigWigs:NewBossLocale("Tomb of Sargeras Trash", "frFR")
 if L then
 	L.chaosbringer = "Infernal porte-chaos"
 	L.rez = "Rez le Garde-Tombe"
+	L.seacaller = "Mande-mers marécaille"
 	L.custodian = "Gardien des fonds marins"
+	L.dresanoth = "Dresanoth"
 	L.sentry = "Factionnaire gardien"
 end

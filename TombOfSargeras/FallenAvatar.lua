@@ -37,7 +37,7 @@ local timersMythic = {
 	[239132] = {34.5, 64.5, 63, 63}, -- Rupture Realities
 }
 
-local phase = 1
+local stage = 1
 local corruptedMatrixCounter = 1
 local ruptureRealitiesCounter = 1
 local unboundChaosCounter = 1
@@ -62,7 +62,7 @@ if L then
 	L.custom_on_stop_timers_desc = "Fallen Avatar randomizes which off-cooldown ability he uses next. When this option is enabled, the bars for those abilities will stay on your screen."
 
 	L.energy_leak = "Energy Leak"
-	L.energy_leak_desc = "Display a warning when energy has leaked onto the boss in phase 1."
+	L.energy_leak_desc = "Display a warning when energy has leaked onto the boss in stage 1."
 	L.energy_leak_msg = "Energy Leak! (%d)"
 end
 --------------------------------------------------------------------------------
@@ -84,7 +84,7 @@ function mod:GetOptions()
 		236528, -- Ripple of Darkness
 		{233856, "HUD"}, -- Cleansing Protocol
 		233556, -- Corrupted Matrix
-		{239739, "FLASH", "SAY"}, -- Dark Mark
+		{239739, "FLASH", "SAY", "INFOBOX"}, -- Dark Mark
 		darkMarkIcons,
 		235572, -- Rupture Realities
 		242017, -- Black Winds
@@ -126,6 +126,7 @@ function mod:OnBossEnable()
 	self:Log("SPELL_AURA_APPLIED", "CleansingProtocolApplied", 241008)
 	self:Log("SPELL_AURA_REMOVED", "CleansingProtocolRemoved", 241008)
 	self:Log("SPELL_AURA_APPLIED", "Malfunction", 233739)
+	self:Death("MaidenDeath", 117264)
 
 	-- Containment Pylon
 	self:Log("SPELL_CAST_START", "CorruptedMatrix", 233556)
@@ -148,7 +149,7 @@ end
 
 function mod:OnEngage()
 	timers = self:Mythic() and timersMythic or timersHeroic
-	phase = 1
+	stage = 1
 	corruptedMatrixCounter = 1
 	desolateCounter = 1
 	unboundChaosCounter = 1
@@ -173,6 +174,8 @@ function mod:OnEngage()
 		self:InitCheckUnitPower()
 		energyLeakCheck = self:ScheduleRepeatingTimer("CheckUnitPower", 1)
 	end
+
+	self:RegisterUnitEvent("UNIT_POWER", nil, "boss2")
 end
 
 --------------------------------------------------------------------------------
@@ -268,6 +271,14 @@ function mod:CHAT_MSG_RAID_BOSS_EMOTE(_, msg)
 	end
 end
 
+function mod:UNIT_POWER(unit)
+	local power = UnitPower(unit)
+	if power >= 85 then
+		self:Message(233856, "Attention", self:Damager() and "Info", CL.soon:format(self:SpellName(233856))) -- Cleansing Protocol
+		self:UnregisterUnitEvent("UNIT_POWER", unit)
+	end
+end
+
 do
 	local prev = 0
 	function mod:GroundEffectDamage(args)
@@ -303,7 +314,7 @@ end
 function mod:Desolate(args)
 	self:Message(args.spellId, "Attention", "Alert", CL.casting:format(args.spellName))
 	desolateCounter = desolateCounter + 1
-	self:CDBar(args.spellId, phase == 2 and (desolateCounter % 2 == 0 and 12 or 23) or (desolateCounter % 4 == 3 and 24.3 or 11.5))
+	self:CDBar(args.spellId, stage == 2 and (desolateCounter % 2 == 0 and 12 or 23) or (desolateCounter % 4 == 3 and 24.3 or 11.5))
 end
 
 function mod:DesolateApplied(args)
@@ -359,8 +370,17 @@ do
 end
 
 function mod:Malfunction()
-	self:Message(233856, "Positive", "Info", CL.removed:format(self:SpellName(233856)))
-	self:StopBar(CL.cast:format(self:SpellName(233856)))
+	self:Message(233856, "Positive", "Info", CL.removed:format(self:SpellName(233856))) -- Cleansing Protocol
+	self:StopBar(CL.cast:format(self:SpellName(233856))) -- Cleansing Protocol
+	self:RegisterUnitEvent("UNIT_POWER", nil, "boss2")
+end
+
+function mod:MaidenDeath()
+	if energyLeakCheck then
+		self:CancelTimer(energyLeakCheck)
+		energyLeakCheck = nil
+	end
+	self:UnregisterUnitEvent("UNIT_POWER", "boss2")
 end
 
 function mod:CorruptedMatrix(args)
@@ -371,8 +391,8 @@ function mod:CorruptedMatrix(args)
 end
 
 function mod:Annihilation() -- Stage 2
-	phase = 2
-	self:Message("stages", "Positive", "Long", self:SpellName(-14719), false) -- Stage Two: An Avatar Awakened
+	stage = 2
+	self:Message("stages", "Positive", "Long", CL.stage:format(stage), false)
 
 	self:StopBar(233556) -- Corrupted Matrix
 	self:StopBar(CL.cast:format(self:SpellName(233556))) -- Corrupted Matrix (cast)
@@ -395,6 +415,8 @@ function mod:Annihilation() -- Stage 2
 		energyLeakCheck = nil
 	end
 
+	self:UnregisterUnitEvent("UNIT_POWER", "boss2")
+
 	self:CDBar(236494, 20) -- Desolate
 	self:CDBar(239739, self:Mythic() and 31.1 or 21.5) -- Dark Mark
 	if self:Mythic() then
@@ -404,24 +426,51 @@ function mod:Annihilation() -- Stage 2
 end
 
 do
-	local list = mod:NewTargetList()
+	local list, infoBoxList, timer = mod:NewTargetList(), {}, nil
+	local infoBoxText = {
+		[1] = "|TInterface\\TARGETINGFRAME\\UI-RaidTargetingIcon_6.png:0|t %.1f",
+		[3] = "|TInterface\\TARGETINGFRAME\\UI-RaidTargetingIcon_4.png:0|t %.1f",
+		[5] = "|TInterface\\TARGETINGFRAME\\UI-RaidTargetingIcon_3.png:0|t %.1f",
+	}
+
+	local function updateInfoBox(self)
+		for _,debuff in pairs(infoBoxList) do
+			local pos = debuff.pos-1
+			self:SetInfo(239739, pos, (infoBoxText[pos]):format(debuff.expires-GetTime()))
+		end
+	end
+
 	function mod:DarkMark(args)
-		list[#list+1] = args.destName
+		local count = #list+1
+		list[count] = args.destName
+
+		local _, _, _, _, _, _, expires = UnitDebuff(args.destName, args.spellName) -- random duration
 		if self:Me(args.destGUID) then
 			self:Flash(args.spellId)
-			self:Say(args.spellId, CL.count:format(args.spellName, #list)) -- Announce which mark you have
-			local _, _, _, _, _, _, expires = UnitDebuff(args.destName, args.spellName) -- random duration
+			self:Say(args.spellId, CL.count:format(args.spellName, count)) -- Announce which mark you have
 			local remaining = expires-GetTime()
 			self:SayCountdown(args.spellId, remaining)
 		end
-		if #list == 1 then
+
+		if count == 1 then
 			self:ScheduleTimer("TargetMessage", 0.3, args.spellId, list, "Attention", "Alarm")
 			darkMarkCounter = darkMarkCounter + 1
 			self:Bar(args.spellId, self:Mythic() and (darkMarkCounter == 2 and 25.5 or 30.5) or 34, CL.count:format(args.spellName, darkMarkCounter))
+			self:OpenInfo(args.spellId, args.spellName)
+			self:SetInfo(args.spellId, 1, infoBoxText[1]:format(6))
+			self:SetInfo(args.spellId, 3, infoBoxText[3]:format(8))
+			if not self:Easy() then
+				self:SetInfo(args.spellId, 5, infoBoxText[5]:format(10))
+			end
+			wipe(infoBoxList)
+			timer = self:ScheduleRepeatingTimer(updateInfoBox, 0.1, self)
 		end
 
+		infoBoxList[args.destName] = {pos = count*2, expires = expires}
+		self:SetInfo(args.spellId, count*2, self:ColorName(args.destName))
+
 		if self:GetOption(darkMarkIcons) then
-			local icon = #list == 1 and 6 or #list == 2 and 4 or #list == 3 and 3 -- (Blue -> Green -> Purple) in order of exploding/application
+			local icon = count == 1 and 6 or count == 2 and 4 or count == 3 and 3 -- (Blue -> Green -> Purple) in order of exploding/application
 			if icon then
 				SetRaidTarget(args.destName, icon)
 			end
@@ -434,6 +483,18 @@ do
 		end
 		if self:GetOption(darkMarkIcons) then
 			SetRaidTarget(args.destName, 0)
+		end
+		if infoBoxList[args.destName] then
+			self:SetInfo(args.spellId, infoBoxList[args.destName].pos, "")
+			self:SetInfo(args.spellId, infoBoxList[args.destName].pos-1, "")
+			infoBoxList[args.destName] = nil
+		end
+		if not next(infoBoxList) then
+			self:CloseInfo(args.spellId)
+			if timer then
+				self:CancelTimer(timer)
+				timer = nil
+			end
 		end
 	end
 end
