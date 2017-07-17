@@ -356,7 +356,7 @@ function mod:OnEngage()
 end
 
 function mod:TankMarker()
-	if self:GetOption(tanks_marker) and UnitExist("boss1target") then
+	if self:GetOption(tanks_marker) and UnitExists("boss1target") then
 		local threat = UnitThreatSituation("boss1target", "boss1")
 		if threat and threat > 1 then
 			self:SetIcon(tanks_marker, "boss1target", 6)
