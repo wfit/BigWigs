@@ -84,7 +84,7 @@ function mod:GetOptions()
 		236528, -- Ripple of Darkness
 		{233856, "HUD"}, -- Cleansing Protocol
 		233556, -- Corrupted Matrix
-		{239739, "FLASH", "SAY", "INFOBOX"}, -- Dark Mark
+		{239739, "FLASH", "SAY", "INFOBOX", "PULSE"}, -- Dark Mark
 		darkMarkIcons,
 		235572, -- Rupture Realities
 		242017, -- Black Winds
@@ -440,16 +440,28 @@ do
 		end
 	end
 
+	local direction = {
+		[1] = "<< Left --",
+		[2] = "-- Right >>",
+		[3] = "-- Middle --",
+	}
+
+	local pulses = {
+		[1] = 241868, -- Left
+		[2] = 241870, -- Right
+		[3] = 200361, -- Down
+	}
+
 	function mod:DarkMark(args)
 		local count = #list+1
 		list[count] = args.destName
 
 		local _, _, _, _, _, _, expires = UnitDebuff(args.destName, args.spellName) -- random duration
 		if self:Me(args.destGUID) then
-			self:Flash(args.spellId)
-			self:Say(args.spellId, CL.count:format(args.spellName, count)) -- Announce which mark you have
+			self:Flash(args.spellId, pulses[count])
+			self:Say(false, direction[count], true) -- Announce which mark you have
 			local remaining = expires-GetTime()
-			self:SayCountdown(args.spellId, remaining)
+			self:SayCountdown(false, remaining)
 		end
 
 		if count == 1 then
