@@ -29,7 +29,6 @@ local hydraShotCounter = 1
 
 local shockCounter = 1
 local mawCounter = 1
-local hungerTimersP3 = {0, 31.7, 41.3, 31.6}
 local waveTimersP3 = {0, 39.0, 32.8, 43}
 
 local nextDreadSharkSoon = 87
@@ -51,7 +50,7 @@ function mod:GetOptions()
 		230959, -- Concealing Murk
 		232722, -- Slicing Tornado
 		230358, -- Thundering Shock
-		{230384, "FLASH"}, -- Consuming Hunger
+		{230384, "ME_ONLY", "FLASH"}, -- Consuming Hunger
 		234621, -- Devouring Maw
 		232913, -- Befouling Ink
 		232827, -- Crashing Wave
@@ -80,8 +79,7 @@ function mod:OnBossEnable()
 	-- Stage One: Ten Thousand Fangs
 	self:Log("SPELL_CAST_START", "SlicingTornado", 232722)
 	self:Log("SPELL_CAST_START", "ThunderingShock", 230358)
-	self:Log("SPELL_CAST_START", "ConsumingHunger", 230384, 234661) -- Stage 1 id + Stage 3 id
-	self:Log("SPELL_AURA_APPLIED", "ConsumingHungerApplied", 230384, 234661)
+	self:Log("SPELL_AURA_APPLIED", "ConsumingHungerApplied", 230384, 234661) -- Stage 1, Stage 3
 
 	-- Stage Two: Terrors of the Deep
 	self:Log("SPELL_CAST_SUCCESS", "DevouringMaw", 232745)
@@ -498,15 +496,6 @@ function mod:ThunderingShock(args)
 	self:Message(args.spellId, "Important", "Info")
 	shockCounter = shockCounter + 1
 	self:Bar(args.spellId, shockCounter == 2 and 36.5 or 32.8) -- was 32.8, not confirmed
-end
-
-function mod:ConsumingHunger()
-	consumingHungerCounter = consumingHungerCounter + 1
-	if self:Mythic() then
-		self:Bar(230384, stage == 3 and hungerTimersP3[consumingHungerCounter] or (consumingHungerCounter == 4 and 31.6) or 34)
-	else
-		self:Bar(230384, stage == 3 and (consumingHungerCounter == 2 and 47 or 42) or (consumingHungerCounter == 4 and 31.6) or 34) -- XXX Need more p3 data.
-	end
 end
 
 do

@@ -239,7 +239,7 @@ function mod:IncorporealShotApplied(args)
 		self:Flash(args.spellId)
 	end
 	self:PrimaryIcon(args.spellId, args.destName)
-	self:CDBar(args.spellId, 54.7)
+	self:Bar(args.spellId, 54.7)
 	nextUltimate = GetTime() + 54.7
 end
 
@@ -281,7 +281,7 @@ end
 function mod:CallMoontalon(args)
 	self:Message(args.spellId, "Urgent", "Alert", CL.incoming:format(self:SpellName(-15064))) -- Moontalon
 	screechCounter = 1
-	self:Bar(args.spellId, 54)
+	self:Bar(args.spellId, 146.9)
 end
 
 function mod:DeadlyScreech(args)
@@ -346,7 +346,7 @@ do
 end
 
 function mod:MoonBurn()
-	self:Bar(236519, stage == 3 and 18.3 or 24.3) -- XXX Need more P3 data/timers
+	self:CDBar(236519, stage == 3 and 18.3 or 24.3)
 end
 
 do
@@ -363,14 +363,29 @@ do
 end
 
 do
-	function mod:LunarBeaconApplied(args)
-		self:TargetMessage(236712, args.destName, "Attention", "Alert")
-		if self:Me(args.destGUID) then
-			self:Flash(236712)
-			self:SayCountdown(args.spellId, 6)
-			self:Say(236712)
+	local targetFound = nil
+
+	local function printTarget(self, name, guid)
+		if not self:Tank(name) then -- sometimes takes really long, so we might return early
+			targetFound = true
+			self:TargetMessage(236712, name, "Attention", "Alert")
+			if self:Me(guid) then
+				self:Say(236712)
+				self:Flash(236712)
+			end
 		end
 	end
+
+	function mod:LunarBeaconApplied(args)
+		if not targetFound then
+			printTarget(self, args.destName, args.destGUID)
+			targetFound = true
+		end
+		if self:Me(args.destGUID) then
+			self:SayCountdown(args.spellId, 6)
+		end
+	end
+
 	function mod:LunarBeaconRemoved(args)
 		if self:Me(args.destGUID) then
 			self:CancelSayCountdown(args.spellId)
@@ -378,6 +393,8 @@ do
 	end
 
 	function mod:LunarBeacon(args)
+		targetFound = nil
+		self:GetBossTarget(printTarget, 0.8, args.sourceGUID) -- Faster than waiting for debuff/cast end, but might return with the tank
 		lunarBeaconCounter = lunarBeaconCounter + 1
 		self:Bar(args.spellId, lunarBeaconCounter == 2 and 21.9 or 31.7) -- XXX Need Data longer than 4 casts
 	end
