@@ -90,7 +90,7 @@ function mod:GetOptions()
 		242017, -- Black Winds
 		236684, -- Fel Infusion
 		240623, -- Tainted Matrix
-		240728, -- Tainted Essence
+		{240728, "SAY"}, -- Tainted Essence
 		234418, -- Rain of the Destroyer
 	},{
 		["stages"] = "general",
@@ -550,6 +550,7 @@ end
 function mod:TaintedEssence(args)
 	local amount = args.amount or 1
 	if self:Me(args.destGUID) and amount > 4 then
-		self:StackMessage(args.spellId, args.destName, amount, "Urgent", "Warning")
+		self:StackMessage(args.spellId, args.destName, amount, "Urgent", amount > 6 and "Warning")
+		self:Say(args.spellId, amount, true)
 	end
 end
