@@ -140,7 +140,7 @@ function mod:OnBossEnable()
 	self:Log("SPELL_AURA_REMOVED", "WrathoftheCreatorsInterrupted", 234891) -- Wrath of the Creators
 
 	if self:Mythic() then
-		self:Death("UnitDied", "*")
+		--self:Death("UnitDied", "*")
 	end
 end
 
