@@ -407,6 +407,7 @@ do
 
 		-- Balancing
 		if total >= 8 then
+			local minCount = math.floor(total / 4)
 			local ok = false
 			while not ok do
 				ok = true
@@ -418,7 +419,7 @@ do
 						maxCount = count
 						maxGroup = i
 					end
-					if #groups[i] < 2 then
+					if #groups[i] < minCount then
 						ok = false
 						failedGroup = i
 					end
