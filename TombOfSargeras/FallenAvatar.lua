@@ -70,12 +70,15 @@ end
 --
 
 local darkMarkIcons = mod:AddMarkerOption(true, "player", 6, 239739, 6, 4, 3)
+local touch_impact = mod:AddCustomOption { "touch_impact", L.touch_impact, default = true,
+	configurable = true, icon = 239207, desc = "Countdown until meteors impact during Armageddon" }
 function mod:GetOptions()
 	return {
 		"stages",
 		"energy_leak",
 		"custom_on_stop_timers",
 		239207, -- Touch of Sargeras
+		touch_impact,
 		239132, -- Rupture Realities
 		234059, -- Unbound Chaos
 		{236604, "SAY", "FLASH"}, -- Shadowy Blades
@@ -301,7 +304,7 @@ end
 function mod:TouchofSargeras(args)
 	self:StopBar(CL.count:format(args.spellName, touchofSargerasCounter))
 	self:Message(args.spellId, "Attention", "Alert", CL.incoming:format(CL.count:format(args.spellName, touchofSargerasCounter)))
-	self:Bar(args.spellId, 10.5, CL.count:format(L.touch_impact, touchofSargerasCounter))
+	self:Bar(touch_impact, 10.5, CL.count:format(L.touch_impact, touchofSargerasCounter))
 	touchofSargerasCounter = touchofSargerasCounter + 1
 	self:Bar(args.spellId, timers[args.spellId][touchofSargerasCounter] or 42, CL.count:format(args.spellName, touchofSargerasCounter))
 end
