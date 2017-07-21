@@ -7,8 +7,16 @@ end
 
 L = BigWigs:NewBossLocale("Demonic Inquisition", "ptBR")
 if L then
+	--L.infobox_title_prisoners = "%d |4Prisoner:Prisoners;"
+
 	--L.custom_on_stop_timers = "Always show ability bars"
 	--L.custom_on_stop_timers_desc = "Demonic Inquisition has some spells which are delayed by interupts/other casts. When this option is enabled, the bars for those abilities will stay on your screen."
+end
+
+L = BigWigs:NewBossLocale("Mistress Sassz'ine", "ptBR")
+if L then
+	--L.inks_fed_count = "Ink (%d/%d)"
+	--L.inks_fed = "Inks fed: %s" -- %s = List of players
 end
 
 L = BigWigs:NewBossLocale("The Desolate Host", "ptBR")
@@ -59,10 +67,14 @@ end
 
 L = BigWigs:NewBossLocale("Tomb of Sargeras Trash", "ptBR")
 if L then
+	L.rune = "Runa Órquica"
 	L.chaosbringer = "Infernal Caótico"
 	L.rez = "Rez, o Vigia da Tumba"
+	L.erduval = "Erdu'val"
+	L.varah = "Varah, Senhora dos Hipogrifos"
 	L.seacaller = "Aquamante Escamaré"
 	L.custodian = "Zelador Submarino"
-	--L.dresanoth = "Dresanoth"
+	L.dresanoth = "Dresanoth"
 	L.sentry = "Sentinela Guardiã"
+	L.acolyte = "Acólita Fantasmagórica"
 end

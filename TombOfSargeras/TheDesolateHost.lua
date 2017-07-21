@@ -82,7 +82,7 @@ function mod:GetOptions()
 		{238570, "SAY", "ICON", "FLASH"}, -- Tormented Cries
 		"adds",
 		235927, -- Rupturing Slam
-		{236513, "INFOBOX"}, -- Bonecage Armor
+		236513, -- Bonecage Armor
 		236131, -- Wither
 		soulBindMarker,
 		236072, -- Wailing Souls

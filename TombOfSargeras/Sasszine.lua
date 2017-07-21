@@ -1,10 +1,5 @@
 
 --------------------------------------------------------------------------------
--- TODO List:
--- - Timers for heroic+mythic (using normal atm)
--- - Tune which markers are used, depending on Mythic targets
-
---------------------------------------------------------------------------------
 -- Module Declaration
 --
 
@@ -26,14 +21,25 @@ local dreadSharkCounter = 1
 local burdenCounter = 1
 local slicingTimersP3 = {0, 39.0, 34.1, 42.6}
 local hydraShotCounter = 1
+local abs = math.abs
 
 local shockCounter = 1
 local mawCounter = 1
-local waveTimersP3 = {0, 39.0, 32.8, 43}
+local waveTimersP3 = { 0, 39.0, 32.8, 43 }
 
 local nextDreadSharkSoon = 87
 local sharkVerySoon = false
 local alreadySuicided = {}
+
+--------------------------------------------------------------------------------
+-- Localization
+--
+
+local L = mod:GetLocale()
+if L then
+	L.inks_fed_count = "Ink (%d/%d)"
+	L.inks_fed = "Inks fed: %s" -- %s = List of players
+end
 
 --------------------------------------------------------------------------------
 -- Initialization
@@ -51,7 +57,7 @@ function mod:GetOptions()
 		232722, -- Slicing Tornado
 		230358, -- Thundering Shock
 		{230384, "ME_ONLY", "FLASH"}, -- Consuming Hunger
-		234621, -- Devouring Maw
+		{234621, "INFOBOX"}, -- Devouring Maw
 		232913, -- Befouling Ink
 		232827, -- Crashing Wave
 		{239436, "FLASH", "PULSE"}, -- Dread Shark
@@ -85,6 +91,10 @@ function mod:OnBossEnable()
 	self:Log("SPELL_CAST_SUCCESS", "DevouringMaw", 232745)
 	self:Log("SPELL_CAST_START", "BefoulingInk", 232756) -- Summon Ossunet = Befouling Ink incoming
 	self:Log("SPELL_CAST_START", "CrashingWave", 232827)
+	self:Log("SPELL_AURA_APPLIED", "MawApplied", 232745) -- Buffed on Sarukel
+	self:Log("SPELL_AURA_REMOVED", "MawRemoved", 232745)
+	self:Log("SPELL_AURA_APPLIED", "InkApplied", 232913)
+	self:Log("SPELL_AURA_REMOVED", "InkRemoved", 232913)
 
 	-- Mythic
 	self:Log("SPELL_AURA_APPLIED", "DeliciousBufferfish", 239362, 239375)
@@ -108,7 +118,7 @@ function mod:OnEngage()
 	self:Bar(230201, self:Easy() and 18 or 15.5, CL.count:format(self:SpellName(230201), burdenCounter)) -- Burden of Pain, Timer until cast_start
 	self:Bar(230384, 20.5) -- Consuming Hunger
 	if not self:LFR() then
-		self:Bar(230139, self:Normal() and 28 or 25, CL.count:format(self:SpellName(230139), hydraShotCounter)) -- Hydra Shot
+		self:CDBar(230139, self:Normal() and 27 or 25, CL.count:format(self:SpellName(230139), hydraShotCounter)) -- Hydra Shot
 	end
 	if self:Mythic() then
 		self:Bar(239362, 13) -- Bufferfish
@@ -217,7 +227,7 @@ do
 			self:ScheduleTimer("TargetMessage", 0.3, args.spellId, list, "Important", "Warning", nil, nil, true)
 			self:CastBar(args.spellId, 6, CL.count:format(args.spellName, hydraShotCounter))
 			hydraShotCounter = hydraShotCounter + 1
-			self:Bar(args.spellId, self:Mythic() and ((stage == 3 and hydraShotCounter <= 4 and 31.5) or 30.5) or stage == 2 and 30 or 40, CL.count:format(args.spellName, hydraShotCounter))
+			self:CDBar(args.spellId, self:Mythic() and ((stage == 3 and hydraShotCounter <= 4 and 31.5) or 30.5) or stage == 2 and 30 or (self:Normal() and stage == 3 and 51) or 40, CL.count:format(args.spellName, hydraShotCounter))
 		end
 
 		hydraShots[count] = args.destUnit
@@ -547,5 +557,56 @@ end
 function mod:DeliciousBufferfishRemoved(args)
 	if self:Me(args.destGUID) then
 		self:Message(239362, "Personal", "Info", CL.removed:format(args.spellName))
+	end
+end
+
+do
+	local debuffs, inkName = {}, mod:SpellName(232913)
+	local fedTable, fedCount, fedsNeeded = {}, 0, 3
+
+	function mod:MawApplied(args)
+		wipe(debuffs)
+		wipe(fedTable)
+		fedCount = 0
+		fedsNeeded = self:Mythic() and 5 or 3
+		self:OpenInfo(234621, L.inks_fed_count:format(fedCount, fedsNeeded))
+
+		for unit in self:IterateGroup() do
+			local _, _, _, _, _, _, expires = UnitDebuff(unit, inkName)
+			debuffs[self:UnitName(unit)] = expires
+		end
+	end
+
+	function mod:InkApplied(args)
+		local _, _, _, _, _, _, expires = UnitDebuff(args.destName, inkName)
+		debuffs[self:UnitName(args.destName)] = expires
+	end
+
+	function mod:InkRemoved(args)
+		local name = args.destName
+		local expires = debuffs[name] -- time when the debuff should expire
+		if expires then
+			local abs = abs(GetTime()-expires) -- difference between now and when it should've expired
+			if abs > 0.1 then -- removed early, probably fed the fish
+				fedTable[name] = (fedTable[name] or 0) + 1
+				fedCount = fedCount + 1
+				self:SetInfoTitle(234621, L.inks_fed_count:format(fedCount, fedsNeeded))
+				self:SetInfoByTable(234621, fedTable)
+			end
+			debuffs[name] = nil
+		end
+	end
+
+	function mod:MawRemoved(args)
+		local list = ""
+		for name, n in pairs(fedTable) do
+			if n > 1 then
+				list = list .. CL.count:format(self:ColorName(name), n) .. ", "
+			else
+				list = list .. self:ColorName(name) .. ", "
+			end
+		end
+		self:Message(234621, "Positive", "Info", CL.over:format(args.spellName) .. " - " .. L.inks_fed:format(list:sub(0, list:len()-2)))
+		self:ScheduleTimer("CloseInfo", 5, 234621) -- delay a bit to make sure the people get enough credit
 	end
 end

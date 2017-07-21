@@ -104,6 +104,7 @@ function mod:GetOptions()
 		{238505, "SAY", "ICON", "FLASH", "PROXIMITY"}, -- Focused Dreadflame
 		{236378, "SAY", "FLASH"}, -- Shadow Reflection: Wailing
 		zoom_minimap,
+		241564, -- Sorrowful Wail
 		241721, -- Illidan's Sightless Gaze
 		{238999, "HUD"}, -- Darkness of a Thousand Souls
 		-15543, -- Demonic Obelisk
@@ -218,7 +219,7 @@ function mod:CHAT_MSG_RAID_BOSS_EMOTE(_, msg, _, _, _, target)
 		end
 	elseif msg:find("235059") then -- Rupturing Singularity
 		self:Message(235059, "Urgent", "Warning", CL.count:format(self:SpellName(235059), singularityCount))
-		self:Bar("rupturingKnock", 9.85, CL.count:format(L.singularityImpact, singularityCount))
+		self:Bar("rupturingKnock", 9.85, CL.count:format(L.singularityImpact, singularityCount), 235059)
 		singularityCount = singularityCount + 1
 		local timer = 0
 		if inIntermission then -- Intermission timer

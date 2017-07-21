@@ -7,8 +7,16 @@ end
 
 L = BigWigs:NewBossLocale("Demonic Inquisition", "ruRU")
 if L then
+	--L.infobox_title_prisoners = "%d |4Prisoner:Prisoners;"
+
 	L.custom_on_stop_timers = "Всегда показывать полосы для способностей"
 	L.custom_on_stop_timers_desc = "Демоническая инквизиция имеет некоторые способности, которые задерживаются прерываниями/другими заклинаниями. Когда эта опция включена, полосы для этих способностей останутся на вашем экране."
+end
+
+L = BigWigs:NewBossLocale("Mistress Sassz'ine", "ruRU")
+if L then
+	--L.inks_fed_count = "Ink (%d/%d)"
+	--L.inks_fed = "Inks fed: %s" -- %s = List of players
 end
 
 L = BigWigs:NewBossLocale("The Desolate Host", "ruRU")
@@ -59,10 +67,14 @@ end
 
 L = BigWigs:NewBossLocale("Tomb of Sargeras Trash", "ruRU")
 if L then
+	L.rune = "Орочья руна"
 	L.chaosbringer = "Инфернал - вестник хаоса"
 	L.rez = "Смотритель гробницы Рез"
+	L.erduval = "Эрду'вал"
+	L.varah = "Повелительница гиппогрифов Вара"
 	L.seacaller = "Зовущая море из клана Волнистой Чешуи"
 	L.custodian = "Подводный надзиратель"
 	L.dresanoth = "Кресанот"
 	L.sentry = "Страж Хранительницы"
+	L.acolyte = "Призрачная послушница"
 end
