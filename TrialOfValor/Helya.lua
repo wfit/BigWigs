@@ -317,7 +317,8 @@ function mod:RAID_BOSS_EMOTE(event, msg, npcname)
 	elseif msg:find("inv_misc_monsterhorn_03", nil, true) then -- Fallback for no locale
 		msg = msg:gsub("|T[^|]+|t", "")
 		self:Message(228730, "Urgent", "Long", msg:format(npcname), 228730)
-		BigWigs:Print("Missing translation for tentacle strike.") -- XXX temp
+		BigWigs:Print("Missing translation for tentacle strike. Please report it on Discord/Curse/GitHub.") -- XXX temp
+		BigWigs:Error(("TELL THE AUTHORS: %s"):format(msg))
 	end
 end
 
