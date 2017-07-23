@@ -86,7 +86,7 @@ function mod:GetOptions()
 		{236494, "TANK"}, -- Desolate
 		236528, -- Ripple of Darkness
 		{233856, "HUD"}, -- Cleansing Protocol
-		233556, -- Corrupted Matrix
+		{233556, "TANK"}, -- Corrupted Matrix
 		{239739, "FLASH", "SAY", "INFOBOX", "PULSE"}, -- Dark Mark
 		darkMarkIcons,
 		235572, -- Rupture Realities
@@ -148,6 +148,11 @@ function mod:OnBossEnable()
 	self:Log("SPELL_AURA_APPLIED_DOSE", "TaintedEssence", 240728)
 
 	self:RegisterMessage("BigWigs_BarCreated", "BarCreated")
+
+	if self:Mythic() then
+		--self:RegisterEvent("GROUP_ROSTER_UPDATE", "FindAvatarBuddy")
+		--self:FindAvatarBuddy()
+	end
 end
 
 function mod:OnEngage()
@@ -179,6 +184,31 @@ function mod:OnEngage()
 	end
 
 	self:RegisterUnitEvent("UNIT_POWER", nil, "boss2")
+end
+
+function mod:FindAvatarBuddy()
+	local roster = self:EnumerateGroup { strict = true, limit = 20 }
+	local buddy
+	for i = 1, 20 do
+		if roster[i] and UnitIsUnit("player", roster[i]) then
+			if i == 5 then
+				buddy = roster[15]
+			elseif i == 10 then
+				buddy = roster[20]
+			elseif i == 11 then
+				buddy = roster[5]
+			elseif i == 16 then
+				buddy = roster[10]
+			else
+				buddy = roster[i - 1]
+			end
+		end
+	end
+	self:Emit("AVATAR_BUDDY", buddy)
+end
+
+function mod:OnBossDisable()
+	--self:Emit("AVATAR_BUDDY", nil)
 end
 
 --------------------------------------------------------------------------------
@@ -304,7 +334,7 @@ end
 function mod:TouchofSargeras(args)
 	self:StopBar(CL.count:format(args.spellName, touchofSargerasCounter))
 	self:Message(args.spellId, "Attention", "Alert", CL.incoming:format(CL.count:format(args.spellName, touchofSargerasCounter)))
-	self:Bar(touch_impact, 10.5, CL.count:format(L.touch_impact, touchofSargerasCounter))
+	self:Bar(touch_impact, 10.5, CL.count:format(L.touch_impact, touchofSargerasCounter), args.spellId)
 	touchofSargerasCounter = touchofSargerasCounter + 1
 	self:Bar(args.spellId, timers[args.spellId][touchofSargerasCounter] or 42, CL.count:format(args.spellName, touchofSargerasCounter))
 end
