@@ -501,7 +501,7 @@ do
 
 		local _, _, _, _, _, _, expires = UnitDebuff(args.destName, args.spellName) -- random duration
 		if self:Me(args.destGUID) then
-			self:Flash(args.spellId, pulses[count])
+			self:Flash(false, pulses[count])
 			self:Say(false, direction[count], true) -- Announce which mark you have
 			local remaining = expires-GetTime()
 			self:SayCountdown(false, remaining)

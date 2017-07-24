@@ -2018,7 +2018,7 @@ function boss:Flash(key, icon)
 	if checkFlag(self, key, C.FLASH) then
 		self:SendMessage("BigWigs_Flash", self, key)
 	end
-	if checkFlag(self, key, C.PULSE) then
+	if (key == false and icon) or checkFlag(self, key, C.PULSE) then
 		self:SendMessage("BigWigs_Pulse", self, key, icons[icon or key])
 	end
 end
