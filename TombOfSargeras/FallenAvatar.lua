@@ -288,8 +288,6 @@ do
 			shadowyBladesCounter = shadowyBladesCounter + 1
 			self:CDBar(236604, timers[spellId][shadowyBladesCounter] or 30)
 			self:CastBar(236604, 5)
-			self:SmartColorSet(spellId, 1, 0, 0)
-			self:ScheduleTimer("SmartColorUnset", 5, spellId)
 		end
 	end
 
@@ -302,6 +300,8 @@ do
 			self:Message(236604, "Personal", "Alarm", CL.you:format(self:SpellName(236604)))
 			self:Flash(236604)
 			self:Say(236604)
+			self:SmartColorSet(236604, 1, 0, 0)
+			self:ScheduleTimer("SmartColorUnset", 5, 236604)
 		end
 	end
 end
