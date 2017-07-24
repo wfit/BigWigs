@@ -81,7 +81,7 @@ function mod:GetOptions()
 		touch_impact,
 		239132, -- Rupture Realities
 		234059, -- Unbound Chaos
-		{236604, "SAY", "FLASH"}, -- Shadowy Blades
+		{236604, "SAY", "FLASH", "SMARTCOLOR"}, -- Shadowy Blades
 		239212, -- Lingering Darkness
 		{236494, "TANK"}, -- Desolate
 		236528, -- Ripple of Darkness
@@ -288,6 +288,8 @@ do
 			shadowyBladesCounter = shadowyBladesCounter + 1
 			self:CDBar(236604, timers[spellId][shadowyBladesCounter] or 30)
 			self:CastBar(236604, 5)
+			self:SmartColorSet(spellId, 1, 0, 0)
+			self:ScheduleTimer("SmartColorUnset", 5, spellId)
 		end
 	end
 
