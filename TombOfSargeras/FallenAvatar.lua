@@ -282,6 +282,7 @@ end
 do
 	local bladeTimer = nil
 	local nextMark = 1
+	local marked = {}
 
 	function mod:UNIT_SPELLCAST_SUCCEEDED(_, spellName, _, _, spellId)
 		if spellId == 234057 then -- Unbound Chaos
@@ -296,6 +297,7 @@ do
 			self:CDBar(236604, timers[spellId][shadowyBladesCounter] or 30)
 			self:CastBar(236604, 5)
 			nextMark = 1
+			wipe(marked)
 		end
 	end
 
@@ -310,7 +312,6 @@ do
 			self:Say(236604)
 			self:SmartColorSet(236604, 1, 0, 0)
 			self:ScheduleTimer("SmartColorUnset", 5, 236604)
-
 			self:Send("RequestBladeMark", { guid = UnitGUID("player") })
 		end
 	end
@@ -320,10 +321,20 @@ do
 			local guid = data.guid
 			for unit in self:IterateGroup() do
 				if UnitGUID(unit) == guid then
+					if nextMark == 1 then
+						self:ScheduleTimer("ClearBladeMark", 5)
+					end
+					marked[unit] = GetRaidTargetIndex(unit) or 0
 					SetRaidTarget(unit, nextMark)
 					nextMark = nextMark + 1
 				end
 			end
+		end
+	end
+
+	function mod:ClearBladeMark()
+		for unit, mark in pairs(marked) do
+			SetRaidTarget(unit, mark)
 		end
 	end
 end
