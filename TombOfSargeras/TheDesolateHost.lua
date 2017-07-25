@@ -5,9 +5,7 @@
 -- TODO List:
 -- - Shattering Scream: Find target before debuffs, without spamming? (current method allows for kicks before warnings)
 -- - Add wave timers (no spell info)
--- - Make sure phase check count works properly on pull XXX
 -- - Stop Bars when initial bosses die (Spear/Bind/Collapsing Fissure)
--- - Add warnings when standing in stuff (Collapsing Fissure, Tormented Cries)
 
 --------------------------------------------------------------------------------
 -- Module Declaration
@@ -31,6 +29,8 @@ local tormentedCriesCounter = 1
 local wailingSoulsCounter = 1
 local boneArmorCounter = 0
 local updateProximity = nil
+local updateRealms = nil
+local soulList = mod:NewTargetList()
 
 local fallenPriestesses = {}
 local priestressIcons = { 1, 2, 5 }
@@ -58,6 +58,8 @@ if L then
 	L.infobox_title = "The Desolate Host"
 	L.infobox_players = "Players"
 	L.armor_remaining = "%s Remaining (%d)" -- Bonecage Armor Remaining (#)
+	L.custom_on_mythic_armor = "Ignore Bonecage Armor on Reanimated Templars in Mythic Difficulty"
+	L.custom_on_mythic_armor_desc = "Leave this option enabled if you are offtanking Reanimated Templars to ignore warnings and counting the Bonecage Armor on the Ranimated Templars"
 	L.tormentingCriesSay = "Cries" -- Tormenting Cries (short say)
 
 	L.adds = CL.adds
@@ -83,7 +85,9 @@ function mod:GetOptions()
 		"adds",
 		235927, -- Rupturing Slam
 		236513, -- Bonecage Armor
+		"custom_on_mythic_armor",
 		236131, -- Wither
+		{236459, "ME_ONLY"}, -- Soulbind
 		soulBindMarker,
 		236072, -- Wailing Souls
 		{236515, "SAY", "FLASH"}, -- Shattering Scream
@@ -104,6 +108,7 @@ end
 
 function mod:OnBossEnable()
 	-- General
+	updateRealms(self)
 	self:RegisterUnitEvent("UNIT_SPELLCAST_SUCCEEDED", nil, "boss1", "boss2", "boss3")
 	self:Log("SPELL_CAST_SUCCESS", "Quietus", 236507)
 	self:Log("SPELL_AURA_APPLIED", "SpiritualBarrier", 235732)
@@ -144,24 +149,7 @@ function mod:OnBossEnable()
 end
 
 function mod:OnEngage()
-	-- Dissonance Handling
-	wipe(phasedList)
-	wipe(unphasedList)
-	for unit in self:IterateGroup() do
-		local buffCheck = UnitDebuff(unit, self:SpellName(235621)) -- Spirit Realm
-		local guid = UnitGUID(unit)
-		if buffCheck then
-			phasedList[#phasedList+1] = self:UnitName(unit)
-			if self:Me(guid) then
-				myRealm = 1 -- Spirit Realm
-			end
-		else
-			unphasedList[#unphasedList+1] = self:UnitName(unit)
-			if self:Me(guid) then
-				myRealm = 0 -- Corporeal Realm
-			end
-		end
-	end
+	updateRealms(self)
 
 	nextPriestressIcon = 1
 	nextAddsSpawn = 1
@@ -174,6 +162,7 @@ function mod:OnEngage()
 	boneArmorCounter = 0
 	tormentedCriesCounter = 1
 	wailingSoulsCounter = 1
+	wipe(soulList)
 
 	self:OpenInfo("infobox", L.infobox_title)
 	self:SetInfo("infobox", 1, self:SpellName(55336)) -- Bone Armor (Shorter Text)
@@ -257,6 +246,27 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(_, spellName, _, _, spellId)
 
 		self:CDBar(236542, 17) -- Sundering Doom
 		self:CDBar(236544, 28) -- Doomed Sundering
+	end
+end
+
+function updateRealms(self)
+	-- Dissonance Handling
+	wipe(phasedList)
+	wipe(unphasedList)
+	for unit in self:IterateGroup() do
+		local buffCheck = UnitDebuff(unit, self:SpellName(235621)) -- Spirit Realm
+		local guid = UnitGUID(unit)
+		if buffCheck then
+			phasedList[#phasedList + 1] = self:UnitName(unit)
+			if self:Me(guid) then
+				myRealm = 1 -- Spirit Realm
+			end
+		else
+			unphasedList[#unphasedList + 1] = self:UnitName(unit)
+			if self:Me(guid) then
+				myRealm = 0 -- Corporeal Realm
+			end
+		end
 	end
 end
 
@@ -378,20 +388,14 @@ do
 end
 
 function mod:BonecageArmor(args)
-	if self:Mythic() then
-		local id = self:MobId(args.destGUID)
-		if id == 118715 or id == 119938 then return end
-	end
+	if self:Mythic() and self:GetOption("custom_on_mythic_armor") and self:MobId(args.destGUID) == 118715 then return end -- Reanimated Templar
 	boneArmorCounter = boneArmorCounter + 1
 	self:Message(args.spellId, "Important", "Alert", CL.count:format(args.spellName, boneArmorCounter))
 	self:SetInfo("infobox", 2, boneArmorCounter)
 end
 
 function mod:BonecageArmorRemoved(args)
-	if self:Mythic() then
-		local id = self:MobId(args.destGUID)
-		if id == 118715 or id == 119938 then return end
-	end
+	if self:Mythic() and self:GetOption("custom_on_mythic_armor") and self:MobId(args.destGUID) == 118715 then return end -- Reanimated Templar
 	boneArmorCounter = boneArmorCounter - 1
 	self:Message(args.spellId, "Positive", "Info", L.armor_remaining:format(args.spellName, boneArmorCounter))
 	self:SetInfo("infobox", 2, boneArmorCounter)
@@ -404,22 +408,13 @@ function mod:Wither(args)
 end
 
 do
-	local list, scheduled = mod:NewTargetList(), nil
+	local linkOnMe = false
 	function mod:Soulbind(args)
-		list[#list+1] = args.destName
-		if #list == 2 then -- Announce at 2
-			if self:GetOption(soulBindMarker) then
-				SetRaidTarget(args.destName, 4)
-			end
-			self:CancelTimer(scheduled)
-			self:TargetMessage(args.spellId, list, "Positive", "Warning")
-		elseif #list == 1 then
-			scheduled = self:ScheduleTimer("TargetMessage", 0.5, args.spellId, list, "Positive", "Warning")
-			local t = 0
+		soulList[#soulList+1] = args.destName
+		if #soulList == 1 then
+			local t = stage == 2 and 20 or 25
 			if self:Easy() then
 				t = stage == 2 and 24 or 34
-			else
-				t = stage == 2 and 20 or 25
 			end
 			if stage ~= 2 and self:BarTimeLeft(236072) < 24.3 and self:BarTimeLeft(236072) > 0 then -- Wailing Souls
 				t = 74.5 + self:BarTimeLeft(236072) -- Time Left + 60s channel + 14.5s cooldown
@@ -428,19 +423,32 @@ do
 			if self:GetOption(soulBindMarker) then
 				SetRaidTarget(args.destName, 3)
 			end
+			linkOnMe = self:Me(args.destGUID)
+		elseif #soulList == 2 then -- Announce at 2
+			if self:GetOption(soulBindMarker) then
+				SetRaidTarget(args.destName, 4)
+			end
+			if self:Me(args.destGUID) then
+				self:Message(args.spellId, "Personal", "Warning", CL.link:format(soulList[1]))
+			elseif linkOnMe then
+				self:Message(args.spellId, "Personal", "Warning", CL.link:format(soulList[2]))
+			elseif not self:CheckOption(args.spellId, "ME_ONLY") then
+				self:Message(args.spellId, "Positive", "Info", CL.link_both:format(soulList[1], soulList[2]))
+			end
+			wipe(soulList)
 		end
 		if self:Me(args.destGUID) then
 			self:Flash(args.spellId)
 		end
 	end
+end
 
-	function mod:SoulbindRemoved(args)
-		if self:Me(args.destGUID) then
-			self:TargetMessage(args.spellId, args.destName, "Positive", "Long", CL.removed:format(args.spellName))
-		end
-		if self:GetOption(soulBindMarker) then
-			SetRaidTarget(args.destName, 0)
-		end
+function mod:SoulbindRemoved(args)
+	if self:Me(args.destGUID) then
+		self:Message(args.spellId, "Personal", "Long", CL.link_removed)
+	end
+	if self:GetOption(soulBindMarker) then
+		SetRaidTarget(args.destName, 0)
 	end
 end
 

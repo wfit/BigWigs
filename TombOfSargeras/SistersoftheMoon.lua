@@ -26,6 +26,7 @@ local screechCounter = 0
 local rapidShotCounter = 1
 local lunarFireCounter = 1
 local lunarBeaconCounter = 1
+local canCastVolley = true
 
 local nextUltimate = 0
 local vulnerabilitiesCount = 0
@@ -123,6 +124,7 @@ function mod:OnEngage()
 	rapidShotCounter = 1
 	lunarBeaconCounter = 1
 	vulnerabilitiesCount = 0
+	canCastVolley = true
 
 	nextUltimate = GetTime() + 48.3
 
@@ -229,6 +231,7 @@ end
 function mod:GlaiveStorm(args)
 	self:Message(236480, "Important", "Warning", CL.incoming:format(args.spellName))
 	self:Bar(236480, 54.7)
+	canCastVolley = false
 	nextUltimate = GetTime() + 54.7
 end
 
@@ -241,6 +244,7 @@ function mod:IncorporealShotApplied(args)
 	end
 	self:PrimaryIcon(args.spellId, args.destName)
 	self:Bar(args.spellId, 54.7)
+	canCastVolley = false
 	nextUltimate = GetTime() + 54.7
 end
 
@@ -256,12 +260,22 @@ do
 		end
 	end
 	function mod:TwilightVolley(args)
+		if canCastVolley == false then
+			canCastVolley = true
+			self:Bar(args.spellId, 7)
+			return
+		end
 		self:GetBossTarget(printTarget, 0.5, args.sourceGUID)
 	end
 end
 
 function mod:TwilightVolleySuccess(args) -- Cast can be interupted (fd/vanish), will recast if it happens.
-	self:Bar(args.spellId, 19.5)
+	local nextUltimateTimer = nextUltimate - GetTime()
+	local timer = 19.5 -- Cooldown
+	if nextUltimateTimer < timer then
+		timer = timer + 7 -- Extra cooldown added after a Ultimate combo by cast id:61207
+	end
+	self:Bar(args.spellId, timer)
 end
 
 do
@@ -304,6 +318,7 @@ end
 function mod:EmbraceoftheEclipse(args)
 	self:Message(args.spellId, "Attention", "Alarm", args.spellName)
 	self:Bar(args.spellId, 54.7)
+	canCastVolley = false
 	nextUltimate = GetTime() + 54.7
 end
 
