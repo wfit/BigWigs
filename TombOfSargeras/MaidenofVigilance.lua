@@ -88,7 +88,7 @@ local infusion_grace_countdown = mod:AddCustomOption { "infusion_grace_countdown
 function mod:GetOptions()
 	return {
 		"berserk",
-		{235117, "COUNTDOWN", "FLASH", "HUD"}, -- Unstable Soul
+		{235117, "COUNTDOWN", "FLASH", "HUD", "SMARTCOLOR"}, -- Unstable Soul
 		--241593, -- Aegwynn's Ward
 		{235271, "PROXIMITY", "FLASH", "PULSE", "SAY"}, -- Infusion
 		tank_marker,
@@ -292,6 +292,7 @@ function mod:UnstableSoul(args)
 	if self:Me(args.destGUID) then
 		self:TargetMessage(235117, args.destName, "Personal", "Alarm")
 		self:Flash(235117)
+		self:SmartColorSet(235117, 1, 0, 0)
 
 		local _, _, _, _, _, _, expires = UnitDebuff(args.destName, args.spellName)
 		local remaining = expires - GetTime() - 1.5
@@ -335,6 +336,7 @@ function mod:UnstableSoulRemoved(args)
 	if self:Me(args.destGUID) then
 		self:StopBar(235117, args.destName)
 		Hud:RemoveObject("UnstableSoulHUD")
+		self:SmartColorUnset(235117)
 	end
 end
 
