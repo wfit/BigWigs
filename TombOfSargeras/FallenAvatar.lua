@@ -92,7 +92,7 @@ function mod:GetOptions()
 		235572, -- Rupture Realities
 		242017, -- Black Winds
 		236684, -- Fel Infusion
-		240623, -- Tainted Matrix
+		{240623, "SMARTCOLOR"}, -- Tainted Matrix
 		{240728, "SAY"}, -- Tainted Essence
 		234418, -- Rain of the Destroyer
 	},{
@@ -144,6 +144,8 @@ function mod:OnBossEnable()
 
 	-- Mythic
 	self:Log("SPELL_CAST_START", "TaintedMatrix", 240623)
+	self:Log("SPELL_AURA_APPLIED", "TaintedMatrixApplied", 240746)
+	self:Log("SPELL_AURA_REMOVED", "TaintedMatrixRemoved", 240746)
 	self:Log("SPELL_AURA_APPLIED", "TaintedEssence", 240728)
 	self:Log("SPELL_AURA_APPLIED_DOSE", "TaintedEssence", 240728)
 
@@ -579,6 +581,18 @@ do
 			self:CDBar(args.spellId, 60, CL.count:format(args.spellName, taintedMatrixCounter))
 			self:CastBar(args.spellId, 8)
 		end
+	end
+end
+
+function mod:TaintedMatrixApplied(args)
+	if self:Me(args.destGUID) then
+		self:SmartColorSet(240623, 230, 122, 255)
+	end
+end
+
+function mod:TaintedMatrixRemoved(args)
+	if self:Me(args.destGUID) then
+		self:SmartColorUnset(240623)
 	end
 end
 
