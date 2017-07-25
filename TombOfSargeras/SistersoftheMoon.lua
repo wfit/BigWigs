@@ -48,7 +48,7 @@ function mod:GetOptions()
 		{236442, "SAY"}, -- Twilight Volley
 		236694, -- Call Moontalon
 		236697, -- Deadly Screech
-		236603, -- Rapid Shot
+		{236603, "SMARTCOLOR"}, -- Rapid Shot
 		{233263, "PROXIMITY", "SMARTCOLOR"}, -- Embrace of the Eclipse
 		{236519, "FLASH"}, -- Moon Burn
 		{236712, "SAY", "FLASH"}, -- Lunar Beacon
@@ -93,6 +93,7 @@ function mod:OnBossEnable()
 	self:Log("SPELL_CAST_START", "CallMoontalon", 236694) -- Call Moontalon
 	self:Log("SPELL_CAST_SUCCESS", "DeadlyScreech", 236697) -- Deadly Screech
 	self:Log("SPELL_AURA_APPLIED", "RapidShotApplied", 236596) -- Rapid Shot (Debuff)
+	self:Log("SPELL_AURA_REMOVED", "RapidShotRemoved", 236596)
 
 	-- Priestess Lunaspyre
 	self:Log("SPELL_CAST_SUCCESS", "EmbraceoftheEclipse", 233263) -- Embrace of the Eclipse
@@ -289,6 +290,15 @@ function mod:RapidShotApplied(args)
 	self:TargetMessage(236603, args.destName, "Attention", "Warning")
 	rapidShotCounter = rapidShotCounter + 1
 	self:Bar(236603, rapidShotCounter % 2 == 0 and 18.5 or 30.5)
+	if self:Me(args.destGUID) then
+		self:SmartColorSet(236603, 192, 145, 255)
+	end
+end
+
+function mod:RapidShotRemoved(args)
+	if self:Me(args.destGUID) then
+		self:SmartColorUnset(236603)
+	end
 end
 
 function mod:EmbraceoftheEclipse(args)
