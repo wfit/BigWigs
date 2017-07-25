@@ -16,6 +16,7 @@ if not mod then return end
 mod:RegisterEnableMob(116939, 117264) -- Fallen Avatar, Maiden of Valor
 mod.engageId = 2038
 mod.respawnTime = 25
+mod.instanceId = 1676
 
 --------------------------------------------------------------------------------
 -- Locals
@@ -71,7 +72,8 @@ end
 
 local darkMarkIcons = mod:AddMarkerOption(true, "player", 6, 239739, 6, 4, 3)
 local touch_impact = mod:AddCustomOption { "touch_impact", L.touch_impact, default = true,
-	configurable = true, icon = 239207, desc = "Countdown until meteors impact during Armageddon" }
+	configurable = true, icon = 239207 }
+local blades_marker = mod:AddTokenOption { "blades_marker", "Set raid target icons on Shadowy Blades", promote = true }
 function mod:GetOptions()
 	return {
 		"stages",
@@ -82,6 +84,7 @@ function mod:GetOptions()
 		239132, -- Rupture Realities
 		234059, -- Unbound Chaos
 		{236604, "SAY", "FLASH", "SMARTCOLOR"}, -- Shadowy Blades
+		blades_marker,
 		239212, -- Lingering Darkness
 		{236494, "TANK"}, -- Desolate
 		236528, -- Ripple of Darkness
@@ -150,6 +153,7 @@ function mod:OnBossEnable()
 	self:Log("SPELL_AURA_APPLIED_DOSE", "TaintedEssence", 240728)
 
 	self:RegisterMessage("BigWigs_BarCreated", "BarCreated")
+	self:RegisterNetMessage("RequestBladeMark")
 
 	if self:Mythic() then
 		--self:RegisterEvent("GROUP_ROSTER_UPDATE", "FindAvatarBuddy")
@@ -277,6 +281,7 @@ end
 
 do
 	local bladeTimer = nil
+	local nextMark = 1
 
 	function mod:UNIT_SPELLCAST_SUCCEEDED(_, spellName, _, _, spellId)
 		if spellId == 234057 then -- Unbound Chaos
@@ -290,6 +295,7 @@ do
 			shadowyBladesCounter = shadowyBladesCounter + 1
 			self:CDBar(236604, timers[spellId][shadowyBladesCounter] or 30)
 			self:CastBar(236604, 5)
+			nextMark = 1
 		end
 	end
 
@@ -304,6 +310,20 @@ do
 			self:Say(236604)
 			self:SmartColorSet(236604, 1, 0, 0)
 			self:ScheduleTimer("SmartColorUnset", 5, 236604)
+
+			self:Send("RequestBladeMark", { guid = UnitGUID("player") })
+		end
+	end
+
+	function mod:RequestBladeMark(data)
+		if self:GetOption(blades_marker) then
+			local guid = data.guid
+			for unit in self:IterateGroup() do
+				if UnitGUID(unit) == guid then
+					SetRaidTarget(unit, nextMark)
+					nextMark = nextMark + 1
+				end
+			end
 		end
 	end
 end
