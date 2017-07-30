@@ -94,6 +94,7 @@ function mod:GetOptions()
 		darkMarkIcons,
 		235572, -- Rupture Realities
 		242017, -- Black Winds
+		240249,
 		236684, -- Fel Infusion
 		{240623, "SMARTCOLOR"}, -- Tainted Matrix
 		{240728, "SAY"}, -- Tainted Essence
@@ -113,9 +114,10 @@ function mod:OnBossEnable()
 	self:RegisterEvent("RAID_BOSS_WHISPER")
 	self:RegisterEvent("CHAT_MSG_RAID_BOSS_EMOTE")
 
-	self:Log("SPELL_AURA_APPLIED", "GroundEffectDamage", 239212) -- Lingering Darkness
-	self:Log("SPELL_PERIODIC_DAMAGE", "GroundEffectDamage", 239212)
-	self:Log("SPELL_PERIODIC_MISSED", "GroundEffectDamage", 239212)
+	self:Log("SPELL_AURA_APPLIED", "GroundEffectDamage", 239212, 240249) -- Lingering Darkness, Molten Fel
+	self:Log("SPELL_PERIODIC_DAMAGE", "GroundEffectDamage", 239212, 240249)
+	self:Log("SPELL_PERIODIC_MISSED", "GroundEffectDamage", 239212, 240249)
+	self:Log("SPELL_DAMAGE", "GroundEffectDamage", 240249)
 
 	-- Stage One: A Slumber Disturbed
 	self:Log("SPELL_CAST_START", "TouchofSargeras", 239207)
