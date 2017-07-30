@@ -530,14 +530,18 @@ do
 
 	function mod:DarkMark(args)
 		local count = #list+1
+		local icon = count == 1 and 6 or count == 2 and 4 or count == 3 and 3
 		list[count] = args.destName
 
 		local _, _, _, _, _, _, expires = UnitDebuff(args.destName, args.spellName) -- random duration
 		if self:Me(args.destGUID) then
 			self:Flash(false, pulses[count])
-			self:Say(false, direction[count], true, "YELL") -- Announce which mark you have
+			local rt = " {rt" .. icon .. "} "
+			local msg = rt .. direction[count] .. rt
+			self:Say(false, msg, true, "YELL") -- Announce which mark you have
+			self:ScheduleTimer("Say", 2, false, msg, true, "YELL")
 			local remaining = expires-GetTime()
-			self:SayCountdown(false, remaining)
+			self:SayCountdown(false, remaining, icon)
 		end
 
 		if count == 1 then
@@ -558,7 +562,6 @@ do
 		self:SetInfo(args.spellId, count*2, self:ColorName(args.destName))
 
 		if self:GetOption(darkMarkIcons) then
-			local icon = count == 1 and 6 or count == 2 and 4 or count == 3 and 3 -- (Blue -> Green -> Purple) in order of exploding/application
 			if icon then
 				SetRaidTarget(args.destName, icon)
 			end
