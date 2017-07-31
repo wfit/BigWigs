@@ -114,6 +114,7 @@ function mod:OnBossEnable()
 	self:Log("SPELL_AURA_APPLIED_DOSE", "LunarFireApplied", 239264) -- Lunar Fire
 
 	self:Log("SPELL_DAMAGE", "AstralPurge", 234998)
+	self:Log("SPELL_MISSED", "AstralPurge", 234998)
 end
 
 function mod:OnEngage()
