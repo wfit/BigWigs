@@ -103,8 +103,6 @@ function mod:OnEngage()
 	hydraShotCounter = 1
 	bufferfishCounter = 1
 
-	wipe(alreadySuicided)
-
 	self:Bar(230358, 10.5) -- Thundering Shock
 	-- Tanks: Burden of Pain
 	self:Bar(230201, self:Easy() and 18 or 15.5, CL.count:format(self:SpellName(230201), burdenCounter)) -- Burden of Pain, Timer until cast_start
