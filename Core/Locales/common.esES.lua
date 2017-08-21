@@ -39,6 +39,7 @@ L.over = "¡%s terminado!"
 L.phase = "Fase %d"
 L.removed = "%s eliminado"
 --L.removed_from = "%s Removed From %s"
+--L.removed_by = "%s removed by %s" -- spell removed by player
 L.small_adds = "Esbirros pequeños"
 L.soon = "¡%s pronto!"
 L.spawned = "%s Apareció"
@@ -62,3 +63,8 @@ L.you = "%s en TI"
 --L.link_short = "Linked: %s"
 --L.link_both = "%s linked with %s"
 --L.link_removed = "Link removed"
+
+-- Abbreviated numbers
+--L.amount_one = "%dB"
+--L.amount_two = "%dM"
+--L.amount_three = "%dK"

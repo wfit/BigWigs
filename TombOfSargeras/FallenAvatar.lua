@@ -65,6 +65,13 @@ if L then
 	L.energy_leak = "Energy Leak"
 	L.energy_leak_desc = "Display a warning when energy has leaked onto the boss in stage 1."
 	L.energy_leak_msg = "Energy Leak! (%d)"
+
+	L.warmup_trigger = "The husk before you" -- The husk before you was once a vessel for the might of Sargeras. But this temple itself is our prize. The means by which we will reduce your world to cinders!
+
+	L.absorb = "Absorb"
+	L.absorb_text = "%s (|cff%s%.0f%%|r)"
+	L.cast = "Cast"
+	L.cast_text = "%.1fs (|cff%s%.0f%%|r)"
 end
 --------------------------------------------------------------------------------
 -- Initialization
@@ -76,7 +83,9 @@ local touch_impact = mod:AddCustomOption { "touch_impact", L.touch_impact, defau
 local blades_marker = mod:AddTokenOption { "blades_marker", "Set raid target icons on Shadowy Blades", promote = true }
 function mod:GetOptions()
 	return {
+		"warmup",
 		"stages",
+		"berserk",
 		"energy_leak",
 		"custom_on_stop_timers",
 		239207, -- Touch of Sargeras
@@ -88,7 +97,7 @@ function mod:GetOptions()
 		239212, -- Lingering Darkness
 		{236494, "TANK"}, -- Desolate
 		236528, -- Ripple of Darkness
-		{233856, "HUD"}, -- Cleansing Protocol
+		{233856, "HUD", "INFOBOX"}, -- Cleansing Protocol
 		{233556, "TANK"}, -- Corrupted Matrix
 		{239739, "FLASH", "SAY", "INFOBOX", "PULSE"}, -- Dark Mark
 		darkMarkIcons,
@@ -100,7 +109,7 @@ function mod:GetOptions()
 		{240728, "SAY"}, -- Tainted Essence
 		234418, -- Rain of the Destroyer
 	},{
-		["stages"] = "general",
+		["warmup"] = "general",
 		[239058] = -14709, -- Stage One: A Slumber Disturbed
 		[233856] = -14713, -- Maiden of Valor
 		[233556] = -15565, -- Containment Pylon
@@ -110,6 +119,7 @@ function mod:GetOptions()
 end
 
 function mod:OnBossEnable()
+	self:RegisterEvent("CHAT_MSG_MONSTER_YELL")
 	self:RegisterUnitEvent("UNIT_SPELLCAST_SUCCEEDED", nil, "boss1", "boss2")
 	self:RegisterEvent("RAID_BOSS_WHISPER")
 	self:RegisterEvent("CHAT_MSG_RAID_BOSS_EMOTE")
@@ -130,8 +140,7 @@ function mod:OnBossEnable()
 	self:Log("SPELL_CAST_SUCCESS", "RippleofDarkness", 236528)
 
 	-- Maiden of Valor
-	self:Log("SPELL_CAST_START", "CleansingProtocol", 233856)
-	self:Log("SPELL_AURA_APPLIED", "CleansingProtocolApplied", 241008)
+	self:Log("SPELL_AURA_APPLIED", "CleansingProtocol", 241008)
 	self:Log("SPELL_AURA_REMOVED", "CleansingProtocolRemoved", 241008)
 	self:Log("SPELL_AURA_APPLIED", "Malfunction", 233739)
 	self:Death("MaidenDeath", 117264)
@@ -186,7 +195,10 @@ function mod:OnEngage()
 	self:Bar(236604, timers[236573][shadowyBladesCounter]) -- Shadowy Blades
 	self:Bar(239132, timers[239132][ruptureRealitiesCounter]) -- Rupture Realities (P1)
 
-	if not self:LFR() then
+	if self:LFR() then
+		self:Bar("stages", 186.5, CL.stage:format(2), 235597) -- Annihilation icon
+		self:Berserk(434.5)
+	else
 		self:InitCheckUnitPower()
 		energyLeakCheck = self:ScheduleRepeatingTimer("CheckUnitPower", 1)
 	end
@@ -222,6 +234,12 @@ end
 --------------------------------------------------------------------------------
 -- Event Handlers
 --
+
+function mod:CHAT_MSG_MONSTER_YELL(_, msg)
+	if msg:find(L.warmup_trigger, nil, true) then
+		self:Bar("warmup", 42, CL.active, "achievement_boss_titanconstructshell")
+	end
+end
 
 do
 	local tbl, checks, prev, last = {}, 0, 0, nil
@@ -286,7 +304,7 @@ do
 	local nextMark = 1
 	local marked = {}
 
-	function mod:UNIT_SPELLCAST_SUCCEEDED(_, spellName, _, _, spellId)
+	function mod:UNIT_SPELLCAST_SUCCEEDED(_, _, _, _, spellId)
 		if spellId == 234057 then -- Unbound Chaos
 			if self:Tank() then
 				self:Message(234059, "Attention", "Alert")
@@ -409,16 +427,47 @@ function mod:RippleofDarkness(args)
 	self:Message(args.spellId, "Urgent", "Warning")
 end
 
-function mod:CleansingProtocol(args)
-	self:Message(args.spellId, "Urgent", "Alarm", CL.casting:format(args.spellName))
-	if self:Mythic() then
-		self:CDBar(args.spellId, 80) -- Maiden Shield (if no fail)
-	end
-	self:CastBar(args.spellId, 18)
-end
-
 do
-	function mod:CleansingProtocolApplied(args)
+	local timer, castOver, maxAbsorb = nil, 0, 0
+	local red, yellow, green = {.6, 0, 0, .6}, {.7, .5, 0}, {0, .5, 0}
+
+	local function updateInfoBox(self)
+		local castTimeLeft = castOver - GetTime()
+		local castPercentage = castTimeLeft / 18
+		local absorb = UnitGetTotalAbsorbs("boss2")
+		local absorbPercentage = absorb / maxAbsorb
+
+		local diff = castPercentage - absorbPercentage
+		local hexColor = "ff0000"
+		local rgbColor = red
+		if diff > 0.1 then -- over 10%
+			hexColor = "00ff00"
+			rgbColor = green
+		elseif diff > 0  then -- below 10%, so it's still close
+			hexColor = "ffff00"
+			rgbColor = yellow
+		end
+
+		self:SetInfoBar(233856, 1, absorbPercentage, unpack(rgbColor))
+		self:SetInfo(233856, 2, L.absorb_text:format(self:AbbreviateNumber(absorb), hexColor, absorbPercentage*100))
+		self:SetInfoBar(233856, 3, castPercentage)
+		self:SetInfo(233856, 4, L.cast_text:format(castTimeLeft, hexColor, castPercentage*100))
+	end
+
+	function mod:CleansingProtocol(args)
+		self:Message(233856, "Urgent", "Alarm", CL.casting:format(args.spellName))
+		if self:Mythic() then
+			self:CDBar(233856, 80) -- Maiden Shield (if no fail)
+		end
+		self:CastBar(233856, 18)
+		if self:CheckOption(233856, "INFOBOX") then
+			self:OpenInfo(233856, args.spellName)
+			self:SetInfo(233856, 1, L.absorb)
+			self:SetInfo(233856, 3, L.cast)
+			castOver = GetTime() + 18
+			maxAbsorb = UnitGetTotalAbsorbs("boss2")
+			timer = self:ScheduleRepeatingTimer(updateInfoBox, 0.1, self)
+		end
 		if self:Hud(233856) then
 			local maiden = args.destGUID
 			local spellName = args.spellName
@@ -443,7 +492,12 @@ do
 	end
 
 	function mod:CleansingProtocolRemoved(args)
+		self:CloseInfo(233856)
 		Hud:RemoveObject("MaidenCleaningProtocolHUD")
+		if timer then
+			self:CancelTimer(timer)
+			timer = nil
+		end
 	end
 end
 
@@ -505,45 +559,28 @@ end
 
 do
 	local list, infoBoxList, timer = mod:NewTargetList(), {}, nil
-	local infoBoxText = {
-		[1] = "|TInterface\\TARGETINGFRAME\\UI-RaidTargetingIcon_6.png:0|t %.1f",
-		[3] = "|TInterface\\TARGETINGFRAME\\UI-RaidTargetingIcon_4.png:0|t %.1f",
-		[5] = "|TInterface\\TARGETINGFRAME\\UI-RaidTargetingIcon_3.png:0|t %.1f",
-	}
-
 	local function updateInfoBox(self)
-		for _,debuff in pairs(infoBoxList) do
-			local pos = debuff.pos-1
-			self:SetInfo(239739, pos, (infoBoxText[pos]):format(debuff.expires-GetTime()))
+		for _,debuff in next, infoBoxList do
+			self:SetInfo(239739, debuff.pos-1, ("|T%d:0|t %.1f"):format(debuff.icon, debuff.expires-GetTime()))
 		end
 	end
 
-	local direction = {
-		[1] = "<< Left --",
-		[2] = "-- Right >>",
-		[3] = "-- Middle --",
-	}
-
-	local pulses = {
-		[1] = 241868, -- Left
-		[2] = 241870, -- Right
-		[3] = 200361, -- Down
-	}
-
 	function mod:DarkMark(args)
 		local count = #list+1
-		local icon = count == 1 and 6 or count == 2 and 4 or count == 3 and 3
 		list[count] = args.destName
+		local icon = count == 1 and 6 or count == 2 and 4 or 3 -- (Blue -> Green -> Purple) in order of exploding/application
 
 		local _, _, _, _, _, _, expires = UnitDebuff(args.destName, args.spellName) -- random duration
 		if self:Me(args.destGUID) then
-			self:Flash(false, pulses[count])
-			local rt = " {rt" .. icon .. "} "
-			local msg = rt .. direction[count] .. rt
-			self:Say(false, msg, true, "YELL") -- Announce which mark you have
-			self:ScheduleTimer("Say", 2, false, msg, true, "YELL")
 			local remaining = expires-GetTime()
-			self:SayCountdown(false, remaining, icon)
+			self:Flash(args.spellId)
+			if self:LFR() then
+				self:Say(args.spellId)
+				self:SayCountdown(args.spellId, remaining)
+			else
+				self:Say(args.spellId, CL.count_rticon:format(args.spellName, count, icon)) -- Announce which mark you have
+				self:SayCountdown(args.spellId, remaining, icon)
+			end
 		end
 
 		if count == 1 then
@@ -551,22 +588,22 @@ do
 			darkMarkCounter = darkMarkCounter + 1
 			self:Bar(args.spellId, self:Mythic() and (darkMarkCounter == 2 and 25.5 or 30.5) or 34, CL.count:format(args.spellName, darkMarkCounter))
 			self:OpenInfo(args.spellId, args.spellName)
-			self:SetInfo(args.spellId, 1, infoBoxText[1]:format(6))
-			self:SetInfo(args.spellId, 3, infoBoxText[3]:format(8))
+			self:SetInfo(args.spellId, 1, "|T137006:0|t 6")
+			if not self:LFR() then
+				self:SetInfo(args.spellId, 3, "|T137004:0|t 8")
+			end
 			if not self:Easy() then
-				self:SetInfo(args.spellId, 5, infoBoxText[5]:format(10))
+				self:SetInfo(args.spellId, 5, "|T137003:0|t 10")
 			end
 			wipe(infoBoxList)
 			timer = self:ScheduleRepeatingTimer(updateInfoBox, 0.1, self)
 		end
 
-		infoBoxList[args.destName] = {pos = count*2, expires = expires}
+		infoBoxList[args.destGUID] = {pos = count*2, expires = expires, icon = 137000+icon}
 		self:SetInfo(args.spellId, count*2, self:ColorName(args.destName))
 
 		if self:GetOption(darkMarkIcons) then
-			if icon then
-				SetRaidTarget(args.destName, icon)
-			end
+			SetRaidTarget(args.destName, icon)
 		end
 	end
 
@@ -577,10 +614,10 @@ do
 		if self:GetOption(darkMarkIcons) then
 			SetRaidTarget(args.destName, 0)
 		end
-		if infoBoxList[args.destName] then
-			self:SetInfo(args.spellId, infoBoxList[args.destName].pos, "")
-			self:SetInfo(args.spellId, infoBoxList[args.destName].pos-1, "")
-			infoBoxList[args.destName] = nil
+		if infoBoxList[args.destGUID] then
+			self:SetInfo(args.spellId, infoBoxList[args.destGUID].pos, "")
+			self:SetInfo(args.spellId, infoBoxList[args.destGUID].pos-1, "")
+			infoBoxList[args.destGUID] = nil
 		end
 		if not next(infoBoxList) then
 			self:CloseInfo(args.spellId)

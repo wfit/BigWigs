@@ -26,6 +26,10 @@ L = BigWigs:NewBossLocale("The Desolate Host", "ptBR")
 if L then
 	--L.infobox_players = "Players"
 	--L.armor_remaining = "%s Remaining (%d)" -- Bonecage Armor Remaining (#)
+	--L.custom_on_mythic_armor = "Ignore Bonecage Armor on Reanimated Templars in Mythic Difficulty"
+	--L.custom_on_mythic_armor_desc = "Leave this option enabled if you are offtanking Reanimated Templars to ignore warnings and counting the Bonecage Armor on the Ranimated Templars"
+	--L.custom_on_armor_plates = "Bonecage Armor icon on Enemy Nameplate"
+	--L.custom_on_armor_plates_desc = "Show an icon on the nameplate of Reanimated Templars who have Bonecage Armor.\nRequires the use of Enemy Nameplates. This feature is currently only supported by KuiNameplates."
 	--L.tormentingCriesSay = "Cries" -- Tormenting Cries (short say)
 end
 
@@ -37,6 +41,11 @@ if L then
 	--L.light = "Light"
 	--L.felHammer = "Fel Hammer" -- Better name for "Hammer of Obliteration"
 	--L.lightHammer = "Light Hammer" -- Better name for "Hammer of Creation"
+	--L.absorb = "Absorb"
+	--L.absorb_text = "%s (|cff%s%.0f%%|r)"
+	--L.cast = "Cast"
+	--L.cast_text = "%.1fs (|cff%s%.0f%%|r)" -- s = seconds
+	--L.stacks = "Stacks"
 end
 
 L = BigWigs:NewBossLocale("Fallen Avatar", "ptBR")
@@ -49,6 +58,13 @@ if L then
 	--L.energy_leak = "Energy Leak"
 	--L.energy_leak_desc = "Display a warning when energy has leaked onto the boss in stage 1."
 	--L.energy_leak_msg = "Energy Leak! (%d)"
+
+	--L.warmup_trigger = "The husk before you" -- The husk before you was once a vessel for the might of Sargeras. But this temple itself is our prize. The means by which we will reduce your world to cinders!
+
+	--L.absorb = "Absorb"
+	--L.absorb_text = "%s (|cff%s%.0f%%|r)"
+	--L.cast = "Cast"
+	--L.cast_text = "%.1fs (|cff%s%.0f%%|r)" -- s = seconds
 end
 
 L = BigWigs:NewBossLocale("Kil'jaeden", "ptBR")
@@ -66,6 +82,8 @@ if L then
 	--L.rupturingKnock_desc = "Show a timer for the knockback"
 
 	--L.meteorImpact_desc = "Show a timer for the Meteors landing"
+
+	--L.add = "Add %d"
 end
 
 L = BigWigs:NewBossLocale("Tomb of Sargeras Trash", "ptBR")
@@ -78,6 +96,8 @@ if L then
 	L.seacaller = "Aquamante Escamaré"
 	L.custodian = "Zelador Submarino"
 	L.dresanoth = "Dresanoth"
+	L.stalker = "Espreitador Medonho"
 	L.sentry = "Sentinela Guardiã"
 	L.acolyte = "Acólita Fantasmagórica"
+	--L.ryul = "Ryul the Fading"
 end

@@ -75,6 +75,11 @@ if L then
 	L.light = "Light"
 	L.felHammer = "Fel Hammer" -- Better name for "Hammer of Obliteration"
 	L.lightHammer = "Light Hammer" -- Better name for "Hammer of Creation"
+	L.absorb = "Absorb"
+	L.absorb_text = "%s (|cff%s%.0f%%|r)"
+	L.cast = "Cast"
+	L.cast_text = "%.1fs (|cff%s%.0f%%|r)"
+	L.stacks = "Stacks"
 end
 --------------------------------------------------------------------------------
 -- Initialization
@@ -102,7 +107,7 @@ function mod:GetOptions()
 		238408, -- Fel Remanence
 		235267, -- Mass Instability
 		248812, -- Blowback
-		{235028, "HUD"}, -- Titanic Bulwark
+		{235028, "HUD", "INFOBOX"}, -- Titanic Bulwark
 		234891, -- Wrath of the Creators
 		239153, -- Spontaneous Fragmentation
 	},{
@@ -116,31 +121,29 @@ end
 function mod:OnBossEnable()
 	-- General
 	self:RegisterUnitEvent("UNIT_SPELLCAST_SUCCEEDED", nil, "boss1")
-	self:Log("SPELL_AURA_APPLIED", "UnstableSoul", 243276, 235117) -- Mythic, Others
-	self:Log("SPELL_AURA_REMOVED", "UnstableSoulRemoved", 243276, 235117) -- Mythic, Others
-	--self:Log("SPELL_AURA_APPLIED", "AegwynnsWardApplied", 241593, 236420) -- Heroic, Normal
+	self:Log("SPELL_AURA_APPLIED", "UnstableSoul", 243276, 240209, 235117) -- Mythic, LFR, Normal/Heroic
+	self:Log("SPELL_AURA_REFRESH", "UnstableSoul", 243276, 240209, 235117) -- Mythic, LFR, Normal/Heroic
+	self:Log("SPELL_AURA_REMOVED", "UnstableSoulRemoved", 243276, 240209, 235117) -- Mythic, LFR, Normal/Heroic
+	--self:Log("SPELL_AURA_APPLIED", "AegwynnsWardApplied", 241593, 236420) -- Heroic, Normal/LFR
 	self:Log("SPELL_AURA_APPLIED", "GroundEffectDamage", 238028, 238408) -- Light Remanence, Fel Remanence
 	self:Log("SPELL_PERIODIC_DAMAGE", "GroundEffectDamage", 238028, 238408)
 	self:Log("SPELL_PERIODIC_MISSED", "GroundEffectDamage", 238028, 238408)
 
 	-- Stage One: Divide and Conquer
-	self:Log("SPELL_CAST_START", "Infusion", 235271) -- Infusion
-	self:Log("SPELL_AURA_APPLIED", "FelInfusion", 235240, 240219) -- Heroic, Normal
-	self:Log("SPELL_AURA_APPLIED", "LightInfusion", 235213, 240218) -- Heroic, Normal
-	self:Log("SPELL_CAST_START", "HammerofCreation", 241635) -- Hammer of Creation
-	self:Log("SPELL_CAST_START", "HammerofObliteration", 241636) -- Hammer of Obliteration
-	self:Log("SPELL_CAST_START", "MassInstability", 235267) -- Mass Instability
+	self:Log("SPELL_CAST_START", "Infusion", 235271)
+	self:Log("SPELL_AURA_APPLIED", "FelInfusion", 235240)
+	self:Log("SPELL_AURA_APPLIED", "LightInfusion", 235213)
+	self:Log("SPELL_AURA_APPLIED", "InfusionLFR", 240219, 240218) -- Fel Infusion (LFR), Light Infusion (LFR)
+	self:Log("SPELL_CAST_START", "HammerofCreation", 241635)
+	self:Log("SPELL_CAST_START", "HammerofObliteration", 241636)
+	self:Log("SPELL_CAST_START", "MassInstability", 235267)
 
 	-- Stage Two: Watcher's Wrath
-	self:Log("SPELL_CAST_SUCCESS", "Blowback", 248812) -- Blowback
-	self:Log("SPELL_AURA_APPLIED", "TitanicBulwarkApplied", 235028) -- Titanic Bulwark
-	self:Log("SPELL_AURA_REMOVED", "TitanicBulwarkRemoved", 235028) -- Titanic Bulwark
-	self:Log("SPELL_CAST_SUCCESS", "WrathoftheCreators", 234891) -- Wrath of the Creators
-	self:Log("SPELL_AURA_REMOVED", "WrathoftheCreatorsInterrupted", 234891) -- Wrath of the Creators
-
-	if self:Mythic() then
-		--self:Death("UnitDied", "*")
-	end
+	self:Log("SPELL_CAST_SUCCESS", "Blowback", 248812)
+	self:Log("SPELL_AURA_APPLIED", "TitanicBulwarkApplied", 235028)
+	self:Log("SPELL_AURA_REMOVED", "TitanicBulwarkRemoved", 235028)
+	self:Log("SPELL_CAST_SUCCESS", "WrathoftheCreators", 234891)
+	self:Log("SPELL_AURA_REMOVED", "WrathoftheCreatorsInterrupted", 234891)
 end
 
 function mod:OnEngage()
@@ -159,16 +162,26 @@ function mod:OnEngage()
 	initialOrbs = true
 	wrathStacks = 0
 
-	self:Bar(235271, 2.0) -- Infusion
-	self:Bar(241635, 14.0, L.lightHammer) -- Hammer of Creation
-	self:Bar(235267, 22.0) -- Mass Instability
-	self:Bar(241636, 32.0, L.felHammer) -- Hammer of Obliteration
-	self:Bar(248812, 42.5) -- Blowback
-	self:Bar(234891, 43.5) -- Wrath of the Creators
+	if not self:LFR() then
+		self:Bar(235271, 2) -- Infusion
+		self:Bar(241635, 14, L.lightHammer) -- Hammer of Creation
+		self:Bar(235267, 22) -- Mass Instability
+		self:Bar(241636, 32, L.felHammer) -- Hammer of Obliteration
+		self:Bar(248812, 42.5) -- Blowback
+		self:Bar(234891, 43.5) -- Wrath of the Creators
+	else
+		self:Bar(235267, 6) -- Mass Instability
+		self:Bar(235271, 41) -- Infusion
+		self:Bar(248812, 46) -- Blowback
+		self:Bar(234891, 47.5) -- Wrath of the Creators
+	end
+
 	if self:Mythic() then
 		self:Bar(239153, 8, CL.count:format(self:SpellName(230932), orbCounter))
 	end
-	self:Berserk(480)
+	if not self:LFR() then
+		self:Berserk(480)
+	end
 end
 
 function mod:OnBossDisable()
@@ -288,43 +301,31 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(_, spellName, _, _, spellId)
 	end
 end
 
-function mod:UnstableSoul(args)
-	if self:Me(args.destGUID) then
-		self:TargetMessage(235117, args.destName, "Personal", "Alarm")
-		self:Flash(235117)
-		self:SmartColorSet(235117, 1, 0, 0)
-
-		local _, _, _, _, _, _, expires = UnitDebuff(args.destName, args.spellName)
-		local remaining = expires - GetTime() - 1.5
-		self:TargetBar(235117, remaining, args.destName)
-
-		if self:Hud(235117) then
-			local timer = Hud:DrawTimer("player", 50, remaining):SetColor(1, 0.5, 0):Register("UnstableSoulHUD")
-			local label = Hud:DrawText("player", "Wait"):Register("UnstableSoulHUD")
-			local done = false
-
-			function timer:OnDone()
-				if not done then
-					done = true
-					mod:PlaySound(false, "Info")
-					timer:SetColor(0.2, 1, 0.2)
-					label:SetText("JUMP!")
-				end
+do
+	local prev = 0
+	function mod:UnstableSoul(args)
+		if self:Me(args.destGUID) then
+			local t = GetTime()
+			if t-prev > 1.5 then
+				prev = t
+				self:TargetMessage(235117, args.destName, "Personal", "Alarm")
 			end
-		end
+			-- Duration can be longer if the debuff gets refreshed
+			local _, _, _, _, _, _, expires = UnitDebuff(args.destName, args.spellName)
+			local remaining = expires-GetTime()-1.5
+			self:TargetBar(235117, remaining, args.destName)
 
-		if self:MobId(args.sourceGUID) == 118289 and GetTime() > massInstabilityGrace and InGuildParty() then
-			local fel = self:SpellName(235240)
-			local light = self:SpellName(235213)
-			local amFel = UnitDebuff("player", fel)
-			local amLight = UnitDebuff("player", light)
-			for unit in mod:IterateGroup() do
-				-- Range should be 3 yd, but cannot check less than 5 yd
-				if not UnitIsUnit(unit, "player") and not UnitIsDead(unit) and mod:Range(unit) <= 5 then
-					if amFel and UnitDebuff(unit, light) then
-						self:Say(false, "I ({rt4}) may have walked over " .. UnitName(unit) .. " ({rt1})", true, "RAID")
-					elseif amLight and UnitDebuff(unit, fel) then
-						self:Say(false, "I ({rt1}) may have walked over " .. UnitName(unit) .. " ({rt4})", true, "RAID")
+			if self:Hud(235117) then
+				local timer = Hud:DrawTimer("player", 50, remaining):SetColor(1, 0.5, 0):Register("UnstableSoulHUD")
+				local label = Hud:DrawText("player", "Wait"):Register("UnstableSoulHUD")
+				local done = false
+
+				function timer:OnDone()
+					if not done then
+						done = true
+						mod:PlaySound(false, "Info")
+						timer:SetColor(0.2, 1, 0.2)
+						label:SetText("JUMP!")
 					end
 				end
 			end
@@ -359,6 +360,7 @@ end
 
 function mod:Infusion(args)
 	self:Message(args.spellId, "Neutral", nil, CL.casting:format(args.spellName))
+	if self:LFR() then return end
 	infusionCounter = infusionCounter + 1
 	if infusionCounter == 2 then
 		self:Bar(args.spellId, 38.0)
@@ -370,7 +372,7 @@ end
 
 do
 	local function checkSide(self, newSide, key, spellName)
-		local sideString = (newSide == 235240 or newSide == 240219) and L.fel or L.light
+		local sideString = newSide == 235240 and L.fel or L.light
 		if mySide ~= newSide then
 			self:Message(235271, "Important", "Warning", mySide == 0 and spellName or L.infusionChanged:format(sideString), newSide)
 			if not self:Mythic() or not mod:GetOption(infusion_no_mm_pulse) then
@@ -424,6 +426,12 @@ do
 	end
 end
 
+function mod:InfusionLFR(args)
+	if self:Me(args.destGUID) then
+		self:Message(235271, "Positive", "Info", args.spellName)
+	end
+end
+
 function mod:HammerofCreation(args)
 	self:Message(args.spellId, "Urgent", "Alert", L.lightHammer)
 	hammerofCreationCounter = hammerofCreationCounter + 1
@@ -443,9 +451,14 @@ end
 function mod:MassInstability(args)
 	self:Message(args.spellId, "Attention", "Alert")
 	massInstabilityCounter = massInstabilityCounter + 1
-	massInstabilityGrace = GetTime() + 5
-	if massInstabilityCounter == 2 then
-		self:Bar(args.spellId, 36)
+	if self:LFR() then
+		if massInstabilityCounter < 5 then
+			self:Bar(args.spellId, 12)
+		end
+	else
+		if massInstabilityCounter == 2 then
+			self:Bar(args.spellId, 36)
+		end
 	end
 end
 
@@ -453,34 +466,55 @@ function mod:Blowback(args)
 	self:Message(args.spellId, "Important", "Warning")
 end
 
-function mod:TitanicBulwarkApplied(args)
-	wrathStacks = 0
-	shieldActive = true
-	bossSide = (bossSide == 1) and 2 or 1
-	if self:Hud(args.spellId) then
-		local cast = Hud:DrawClock(args.destGUID, 80, 50):Register(args.destKey, true)
-		local shield = Hud:DrawSpinner(args.destGUID, 80):Register(args.destKey)
+do
+	local timer, castOver, maxAbsorb = nil, 0, 0
+	local red, yellow, green = {.6, 0, 0, .6}, {.7, .5, 0}, {0, .5, 0}
 
-		local unit = args.destUnit
-		local spellName = args.spellName
-		local shieldMax = false
-		function shield:Progress()
-			local _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, absorb, _, _ = UnitBuff(unit, spellName)
-			if not absorb then return 0 end
-			if not shieldMax then shieldMax = absorb end
-			return (shieldMax - absorb) / shieldMax
+	local function updateInfoBox(self, spellId)
+		local castTimeLeft = castOver - GetTime()
+		local castPercentage = castTimeLeft / 50
+		local absorb = UnitGetTotalAbsorbs("boss1")
+		local absorbPercentage = absorb / maxAbsorb
+
+		local diff = castPercentage - absorbPercentage
+		local hexColor = "ff0000"
+		local rgbColor = red
+		if diff > 0.1 then -- over 10%
+			hexColor = "00ff00"
+			rgbColor = green
+		elseif diff > 0  then -- below 10%, so it's still close
+			hexColor = "ffff00"
+			rgbColor = yellow
 		end
 
-		function cast:OnRemove()
-			shield:SetColor(1, 0, 0)
+		self:SetInfoBar(spellId, 1, absorbPercentage, unpack(rgbColor))
+		self:SetInfo(spellId, 2, L.absorb_text:format(self:AbbreviateNumber(absorb), hexColor, absorbPercentage * 100))
+		self:SetInfoBar(spellId, 3, castPercentage)
+		self:SetInfo(spellId, 4, L.cast_text:format(castTimeLeft, hexColor, castPercentage * 100))
+		self:SetInfo(spellId, 6, ("%d/30"):format(wrathStacks))
+	end
+
+	function mod:TitanicBulwarkApplied(args)
+		wrathStacks = 0
+		if self:CheckOption(args.spellId, "INFOBOX") then
+			self:OpenInfo(args.spellId, args.spellName)
+			self:SetInfo(args.spellId, 1, L.absorb)
+			self:SetInfo(args.spellId, 3, L.cast)
+			self:SetInfo(args.spellId, 5, L.stacks)
+			castOver = GetTime() + 50 -- Time to 30 stacks
+			maxAbsorb = UnitGetTotalAbsorbs("boss1")
+			timer = self:ScheduleRepeatingTimer(updateInfoBox, 0.1, self, args.spellId)
 		end
 	end
-end
 
-function mod:TitanicBulwarkRemoved(args)
-	shieldActive = false
-	self:Message(args.spellId, "Positive", "Info", CL.removed:format(args.spellName))
-	Hud:RemoveObject(args.destKey)
+	function mod:TitanicBulwarkRemoved(args)
+		self:Message(args.spellId, "Positive", "Info", CL.removed:format(args.spellName))
+		self:CloseInfo(args.spellId)
+		if timer then
+			self:CancelTimer(timer)
+			timer = nil
+		end
+	end
 end
 
 function mod:WrathoftheCreators(args)
@@ -496,13 +530,19 @@ function mod:WrathoftheCreatorsInterrupted(args)
 	orbCounter = 1
 	initialOrbs = nil
 
-	self:Bar(235271, 2) -- Infusion
+	if not self:LFR() then
+		self:Bar(235271, 2) -- Infusion
+		self:Bar(241635, 14, L.lightHammer) -- Hammer of Creation
+		self:Bar(235267, 22) -- Mass Instability
+		self:Bar(241636, 32, L.felHammer) -- Hammer of Obliteration
+		self:Bar(248812, 81) -- Blowback
+		self:Bar(234891, 83.5) -- Wrath of the Creators
+	else
+		self:Bar(235267, 8) -- Mass Instability
+		self:Bar(248812, 66) -- Blowback
+		self:Bar(234891, 68) -- Wrath of the Creators
+	end
 	if self:Mythic() then
 		self:Bar(239153, 8, CL.count:format(self:SpellName(230932), orbCounter))
 	end
-	self:Bar(241635, 14, L.lightHammer) -- Hammer of Creation
-	self:Bar(235267, 22) -- Mass Instability
-	self:Bar(241636, 32, L.felHammer) -- Hammer of Obliteration
-	self:Bar(248812, 81) -- Blowback
-	self:Bar(234891, 83.5) -- Wrath of the Creators
 end

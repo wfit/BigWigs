@@ -28,8 +28,9 @@ L.general = "일반" -- General settings, i.e. things that apply to normal, hero
 
 L.duration = "%s %s초 남음"
 L.over = "%s 종료!"
-L.removed = "%s 사라짐"
-L.removed_from = "%2$s의 %1$s 사라짐"
+L.removed = "%s 제거됨"
+L.removed_from = "%2$s의 %1$s 제거됨"
+L.removed_by = "%2$s|1이;가; %1$s 제거함" -- spell removed by player
 L.incoming = "곧 %s!"
 L.interrupted = "%s 시전 방해됨"
 L.no = "%s 없음!"
@@ -72,3 +73,8 @@ L.link = "%s|1과;와; 연결됨"
 L.link_short = "연결됨: %s"
 L.link_both = "%s|1과;와; %s|1이;가; 연결됨"
 L.link_removed = "연결 사라짐"
+
+-- Abbreviated numbers
+L.amount_one = "%.2f억"
+L.amount_two = "%.1f만"
+L.amount_three = "%d천"

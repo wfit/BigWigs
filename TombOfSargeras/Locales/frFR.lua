@@ -26,6 +26,10 @@ L = BigWigs:NewBossLocale("The Desolate Host", "frFR")
 if L then
 	L.infobox_players = "Joueurs"
 	L.armor_remaining = "%s restant (%d)" -- Bonecage Armor Remaining (#)
+	L.custom_on_mythic_armor = "Ignorer Armure thoracique sur les Templiers réanimés en Mythique"
+	L.custom_on_mythic_armor_desc = "Laissez cette option activée si vous off-tankez les Templiers réanimés afin d'ignorer les alertes et le comptage des Armures thoraciques sur les Templiers réanimés."
+	L.custom_on_armor_plates = "Icône Armure thoracique sur les barres d'info des ennemis"
+	L.custom_on_armor_plates_desc = "Affiche une icône sur la barre d'info des Templiers réanimés sous Armure thoracique.\nNécessite l'utlisation des barres d'info des ennemis. Cette fonctionnalité est actuellement uniquement supportée par KuiNameplates."
 	L.tormentingCriesSay = "Cris" -- Tormenting Cries (short say)
 end
 
@@ -37,6 +41,11 @@ if L then
 	L.light = "Lumière"
 	L.felHammer = "Marteau gangrené" -- Better name for "Hammer of Obliteration"
 	L.lightHammer = "Marteau de Lumière" -- Better name for "Hammer of Creation"
+	L.absorb = "Absorb."
+	L.absorb_text = "%s (|cff%s%.0f%%|r)"
+	L.cast = "Incant."
+	L.cast_text = "%.1fs (|cff%s%.0f%%|r)" -- s = seconds
+	L.stacks = "Cumuls"
 end
 
 L = BigWigs:NewBossLocale("Fallen Avatar", "frFR")
@@ -49,6 +58,13 @@ if L then
 	L.energy_leak = "Fuite d'énergie"
 	L.energy_leak_desc = "Affiche une alerte quand de l'énergie a fuité vers le boss en phase 1."
 	L.energy_leak_msg = "Fuite d'énergie ! (%d)"
+
+	L.warmup_trigger = "L'enveloppe devant vous" -- L'enveloppe devant vous a servi de réceptacle à la puissance de Sargeras. Mais ce temple est notre véritable récompense. Le moyen par lequel nous allons réduire votre monde en cendres !
+
+	L.absorb = "Absorb."
+	L.absorb_text = "%s (|cff%s%.0f%%|r)"
+	L.cast = "Incant."
+	L.cast_text = "%.1fs (|cff%s%.0f%%|r)" -- s = seconds
 end
 
 L = BigWigs:NewBossLocale("Kil'jaeden", "frFR")
@@ -66,6 +82,8 @@ if L then
 	L.rupturingKnock_desc = "Affiche un délai pour le knockback"
 
 	L.meteorImpact_desc = "Affiche un délai pour l'impact des météores"
+
+	L.add = "Add %d"
 end
 
 L = BigWigs:NewBossLocale("Tomb of Sargeras Trash", "frFR")
@@ -78,6 +96,8 @@ if L then
 	L.seacaller = "Mande-mers marécaille"
 	L.custodian = "Gardien des fonds marins"
 	L.dresanoth = "Dresanoth"
+	L.stalker = "Le Traqueur de l'effroi"
 	L.sentry = "Factionnaire gardien"
 	L.acolyte = "Acolyte fantomatique"
+	L.ryul = "Ryul le Déclinant"
 end

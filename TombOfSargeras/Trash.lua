@@ -23,10 +23,12 @@ mod:RegisterEnableMob(
 	120482, -- Tidescale Seacaller
 	120463, -- Undersea Custodian
 	120012, -- Dresanoth
+	120013, -- The Dread Stalker
 
 	--[[ Sisters of the Moon -> The Desolate Host ]]--
 	120777, -- Guardian Sentry
-	120194 -- Ghostly Acolyte
+	120194, -- Ghostly Acolyte
+	120019 -- Ryul the Fading
 
 	--[[ Pre Maiden of Vigilance ]]--
 
@@ -66,10 +68,12 @@ if L then
 	L.seacaller = "Tidescale Seacaller"
 	L.custodian = "Undersea Custodian"
 	L.dresanoth = "Dresanoth"
+	L.stalker = "The Dread Stalker"
 
 	--[[ Sisters of the Moon -> The Desolate Host ]]--
 	L.sentry = "Guardian Sentry"
 	L.acolyte = "Ghostly Acolyte"
+	L.ryul = "Ryul the Fading"
 
 	--[[ Pre Maiden of Vigilance ]]--
 
@@ -106,10 +110,15 @@ function mod:GetOptions()
 		241254, -- Frost-Fingered Fear (Dresanoth)
 		{241289, "FLASH"}, -- Mist Filled Pools (Dresanoth)
 		{241267, "TANK"}, -- Icy Talons (Dresanoth)
+		241703, -- Blood Siphon (The Dread Stalker)
+		241716, -- Blood Drain (The Dread Stalker)
 
 		--[[ Sisters of the Moon -> The Desolate Host ]]--
 		{240735, "SAY", "FLASH"}, -- Polymorph Bomb (Guardian Sentry)
 		{239741, "SAY"}, -- Anguish (Ghostly Acolyte)
+		{241367, "FLASH"}, -- Anguishing Strike (Ryul the Fading)
+		{241675, "SAY", "PROXIMITY"}, -- Void Rift (Ryul the Fading)
+		241646, -- Soul Portal (Ryul the Fading)
 
 		--[[ Pre Maiden of Vigilance ]]--
 
@@ -126,17 +135,19 @@ function mod:GetOptions()
 		[240599] = L.seacaller,
 		[240169] = L.custodian,
 		[241254] = L.dresanoth,
+		[241703] = L.stalker,
 		[240735] = L.sentry,
 		[239741] = L.acolyte,
+		[241367] = L.ryul,
 	}
 end
 
 function mod:OnBossEnable()
 	--[[ General ]]--
 	self:RegisterMessage("BigWigs_OnBossEngage", "Disable")
-	self:Log("SPELL_AURA_APPLIED", "GroundEffectDamage", 241262, 241169, 240176) -- Felburn, Umbra Destruction, Lightning Storm
-	self:Log("SPELL_PERIODIC_DAMAGE", "GroundEffectDamage", 241262, 241169, 240176)
-	self:Log("SPELL_PERIODIC_MISSED", "GroundEffectDamage", 241262, 241169, 240176)
+	self:Log("SPELL_AURA_APPLIED", "GroundEffectDamage", 241262, 241169, 240176, 241703) -- Felburn, Umbra Destruction, Lightning Storm, Blood Siphon
+	self:Log("SPELL_PERIODIC_DAMAGE", "GroundEffectDamage", 241262, 241169, 240176, 241703)
+	self:Log("SPELL_PERIODIC_MISSED", "GroundEffectDamage", 241262, 241169, 240176, 241703)
 
 	self:Log("SPELL_AURA_APPLIED", "CurseOfGuldan", 241742)
 	self:Log("SPELL_AURA_REMOVED", "CurseOfGuldanRemoved", 241742)
@@ -163,6 +174,10 @@ function mod:OnBossEnable()
 	self:Log("SPELL_CAST_START", "MistFilledPools", 241289)
 	self:Log("SPELL_AURA_APPLIED", "IcyTalons", 241267)
 	self:Log("SPELL_AURA_APPLIED_DOSE", "IcyTalons", 241267)
+	self:Log("SPELL_CAST_SUCCESS", "BloodDrain", 241716)
+	self:Log("SPELL_AURA_APPLIED", "BloodDrainApplied", 241716)
+	self:Log("SPELL_AURA_REMOVED", "BloodDrainRemoved", 241716)
+	self:Log("SPELL_DISPEL", "BloodDrainDispelled", "*")
 
 
 	--[[ Sisters of the Moon -> The Desolate Host ]]--
@@ -170,6 +185,11 @@ function mod:OnBossEnable()
 	self:Log("SPELL_AURA_REMOVED", "PolymorphBombRemoved", 240735)
 	self:Log("SPELL_AURA_APPLIED", "Anguish", 239741)
 	self:Log("SPELL_AURA_REMOVED", "AnguishRemoved", 239741)
+	self:Log("SPELL_CAST_SUCCESS", "AnguishingStrike", 241367)
+	self:Log("SPELL_AURA_APPLIED", "AnguishingStrikeApplied", 241367)
+	self:Log("SPELL_AURA_APPLIED", "VoidRift", 241675)
+	self:Log("SPELL_AURA_REMOVED", "VoidRiftRemoved", 241675)
+	self:Log("SPELL_CAST_SUCCESS", "SoulPortal", 241646)
 
 	--[[ Pre Maiden of Vigilance ]]--
 
@@ -290,6 +310,28 @@ function mod:IcyTalons(args)
 	end
 end
 
+function mod:BloodDrain(args)
+	self:TargetMessage(args.spellId, args.destName, "Attention", "Warning", nil, nil, self:Dispeller("magic"))
+	self:Bar(args.spellId, 13.3)
+end
+
+function mod:BloodDrainApplied(args)
+	if self:Me(args.destGUID) or self:Dispeller("magic") then
+		self:Flash(args.spellId)
+	end
+	self:TargetBar(args.spellId, 3, args.destName)
+end
+
+function mod:BloodDrainRemoved(args)
+	self:StopBar(args.spellName, args.destName)
+end
+
+function mod:BloodDrainDispelled(args)
+	if args.extraSpellId == 241716 then
+		self:Message(args.extraSpellId, "Positive", "Info", CL.removed_by:format(args.extraSpellName, self:ColorName(args.sourceName)))
+	end
+end
+
 --[[ Sisters of the Moon -> The Desolate Host ]]--
 function mod:PolymorphBomb(args)
 	self:TargetMessage(args.spellId, args.destName, "Urgent", "Alarm")
@@ -324,6 +366,37 @@ function mod:AnguishRemoved(args)
 	if self:Me(args.destGUID) then
 		self:CancelSayCountdown(args.spellId)
 	end
+end
+
+function mod:AnguishingStrike(args)
+	self:TargetMessage(args.spellId, args.destName, "Attention", "Warning", nil, nil, self:Tank())
+	self:Bar(args.spellId, 15.8)
+	if not self:Me(args.destGUID) and self:Tank() then
+		self:Flash(args.spellId)
+	end
+end
+
+function mod:AnguishingStrikeApplied(args)
+	self:TargetBar(args.spellId, 10, args.destName)
+end
+
+function mod:VoidRift(args)
+	self:TargetMessage(args.spellId, args.destName, "Urgent", "Alert")
+	if self:Me(args.destGUID) then
+		self:OpenProximity(args.spellId, 10)
+		self:Say(args.spellId)
+	end
+end
+
+function mod:VoidRiftRemoved(args)
+	if self:Me(args.destGUID) then
+		self:CloseProximity(args.spellId)
+	end
+end
+
+function mod:SoulPortal(args)
+	self:Message(args.spellId, "Positive", nil, CL.spawned:format(args.spellName))
+	self:Bar(args.spellId, 15.8)
 end
 
 --[[ Pre Maiden of Vigilance ]]--

@@ -30,6 +30,7 @@ L.duration = "%s durante %s seg"
 L.over = "%s Acabou!"
 L.removed = "%s Removido"
 --L.removed_from = "%s Removed From %s"
+--L.removed_by = "%s removed by %s" -- spell removed by player
 L.incoming = "%s Chegando!"
 L.interrupted = "%s Interrompido"
 L.no = "Sem %s!"
@@ -70,3 +71,8 @@ L.marker_npc_desc = "Marca %s com %s, requer líder ou assistente."
 --L.link_short = "Linked: %s"
 --L.link_both = "%s linked with %s"
 --L.link_removed = "Link removed"
+
+-- Abbreviated numbers
+--L.amount_one = "%dB"
+--L.amount_two = "%dM"
+--L.amount_three = "%dK"

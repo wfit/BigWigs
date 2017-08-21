@@ -26,6 +26,10 @@ L = BigWigs:NewBossLocale("The Desolate Host", "koKR")
 if L then
 	L.infobox_players = "플레이어"
 	L.armor_remaining = "%s 남음 (%d)" -- Bonecage Armor Remaining (#)
+	L.custom_on_mythic_armor = "신화 난이도에서 되살아난 기사단원의 뼈껍질 방어구 무시하기"
+	L.custom_on_mythic_armor_desc = "되살아난 기사단원을 방어 중이지 않을 때 되살아난 기사단원의 뼈껍질 방어구에 대한 경보와 횟수를 무시하려면 이 옵션을 활성화하세요"
+	L.custom_on_armor_plates = "적 이름표에 뼈껍질 방어구 아이콘"
+	L.custom_on_armor_plates_desc = "뼈껍질 방어구를 가진 되살아난 기사단원의 이름표에 아이콘을 표시합니다.\n적 이름표를 사용해야 합니다. 이 기능은 현재 KuiNameplates만 지원합니다."
 	L.tormentingCriesSay = "외침" -- Tormenting Cries (short say)
 end
 
@@ -37,6 +41,11 @@ if L then
 	L.light = "빛"
 	L.felHammer = "지옥 망치" -- Better name for "Hammer of Obliteration"
 	L.lightHammer = "빛 망치" -- Better name for "Hammer of Creation"
+	L.absorb = "흡수"
+	L.absorb_text = "%s (|cff%s%.0f%%|r)"
+	L.cast = "시전"
+	L.cast_text = "%.1f초 (|cff%s%.0f%%|r)" -- s = seconds
+	L.stacks = "중첩"
 end
 
 L = BigWigs:NewBossLocale("Fallen Avatar", "koKR")
@@ -49,6 +58,13 @@ if L then
 	L.energy_leak = "마력 누출"
 	L.energy_leak_desc = "1단계에서 우두머리에게 마력이 누출되면 경보를 표시합니다."
 	L.energy_leak_msg = "마력 누출! (%d)"
+
+	L.warmup_trigger = "네 눈앞의 껍데기는 한때 살게라스의 무지막지한 힘을 담던 그릇이었다." -- 네 눈앞의 껍데기는 한때 살게라스의 무지막지한 힘을 담던 그릇이었다. 그러나 이 사원 자체가 우리에겐 포상이다. 이곳이 우리가 너희 세상을 잿더미로 만드는 발판이 되리라!
+
+	L.absorb = "흡수"
+	L.absorb_text = "%s (|cff%s%.0f%%|r)"
+	L.cast = "시전"
+	L.cast_text = "%.1f초 (|cff%s%.0f%%|r)" -- s = seconds
 end
 
 L = BigWigs:NewBossLocale("Kil'jaeden", "koKR")
@@ -57,7 +73,7 @@ if L then
 	L.obeliskExplosion = "방첨탑 폭발"
 	L.obeliskExplosion_desc = "방첨탑 폭발의 타이머입니다"
 
-	L.darkness = "어둠 영혼" -- Shorter name for Darkness of a Thousand Souls (238999)
+	L.darkness = "어둠의 영혼" -- Shorter name for Darkness of a Thousand Souls (238999)
 	L.reflectionErupting = "반영: 분출" -- Shorter name for Shadow Reflection: Erupting (236710)
 	L.reflectionWailing = "반영: 통곡" -- Shorter name for Shadow Reflection: Wailing (236378)
 	L.reflectionHopeless = "반영: 절망" -- Shorter name for Shadow Reflection: Hopeless (237590)
@@ -66,6 +82,8 @@ if L then
 	L.rupturingKnock_desc = "밀쳐내기 타이머를 표시합니다"
 
 	L.meteorImpact_desc = "유성 충돌 타이머를 표시합니다"
+
+	L.add = "어둠영혼 %d"
 end
 
 L = BigWigs:NewBossLocale("Tomb of Sargeras Trash", "koKR")
@@ -78,6 +96,8 @@ if L then
 	L.seacaller = "물결비늘 바다소환사"
 	L.custodian = "깊은바다 관리인"
 	L.dresanoth = "드레사노스"
+	L.stalker = "공포의 추적자"
 	L.sentry = "수호의 감시자"
 	L.acolyte = "유령 수행사제"
+	L.ryul = "희미한 자 률"
 end

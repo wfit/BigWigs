@@ -14,22 +14,14 @@ mod.respawnTime = 40
 --
 
 local stage = 1
-local consumingHungerCounter = 1
 local slicingTornadoCounter = 1
 local waveCounter = 1
 local dreadSharkCounter = 1
 local burdenCounter = 1
-local slicingTimersP3 = {0, 39.0, 34.1, 42.6}
+local crashingWaveStage3Mythic = {32.5, 39, 33, 45, 33}
 local hydraShotCounter = 1
+local bufferfishCounter = 1
 local abs = math.abs
-
-local shockCounter = 1
-local mawCounter = 1
-local waveTimersP3 = { 0, 39.0, 32.8, 43 }
-
-local nextDreadSharkSoon = 87
-local sharkVerySoon = false
-local alreadySuicided = {}
 
 --------------------------------------------------------------------------------
 -- Localization
@@ -53,6 +45,7 @@ function mod:GetOptions()
 		{230139, "FLASH", "PULSE"}, -- Hydra Shot
 		hydraShotMarker,
 		{230201, "TANK", "FLASH"}, -- Burden of Pain
+		230227, -- From the Abyss // Showing this as an alternative to Burden of Pain for non-tanks, they are the same spell
 		230959, -- Concealing Murk
 		232722, -- Slicing Tornado
 		230358, -- Thundering Shock
@@ -103,29 +96,30 @@ end
 
 function mod:OnEngage()
 	stage = 1
-	consumingHungerCounter = 1
 	slicingTornadoCounter = 1
 	waveCounter = 1
 	dreadSharkCounter = 1
 	burdenCounter = 1
 	hydraShotCounter = 1
-	shockCounter = 1
-	mawCounter = 1
+	bufferfishCounter = 1
 
 	wipe(alreadySuicided)
 
 	self:Bar(230358, 10.5) -- Thundering Shock
+	-- Tanks: Burden of Pain
 	self:Bar(230201, self:Easy() and 18 or 15.5, CL.count:format(self:SpellName(230201), burdenCounter)) -- Burden of Pain, Timer until cast_start
+	-- Non-Tanks: From the Abyss
+	if not self:Tank() or self:GetOption(230201) == 0 then
+		self:Bar(230227, self:Easy() and 20.5 or 18, CL.count:format(self:SpellName(230227), burdenCounter))
+	end
 	self:Bar(230384, 20.5) -- Consuming Hunger
 	if not self:LFR() then
 		self:CDBar(230139, self:Normal() and 27 or 25, CL.count:format(self:SpellName(230139), hydraShotCounter)) -- Hydra Shot
 	end
-	if self:Mythic() then
-		self:Bar(239362, 13) -- Bufferfish
-		nextDreadSharkSoon = 87
-		self:RegisterUnitEvent("UNIT_HEALTH_FREQUENT", nil, "boss1")
-	end
 	self:Bar(232722, self:Easy() and 36 or 30.3) -- Slicing Tornado
+	if self:Mythic() then
+		self:Bar(239362, 13, CL.count:format(self:SpellName(239362), bufferfishCounter)) -- Delicious Bufferfish
+	end
 	self:Berserk(self:LFR() and 540 or 480)
 end
 
@@ -137,28 +131,28 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(_, _, _, _, spellId)
 		dreadSharkCounter = dreadSharkCounter + 1
 		if not self:Mythic() then
 			stage = dreadSharkCounter
-		elseif dreadSharkCounter == 3 or dreadSharkCounter == 5 then
-			self:Bar(239362, 22) -- Bufferfish
-			self:Message(239436, "Urgent", "Warning")
-			sharkVerySoon = false
-			stage = stage+1
 		else
-			self:Bar(239362, 22) -- Bufferfish
-			self:Message(239436, "Urgent", "Warning")
-			sharkVerySoon = false
-			return -- No stage change yet
+			bufferfishCounter = bufferfishCounter + 1
+			self:Bar(239362, 22.5, CL.count:format(self:SpellName(239362), bufferfishCounter)) -- Delicious Bufferfish
+			if dreadSharkCounter == 3 or dreadSharkCounter == 5 then
+				self:Message(239436, "Urgent", "Warning")
+				stage = stage + 1
+			else
+				self:Message(239436, "Urgent", "Warning")
+				return -- No stage change yet
+			end
 		end
 
 		self:StopBar(232722) -- Slicing Tornado
 		self:StopBar(230358) -- Thundering Shock
 		self:StopBar(230384) -- Consuming Hunger
 		self:StopBar(232913) -- Befouling Ink
+		self:StopBar(232827) -- Crashing Wave
 		self:StopBar(234621) -- Devouring Maw
 		self:StopBar(CL.count:format(self:SpellName(230139), hydraShotCounter)) -- Hydra Shot
 		self:StopBar(CL.count:format(self:SpellName(230201), burdenCounter)) -- Burden of Pain
-		self:StopBar(CL.count:format(self:SpellName(232827), waveCounter)) -- Crashing Wave
+		self:StopBar(CL.count:format(self:SpellName(230227), burdenCounter)) -- From the Abyss
 
-		consumingHungerCounter = 1
 		slicingTornadoCounter = 1
 		waveCounter = 1
 		burdenCounter = 1
@@ -170,34 +164,29 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(_, _, _, _, spellId)
 			if not self:LFR() then
 				self:Bar(230139, self:Normal() and 18.2 or 15.9, CL.count:format(self:SpellName(230139), hydraShotCounter)) -- Hydra Shot
 			end
+			-- Tanks: Burden of Pain
 			self:Bar(230201, self:Easy() and 28 or 25.6, CL.count:format(self:SpellName(230201), burdenCounter)) -- Burden of Pain, Timer until cast_start
-			self:Bar(232827, self:Easy() and 39.6 or 32.5, CL.count:format(self:SpellName(232827), waveCounter)) -- Crashing Wave
-			self:Bar(234621, self:Easy() and 46.5 or 41.7) -- Devouring Maw
+			-- Non-Tanks: From the Abyss
+			if not self:Tank() or self:GetOption(230201) == 0 then
+				self:Bar(230227, self:Easy() and 30.5 or 28, CL.count:format(self:SpellName(230227), burdenCounter))
+			end
+			self:Bar(232827, self:Easy() and 39.6 or 32.5) -- Crashing Wave
+			self:Bar(234621, self:Easy() and 46.5 or 42.2) -- Devouring Maw
 		elseif stage == 3 then
 			self:CDBar(232913, 11) -- Befouling Ink
+			-- Tanks: Burden of Pain
 			self:Bar(230201, self:Easy() and 28 or 25.6, CL.count:format(self:SpellName(230201), burdenCounter)) -- Burden of Pain, Timer until cast_start
-			self:Bar(232827, self:Easy() and 38.5 or 32.5, CL.count:format(self:SpellName(232827), waveCounter)) -- Crashing Wave
+			-- Non-Tanks: From the Abyss
+			if not self:Tank() or self:GetOption(230201) == 0 then
+				self:Bar(230227, self:Easy() and 30.5 or 28, CL.count:format(self:SpellName(230227), burdenCounter))
+			end
+			self:Bar(232827, self:Easy() and 38.5 or 32.5) -- Crashing Wave
 			if not self:LFR() then
-				self:Bar(230139, self:Normal() and 18.2 or self:Mythic() and 15.8 or 31.6, CL.count:format(self:SpellName(230139), hydraShotCounter)) -- Hydra Shot
+				self:Bar(230139, self:Normal() and 18.2 or 15.5, CL.count:format(self:SpellName(230139), hydraShotCounter)) -- Hydra Shot
 			end
 
-			self:Bar(230384, self:Mythic() and 45 or 40.1) -- Consuming Hunger
-			self:Bar(232722, self:Easy() and 51.1 or self:Mythic() and 52.3 or 57.2) -- Slicing Tornado
-		end
-	end
-end
-
-function mod:UNIT_HEALTH_FREQUENT(unit)
-	local hp = UnitHealth(unit) / UnitHealthMax(unit) * 100
-	if hp < nextDreadSharkSoon then
-		self:Message(239436, "Neutral", "Beware", CL.soon:format(self:SpellName(239436)), false)
-		if UnitDebuff("player", self:SpellName(239362)) then
-			self:Flash(239436)
-		end
-		sharkVerySoon = true
-		nextDreadSharkSoon = nextDreadSharkSoon - 15
-		if nextDreadSharkSoon < 0 then
-			self:UnregisterUnitEvent("UNIT_HEALTH_FREQUENT", unit)
+			self:Bar(230384, 40.1) -- Consuming Hunger
+			self:Bar(232722, self:Easy() and 51.1 or 57.2) -- Slicing Tornado
 		end
 	end
 end
@@ -223,11 +212,12 @@ do
 
 		if count == 1 then
 			wipe(hydraShots)
-			self:StopBar(CL.count:format(args.spellName, hydraShotCounter))
-			self:ScheduleTimer("TargetMessage", 0.3, args.spellId, list, "Important", "Warning", nil, nil, true)
+			self:StopBar(CL.count:format(self:SpellName(230139), hydraShotCounter)) -- Stop previous one if early
 			self:CastBar(args.spellId, 6, CL.count:format(args.spellName, hydraShotCounter))
+			self:ScheduleTimer("TargetMessage", 0.3, args.spellId, list, "Important", "Warning", nil, nil, true)
 			hydraShotCounter = hydraShotCounter + 1
-			self:CDBar(args.spellId, self:Mythic() and ((stage == 3 and hydraShotCounter <= 4 and 31.5) or 30.5) or stage == 2 and 30 or (self:Normal() and stage == 3 and 51) or 40, CL.count:format(args.spellName, hydraShotCounter))
+			-- Normal stage 3 seems to swing between 41-43 or 51-53
+			self:CDBar(args.spellId, self:Mythic() and 30.5 or stage == 2 and 30 or (self:Normal() and stage == 3 and 41.3) or 40, CL.count:format(args.spellName, hydraShotCounter))
 		end
 
 		hydraShots[count] = args.destUnit
@@ -466,17 +456,18 @@ do
 end
 
 function mod:BurdenofPainCast(args)
-	self:StopBar(CL.count:format(args.spellName, burdenCounter))
 	self:Message(args.spellId, "Attention", "Warning", CL.casting:format(args.spellName))
-	burdenCounter = burdenCounter + 1
-	self:Bar(args.spellId, stage == 1 and (burdenCounter == 4 and 31.5) or stage > 1 and ((burdenCounter == 2 and 30.4) or (burdenCounter == 3 and 29.2)) or 28, CL.count:format(args.spellName, burdenCounter))
-	if not UnitDetailedThreatSituation("player", "boss1") then
-		self:Emit("BURDEN_CAST_START")
-	end
 end
 
 function mod:BurdenofPain(args)
+	burdenCounter = burdenCounter + 1
+	-- Tanks: Burden of Pain
 	self:TargetMessage(args.spellId, args.destName, "Urgent", "Alarm", nil, nil, true)
+	self:Bar(args.spellId, 25.5, CL.count:format(args.spellName, burdenCounter)) -- Timer until cast_start
+	if not self:Tank() or self:GetOption(args.spellId) == 0 then -- Non-Tanks: From the Abyss
+		self:Message(230227, "Urgent", "Alarm", CL.count:format(self:SpellName(230227), burdenCounter-1))
+		self:Bar(230227, 28, CL.count:format(self:SpellName(230227), burdenCounter))
+	end
 	if self:Me(args.destGUID) then
 		self:Flash(args.spellId)
 	end
@@ -497,16 +488,15 @@ function mod:SlicingTornado(args)
 	slicingTornadoCounter = slicingTornadoCounter + 1
 	self:Message(args.spellId, "Important", "Long")
 	if self:Mythic() then
-		self:Bar(args.spellId, stage == 3 and slicingTimersP3[slicingTornadoCounter] or stage == 1 and (slicingTornadoCounter == 4 and 36.5) or 34) -- -- XXX Need more p3 data.
+		self:CDBar(args.spellId, stage == 3 and 35.3 or 34)
 	else
-		self:Bar(args.spellId, stage == 3 and (slicingTornadoCounter % 2 == 0 and 45 or 52) or 45) -- -- XXX Need more p3 data.
+		self:CDBar(args.spellId, stage == 3 and (slicingTornadoCounter % 2 == 0 and 45 or 52) or 45)
 	end
 end
 
 function mod:ThunderingShock(args)
 	self:Message(args.spellId, "Important", "Info")
-	shockCounter = shockCounter + 1
-	self:Bar(args.spellId, shockCounter == 2 and 36.5 or 32.8) -- was 32.8, not confirmed
+	self:CDBar(args.spellId, 32.8) -- Can be delayed sometimes by other casts
 end
 
 do
@@ -524,32 +514,29 @@ end
 
 function mod:DevouringMaw()
 	self:Message(234621, "Important", "Long")
-	mawCounter = mawCounter + 1
 	self:Bar(234621, 42)
 end
 
 function mod:BefoulingInk()
 	self:Message(232913, "Attention", "Info", CL.incoming:format(self:SpellName(232913))) -- Befouling Ink incoming!
-	self:CDBar(232913, stage == 3 and (self:Mythic() and 25 or 32) or 42.5) -- XXX 32-34 in P3
+	self:CDBar(232913, stage == 3 and (self:Mythic() and 37 or 32) or 41.5)
 end
 
 function mod:CrashingWave(args)
-	self:StopBar(CL.count:format(args.spellName, waveCounter))
 	waveCounter = waveCounter + 1
 	self:Message(args.spellId, "Important", "Warning")
-	self:CastBar(args.spellId, self:Mythic() and 4 or 5)
-	if self:Mythic() then
-		self:Bar(args.spellId, stage == 3 and waveTimersP3[waveCounter] or 42.5, CL.count:format(args.spellName, waveCounter))
-	else
-		self:Bar(args.spellId, stage == 3 and (waveCounter == 3 and 49) or 42.5, CL.count:format(args.spellName, waveCounter)) -- XXX need more data in p3
+	self:CastBar(args.spellId, self:LFR() and 7 or 5)
+	local timer = 42
+	if self:Mythic() and stage == 3 then
+		timer = crashingWaveStage3Mythic[waveCounter] or 32
+	elseif stage == 3 and waveCounter == 3 and (self:Heroic() or self:Normal()) then
+		timer = 49
 	end
+	self:Bar(args.spellId, timer)
 end
 
 function mod:DeliciousBufferfish(args)
 	if self:Me(args.destGUID) then
-		if sharkVerySoon then
-			self:Flash(239436)
-		end
 		self:TargetMessage(239362, args.destName, "Personal", "Positive")
 	end
 end
@@ -564,7 +551,7 @@ do
 	local debuffs, inkName = {}, mod:SpellName(232913)
 	local fedTable, fedCount, fedsNeeded = {}, 0, 3
 
-	function mod:MawApplied(args)
+	function mod:MawApplied()
 		wipe(debuffs)
 		wipe(fedTable)
 		fedCount = 0
@@ -599,12 +586,18 @@ do
 
 	function mod:MawRemoved(args)
 		local list = ""
+		local total = 0
 		for name, n in pairs(fedTable) do
+			if total >= fedsNeeded then
+				list = list .. "..., " -- ", " will be cut
+				break
+			end
 			if n > 1 then
 				list = list .. CL.count:format(self:ColorName(name), n) .. ", "
 			else
 				list = list .. self:ColorName(name) .. ", "
 			end
+			total = total + n
 		end
 		self:Message(234621, "Positive", "Info", CL.over:format(args.spellName) .. " - " .. L.inks_fed:format(list:sub(0, list:len()-2)))
 		self:ScheduleTimer("CloseInfo", 5, 234621) -- delay a bit to make sure the people get enough credit

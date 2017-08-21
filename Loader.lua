@@ -7,7 +7,7 @@ local bwFrame = CreateFrame("Frame")
 -- Generate our version variables
 --
 
-local BIGWIGS_VERSION = 66
+local BIGWIGS_VERSION = 70
 local BIGWIGS_RELEASE_STRING = ""
 local versionQueryString, versionResponseString = "Q^%d^%s", "V^%d^%s"
 
@@ -54,7 +54,7 @@ local tooltipFunctions = {}
 local next, tonumber, strsplit = next, tonumber, strsplit
 local SendAddonMessage, Ambiguate, CTimerAfter, CTimerNewTicker = SendAddonMessage, Ambiguate, C_Timer.After, C_Timer.NewTicker
 local IsInInstance, GetCurrentMapAreaID, SetMapToCurrentZone = IsInInstance, GetCurrentMapAreaID, SetMapToCurrentZone
-local GetAreaMapInfo, GetInstanceInfo, GetPlayerMapAreaID = GetAreaMapInfo, GetInstanceInfo, GetPlayerMapAreaID
+local GetAreaMapInfo, GetInstanceInfo, GetPlayerMapAreaID, IsFalling = GetAreaMapInfo, GetInstanceInfo, GetPlayerMapAreaID, IsFalling
 
 -- Try to grab unhooked copies of critical funcs (hooked by some crappy addons)
 public.GetCurrentMapAreaID = GetCurrentMapAreaID
@@ -77,18 +77,17 @@ local highestFoundVersion = BIGWIGS_VERSION
 -- Loading
 local loadOnCoreEnabled = {} -- BigWigs modulepacks that should load when a hostile zone is entered or the core is manually enabled, this would be the default plugins Bars, Messages etc
 local loadOnZone = {} -- BigWigs modulepack that should load on a specific zone
-local loadOnSubMenu = {} -- BigWigs modulepack that should load on a specific zone and display inside a specific menu
 local loadOnSlash = {} -- BigWigs modulepacks that can load from a chat command
 local menus = {} -- contains the menus for BigWigs, once the core is loaded they will get injected
 local enableZones = {} -- contains the zones in which BigWigs will enable
 local disabledZones -- contains the zones in which BigWigs will enable, but the user has disabled the addon
 local worldBosses = {} -- contains the list of world bosses per zone that should enable the core
 local fakeWorldZones = { -- Fake world zones used for world boss translations and loading
-	[466]=true, -- Outland
-	[862]=true, -- Pandaria
-	[962]=true, -- Draenor
-	[1007]=true, -- Broken Isles
-	[1021]=true, -- Broken Shore
+	[-466]=true, -- Outland
+	[-862]=true, -- Pandaria
+	[-962]=true, -- Draenor
+	[-1007]=true, -- Broken Isles
+	[-1021]=true, -- Broken Shore
 }
 
 do
@@ -107,55 +106,163 @@ do
 	local lw_wod = "LittleWigs_WarlordsOfDraenor"
 	local lw_l = "LittleWigs_Legion"
 
-	local tbl = {
-		[696]=c, [755]=c, [766]=c, [717]=c,
-		[775]=bc, [780]=bc, [779]=bc, [776]=bc, [796]=bc, [799]=bc, [782]=bc, [466]=bc,
-		[604]=wotlk, [543]=wotlk, [535]=wotlk, [529]=wotlk, [527]=wotlk, [532]=wotlk, [531]=wotlk, [609]=wotlk, [718]=wotlk,
-		[752]=cata, [758]=cata, [754]=cata, [824]=cata, [800]=cata, [773]=cata,
-		[896]=mop, [897]=mop, [886]=mop, [930]=mop, [953]=mop, [862]=mop,
-		[994]=wod, [988]=wod, [1026]=wod, [962]=wod,
-		[1094]=l, [1088]=l, [1007]=l, [1114]=l, [1147]=l,
+	public.zoneTbl = {
+		--[[ BigWigs: Classic ]]--
+		[409] = c, -- Molten Core
+		[469] = c, -- Blackwing Lair
+		[509] = c, -- Ruins of Ahn'Qiraj
+		[531] = c, -- Ahn'Qiraj Temple
+		--[[ BigWigs: The Burning Crusade ]]--
+		[-466] = bc, -- Outland
+		[565] = bc, -- Gruul's Lair
+		[532] = bc, -- Karazhan
+		[548] = bc, -- Coilfang: Serpentshrine Cavern
+		[550] = bc, -- Tempest Keep
+		[544] = bc, -- Magtheridon's Lair
+		[534] = bc, -- The Battle for Mount Hyjal
+		[564] = bc, -- Black Temple
+		--[[ BigWigs: Wrath of the Lich King ]]--
+		[533] = wotlk, -- Naxxramas
+		[616] = wotlk, -- The Eye of Eternity
+		[603] = wotlk, -- Ulduar
+		[624] = wotlk, -- Vault of Archavon
+		[649] = wotlk, -- Trial of the Crusader
+		[724] = wotlk, -- The Ruby Sanctum
+		[631] = wotlk, -- Icecrown Citadel
+		[615] = wotlk, -- The Obsidian Sanctum
+		[249] = wotlk, -- Onyxia's Lair
+		--[[ BigWigs: Cataclysm ]]--
+		[671] = cata, -- The Bastion of Twilight
+		[669] = cata, -- Blackwing Descent
+		[754] = cata, -- Throne of the Four Winds
+		[757] = cata, -- Baradin Hold
+		[720] = cata, -- Firelands
+		[967] = cata, -- Dragon Soul
+		--[[ BigWigs: Mists of Pandaria ]]--
+		[-862] = mop, -- Pandaria
+		[1009] = mop, -- Heart of Fear
+		[996] = mop, -- Terrace of Endless Spring
+		[1008] = mop, -- Mogu'shan Vaults
+		[1098] = mop, -- Throne of Thunder
+		[1136] = mop, -- Siege of Orgrimmar
+		--[[ BigWigs: Warlords of Draenor ]]--
+		[-962] = wod, -- Draenor
+		[1228] = wod, -- Highmaul
+		[1205] = wod, -- Blackrock Foundry
+		[1448] = wod, -- Hellfire Citadel
+		--[[ BigWigs: Legion ]]--
+		[-1007] = l, -- Broken Isles
+		[1520] = l, -- The Emerald Nightmare
+		[1648] = l, -- Trial of Valor
+		[1530] = l, -- The Nighthold
+		[1676] = l, -- Tomb of Sargeras
+		[1712] = l, -- Antorus, the Burning Throne
 
-		[756]=lw_c, -- Classic
-		[710]=lw_bc, [722]=lw_bc, [723]=lw_bc, [724]=lw_bc, [725]=lw_bc, [726]=lw_bc, [727]=lw_bc, [728]=lw_bc, [729]=lw_bc, [730]=lw_bc, [731]=lw_bc, [732]=lw_bc, [733]=lw_bc, [734]=lw_bc, [797]=lw_bc, [798]=lw_bc, -- TBC
-		[520]=lw_wotlk, [521]=lw_wotlk, [522]=lw_wotlk, [523]=lw_wotlk, [524]=lw_wotlk, [525]=lw_wotlk, [526]=lw_wotlk, [528]=lw_wotlk, [530]=lw_wotlk, [533]=lw_wotlk, [534]=lw_wotlk, [536]=lw_wotlk, [542]=lw_wotlk, [601]=lw_wotlk, [602]=lw_wotlk, [603]=lw_wotlk, -- WotLK
-		[747]=lw_cata, [757]=lw_cata, [767]=lw_cata, [768]=lw_cata, [769]=lw_cata, [820]=lw_cata, -- Cataclysm
-		[877]=lw_mop, [871]=lw_mop, [874]=lw_mop, [885]=lw_mop, [867]=lw_mop, [919]=lw_mop, -- MoP
-		[964]=lw_wod, [969]=lw_wod, [984]=lw_wod, [987]=lw_wod, [989]=lw_wod, [993]=lw_wod, [995]=lw_wod, [1008]=lw_wod, -- WoD
-		[1041]=lw_l, [1042]=lw_l, [1045]=lw_l, [1046]=lw_l, [1065]=lw_l, [1066]=lw_l, [1067]=lw_l, [1079]=lw_l, [1081]=lw_l, [1087]=lw_l, [1115]=lw_l, [1146]=lw_l, [1178]=lw_l, -- Legion
-		[1021]=lw_l, [1129]=lw_l, -- Legion Scenarios
+		--[[ LittleWigs: Classic ]]--
+		[36] = lw_c, -- Deadmines
+		--[[ LittleWigs: The Burning Crusade ]]--
+		[540] = lw_bc, -- Hellfire Citadel: The Shattered Halls
+		[542] = lw_bc, -- Hellfire Citadel: The Blood Furnace
+		[543] = lw_bc, -- Hellfire Citadel: Ramparts
+		[546] = lw_bc, -- Coilfang: The Underbog
+		[545] = lw_bc, -- Coilfang: The Steamvault
+		[547] = lw_bc, -- Coilfang: The Slave Pens
+		[553] = lw_bc, -- Tempest Keep: The Botanica
+		[554] = lw_bc, -- Tempest Keep: The Mechanar
+		[552] = lw_bc, -- Tempest Keep: The Arcatraz
+		[556] = lw_bc, -- Auchindoun: Sethekk Halls
+		[555] = lw_bc, -- Auchindoun: Shadow Labyrinth
+		[557] = lw_bc, -- Auchindoun: Mana-Tombs
+		[558] = lw_bc, -- Auchindoun: Auchenai Crypts
+		[269] = lw_bc, -- Opening of the Dark Portal
+		[560] = lw_bc, -- The Escape from Durnholde
+		[585] = lw_bc, -- Magister's Terrace
+		--[[ LittleWigs: Wrath of the Lich King ]]--
+		[576] = lw_wotlk, -- The Nexus
+		[578] = lw_wotlk, -- The Oculus
+		[608] = lw_wotlk, -- Violet Hold
+		[595] = lw_wotlk, -- The Culling of Stratholme
+		[619] = lw_wotlk, -- Ahn'kahet: The Old Kingdom
+		[604] = lw_wotlk, -- Gundrak
+		[574] = lw_wotlk, -- Utgarde Keep
+		[575] = lw_wotlk, -- Utgarde Pinnacle
+		[602] = lw_wotlk, -- Halls of Lightning
+		[601] = lw_wotlk, -- Azjol-Nerub
+		[658] = lw_wotlk, -- Pit of Saron
+		[599] = lw_wotlk, -- Halls of Stone
+		[600] = lw_wotlk, -- Drak'Tharon Keep
+		[650] = lw_wotlk, -- Trial of the Champion
+		[668] = lw_wotlk, -- Halls of Reflection
+		[632] = lw_wotlk, -- The Forge of Souls
+		--[[ LittleWigs: Cataclysm ]]--
+		[643] = lw_cata, -- Throne of the Tides
+		[755] = lw_cata, -- Lost City of the Tol'vir
+		[725] = lw_cata, -- The Stonecore
+		[938] = lw_cata, -- End Time
+		[657] = lw_cata, -- The Vortex Pinnacle
+		[670] = lw_cata, -- Grim Batol
+		--[[ LittleWigs: Mists of Pandaria ]]--
+		[959] = lw_mop, -- Shado-Pan Monastery
+		[960] = lw_mop, -- Temple of the Jade Serpent
+		[994] = lw_mop, -- Mogu'shan Palace
+		[1001] = lw_mop, -- Scarlet Halls
+		[1112] = lw_mop, -- Pursuing the Black Harvest
+		[1004] = lw_mop, -- Scarlet Monastery
+		--[[ LittleWigs: Warlords of Draenor ]]--
+		[1209] = lw_wod, -- Skyreach
+		[1176] = lw_wod, -- Shadowmoon Burial Grounds
+		[1208] = lw_wod, -- Grimrail Depot
+		[1279] = lw_wod, -- The Everbloom
+		[1195] = lw_wod, -- Iron Docks
+		[1182] = lw_wod, -- Auchindoun
+		[1175] = lw_wod, -- Bloodmaul Slag Mines
+		[1358] = lw_wod, -- Upper Blackrock Spire
+		--[[ LittleWigs: Legion ]]--
+		[-1021] = lw_l, -- Broken Shore (Used for Mage Tower Scenarios)
+		[1544] = lw_l, -- Assault on Violet Hold
+		[1677] = lw_l, -- Cathedral of Eternal Night
+		[1571] = lw_l, -- Court of Stars
+		[1651] = lw_l, -- Return to Karazhan
+		[1501] = lw_l, -- Black Rook Hold
+		[1516] = lw_l, -- The Arcway
+		[1466] = lw_l, -- Darkheart Thicket
+		[1458] = lw_l, -- Neltharion's Lair
+		[1456] = lw_l, -- Eye of Azshara
+		[1492] = lw_l, -- Maw of Souls
+		[1477] = lw_l, -- Halls of Valor
+		[1493] = lw_l, -- Vault of the Wardens
+		[1753] = lw_l, -- Seat of the Triumvirate
 	}
 
 	public.zoneTblWorld = {
-		[-473] = 466, [-465] = 466, -- Outland
-		[-807] = 862, [-809] = 862, [-928] = 862, [-929] = 862, [-951] = 862, -- Pandaria
-		[-948] = 962, [-949] = 962, [-945] = 962, -- Draenor
-		[-1015] = 1007, [-1017] = 1007, [-1018] = 1007, [-1024] = 1007, [-1033] = 1007, -- Broken Isles
+		[-473] = -466, [-465] = -466, -- Outland
+		[-807] = -862, [-809] = -862, [-928] = -862, [-929] = -862, [-951] = -862, -- Pandaria
+		[-948] = -962, [-949] = -962, [-945] = -962, -- Draenor
+		[-1015] = -1007, [-1017] = -1007, [-1018] = -1007, [-1024] = -1007, [-1033] = -1007, -- Broken Isles
 	}
 	public.fakeWorldZones = fakeWorldZones
-	public.zoneTbl = {}
-	for k,v in next, tbl do
-		if fakeWorldZones[k] then
-			public.zoneTbl[k] = v
-		else
-			local instanceId = GetAreaMapInfo(k)
-			if instanceId then -- Protect live client from beta client ids
-				public.zoneTbl[instanceId] = v
-			end
-		end
-	end
 end
 
 -- GLOBALS: _G, ADDON_LOAD_FAILED, BigWigs, BigWigs3DB, BigWigs3IconDB, BigWigsLoader, BigWigsOptions, CreateFrame, CUSTOM_CLASS_COLORS, error, GetAddOnEnableState, GetAddOnInfo
--- GLOBALS: GetAddOnMetadata, GetLocale, GetNumGroupMembers, GetRealmName, GetSpecialization, GetSpecializationRole, GetSpellInfo, GetTime, GRAY_FONT_COLOR, InCombatLockdown
--- GLOBALS: InterfaceOptionsFrameOkay, IsAddOnLoaded, IsAltKeyDown, IsControlKeyDown, IsEncounterInProgress, IsInGroup, IsInRaid, IsLoggedIn, IsPartyLFG, IsSpellKnown, LFGDungeonReadyPopup
+-- GLOBALS: GetAddOnMetadata, GetLocale, GetNumGroupMembers, GetRealmName, GetSpecialization, GetSpecializationRole, GetSpellInfo, GetTime, GRAY_FONT_COLOR, InterfaceOptionsFrameOkay
+-- GLOBALS: IsAddOnLoaded, IsAltKeyDown, IsControlKeyDown, IsEncounterInProgress, IsInGroup, IsInRaid, IsLoggedIn, IsPartyLFG, IsSpellKnown, LFGDungeonReadyPopup
 -- GLOBALS: LibStub, LoadAddOn, message, PlaySound, print, RAID_CLASS_COLORS, RaidNotice_AddMessage, RaidWarningFrame, RegisterAddonMessagePrefix, RolePollPopup, select, StopSound
--- GLOBALS: tostring, tremove, type, UnitAffectingCombat, UnitClass, UnitGroupRolesAssigned, UnitIsConnected, UnitIsDeadOrGhost, UnitName, UnitSetRole, unpack, SLASH_BigWigs1, SLASH_BigWigs2
+-- GLOBALS: tostring, tremove, type, UnitClass, UnitGroupRolesAssigned, UnitIsConnected, UnitIsDeadOrGhost, UnitName, UnitSetRole, unpack, SLASH_BigWigs1, SLASH_BigWigs2
 -- GLOBALS: SLASH_BigWigsVersion1, UnitBuff, wipe
 
 -----------------------------------------------------------------------
 -- Utility
 --
+
+local InCombat
+do
+	local InCombatLockdown, UnitAffectingCombat = InCombatLockdown, UnitAffectingCombat
+	function InCombat()
+		if InCombatLockdown() or UnitAffectingCombat("player") then
+			return true
+		end
+	end
+end
 
 local function IsAddOnEnabled(addon)
 	local character = UnitName("player")
@@ -210,7 +317,7 @@ local function loadAndEnableCore()
 end
 
 local function loadCoreAndOpenOptions()
-	if not BigWigsOptions and not IsAltKeyDown() and (InCombatLockdown() or UnitAffectingCombat("player")) then -- Allow combat loading using ALT key.
+	if not BigWigsOptions and not IsAltKeyDown() and PlaySoundKitID and (InCombat() or IsFalling()) then -- Allow combat loading using ALT key.
 		sysprint(L.blizzRestrictionsConfig)
 		return
 	end
@@ -253,7 +360,11 @@ do
 		BigWigs_Plugins = true,
 	}
 	local loadOnZoneAddons = {} -- Will contain all names of addons with an X-BigWigs-LoadOn-ZoneId directive
-	local loadOnWorldBoss = {} -- Packs that should load when targetting a specific mob
+	local loadOnInstanceAddons = {} -- Will contain all names of addons with an X-BigWigs-LoadOn-InstanceId directive
+	local loadOnWorldBoss = {} -- Addons that should load when targetting a specific mob
+	local extraMenus = {} -- Addons that contain extra zone menus to appear in the GUI
+	local noMenus = {} -- Addons that contain zones that shouldn't create a menu
+	local blockedMenus = {} -- Zones that shouldn't create a menu
 
 	for i = 1, GetNumAddOns() do
 		local name = GetAddOnInfo(i)
@@ -266,13 +377,21 @@ do
 			if meta then
 				loadOnZoneAddons[#loadOnZoneAddons + 1] = i
 			end
+			meta = GetAddOnMetadata(i, "X-BigWigs-LoadOn-InstanceId")
+			if meta then
+				loadOnInstanceAddons[#loadOnInstanceAddons + 1] = i
+			end
+			meta = GetAddOnMetadata(i, "X-BigWigs-ExtraMenu")
+			if meta then
+				extraMenus[#extraMenus + 1] = i
+			end
+			meta = GetAddOnMetadata(i, "X-BigWigs-NoMenu")
+			if meta then
+				noMenus[#noMenus + 1] = i
+			end
 			meta = GetAddOnMetadata(i, "X-BigWigs-LoadOn-WorldBoss")
 			if meta then
 				loadOnWorldBoss[#loadOnWorldBoss + 1] = i
-			end
-			meta = GetAddOnMetadata(i, "X-BigWigs-LoadOn-SubMenu")
-			if meta then
-				loadOnSubMenu[#loadOnSubMenu + 1] = i
 			end
 			meta = GetAddOnMetadata(i, "X-BigWigs-LoadOn-Slash")
 			if meta then
@@ -307,6 +426,7 @@ do
 		elseif reqFuncAddons[name] then
 			sysprint(L.coreAddonDisabled:format(name))
 		else
+			--[[ DEPRECATED ]]--
 			local meta = GetAddOnMetadata(i, "X-BigWigs-LoadOn-ZoneId")
 			if meta then -- Disabled content
 				for j = 1, select("#", strsplit(",", meta)) do
@@ -314,9 +434,24 @@ do
 					local id = tonumber(rawId:trim())
 					if id and id > 0 then
 						local instanceId = GetAreaMapInfo(id) -- convert map id to instance id
-						if not fakeWorldZones[id] and public.zoneTbl[instanceId] then
+						if public.zoneTbl[instanceId] then
 							if not disabledZones then disabledZones = {} end
 							disabledZones[instanceId] = name
+						end
+					end
+				end
+			end
+			--
+
+			meta = GetAddOnMetadata(i, "X-BigWigs-LoadOn-InstanceId")
+			if meta then -- Disabled content
+				for j = 1, select("#", strsplit(",", meta)) do
+					local rawId = select(j, strsplit(",", meta))
+					local id = tonumber(rawId:trim())
+					if id and id > 0 then
+						if public.zoneTbl[id] then
+							if not disabledZones then disabledZones = {} end
+							disabledZones[id] = name
 						end
 					end
 				end
@@ -328,7 +463,8 @@ do
 		end
 	end
 
-	local function iterateZones(addon, override, ...)
+	--[[ DEPRECATED ]]--
+	local function iterateZones(addon, ...)
 		for i = 1, select("#", ...) do
 			local rawZone = select(i, ...)
 			local zone = tonumber(rawZone:trim())
@@ -341,11 +477,7 @@ do
 					if not loadOnZone[instanceId] then loadOnZone[instanceId] = {} end
 					loadOnZone[instanceId][#loadOnZone[instanceId] + 1] = addon
 
-					if override then
-						loadOnZone[override][#loadOnZone[override] + 1] = addon
-					else
-						if not menus[zone] then menus[zone] = true end
-					end
+					if not menus[instanceId] and not blockedMenus[instanceId] then menus[instanceId] = true end
 				end
 			else
 				local name = GetAddOnInfo(addon)
@@ -353,9 +485,32 @@ do
 			end
 		end
 	end
+	--
+
+	local function iterateInstanceIds(addon, ...)
+		for i = 1, select("#", ...) do
+			local rawId = select(i, ...)
+			local id = tonumber(rawId:trim())
+			if id then
+				local instanceName = GetRealZoneText(id)
+				-- register the instance id for enabling.
+				if instanceName and instanceName ~= "" then -- Protect live client from beta client ids
+					enableZones[id] = true
+
+					if not loadOnZone[id] then loadOnZone[id] = {} end
+					loadOnZone[id][#loadOnZone[id] + 1] = addon
+
+					if not menus[id] and not blockedMenus[id] then menus[id] = true end
+				end
+			else
+				local name = GetAddOnInfo(addon)
+				sysprint(("The instance ID %q from the addon %q was not parsable."):format(tostring(rawId), name))
+			end
+		end
+	end
 
 	local currentZone = nil
-	local function iterateWorldBosses(addon, override, ...)
+	local function iterateWorldBosses(addon, ...)
 		for i = 1, select("#", ...) do
 			local rawZoneOrBoss = select(i, ...)
 			local zoneOrBoss = tonumber(rawZoneOrBoss:trim())
@@ -368,10 +523,6 @@ do
 
 					if not loadOnZone[currentZone] then loadOnZone[currentZone] = {} end
 					loadOnZone[currentZone][#loadOnZone[currentZone] + 1] = addon
-
-					if override then
-						loadOnZone[override][#loadOnZone[override] + 1] = addon
-					end
 				else
 					worldBosses[zoneOrBoss] = currentZone
 					currentZone = nil
@@ -383,59 +534,79 @@ do
 		end
 	end
 
-	local function iterateSubMenus(addon, override, ...)
+	local function addExtraMenus(addon, ...)
 		for i = 1, select("#", ...) do
-			local rawZone = select(i, ...)
-			local menu = tonumber(override:trim())
-			local zone = tonumber(rawZone:trim())
-			if zone then
-				-- register the zone for enabling.
-				local instanceId = fakeWorldZones[zone] and zone or zone < 0 and -zone or GetAreaMapInfo(zone)
-				if instanceId then -- Protect live client from beta client ids
-					enableZones[instanceId] = true
+			local rawMenu = select(i, ...)
+			local id = tonumber(rawMenu:trim())
+			if id then
+				local name = id < 0 and GetMapNameByID(-id) or GetRealZoneText(id)
+				if name and name ~= "" then -- Protect live client from beta client ids
+					if not loadOnZone[id] then loadOnZone[id] = {} end
+					loadOnZone[id][#loadOnZone[id] + 1] = addon
 
-					if not loadOnZone[instanceId] then loadOnZone[instanceId] = {} end
-					loadOnZone[instanceId][#loadOnZone[instanceId] + 1] = addon
-
-					if not loadOnZone[menu] then loadOnZone[menu] = {} end
-					if not menus[menu] then menus[menu] = true end
-					loadOnZone[menu][#loadOnZone[menu] + 1] = addon
+					if not menus[id] then menus[id] = true end
 				end
 			else
 				local name = GetAddOnInfo(addon)
-				sysprint(("The zone ID %q from the addon %q was not parsable."):format(tostring(rawZone), name))
+				sysprint(("The extra menu ID %q from the addon %q was not parsable."):format(tostring(rawMenu), name))
 			end
 		end
 	end
 
-	for _, index in next, loadOnZoneAddons do
-		local menu = tonumber(GetAddOnMetadata(index, "X-BigWigs-Menu"))
-		if menu then
-			if not loadOnZone[menu] then loadOnZone[menu] = {} end
-			if not menus[menu] then menus[menu] = true end
+	local function blockMenus(addon, ...)
+		for i = 1, select("#", ...) do
+			local rawMenu = select(i, ...)
+			local id = tonumber(rawMenu:trim())
+			if id then
+				local name = id < 0 and GetMapNameByID(-id) or GetRealZoneText(id)
+				if name and name ~= "" and not blockedMenus[id] then -- Protect live client from beta client ids
+					blockedMenus[id] = true
+				end
+			else
+				local name = GetAddOnInfo(addon)
+				sysprint(("The block menu ID %q from the addon %q was not parsable."):format(tostring(rawMenu), name))
+			end
 		end
+	end
+
+	for i = 1, #extraMenus do
+		local index = extraMenus[i]
+		local data = GetAddOnMetadata(index, "X-BigWigs-ExtraMenu")
+		if data then
+			addExtraMenus(index, strsplit(",", data))
+		end
+	end
+
+	for i = 1, #noMenus do
+		local index = noMenus[i]
+		local data = GetAddOnMetadata(index, "X-BigWigs-NoMenu")
+		if data then
+			blockMenus(index, strsplit(",", data))
+		end
+	end
+
+	--[[ DEPRECATED ]]--
+	for i = 1, #loadOnZoneAddons do
+		local index = loadOnZoneAddons[i]
 		local zones = GetAddOnMetadata(index, "X-BigWigs-LoadOn-ZoneId")
 		if zones then
-			iterateZones(index, menu, strsplit(",", zones))
+			iterateZones(index, strsplit(",", zones))
+		end
+	end
+	--
+
+	for i = 1, #loadOnInstanceAddons do
+		local index = loadOnInstanceAddons[i]
+		local instancesIds = GetAddOnMetadata(index, "X-BigWigs-LoadOn-InstanceId")
+		if instancesIds then
+			iterateInstanceIds(index, strsplit(",", instancesIds))
 		end
 	end
 
 	for _, index in next, loadOnWorldBoss do
-		local menu = tonumber(GetAddOnMetadata(index, "X-BigWigs-Menu"))
-		if menu then
-			if not loadOnZone[menu] then loadOnZone[menu] = {} end
-			if not menus[menu] then menus[menu] = true end
-		end
 		local zones = GetAddOnMetadata(index, "X-BigWigs-LoadOn-WorldBoss")
 		if zones then
-			iterateWorldBosses(index, menu, strsplit(",", zones))
-		end
-	end
-
-	for _, index in next, loadOnSubMenu do
-		local zones = GetAddOnMetadata(index, "X-BigWigs-LoadOn-SubMenu")
-		if zones then
-			iterateSubMenus(index, strsplit(",", zones))
+			iterateWorldBosses(index, strsplit(",", zones))
 		end
 	end
 end
@@ -582,6 +753,7 @@ do
 		BigWigs_LeiShi_Marker = "BigWigs",
 		BigWigs_NoPluginWarnings = "BigWigs",
 		LFG_ProposalTime = "BigWigs",
+		CourtOfStarsGossipHelper = "LittleWigs",
 		BigWigs_DispelResist = "",
 	}
 	local delayedMessages = {}
@@ -693,8 +865,8 @@ end
 
 do
 	-- This is a crapfest mainly because DBM's actual handling of versions is a crapfest, I'll try explain how this works...
-	local DBMdotRevision = "16445" -- The changing version of the local client, changes with every alpha revision using an SVN keyword.
-	local DBMdotDisplayVersion = "7.2.15" -- "N.N.N" for a release and "N.N.N alpha" for the alpha duration. Unless they fuck up their release and leave the alpha text in it.
+	local DBMdotRevision = "16590" -- The changing version of the local client, changes with every alpha revision using an SVN keyword.
+	local DBMdotDisplayVersion = "7.2.17" -- "N.N.N" for a release and "N.N.N alpha" for the alpha duration. Unless they fuck up their release and leave the alpha text in it.
 	local DBMdotReleaseRevision = DBMdotRevision -- This is manually changed by them every release, they use it to track the highest release version, a new DBM release is the only time it will change.
 
 	local timer, prevUpgradedUser = nil, nil
@@ -758,7 +930,7 @@ do
 
 			local role = GetSpecializationRole(tree)
 			if role and UnitGroupRolesAssigned("player") ~= role then
-				if InCombatLockdown() or UnitAffectingCombat("player") then
+				if InCombat() then
 					bwFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
 					return
 				end
@@ -910,26 +1082,35 @@ do
 end
 
 do
-	local queueLoad = {}
+	local loadedList = {}
 	local warnedThisZone = {}
+	local loadByUnitTarget, loadByZone = nil, nil
 	function mod:PLAYER_REGEN_ENABLED()
 		self:ACTIVE_TALENT_GROUP_CHANGED() -- Force role check
 		bwFrame:UnregisterEvent("PLAYER_REGEN_ENABLED")
 
-		local shouldPrint = false
-		for k,v in next, queueLoad do
-			if v == "unloaded" and loadAndEnableCore() then
-				shouldPrint = true
-				queueLoad[k] = "loaded"
-				if BigWigs:IsEnabled() and loadOnZone[k] then
-					loadZone(k)
-				else
-					BigWigs:Enable()
-				end
-			end
+		if loadByUnitTarget then
+			local target = loadByUnitTarget
+			loadByUnitTarget = nil
+			self:UNIT_TARGET(target)
+		elseif loadByZone then
+			loadByZone = nil
+			self:ZONE_CHANGED_NEW_AREA()
 		end
-		if shouldPrint then
-			sysprint(L.finishedLoading)
+	end
+
+	local function HasStoppedFalling()
+		if IsFalling() then
+			CTimerAfter(0.1, HasStoppedFalling)
+		else
+			if loadByUnitTarget then
+				local target = loadByUnitTarget
+				loadByUnitTarget = nil
+				mod:UNIT_TARGET(target)
+			elseif loadByZone then
+				loadByZone = nil
+				mod:ZONE_CHANGED_NEW_AREA()
+			end
 		end
 	end
 
@@ -939,16 +1120,20 @@ do
 		if guid then
 			local _, _, _, _, _, id = strsplit("-", guid)
 			local mobId = tonumber(id)
-			if mobId and worldBosses[mobId] then
-				local id = worldBosses[mobId]
-				if InCombatLockdown() or UnitAffectingCombat("player") then
-					if not queueLoad[id] then
-						queueLoad[id] = "unloaded"
-						bwFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
-						sysprint(L.blizzRestrictionsZone)
+			local id = mobId and worldBosses[mobId]
+			if id then
+				local combat, falling = InCombat(), IsFalling()
+				if PlaySoundKitID and (combat or falling) then
+					if not loadedList[id] then
+						loadByUnitTarget = unit
+						if combat then
+							bwFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
+						elseif falling then
+							CTimerAfter(0.1, HasStoppedFalling)
+						end
 					end
 				else
-					queueLoad[id] = "loaded"
+					loadedList[id] = true
 					if loadAndEnableCore() then
 						if BigWigs:IsEnabled() then
 							loadZone(id)
@@ -975,21 +1160,25 @@ do
 		-- Module loading
 		if enableZones[id] then
 			if not inside and enableZones[id] == "world" then
-				if BigWigs and BigWigs:IsEnabled() and not UnitIsDeadOrGhost("player") and (not BigWigsOptions or not BigWigsOptions:InConfigureMode()) and (not BigWigs3DB or not BigWigs3DB.breakTime) then
+				if BigWigs and BigWigs:IsEnabled() and not UnitIsDeadOrGhost("player") and (not BigWigsOptions or not BigWigsOptions:IsOpen()) and (not BigWigs3DB or not BigWigs3DB.breakTime) then
 					BigWigs:Disable() -- Might be leaving an LFR and entering a world enable zone, disable first
 				end
 				bwFrame:RegisterEvent("UNIT_TARGET")
 				self:UNIT_TARGET("player")
 			elseif inside then
 				bwFrame:UnregisterEvent("UNIT_TARGET")
-				if not IsEncounterInProgress() and IsLoggedIn() and (InCombatLockdown() or UnitAffectingCombat("player")) then
-					if not queueLoad[id] then
-						queueLoad[id] = "unloaded"
-						bwFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
-						sysprint(L.blizzRestrictionsZone)
+				local combat, falling = InCombat(), IsFalling()
+				if not IsEncounterInProgress() and PlaySoundKitID and IsLoggedIn() and (combat or falling) then
+					if not loadedList[id] then
+						loadByZone = true
+						if combat then
+							bwFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
+						elseif falling then
+							CTimerAfter(0.1, HasStoppedFalling)
+						end
 					end
 				else
-					queueLoad[id] = "loaded"
+					loadedList[id] = true
 					if loadAndEnableCore() then
 						if BigWigs:IsEnabled() and loadOnZone[id] then
 							loadZone(id)
@@ -1001,7 +1190,7 @@ do
 			end
 		else
 			bwFrame:UnregisterEvent("UNIT_TARGET")
-			if BigWigs and BigWigs:IsEnabled() and not UnitIsDeadOrGhost("player") and (not BigWigsOptions or not BigWigsOptions:InConfigureMode()) and (not BigWigs3DB or not BigWigs3DB.breakTime) then
+			if BigWigs and BigWigs:IsEnabled() and not UnitIsDeadOrGhost("player") and (not BigWigsOptions or not BigWigsOptions:IsOpen()) and (not BigWigs3DB or not BigWigs3DB.breakTime) then
 				BigWigs:Disable() -- Alive in a non-enable zone, disable
 			end
 			if disabledZones and disabledZones[id] then -- We have content for the zone but it is disabled in the addons menu
@@ -1055,7 +1244,7 @@ function mod:BigWigs_BossModuleRegistered(_, _, module)
 		enableZones[module.instanceId or GetAreaMapInfo(module.zoneId)] = true
 	end
 
-	local id = module.otherMenu or module.zoneId
+	local id = module.otherMenu or module.instanceId or module.zoneId > 0 and GetAreaMapInfo(module.zoneId) or module.zoneId
 	if type(menus[id]) ~= "table" then menus[id] = {} end
 	menus[id][#menus[id]+1] = module
 end

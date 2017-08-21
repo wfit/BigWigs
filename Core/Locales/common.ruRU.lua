@@ -39,6 +39,7 @@ L.over = "%s завершается!"
 L.phase = "Фаза %d"
 L.removed = "%s снято"
 --L.removed_from = "%s Removed From %s"
+--L.removed_by = "%s removed by %s" -- spell removed by player
 L.small_adds = "Маленькие помощники"
 L.soon = "%s скоро!"
 L.spawned = "Появление: %s"
@@ -62,3 +63,8 @@ L.marker_npc_desc = "Отмечать %s метрой %s, требуется б�
 --L.link_short = "Linked: %s"
 --L.link_both = "%s linked with %s"
 --L.link_removed = "Link removed"
+
+-- Abbreviated numbers
+--L.amount_one = "%dB"
+--L.amount_two = "%dM"
+--L.amount_three = "%dK"

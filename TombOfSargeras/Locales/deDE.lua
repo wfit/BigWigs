@@ -26,6 +26,10 @@ L = BigWigs:NewBossLocale("The Desolate Host", "deDE")
 if L then
 	L.infobox_players = "Spieler"
 	L.armor_remaining = "%s Verbleibend (%d)" -- Bonecage Armor Remaining (#)
+	L.custom_on_mythic_armor = "Knochenkäfigrüstung auf Reanimierter Templern auf dem Schwierigkeitsgrad Mythisch ignorieren"
+	--L.custom_on_mythic_armor_desc = "Leave this option enabled if you are offtanking Reanimated Templars to ignore warnings and counting the Bonecage Armor on the Ranimated Templars"
+	L.custom_on_armor_plates = "Knochenkäfigrüstung-Symbol auf gegnerischen Namensplaketten"
+	L.custom_on_armor_plates_desc = "Zeigt ein Symbol auf den Namensplaketten von Reanimierten Templern, welche Knochenkäfigrüstung haben.\nErfordert die Verwendung von Gegnerischen Namensplaketten. Diese Funktion wird derzeit nur von KuiNameplates unterstützt."
 	L.tormentingCriesSay = "Schreie" -- Tormenting Cries (short say)
 end
 
@@ -37,6 +41,11 @@ if L then
 	L.light = "Licht"
 	L.felHammer = "Teufelshammer" -- Better name for "Hammer of Obliteration"
 	L.lightHammer = "Lichthammer" -- Better name for "Hammer of Creation"
+	L.absorb = "Absorption"
+	L.absorb_text = "%s (|cff%s%.0f%%|r)"
+	L.cast = "Wirkt"
+	L.cast_text = "%.1fs (|cff%s%.0f%%|r)" -- s = seconds
+	L.stacks = "Stapel"
 end
 
 L = BigWigs:NewBossLocale("Fallen Avatar", "deDE")
@@ -49,6 +58,13 @@ if L then
 	L.energy_leak = "Energieleck"
 	L.energy_leak_desc = "Zeigt eine Warnung, wenn Energie auf den Boss in Phase 1 zuströmt."
 	L.energy_leak_msg = "Energieleck! (%d)"
+
+	L.warmup_trigger = "Diese Hülle diente einst" -- Diese Hülle diente einst als Gefäß der Macht von Sargeras. Aber es ist der Tempel selbst, um den es uns geht. Und mit seiner Hilfe werden wir Eure Welt zu Asche verbrennen!
+
+	L.absorb = "Absorption"
+	L.absorb_text = "%s (|cff%s%.0f%%|r)"
+	L.cast = "Wirkt"
+	L.cast_text = "%.1fs (|cff%s%.0f%%|r)" -- s = seconds
 end
 
 L = BigWigs:NewBossLocale("Kil'jaeden", "deDE")
@@ -66,6 +82,8 @@ if L then
 	L.rupturingKnock_desc = "Zeigt einen Timer für die Zurückstoßung."
 
 	L.meteorImpact_desc = "Zeigt einen Timer für einschlagende Meteore."
+
+	--L.add = "Add %d"
 end
 
 L = BigWigs:NewBossLocale("Tomb of Sargeras Trash", "deDE")
@@ -78,6 +96,8 @@ if L then
 	L.seacaller = "Seeruferin der Gezeitenschuppen"
 	L.custodian = "Unterwasserverwalter"
 	L.dresanoth = "Dresanoth"
+	L.stalker = "Der Schreckenspirscher"
 	L.sentry = "Wachposten"
 	L.acolyte = "Geisterhafte Akolythin"
+	L.ryul = "Ryul der Schwindende"
 end
