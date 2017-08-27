@@ -83,7 +83,14 @@ if L then
 
 	L.meteorImpact_desc = "Affiche un délai pour l'impact des météores"
 
-	L.add = "Add %d"
+	L.shadowsoul = "Suivi des vies des Ames d'ombre"
+	L.shadowsoul_desc = "Affiche la boîte d'info avec la vie actuelle des 5 Ames d'ombre."
+
+	L.custom_on_track_illidan = "Pistage automatique des humanoïdes"
+	L.custom_on_track_illidan_desc = "Si vous êtes un chasseur ou un druide farouche, cette option activera automatiquement le pistage des humanoïdes afin que vous puissiez traquer Illidan."
+
+	L.custom_on_zoom_in = "Zoom automatique de la minicarte"
+	L.custom_on_zoom_in_desc = "Cette option mettra le zoom de la minicarte au niveau 4 pour rendre plus facile la traque d'Illidan, et la remettra ensuite à son niveau précédent une fois la phase terminée."
 end
 
 L = BigWigs:NewBossLocale("Tomb of Sargeras Trash", "frFR")
@@ -97,7 +104,9 @@ if L then
 	L.custodian = "Gardien des fonds marins"
 	L.dresanoth = "Dresanoth"
 	L.stalker = "Le Traqueur de l'effroi"
+	L.darjah = "Seigneur de guerre Darjah"
 	L.sentry = "Factionnaire gardien"
 	L.acolyte = "Acolyte fantomatique"
 	L.ryul = "Ryul le Déclinant"
+	L.countermeasure = "Contre-mesure défensive"
 end

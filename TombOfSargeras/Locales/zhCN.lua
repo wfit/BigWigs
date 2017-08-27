@@ -59,7 +59,7 @@ if L then
 	L.energy_leak_desc = "当第一阶段首领能量泄漏时显示警报。"
 	L.energy_leak_msg = "能量泄漏！（%d）"
 
-	--L.warmup_trigger = "The husk before you" -- The husk before you was once a vessel for the might of Sargeras. But this temple itself is our prize. The means by which we will reduce your world to cinders!
+	L.warmup_trigger = "你们眼前的躯壳曾承载过萨格拉斯的力量" -- The husk before you was once a vessel for the might of Sargeras. But this temple itself is our prize. The means by which we will reduce your world to cinders!
 
 	L.absorb = "吸收"
 	L.absorb_text = "%s （|cff%s%.0f%%|r）"
@@ -83,7 +83,14 @@ if L then
 
 	L.meteorImpact_desc = "陨石雨降落计时器"
 
-	L.add = "增援 %d"
+	L.shadowsoul = "千魂生命值追踪"
+	L.shadowsoul_desc = "在信息盒显示当前5个千魂增援当前生命值。"
+
+	L.custom_on_track_illidan = "自动追踪人形生物"
+	L.custom_on_track_illidan_desc = "如果你是猎人或者野性德鲁伊，此选项将自动启用追踪人型生物以便于追踪到伊利丹。"
+
+	L.custom_on_zoom_in = "自动缩放迷你地图"
+	L.custom_on_zoom_in_desc = "此功能将设置迷你地图缩放等级为4以便于更快追踪伊利丹，并将在此阶段结束后恢复到你之前设置的等级。"
 end
 
 L = BigWigs:NewBossLocale("Tomb of Sargeras Trash", "zhCN")
@@ -97,7 +104,9 @@ if L then
 	L.custodian = "海底监察者"
 	L.dresanoth = "德萨诺斯"
 	L.stalker = "恐怖追猎者"
+	L.darjah = "督军达加尔"
 	L.sentry = "守护者哨兵"
 	L.acolyte = "幽灵助祭"
 	L.ryul = "消逝者鲁尔"
+	L.countermeasure = "防御性反制机关"
 end
