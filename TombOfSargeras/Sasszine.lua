@@ -37,12 +37,12 @@ end
 -- Initialization
 --
 
-local hydraShotMarker = mod:AddMarkerOption(true, "player", 1, 230139, 1, 2, 3, 6)
+local hydraShotMarker = mod:AddMarkerOption(false, "player", 1, 230139, 1, 2, 3, 4)
 function mod:GetOptions()
 	return {
 		"stages",
 		"berserk",
-		{230139, "FLASH", "PULSE"}, -- Hydra Shot
+		{230139, "SAY"}, -- Hydra Shot
 		hydraShotMarker,
 		{230201, "TANK", "FLASH"}, -- Burden of Pain
 		230227, -- From the Abyss // Showing this as an alternative to Burden of Pain for non-tanks, they are the same spell
@@ -53,7 +53,7 @@ function mod:GetOptions()
 		{234621, "INFOBOX"}, -- Devouring Maw
 		232913, -- Befouling Ink
 		232827, -- Crashing Wave
-		{239436, "FLASH", "PULSE"}, -- Dread Shark
+		239436, -- Dread Shark
 		239362, -- Delicious Bufferfish
 	},{
 		["stages"] = "general",
@@ -191,14 +191,10 @@ end
 
 do
 	local list = mod:NewTargetList()
-	local hydraShots = {}
-
 	function mod:HydraShot(args)
 		local count = #list+1
 		list[count] = args.destName
 
-		-- Don't forget to add the SAY flag to HS if bringing this back
-		--[[
 		if self:Me(args.destGUID)then
 			if self:Easy() then
 				self:Say(args.spellId)
@@ -206,10 +202,9 @@ do
 				self:Say(args.spellId, CL.count_rticon:format(args.spellName, count, count))
 				self:SayCountdown(args.spellId, 6, count, 4)
 			end
-		end]]
+		end
 
 		if count == 1 then
-			wipe(hydraShots)
 			self:StopBar(CL.count:format(self:SpellName(230139), hydraShotCounter)) -- Stop previous one if early
 			self:CastBar(args.spellId, 6, CL.count:format(args.spellName, hydraShotCounter))
 			self:ScheduleTimer("TargetMessage", 0.3, args.spellId, list, "Important", "Warning", nil, nil, true)
@@ -217,20 +212,8 @@ do
 			-- Normal stage 3 seems to swing between 41-43 or 51-53
 			self:CDBar(args.spellId, self:Mythic() and 30.5 or stage == 2 and 30 or (self:Normal() and stage == 3 and 41.3) or 40, CL.count:format(args.spellName, hydraShotCounter))
 		end
-
-		hydraShots[count] = args.destUnit
-
-		if not self:Mythic() then
-			local icon = (count == 4) and 6 or count
-			if self:Me(args.destGUID) then
-				self:Flash(args.spellId, icon)
-				self:Say(false, "{rt" .. icon .. "}", true, "YELL")
-			end
-			if self:GetOption(hydraShotMarker)  then -- Targets: LFR: 0, 1 Normal, 3 Heroic, 4 Mythic
-				SetRaidTarget(args.destName, icon)
-			end
-		elseif count == 4 then
-			self:GenMythicSoaking(args.spellId)
+		if self:GetOption(hydraShotMarker) then -- Targets: LFR: 0, 1 Normal, 3 Heroic, 4 Mythic
+			SetRaidTarget(args.destName, count)
 		end
 	end
 
@@ -241,215 +224,6 @@ do
 		if self:Me(args.destGUID) and not self:Easy() then
 			self:CancelSayCountdown(args.spellId)
 		end
-	end
-
-	function mod:GenMythicSoaking(spellId)
-		local icons = { 1, 2, 3, 6 } -- Star, Circle, Diamond, Square
-		local targets = {}
-		local unavailable = {}
-		local groups = {
-			[1] = {}, -- Tanks
-			[2] = {}, -- Melees
-			[3] = {}, -- Healers
-			[4] = {}, -- Ranged
-		}
-		local suicided = { false, false, false, false }
-
-		-- Selects prefered group based on the role of the given unit
-		local function unit_prefered_group(unit)
-			if self:Tank(unit) then
-				return 1
-			elseif self:Melee(unit, true) then
-				return 2
-			elseif self:Healer(unit) then
-				return 3
-			elseif self:Ranged(unit, true) then
-				return 4
-			end
-		end
-
-		-- Try placing each player in their prefered group.
-		-- If a group is not empty at this point, two players from the same
-		-- catergory are targets at the same time, delay attribution until a
-		-- a later time.
-		local delayed = {}
-		for _, unit in ipairs(hydraShots) do
-			local g = unit_prefered_group(unit)
-			if not targets[g] then
-				targets[g] = unit
-			else
-				table.insert(delayed, unit)
-			end
-		end
-
-		-- Place each delayed unit in the first available group
-		for _, unit in ipairs(delayed) do
-			for i = 1, 4 do
-				if not targets[i] then
-					targets[i] = unit
-					break
-				end
-			end
-		end
-
-		-- Mark targets unavailable
-		for i, unit in ipairs(targets) do
-			unavailable[UnitGUID(unit)] = true
-		end
-
-		-- Mark fishes as unavailable
-		local DeliciousBufferfish = self:SpellName(239362)
-		local HydraAcid = self:SpellName(234332)
-		local fishes = {}
-		local fishesCount = 0
-		for unit in self:IterateGroup() do
-			if UnitDebuff(unit, HydraAcid) then
-				unavailable[UnitGUID(unit)] = true
-			else
-				local stacks = select(4, UnitDebuff(unit, DeliciousBufferfish))
-				if stacks then
-					unavailable[UnitGUID(unit)] = true
-					fishes[unit] = stacks
-					fishesCount = fishesCount + 1
-				end
-			end
-		end
-
-		-- Place available units in prefered groups
-		local total = 0
-		for unit in self:IterateGroup { strict = true, alive = true } do
-			if not unavailable[UnitGUID(unit)] then
-				table.insert(groups[unit_prefered_group(unit)], unit)
-				total = total + 1
-			end
-		end
-
-		-- If less than 8 players are available, it is impossible to put at least 2 of them
-		-- in each group. If using fish players would allow to reach the 8 soakers, forfeit
-		-- fishes and use these players. Prefer players with the less stacks.
-		if total < 8 and (total + fishesCount) >= 8 then
-			for i = 1, (8 - total) do
-				local minStacks, minUnit = 1000, nil
-				for unit, stacks in pairs(fishes) do
-					if stacks < minStacks then
-						minStacks = stacks
-						minUnit = unit
-					end
-				end
-				fishes[minUnit] = nil
-				table.insert(groups[unit_prefered_group(minUnit)], minUnit)
-			end
-			total = 8
-		end
-
-		-- Impossible to save the 4 players, suicide time!
-		--[[if total < 8 then
-			local suicide = 4 - math.floor(total / 2)
-			local candidates = {}
-			local picked = {}
-
-			-- Pick prefered classes
-			local preferedClasses = { [2] = true, [8] = true, [12] = true } -- Paladin / Mage / Demon Hunter
-			for i, unit in ipairs(targets) do
-				local guid = UnitGUID(unit)
-				if preferedClasses[select(3, UnitClass(unit))] and not alreadySuicided[guid] then
-					table.insert(candidates, unit)
-					picked[unit] = true
-					alreadySuicided[guid] = true
-				end
-			end
-
-			-- Pick healers
-			for i, unit in ipairs(targets) do
-				if not picked[unit] and self:Healer(unit) then
-					table.insert(candidates, unit)
-					picked[unit] = true
-				end
-			end
-
-			-- Pick rest
-			for i, unit in ipairs(targets) do
-				if not picked[unit] then
-					table.insert(candidates, unit)
-				end
-			end
-
-			if suicide <= 2 then
-				-- 1 or 2 suicide, empty groups and change icons
-				local suicideIcons = { 8, 7 }
-				local function suicide_unit(unit, k)
-					for i = 1, 4 do
-						if targets[i] == unit then
-							icons[i] = suicideIcons[k]
-							suicided[i] = true
-							for u, unit in ipairs(groups[i]) do
-								for j = 1, 4 do
-									if not suicided[i] then
-										table.insert(groups[j], unit)
-									end
-								end
-							end
-							wipe(groups[i])
-						end
-					end
-				end
-				for i = 1, suicide do
-					suicide_unit(candidates[i], i)
-				end
-			elseif suicide == 3 then
-				-- Use 1 and 2 to soak 3
-
-			else
-			end
-		end]]
-
-		-- Balancing
-		if total >= 8 then
-			local minCount = math.floor(total / 4)
-			local ok = false
-			while not ok do
-				ok = true
-				local maxCount, maxGroup = -1, -1
-				local failedGroup = -1
-				for i = 1, 4 do
-					local count = #groups[i]
-					if count > maxCount then
-						maxCount = count
-						maxGroup = i
-					end
-					if #groups[i] < minCount then
-						ok = false
-						failedGroup = i
-					end
-				end
-				if ok then break end
-				table.insert(groups[failedGroup], table.remove(groups[maxGroup]))
-			end
-		end
-
-		-- Set raid markers
-		for i, unit in ipairs(targets) do
-			local icon = icons[i]
-			SetRaidTarget(unit, icon)
-			if self:Me(unit) then
-				self:Flash(spellId, icon)
-				self:Say(false, "{rt" .. icon .. "}", true, "YELL")
-				self:Emit("HYDRA_SHOT_ICON", self:SpellIcon(icon), false)
-			end
-		end
-
-		-- Assign
-		for i = 1, 4 do
-			local icon = icons[i]
-			for _, unit in ipairs(groups[i]) do
-				if self:Me(unit) then
-					self:Emit("HYDRA_SHOT_ICON", self:SpellIcon(icon), true)
-				end
-			end
-		end
-
-		-- Report
-		self:Emit("HYDRA_SHOT_REPORT", targets, icons, groups, suicided)
 	end
 end
 
@@ -512,7 +286,7 @@ end
 
 function mod:DevouringMaw()
 	self:Message(234621, "Important", "Long")
-	self:Bar(234621, 42)
+	self:Bar(234621, 41.5)
 end
 
 function mod:BefoulingInk()
