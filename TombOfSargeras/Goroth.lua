@@ -28,20 +28,15 @@ local cometCounter = 1
 -- Initialization
 --
 
-local shatteringStarMarker = mod:AddMarkerOption(true, "player", 1, 233279, 1)
-local meteors_impact = mod:AddCustomOption { "meteors_impact", "Rain of Brimstone meteors impact", default = true,
-	configurable = true, icon = 206433, desc = "Countdown until meteors impact during Rain of Brimstone" }
 function mod:GetOptions()
 	return {
 		{231363, "TANK", "SAY"}, -- Burning Armor
 		233514, -- Infernal Spike
 		{232249, "FLASH", "SAY"}, -- Crashing Comet
 		{233279, "FLASH", "SAY"}, -- Shattering Star
-		shatteringStarMarker,
 		233062, -- Infernal Burning
 		234346, -- Fel Eruption
 		238588, -- Rain of Brimstone
-		{meteors_impact, "COUNTDOWN"}
 	},{
 		[231363] = "general",
 		[238588] = "mythic",
@@ -55,7 +50,6 @@ function mod:OnBossEnable()
 	self:Log("SPELL_AURA_APPLIED", "BurningArmor", 231363)
 	self:Log("SPELL_AURA_REMOVED", "MeltedArmorRemoved", 234264)
 	self:Log("SPELL_AURA_APPLIED", "ShatteringStarDebuff", 233272)
-	self:Log("SPELL_AURA_REMOVED", "ShatteringStarDebuffRemoved", 233272)
 	self:Log("SPELL_CAST_START", "InfernalBurning", 233062)
 	self:Log("SPELL_CAST_SUCCESS", "CrashingComet", 232249)
 	self:Log("SPELL_AURA_APPLIED", "CrashingCometApplied", 232249)
@@ -103,7 +97,7 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(_, spellName, _, _, spellId)
 		rainCounter = rainCounter + 1
 		self:Message(238588, "Urgent", "Warning", CL.incoming:format(spellName))
 		self:Bar(238588, rainCounter == 5 and 68 or 60, CL.count:format(spellName, rainCounter))
-		self:Bar(meteors_impact, 8, self:SpellName(182580), 206433) -- Meteor Impact
+		self:Bar(238588, 8, self:SpellName(182580), 238588) -- Meteor Impact
 	end
 end
 
@@ -112,7 +106,7 @@ function mod:BurningArmorSuccess(args)
 	if self:LFR() then
 		self:CDBar(args.spellId, armorCounter == 3 and 33 or armorCounter == 8 and 29 or 24.3)
 	elseif self:Mythic() then
-		self:CDBar(args.spellId, armorCounter == 3 and 26.8 or 24.5)
+		self:CDBar(args.spellId, 24.5)
 	else
 		self:CDBar(args.spellId, (armorCounter > 3 and armorCounter % 2 ~= 0 and 35) or (self:Normal() and 25 or 24))
 	end
@@ -140,15 +134,6 @@ function mod:ShatteringStarDebuff(args)
 	if self:Me(args.destGUID) then
 		self:Say(233279)
 		self:Flash(233279)
-	end
-	if self:GetOption(shatteringStarMarker) then
-		SetRaidTarget(args.destName, 1)
-	end
-end
-
-function mod:ShatteringStarDebuffRemoved(args)
-	if self:GetOption(shatteringStarMarker) then
-		SetRaidTarget(args.destName, 0)
 	end
 end
 

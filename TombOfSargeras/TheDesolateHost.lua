@@ -67,7 +67,7 @@ function mod:GetOptions()
 		"custom_on_armor_plates",
 		"custom_on_mythic_armor",
 		236131, -- Wither
-		{236459, "ME_ONLY"}, -- Soulbind
+		{236459, "ME_ONLY", "FLASH", "PULSE"}, -- Soulbind
 		soulBindMarker,
 		236072, -- Wailing Souls
 		{236515, "ME_ONLY"}, -- Shattering Scream
@@ -396,7 +396,10 @@ do
 			if self:GetOption(soulBindMarker) then
 				SetRaidTarget(args.destName, 3)
 			end
-			linkOnMe = self:Me(args.destGUID)
+			if self:Me(args.destGUID) then
+				linkOnMe = true
+				self:Flash(args.spellId)
+			end
 		elseif #soulList == 2 then -- Announce at 2
 			if self:GetOption(soulBindMarker) then
 				SetRaidTarget(args.destName, 4)

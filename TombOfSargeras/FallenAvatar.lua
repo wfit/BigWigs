@@ -77,7 +77,7 @@ end
 -- Initialization
 --
 
-local darkMarkIcons = mod:AddMarkerOption(true, "player", 6, 239739, 6, 4, 3)
+local darkMarkIcons = mod:AddMarkerOption(false, "player", 6, 239739, 6, 4, 3)
 local touch_impact = mod:AddCustomOption { "touch_impact", L.touch_impact, default = true,
 	configurable = true, icon = 239207 }
 local blades_marker = mod:AddTokenOption { "blades_marker", "Set raid target icons on Shadowy Blades", promote = true }
@@ -103,9 +103,9 @@ function mod:GetOptions()
 		darkMarkIcons,
 		235572, -- Rupture Realities
 		242017, -- Black Winds
-		240249,
+		240249, -- Molten Fel
 		236684, -- Fel Infusion
-		{240623, "SMARTCOLOR"}, -- Tainted Matrix
+		240623, -- Tainted Matrix
 		{240728, "SAY"}, -- Tainted Essence
 		234418, -- Rain of the Destroyer
 	},{
@@ -158,18 +158,11 @@ function mod:OnBossEnable()
 
 	-- Mythic
 	self:Log("SPELL_CAST_START", "TaintedMatrix", 240623)
-	self:Log("SPELL_AURA_APPLIED", "TaintedMatrixApplied", 240746)
-	self:Log("SPELL_AURA_REMOVED", "TaintedMatrixRemoved", 240746)
 	self:Log("SPELL_AURA_APPLIED", "TaintedEssence", 240728)
 	self:Log("SPELL_AURA_APPLIED_DOSE", "TaintedEssence", 240728)
 
 	self:RegisterMessage("BigWigs_BarCreated", "BarCreated")
 	self:RegisterNetMessage("RequestBladeMark")
-
-	if self:Mythic() then
-		--self:RegisterEvent("GROUP_ROSTER_UPDATE", "FindAvatarBuddy")
-		--self:FindAvatarBuddy()
-	end
 end
 
 function mod:OnEngage()
@@ -204,31 +197,6 @@ function mod:OnEngage()
 	end
 
 	self:RegisterUnitEvent("UNIT_POWER", nil, "boss2")
-end
-
-function mod:FindAvatarBuddy()
-	local roster = self:EnumerateGroup { strict = true, limit = 20 }
-	local buddy
-	for i = 1, 20 do
-		if roster[i] and UnitIsUnit("player", roster[i]) then
-			if i == 5 then
-				buddy = roster[15]
-			elseif i == 10 then
-				buddy = roster[20]
-			elseif i == 11 then
-				buddy = roster[5]
-			elseif i == 16 then
-				buddy = roster[10]
-			else
-				buddy = roster[i - 1]
-			end
-		end
-	end
-	self:Emit("AVATAR_BUDDY", buddy)
-end
-
-function mod:OnBossDisable()
-	--self:Emit("AVATAR_BUDDY", nil)
 end
 
 --------------------------------------------------------------------------------
@@ -657,22 +625,10 @@ do
 	end
 end
 
-function mod:TaintedMatrixApplied(args)
-	if self:Me(args.destGUID) then
-		self:SmartColorSet(240623, 230, 122, 255)
-	end
-end
-
-function mod:TaintedMatrixRemoved(args)
-	if self:Me(args.destGUID) then
-		self:SmartColorUnset(240623)
-	end
-end
-
 function mod:TaintedEssence(args)
 	local amount = args.amount or 1
 	if self:Me(args.destGUID) and amount > 4 then
-		self:StackMessage(args.spellId, args.destName, amount, "Urgent", amount > 6 and "Warning")
+		self:StackMessage(args.spellId, args.destName, amount, "Urgent", amount > 5 and "Warning")
 		self:Say(args.spellId, amount, true)
 	end
 end
