@@ -36,6 +36,19 @@ local updateRealms = nil
 local armorAppliedTimer, armorRemovedTimer = nil, nil
 local soulList = mod:NewTargetList()
 
+local nextAddsSpawn = 1
+local nextAddsTimer
+local addsSpawn = {
+	{ "Adds Up (2)", 181437 },
+	{ "Adds Down (2)", 100082 },
+	{ "Adds Up (3): 2x Templars", 181437 },
+	{ "Adds Down (3): 3x Priestess", 100082 },
+	{ "Adds Up (4)", 181437 },
+	{ "Adds Down (4)", 100082 },
+	{ "Adds Up 5)", 181437 },
+	{ "Adds Down (5)", 100082 },
+}
+
 --------------------------------------------------------------------------------
 -- Localization
 --
@@ -50,6 +63,9 @@ if L then
 	L.custom_on_armor_plates_desc = "Show an icon on the nameplate of Reanimated Templars who have Bonecage Armor.\nRequires the use of Enemy Nameplates. This feature is currently only supported by KuiNameplates."
 	L.custom_on_armor_plates_icon = 236513
 	L.tormentingCriesSay = "Cries" -- Tormenting Cries (short say)
+
+	L.adds = CL.adds
+	L.adds_desc = "Timers and warnings for the add spawns."
 end
 --------------------------------------------------------------------------------
 -- Initialization
@@ -64,6 +80,7 @@ function mod:GetOptions()
 		{235924, "SAY"}, -- Spear of Anguish
 		235907, -- Collapsing Fissure
 		{238570, "SAY", "ICON"}, -- Tormented Cries
+		"adds",
 		235927, -- Rupturing Slam
 		236513, -- Bonecage Armor
 		"custom_on_armor_plates",
@@ -143,6 +160,7 @@ function mod:OnEngage()
 	tormentedCriesCounter = 1
 	wailingSoulsCounter = 1
 	spearCount = 1
+	nextAddsSpawn = 1
 	armorAppliedTimer, armorRemovedTimer = nil, nil
 	wipe(soulList)
 
@@ -171,6 +189,11 @@ function mod:OnEngage()
 	end
 	self:CDBar(236072, 60) -- Wailing Souls
 	self:CDBar(238570, 120) -- Tormented Cries
+
+	if self:GetOption("adds") then
+		self:Bar("adds", 60, addsSpawn[nextAddsSpawn][1], addsSpawn[nextAddsSpawn][2])
+		nextAddsTimer = self:ScheduleTimer("AddsSpawn", 60)
+	end
 end
 
 --------------------------------------------------------------------------------
@@ -188,6 +211,9 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(_, spellName, _, _, spellId)
 	elseif spellId == 239978 then -- Soul Pallor // Stage 2
 		stage = 2
 
+		self:CancelTimer(nextAddsTimer)
+		self:StopBar(addsSpawn[nextAddsSpawn][1]) -- Adds spawn
+
 		self:StopBar(236072) -- Wailing Souls
 		self:StopBar(238570) -- Tormented Cries
 		self:StopBar(CL.cast:format(self:SpellName(236072))) -- <cast: Wailing Souls>
@@ -201,6 +227,15 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(_, spellName, _, _, spellId)
 
 		self:CDBar(236542, 17) -- Sundering Doom
 		self:CDBar(236544, 28) -- Doomed Sundering
+	end
+end
+
+function mod:AddsSpawn()
+	self:Message("adds", "Neutral", "Info", addsSpawn[nextAddsSpawn][1], addsSpawn[nextAddsSpawn][2])
+	nextAddsSpawn = nextAddsSpawn + 1
+	if addsSpawn[nextAddsSpawn] then
+		self:Bar("adds", 60, addsSpawn[nextAddsSpawn][1], addsSpawn[nextAddsSpawn][2])
+		nextAddsTimer = self:ScheduleTimer("AddsSpawn", 60)
 	end
 end
 
