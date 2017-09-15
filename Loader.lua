@@ -7,7 +7,7 @@ local bwFrame = CreateFrame("Frame")
 -- Generate our version variables
 --
 
-local BIGWIGS_VERSION = 70
+local BIGWIGS_VERSION = 72
 local BIGWIGS_RELEASE_STRING = ""
 local versionQueryString, versionResponseString = "Q^%d^%s", "V^%d^%s"
 
@@ -54,7 +54,7 @@ local tooltipFunctions = {}
 local next, tonumber, strsplit = next, tonumber, strsplit
 local SendAddonMessage, Ambiguate, CTimerAfter, CTimerNewTicker = SendAddonMessage, Ambiguate, C_Timer.After, C_Timer.NewTicker
 local IsInInstance, GetCurrentMapAreaID, SetMapToCurrentZone = IsInInstance, GetCurrentMapAreaID, SetMapToCurrentZone
-local GetAreaMapInfo, GetInstanceInfo, GetPlayerMapAreaID, IsFalling = GetAreaMapInfo, GetInstanceInfo, GetPlayerMapAreaID, IsFalling
+local GetAreaMapInfo, GetInstanceInfo, GetPlayerMapAreaID = GetAreaMapInfo, GetInstanceInfo, GetPlayerMapAreaID
 
 -- Try to grab unhooked copies of critical funcs (hooked by some crappy addons)
 public.GetCurrentMapAreaID = GetCurrentMapAreaID
@@ -82,12 +82,12 @@ local menus = {} -- contains the menus for BigWigs, once the core is loaded they
 local enableZones = {} -- contains the zones in which BigWigs will enable
 local disabledZones -- contains the zones in which BigWigs will enable, but the user has disabled the addon
 local worldBosses = {} -- contains the list of world bosses per zone that should enable the core
-local fakeWorldZones = { -- Fake world zones used for world boss translations and loading
+local fakeZones = { -- Fake zones used as GUI menus
 	[-466]=true, -- Outland
 	[-862]=true, -- Pandaria
 	[-962]=true, -- Draenor
 	[-1007]=true, -- Broken Isles
-	[-1021]=true, -- Broken Shore
+	[1716]=true, -- Broken Shore Mage Tower
 }
 
 do
@@ -113,7 +113,7 @@ do
 		[509] = c, -- Ruins of Ahn'Qiraj
 		[531] = c, -- Ahn'Qiraj Temple
 		--[[ BigWigs: The Burning Crusade ]]--
-		[-466] = bc, -- Outland
+		[-466] = bc, -- Outland (Fake Menu)
 		[565] = bc, -- Gruul's Lair
 		[532] = bc, -- Karazhan
 		[548] = bc, -- Coilfang: Serpentshrine Cavern
@@ -139,24 +139,25 @@ do
 		[720] = cata, -- Firelands
 		[967] = cata, -- Dragon Soul
 		--[[ BigWigs: Mists of Pandaria ]]--
-		[-862] = mop, -- Pandaria
+		[-862] = mop, -- Pandaria (Fake Menu)
 		[1009] = mop, -- Heart of Fear
 		[996] = mop, -- Terrace of Endless Spring
 		[1008] = mop, -- Mogu'shan Vaults
 		[1098] = mop, -- Throne of Thunder
 		[1136] = mop, -- Siege of Orgrimmar
 		--[[ BigWigs: Warlords of Draenor ]]--
-		[-962] = wod, -- Draenor
+		[-962] = wod, -- Draenor (Fake Menu)
 		[1228] = wod, -- Highmaul
 		[1205] = wod, -- Blackrock Foundry
 		[1448] = wod, -- Hellfire Citadel
 		--[[ BigWigs: Legion ]]--
-		[-1007] = l, -- Broken Isles
+		[-1007] = l, -- Broken Isles (Fake Menu)
 		[1520] = l, -- The Emerald Nightmare
 		[1648] = l, -- Trial of Valor
 		[1530] = l, -- The Nighthold
 		[1676] = l, -- Tomb of Sargeras
 		[1712] = l, -- Antorus, the Burning Throne
+		[1779] = l, -- Invasion Points
 
 		--[[ LittleWigs: Classic ]]--
 		[36] = lw_c, -- Deadmines
@@ -218,7 +219,7 @@ do
 		[1175] = lw_wod, -- Bloodmaul Slag Mines
 		[1358] = lw_wod, -- Upper Blackrock Spire
 		--[[ LittleWigs: Legion ]]--
-		[-1021] = lw_l, -- Broken Shore (Used for Mage Tower Scenarios)
+		[1716] = lw_l, -- Broken Shore Mage Tower (Fake Menu)
 		[1544] = lw_l, -- Assault on Violet Hold
 		[1677] = lw_l, -- Cathedral of Eternal Night
 		[1571] = lw_l, -- Court of Stars
@@ -240,29 +241,18 @@ do
 		[-948] = -962, [-949] = -962, [-945] = -962, -- Draenor
 		[-1015] = -1007, [-1017] = -1007, [-1018] = -1007, [-1024] = -1007, [-1033] = -1007, -- Broken Isles
 	}
-	public.fakeWorldZones = fakeWorldZones
 end
 
--- GLOBALS: _G, ADDON_LOAD_FAILED, BigWigs, BigWigs3DB, BigWigs3IconDB, BigWigsLoader, BigWigsOptions, CreateFrame, CUSTOM_CLASS_COLORS, error, GetAddOnEnableState, GetAddOnInfo
--- GLOBALS: GetAddOnMetadata, GetLocale, GetNumGroupMembers, GetRealmName, GetSpecialization, GetSpecializationRole, GetSpellInfo, GetTime, GRAY_FONT_COLOR, InterfaceOptionsFrameOkay
+-- GLOBALS: _G, ADDON_LOAD_FAILED, BigWigs, BigWigs3DB, BigWigs3IconDB, BigWigsLoader, BigWigsOptions, ChatFrame_ImportAllListsToHash, ChatTypeInfo, CreateFrame, CUSTOM_CLASS_COLORS, DEFAULT_CHAT_FRAME, error
+-- GLOBALS: GetAddOnEnableState, GetAddOnInfo, GetAddOnMetadata, GetLocale, GetNumGroupMembers, GetRealmName, GetSpecialization, GetSpecializationRole, GetTime, GRAY_FONT_COLOR, hash_SlashCmdList, InCombatLockdown
 -- GLOBALS: IsAddOnLoaded, IsAltKeyDown, IsControlKeyDown, IsEncounterInProgress, IsInGroup, IsInRaid, IsLoggedIn, IsPartyLFG, IsSpellKnown, LFGDungeonReadyPopup
 -- GLOBALS: LibStub, LoadAddOn, message, PlaySound, print, RAID_CLASS_COLORS, RaidNotice_AddMessage, RaidWarningFrame, RegisterAddonMessagePrefix, RolePollPopup, select, StopSound
--- GLOBALS: tostring, tremove, type, UnitClass, UnitGroupRolesAssigned, UnitIsConnected, UnitIsDeadOrGhost, UnitName, UnitSetRole, unpack, SLASH_BigWigs1, SLASH_BigWigs2
--- GLOBALS: SLASH_BigWigsVersion1, UnitBuff, wipe
+-- GLOBALS: tostring, tremove, type, UnitAffectingCombat, UnitClass, UnitGroupRolesAssigned, UnitIsConnected, UnitIsDeadOrGhost, UnitName, UnitSetRole, unpack, SLASH_BigWigs1, SLASH_BigWigs2
+-- GLOBALS: SLASH_BigWigsVersion1, wipe
 
 -----------------------------------------------------------------------
 -- Utility
 --
-
-local InCombat
-do
-	local InCombatLockdown, UnitAffectingCombat = InCombatLockdown, UnitAffectingCombat
-	function InCombat()
-		if InCombatLockdown() or UnitAffectingCombat("player") then
-			return true
-		end
-	end
-end
 
 local function IsAddOnEnabled(addon)
 	local character = UnitName("player")
@@ -317,10 +307,6 @@ local function loadAndEnableCore()
 end
 
 local function loadCoreAndOpenOptions()
-	if not BigWigsOptions and not IsAltKeyDown() and PlaySoundKitID and (InCombat() or IsFalling()) then -- Allow combat loading using ALT key.
-		sysprint(L.blizzRestrictionsConfig)
-		return
-	end
 	loadAndEnableCore()
 	load(BigWigsOptions, "BigWigs_Options")
 	if BigWigsOptions then
@@ -470,7 +456,7 @@ do
 			local zone = tonumber(rawZone:trim())
 			if zone then
 				-- register the zone for enabling.
-				local instanceId = fakeWorldZones[zone] and zone or GetAreaMapInfo(zone)
+				local instanceId = fakeZones[zone] and zone or GetAreaMapInfo(zone)
 				if instanceId then -- Protect live client from beta client ids
 					enableZones[instanceId] = true
 
@@ -784,13 +770,11 @@ do
 
 	local L = GetLocale()
 	if L == "ptBR" then
-		delayedMessages[#delayedMessages+1] = "Some BigWigs features will not work due to missing translations for Brazilian Portugese (ptBR). Can you help? Ask us on Discord for more info."
+		delayedMessages[#delayedMessages+1] = "BigWigs is missing translations for Brazilian Portugese (ptBR). Can you help? Ask us on Discord for more info."
 	elseif L == "itIT" then
-		delayedMessages[#delayedMessages+1] = "Some BigWigs features will not work due to missing translations for Italian (itIT). Can you help? Ask us on Discord for more info."
-	elseif L == "ruRU" then
-		delayedMessages[#delayedMessages+1] = "Some BigWigs features will not work due to missing translations for Russian (ruRU). Can you help? Ask us on Discord for more info."
+		delayedMessages[#delayedMessages+1] = "BigWigs is missing translations for Italian (itIT). Can you help? Ask us on Discord for more info."
 	elseif L == "esES" or L == "esMX" then
-		delayedMessages[#delayedMessages+1] = "Some BigWigs features will not work due to missing translations for Spanish (esES). Can you help? Ask us on Discord for more info."
+		delayedMessages[#delayedMessages+1] = "BigWigs is missing translations for Spanish (esES). Can you help? Ask us on Discord for more info."
 	end
 
 	CTimerAfter(11, function()
@@ -867,8 +851,8 @@ end
 
 do
 	-- This is a crapfest mainly because DBM's actual handling of versions is a crapfest, I'll try explain how this works...
-	local DBMdotRevision = "16632" -- The changing version of the local client, changes with every alpha revision using an SVN keyword.
-	local DBMdotDisplayVersion = "7.2.18" -- "N.N.N" for a release and "N.N.N alpha" for the alpha duration. Unless they fuck up their release and leave the alpha text in it.
+	local DBMdotRevision = "16694" -- The changing version of the local client, changes with every alpha revision using an SVN keyword.
+	local DBMdotDisplayVersion = "7.3.2" -- "N.N.N" for a release and "N.N.N alpha" for the alpha duration. Unless they fuck up their release and leave the alpha text in it.
 	local DBMdotReleaseRevision = DBMdotRevision -- This is manually changed by them every release, they use it to track the highest release version, a new DBM release is the only time it will change.
 
 	local timer, prevUpgradedUser = nil, nil
@@ -923,6 +907,10 @@ bwFrame:RegisterEvent("UPDATE_FLOATING_CHAT_WINDOWS")
 do
 	-- Role Updating
 	local prev = 0
+	function mod:PLAYER_REGEN_ENABLED()
+		bwFrame:UnregisterEvent("PLAYER_REGEN_ENABLED")
+		self:ACTIVE_TALENT_GROUP_CHANGED() -- Force role check
+	end
 	function mod:ACTIVE_TALENT_GROUP_CHANGED()
 		if IsInGroup() then
 			if IsPartyLFG() then return end
@@ -932,7 +920,7 @@ do
 
 			local role = GetSpecializationRole(tree)
 			if role and UnitGroupRolesAssigned("player") ~= role then
-				if InCombat() then
+				if InCombatLockdown() or UnitAffectingCombat("player") then
 					bwFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
 					return
 				end
@@ -989,7 +977,7 @@ do
 				-- Using false as third arg to avoid the "only one of each sound at a time" throttle.
 				-- Only play via the "Master" channel if we have sounds turned on
 				if (BigWigs and BigWigs:GetPlugin("Sounds") and BigWigs:GetPlugin("Sounds").db.profile.sound) or self.isSoundOn ~= false then
-					local _, id = PlaySound(PlaySoundKitID and "ReadyCheck" or 8960, "Master", false) -- SOUNDKIT.READY_CHECK
+					local _, id = PlaySound(8960, "Master", false) -- SOUNDKIT.READY_CHECK
 					if id then
 						StopSound(id-1) -- Should work most of the time to stop the blizz sound
 					end
@@ -1086,35 +1074,6 @@ end
 do
 	local loadedList = {}
 	local warnedThisZone = {}
-	local loadByUnitTarget, loadByZone = nil, nil
-	function mod:PLAYER_REGEN_ENABLED()
-		self:ACTIVE_TALENT_GROUP_CHANGED() -- Force role check
-		bwFrame:UnregisterEvent("PLAYER_REGEN_ENABLED")
-
-		if loadByUnitTarget then
-			local target = loadByUnitTarget
-			loadByUnitTarget = nil
-			self:UNIT_TARGET(target)
-		elseif loadByZone then
-			loadByZone = nil
-			self:ZONE_CHANGED_NEW_AREA()
-		end
-	end
-
-	local function HasStoppedFalling()
-		if IsFalling() then
-			CTimerAfter(0.1, HasStoppedFalling)
-		else
-			if loadByUnitTarget then
-				local target = loadByUnitTarget
-				loadByUnitTarget = nil
-				mod:UNIT_TARGET(target)
-			elseif loadByZone then
-				loadByZone = nil
-				mod:ZONE_CHANGED_NEW_AREA()
-			end
-		end
-	end
 
 	local UnitGUID = UnitGUID
 	function mod:UNIT_TARGET(unit)
@@ -1124,24 +1083,12 @@ do
 			local mobId = tonumber(id)
 			local id = mobId and worldBosses[mobId]
 			if id then
-				local combat, falling = InCombat(), IsFalling()
-				if PlaySoundKitID and (combat or falling) then
-					if not loadedList[id] then
-						loadByUnitTarget = unit
-						if combat then
-							bwFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
-						elseif falling then
-							CTimerAfter(0.1, HasStoppedFalling)
-						end
-					end
-				else
-					loadedList[id] = true
-					if loadAndEnableCore() then
-						if BigWigs:IsEnabled() then
-							loadZone(id)
-						else
-							BigWigs:Enable()
-						end
+				loadedList[id] = true
+				if loadAndEnableCore() then
+					if BigWigs:IsEnabled() then
+						loadZone(id)
+					else
+						BigWigs:Enable()
 					end
 				end
 			end
@@ -1153,7 +1100,14 @@ do
 		local id
 		local inside = IsInInstance()
 		if not inside then
-			id = -(GetPlayerMapAreaID("player") or 0)
+			local mapId = GetPlayerMapAreaID("player")
+			if mapId then
+				id = -mapId
+			else
+				local _, _, _, _, _, _, _, instanceId = GetInstanceInfo()
+				id = instanceId
+				inside = true -- For Argus Invasion Points, 1779
+			end
 		else
 			local _, _, _, _, _, _, _, instanceId = GetInstanceInfo()
 			id = instanceId
@@ -1169,24 +1123,12 @@ do
 				self:UNIT_TARGET("player")
 			elseif inside then
 				bwFrame:UnregisterEvent("UNIT_TARGET")
-				local combat, falling = InCombat(), IsFalling()
-				if not IsEncounterInProgress() and PlaySoundKitID and IsLoggedIn() and (combat or falling) then
-					if not loadedList[id] then
-						loadByZone = true
-						if combat then
-							bwFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
-						elseif falling then
-							CTimerAfter(0.1, HasStoppedFalling)
-						end
-					end
-				else
-					loadedList[id] = true
-					if loadAndEnableCore() then
-						if BigWigs:IsEnabled() and loadOnZone[id] then
-							loadZone(id)
-						else
-							BigWigs:Enable()
-						end
+				loadedList[id] = true
+				if loadAndEnableCore() then
+					if BigWigs:IsEnabled() and loadOnZone[id] then
+						loadZone(id)
+					else
+						BigWigs:Enable()
 					end
 				end
 			end
@@ -1210,7 +1152,7 @@ do
 		local zoneAddon = public.zoneTbl[id]
 		if zoneAddon and zoneAddon ~= "BigWigs_Legion" then
 			if zoneAddon:find("LittleWigs_", nil, true) then zoneAddon = "LittleWigs" end -- Collapse into one addon
-			if inside and not fakeWorldZones[id] and not warnedThisZone[id] and not IsAddOnEnabled(zoneAddon) then
+			if inside and not fakeZones[id] and not warnedThisZone[id] and not IsAddOnEnabled(zoneAddon) then
 				warnedThisZone[id] = true
 				local msg = L.missingAddOn:format(zoneAddon)
 				sysprint(msg)

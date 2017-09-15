@@ -509,7 +509,6 @@ do
 
 	function mod:TitanicBulwarkRemoved(args)
 		self:Message(args.spellId, "Positive", "Info", CL.removed:format(args.spellName))
-		self:CloseInfo(args.spellId)
 		if timer then
 			self:CancelTimer(timer)
 			timer = nil
@@ -529,6 +528,7 @@ function mod:WrathoftheCreatorsInterrupted(args)
 	infusionCounter = 1
 	orbCounter = 1
 	initialOrbs = nil
+	self:CloseInfo(235028) -- Titanic Bulwark
 
 	if not self:LFR() then
 		self:Bar(235271, 2) -- Infusion
