@@ -21,6 +21,8 @@ mod.respawnTime = 40
 -- Locals
 --
 
+local Hud = WFI.Hud
+
 local myRealm = 0 -- 1 = Spirit Realm, 0 = Corporeal Realm
 local phasedList = {}
 local unphasedList = {}
@@ -70,7 +72,7 @@ function mod:GetOptions()
 		{236459, "ME_ONLY", "FLASH", "PULSE"}, -- Soulbind
 		soulBindMarker,
 		236072, -- Wailing Souls
-		{236515, "ME_ONLY"}, -- Shattering Scream
+		{236515, "ME_ONLY", "HUD"}, -- Shattering Scream
 		236361, -- Spirit Chains
 		236542, -- Sundering Doom
 		236544, -- Doomed Sundering
@@ -116,6 +118,8 @@ function mod:OnBossEnable()
 	self:Log("SPELL_CAST_SUCCESS", "WailingSouls", 236072)
 	-- Adds
 	self:Log("SPELL_AURA_APPLIED", "ShatteringScream", 236515)
+	self:Log("SPELL_AURA_APPLIED", "ShatteringScreamApplied", 235969)
+	self:Log("SPELL_AURA_APPLIED", "ShatteringScreamRemoved", 235969)
 	self:Log("SPELL_AURA_APPLIED", "SpiritChains", 236361)
 
 	-- Tormented Souls
@@ -442,6 +446,22 @@ do
 		list[#list+1] = args.destName
 		if #list == 1 then
 			self:ScheduleTimer("TargetMessage", 0.5, args.spellId, list, "Attention", "Warning")
+		end
+	end
+
+	function mod:ShatteringScreamApplied(args)
+		if self:Me(args.destGUID) and self:Hud(236515) then
+			local timer = Hud:DrawTimer("player", 50, args.spellId):Register(args.destKey, true)
+			local label = Hud:DrawText("player", tostring(boneArmorCounter))
+			function timer:OnUpdate()
+				label:SetText(tostring(boneArmorCounter))
+			end
+		end
+	end
+
+	function mod:ShatteringScreamRemoved(args)
+		if self:Me(args.destGUID) and self:Hud(236515) then
+			Hud:RemoveObject(args.destKey)
 		end
 	end
 end
