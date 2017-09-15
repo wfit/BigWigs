@@ -343,11 +343,22 @@ do
 	end
 end
 
+local fo_soakers = {
+	[1] = "Boun",
+	[2] = "Gargan",
+	[3] = "Cris",
+	[4] = "Boun",
+	[5] = "Gargan",
+	[6] = "Belphou",
+	[7] = "Boun",
+	[8] = "Gargan",
+}
+
 function mod:UNIT_SPELLCAST_SUCCEEDED(_, spellName, _, _, spellId)
 	if spellId == 244856 then -- Flaming Orb
-		self:Message(spellId, "Attention", "Alert", CL.count:format(spellName, flamingOrbCount))
-		flamingOrbCount = (flamingOrbCount % (self:Mythic() and 3 or 2)) + 1
-		self:Bar(spellId, self:Mythic() and (flamingOrbCount == 2 and 15.0 or flamingOrbCount == 3 and 16.0 or 64) or flamingOrbCount == 2 and 30 or 64, CL.count:format(spellName, flamingOrbCount))
+		self:Message(spellId, "Attention", "Alert", "Orb: " .. (fo_soakers[flamingOrbCount] or flamingOrbCount))
+		flamingOrbCount = flamingOrbCount + 1
+		self:Bar(spellId, self:Mythic() and (flamingOrbCount == 2 and 15.0 or flamingOrbCount == 3 and 16.0 or 64) or flamingOrbCount == 2 and 30 or 64, "Orb: " .. (fo_soakers[flamingOrbCount] or flamingOrbCount))
 	end
 end
 
