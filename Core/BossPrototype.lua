@@ -77,9 +77,9 @@ local updateData = function(module)
 	UpdateInterruptStatus()
 end
 
-local Token = FS.Token
-local Roster = FS.Roster
-local Hud = FS.Hud
+local Token = WFI.Token
+local Roster = WFI.Roster
+local Hud = WFI.Hud
 
 -------------------------------------------------------------------------------
 -- Debug
@@ -2228,7 +2228,7 @@ end
 
 function boss:EnableTokens()
 	if not self.tokens then return end
-	self:RegisterMessage("BigWigs_FS_Option_Toggled")
+	self:RegisterMessage("BigWigs_WFI_Option_Toggled")
 	self:SyncTokensState()
 end
 
@@ -2250,7 +2250,7 @@ function boss:SyncTokensState()
 	end
 end
 
-function boss:BigWigs_FS_Option_Toggled(_, module, key, value)
+function boss:BigWigs_WFI_Option_Toggled(_, module, key, value)
 	if module == self then self:SyncTokensState() end
 end
 
@@ -2287,7 +2287,7 @@ end
 --
 
 function boss:Send(event, data, ...)
-	FS:Send("BW_NET_MSG", { event = event, data = data }, ...)
+	WFI:Send("BW_NET_MSG", { event = event, data = data }, ...)
 end
 
 function boss:RegisterNetMessage(event, handler)
@@ -2303,7 +2303,7 @@ function boss:BW_NET_MSG(_, msg, channel, source)
 end
 
 function boss:Emit(msg, ...)
-	FS:SendMessage(msg, ...)
+	WFI:SendMessage(msg, ...)
 end
 
 -------------------------------------------------------------------------------
@@ -2405,7 +2405,7 @@ function boss:SmartColorSet(key, guid, r, g, b, targets)
 	if r > 1 then r = r / 255 end
 	if g > 1 then g = g / 255 end
 	if b > 1 then b = b / 255 end
-	FS:Send("SMARTCOLOR", { action = "set", guid = guid, key = key, color = { r = r, g = g, b = b } }, targets)
+	WFI:Send("SMARTCOLOR", { action = "set", guid = guid, key = key, color = { r = r, g = g, b = b } }, targets)
 end
 
 function boss:SmartColorUnset(key, guid, targets)
@@ -2415,11 +2415,11 @@ function boss:SmartColorUnset(key, guid, targets)
 	end
 	if not guid then guid = myGUID end
 	if UnitExists(guid) then guid = UnitGUID(guid) end
-	FS:Send("SMARTCOLOR", { action = "unset", guid = guid, key = key }, targets)
+	WFI:Send("SMARTCOLOR", { action = "unset", guid = guid, key = key }, targets)
 end
 
 function boss:SmartColorUnsetAll(key, targets)
-	FS:Send("SMARTCOLOR", { action = "unsetall", key = key }, targets)
+	WFI:Send("SMARTCOLOR", { action = "unsetall", key = key }, targets)
 end
 
 function boss:SmartColorFilter(key)

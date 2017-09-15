@@ -384,6 +384,9 @@ do
 	local linkOnMe = false
 	function mod:Soulbind(args)
 		soulList[#soulList+1] = args.destName
+		if self:Me(args.destGUID) then
+			self:Flash(236459)
+		end
 		if #soulList == 1 then
 			local t = stage == 2 and 19.4 or 24.3
 			if self:Easy() then
@@ -398,7 +401,6 @@ do
 			end
 			if self:Me(args.destGUID) then
 				linkOnMe = true
-				self:Flash(args.spellId)
 			end
 		elseif #soulList == 2 then -- Announce at 2
 			if self:GetOption(soulBindMarker) then

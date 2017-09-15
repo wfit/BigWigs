@@ -315,7 +315,7 @@ local function masterOptionToggled(self, event, value)
 			scrollFrame:PerformLayout()
 		end
 	end
-	BigWigs:SendMessage("BigWigs_FS_Option_Toggled", module, key,  value or false)
+	BigWigs:SendMessage("BigWigs_WFI_Option_Toggled", module, key,  value or false)
 end
 
 local function slaveOptionToggled(self, event, value)

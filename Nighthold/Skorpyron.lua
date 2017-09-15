@@ -19,7 +19,7 @@ mod.instanceId = 1530
 -- Locals
 --
 
-local Hud = FS.Hud
+local Hud = WFI.Hud
 
 local engageTime = 0
 local arcanoslashCount = 1

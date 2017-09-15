@@ -17,7 +17,7 @@ mod.respawnTime = 15
 -- Locals
 --
 
-local Hud = FS.Hud
+local Hud = WFI.Hud
 
 local stage = 1
 local moonGlaiveCounter = 1

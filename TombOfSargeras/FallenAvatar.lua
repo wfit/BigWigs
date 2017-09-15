@@ -22,7 +22,7 @@ mod.instanceId = 1676
 -- Locals
 --
 
-local Hud = FS.Hud
+local Hud = WFI.Hud
 
 local timersHeroic = {
 	[234057] = {7, 42, 35, 41, 36, 35, 43}, -- Unbound Chaos
