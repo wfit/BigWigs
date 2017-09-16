@@ -43,7 +43,7 @@ function mod:GetOptions()
 	return {
 		"stages",
 		"berserk",
-		{230139, "SAY"}, -- Hydra Shot
+		230139, -- Hydra Shot
 		hydraShotMarker,
 		{230201, "TANK", "FLASH"}, -- Burden of Pain
 		230227, -- From the Abyss // Showing this as an alternative to Burden of Pain for non-tanks, they are the same spell
@@ -197,6 +197,7 @@ do
 		local count = #list+1
 		list[count] = args.destName
 
+		--[[
 		if self:Me(args.destGUID)then
 			if self:Easy() then
 				self:Say(args.spellId)
@@ -205,6 +206,7 @@ do
 				self:SayCountdown(args.spellId, 6, count, 4)
 			end
 		end
+		]]
 
 		if count == 1 then
 			self:StopBar(CL.count:format(self:SpellName(230139), hydraShotCounter)) -- Stop previous one if early
