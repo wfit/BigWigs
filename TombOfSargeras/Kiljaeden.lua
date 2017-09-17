@@ -174,7 +174,7 @@ function mod:GetOptions()
 		{meteors_impact, "COUNTDOWN", "HUD"},
 		{236710, "SAY", "FLASH"}, -- Shadow Reflection: Erupting
 		eruptingMarker,
-		{238430, "SAY", "FLASH"}, -- Bursting Dreadflame
+		{238430, "SAY", "FLASH", "SMARTCOLOR"}, -- Bursting Dreadflame
 		{238505, "SAY", "ICON", "FLASH", "PROXIMITY"}, -- Focused Dreadflame
 		{236378, "SAY", "FLASH"}, -- Shadow Reflection: Wailing
 		241564, -- Sorrowful Wail
@@ -504,6 +504,8 @@ do
 			self:Flash(args.spellId)
 			self:Say(args.spellId)
 			self:SayCountdown(args.spellId, 5)
+			self:SmartColorSet(args.spellId, 1, 0.5, 0)
+			self:ScheduleTimer("SmartColorUnset", 5, args.spellId)
 		end
 		playerList[#playerList+1] = args.destName
 		if #playerList == 1 then
