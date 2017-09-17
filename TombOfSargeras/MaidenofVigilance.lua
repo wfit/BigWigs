@@ -312,7 +312,7 @@ do
 			end
 			-- Duration can be longer if the debuff gets refreshed
 			local _, _, _, _, _, _, expires = UnitDebuff(args.destName, args.spellName)
-			local remaining = expires-GetTime()-1.2
+			local remaining = expires-GetTime()-1.5
 			self:TargetBar(235117, remaining, args.destName)
 
 			if self:Hud(235117) then
