@@ -135,8 +135,7 @@ function mod:OnBossEnable()
 	self:Log("SPELL_CAST_SUCCESS", "WailingSouls", 236072)
 	-- Adds
 	self:Log("SPELL_AURA_APPLIED", "ShatteringScream", 236515)
-	self:Log("SPELL_AURA_APPLIED", "ShatteringScreamApplied", 235969)
-	self:Log("SPELL_AURA_APPLIED", "ShatteringScreamRemoved", 235969)
+	self:Log("SPELL_AURA_REMOVED", "ShatteringScreamRemoved", 236515)
 	self:Log("SPELL_AURA_APPLIED", "SpiritChains", 236361)
 
 	-- Tormented Souls
@@ -482,12 +481,10 @@ do
 		if #list == 1 then
 			self:ScheduleTimer("TargetMessage", 0.5, args.spellId, list, "Attention", "Warning")
 		end
-	end
 
-	function mod:ShatteringScreamApplied(args)
-		if self:Me(args.destGUID) and self:Hud(236515) then
-			local timer = Hud:DrawTimer("player", 50, args.spellId):Register(args.destKey, true)
-			local label = Hud:DrawText("player", tostring(boneArmorCounter))
+		if self:Me(args.destGUID) and self:Hud(args.spellId) then
+			local timer = Hud:DrawTimer("player", 50, args.spellId):Register("ShatteringScreamHUD", true)
+			local label = Hud:DrawText("player", tostring(boneArmorCounter)):Register("ShatteringScreamHUD")
 			function timer:OnUpdate()
 				label:SetText(tostring(boneArmorCounter))
 			end
@@ -495,8 +492,8 @@ do
 	end
 
 	function mod:ShatteringScreamRemoved(args)
-		if self:Me(args.destGUID) and self:Hud(236515) then
-			Hud:RemoveObject(args.destKey)
+		if self:Me(args.destGUID) then
+			Hud:RemoveObject("ShatteringScreamHUD")
 		end
 	end
 end
