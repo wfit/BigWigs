@@ -1495,7 +1495,7 @@ end
 -- Start bars
 --
 
-function plugin:BigWigs_StartBar(_, module, key, text, time, icon, isApprox, forceEmphasize)
+function plugin:BigWigs_StartBar(_, module, key, text, time, icon, isApprox)
 	if createAnchors then createAnchors() end
 	if not text then text = "" end
 	self:StopSpecificBar(nil, module, text)
@@ -1534,7 +1534,7 @@ function plugin:BigWigs_StartBar(_, module, key, text, time, icon, isApprox, for
 	end
 	currentBarStyler.ApplyStyle(bar)
 
-	if db.emphasize and time < db.emphasizeTime or forceEmphasize then
+	if db.emphasize and time < db.emphasizeTime then
 		self:EmphasizeBar(bar, true)
 	else
 		bar:Start() -- Don't fire :Start twice when emphasizeRestart is on
@@ -1553,7 +1553,7 @@ end
 -- Impact bars
 --
 
-function plugin:StartImpactBar(_, module, key, text, time, icon, isApprox, forceEmphasize)
+function plugin:StartImpactBar(_, module, key, text, time, icon, isApprox)
 	if createAnchors then createAnchors() end
 	if not text then text = "" end
 	self:StopSpecificBar(nil, module, text)

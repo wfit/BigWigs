@@ -1863,11 +1863,6 @@ do
 		end
 	end
 
-	function boss:ImpactBar(key, length)
-		local msg = spells[key]
-		self:SendMessage("BigWigs_StartImpactBar", self, key, msg, length, icons[key], null, true)
-	end
-
 	--- Display a cooldown bar.
 	-- Indicates an unreliable duration by prefixing the time with "~"
 	-- @param key the option key
@@ -1936,6 +1931,15 @@ do
 	end
 end
 
+--------------
+-- Impact Bar.
+
+do
+	function boss:ImpactBar(key, length)
+		local msg = spells[key]
+		self:SendMessage("BigWigs_StartImpactBar", self, key, msg, length, icons[key], null, true)
+	end
+end
 --- Stop a bar.
 -- @param text the bar text, or a spellId which is converted into the spell name and used
 -- @string[opt] player the player name if stopping a target bar
