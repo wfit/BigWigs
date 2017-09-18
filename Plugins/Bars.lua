@@ -886,18 +886,6 @@ do
 						desc = L.moveDesc,
 						order = 2,
 					},
-					impactRestart = {
-						type = "toggle",
-						name = L.restart,
-						desc = L.restartDesc,
-						order = 3,
-					},
-					impactGrowup = {
-						type = "toggle",
-						name = L.growingUpwards,
-						desc = L.growingUpwardsDesc,
-						order = 4,
-					},
 					impactTime = {
 						type = "range",
 						name = "Impact at",
@@ -1298,6 +1286,12 @@ function plugin:PauseBar(_, module, text)
 			return
 		end
 	end
+	for k in next, impactAnchor.bars do
+		if k:Get("bigwigs:module") == module and k:GetLabel() == text then
+			k:Pause()
+			return
+		end
+	end
 end
 
 function plugin:ResumeBar(_, module, text)
@@ -1309,6 +1303,12 @@ function plugin:ResumeBar(_, module, text)
 		end
 	end
 	for k in next, emphasizeAnchor.bars do
+		if k:Get("bigwigs:module") == module and k:GetLabel() == text then
+			k:Resume()
+			return
+		end
+	end
+	for k in next, impactAnchor.bars do
 		if k:Get("bigwigs:module") == module and k:GetLabel() == text then
 			k:Resume()
 			return
@@ -1332,6 +1332,11 @@ function plugin:StopSpecificBar(_, module, text)
 			k:Stop()
 		end
 	end
+	for k in next, impactAnchor.bars do
+		if k:Get("bigwigs:module") == module and k:GetLabel() == text then
+			k:Stop()
+		end
+	end
 end
 
 function plugin:StopModuleBars(_, module)
@@ -1342,6 +1347,11 @@ function plugin:StopModuleBars(_, module)
 		end
 	end
 	for k in next, emphasizeAnchor.bars do
+		if k:Get("bigwigs:module") == module then
+			k:Stop()
+		end
+	end
+	for k in next, impactAnchor.bars do
 		if k:Get("bigwigs:module") == module then
 			k:Stop()
 		end
@@ -1360,6 +1370,11 @@ function plugin:GetBarTimeLeft(module, text)
 			end
 		end
 		for k in next, emphasizeAnchor.bars do
+			if k:Get("bigwigs:module") == module and k:GetLabel() == text then
+				return k.remaining
+			end
+		end
+		for k in next, impactAnchor.bars do
 			if k:Get("bigwigs:module") == module and k:GetLabel() == text then
 				return k.remaining
 			end
@@ -1481,6 +1496,14 @@ clickHandlers.removeOther = function(bar)
 			end
 		end
 	end
+	if impactAnchor then
+		for k in next, impactAnchor.bars do
+			if k ~= bar then
+				plugin:SendMessage("BigWigs_SilenceOption", k:Get("bigwigs:option"), k.remaining + 0.3)
+				k:Stop()
+			end
+		end
+	end
 end
 
 -- Disables the option that launched this bar
@@ -1562,7 +1585,8 @@ function plugin:StartImpactBar(_, module, key, text, time, icon, isApprox)
 	bar:Set("bigwigs:module", module)
 	bar:Set("bigwigs:anchor", impactAnchor)
 	bar:Set("bigwigs:option", key)
-	bar:SetColor(colors:GetColor("barColor", module, key))
+	bar:Set("bigwigs:impact", true)
+	bar:SetColor(colors:GetColor("barEmphasized", module, key))
 	bar:SetTextColor(colors:GetColor("barText", module, key))
 	bar:SetShadowColor(colors:GetColor("barTextShadow", module, key))
 	bar.candyBarLabel:SetJustifyH(db.alignText)
@@ -1585,7 +1609,7 @@ function plugin:StartImpactBar(_, module, key, text, time, icon, isApprox)
 	bar:SetDuration(time, isApprox)
 	bar:SetTimeVisibility(db.time)
 	bar:SetIcon(db.icon and icon or nil)
-	bar:SetScale(db.scale)
+	bar:SetScale(db.impactScale)
 	bar:SetFill(db.fill)
 	if db.interceptMouse and not db.onlyInterceptOnKeypress then
 		refixClickOnBar(true, bar)
