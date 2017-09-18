@@ -1865,7 +1865,7 @@ do
 
 	function boss:ImpactBar(key, length)
 		local msg = spells[key]
-		self:SendMessage("BigWigs_StartBar", self, key, msg, length, icons[key], null, true)
+		self:SendMessage("BigWigs_StartImpactBar", self, key, msg, length, icons[key], null, true)
 	end
 
 	--- Display a cooldown bar.
