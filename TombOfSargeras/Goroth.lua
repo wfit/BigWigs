@@ -140,7 +140,7 @@ end
 function mod:InfernalBurning(args)
 	burningCounter = burningCounter + 1
 	self:Message(args.spellId, "Urgent", "Warning", CL.casting:format(args.spellName))
-	self:ImpactBar(args.spellId, self:LFR() and 10 or 6)
+	self:ImpactBar(args.spellId, self:LFR() and 10 or 6, CL.cast:format(args.spellName))
 	self:Bar(args.spellId, self:LFR() and 64.4 or 60.5)
 end
 
