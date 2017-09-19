@@ -465,6 +465,7 @@ plugin.defaultDB = {
 	emphasizeRestart = true,
 	emphasizeTime = 11,
 	impact = true,
+	impactGrowup = true,
 	impactScale = 1.8,
 	BigWigsAnchor_width = 200,
 	BigWigsEmphasizeAnchor_width = 300,
