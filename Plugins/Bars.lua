@@ -464,9 +464,11 @@ plugin.defaultDB = {
 	emphasizeGrowup = nil,
 	emphasizeRestart = true,
 	emphasizeTime = 11,
+	impact = true,
+	impactScale = 1.8,
 	BigWigsAnchor_width = 200,
 	BigWigsEmphasizeAnchor_width = 300,
-	BigWigsImpactAnchor_width = 300,
+	BigWigsImpactAnchor_width = 250,
 	interceptMouse = nil,
 	onlyInterceptOnKeypress = nil,
 	interceptKey = "CTRL",
@@ -872,7 +874,7 @@ do
 			},
 			impact = {
 				type = "group",
-				name = "impact bar",
+				name = "Impact Bars",
 				order = 5,
 				args = {
 					impact = {
@@ -880,26 +882,18 @@ do
 						name = L.enable,
 						order = 1,
 					},
-					impactMove = {
+					impactGrowup = {
 						type = "toggle",
-						name = L.move,
-						desc = L.moveDesc,
-						order = 2,
-					},
-					impactTime = {
-						type = "range",
-						name = "Impact at",
-						order = 5,
-						min = 6,
-						max = 20,
-						step = 1,
+						name = L.growingUpwards,
+						desc = L.growingUpwardsDesc,
+						order = 4,
 					},
 					impactScale = {
 						type = "range",
 						name = L.scale,
 						order = 6,
 						min = 0.2,
-						max = 2.0,
+						max = 3.0,
 						step = 0.1,
 					},
 					exactPositioning = {
@@ -964,7 +958,13 @@ do
 		table.sort(tmp, barSorter)
 		local lastBar = nil
 		local up = nil
-		if anchor == normalAnchor then up = db.growup else up = db.emphasizeGrowup end
+		if anchor == normalAnchor then
+			up = db.growup
+		elseif anchor == emphasizeAnchor then
+			up = db.emphasizeGrowup
+		elseif anchor == impactAnchor then
+			up = db.impactGrowup
+		end
 		for i = 1, #tmp do
 			local bar = tmp[i]
 			local spacing = currentBarStyler.GetSpacing(bar) or 0
@@ -1008,7 +1008,7 @@ end
 local defaultPositions = {
 	BigWigsAnchor = {"CENTER", "UIParent", "CENTER", 0, -120},
 	BigWigsEmphasizeAnchor = {"TOP", RaidWarningFrame, "BOTTOM", 0, -35}, --Below the Blizzard "Raid Warning" frame
-	BigWigsImpactAnchor = {"TOP", RaidWarningFrame, "LEFT", 0, -35},
+	BigWigsImpactAnchor = {"CENTER", "UIParent", "CENTER", 0, 100},
 }
 
 local function onDragHandleMouseDown(self) self:GetParent():StartSizing("BOTTOMRIGHT") end
@@ -1093,7 +1093,7 @@ end
 local function createAnchors()
 	normalAnchor = createAnchor("BigWigsAnchor", L.bars)
 	emphasizeAnchor = createAnchor("BigWigsEmphasizeAnchor", L.emphasizedBars)
-	impactAnchor = createAnchor("BigWigsImpactAnchor", 'Impact bar')
+	impactAnchor = createAnchor("BigWigsImpactAnchor", "Impact Bar")
 
 	createAnchors = nil
 	createAnchor = nil
@@ -1573,7 +1573,7 @@ function plugin:BigWigs_StartBar(_, module, key, text, time, icon, isApprox)
 end
 
 -----------------------------------------------------------------------
--- Impact bars
+-- Impact Bars
 --
 
 function plugin:StartImpactBar(_, module, key, text, time, icon, isApprox)
