@@ -362,7 +362,7 @@ do
 		messages[spell] = icon
 
 		addon:SendMessage("BigWigs_StartBar", addon, spell, spell, time, icon)
-		addon:SendMessage("BigWigs_StartImpactBar", addon, spell, "Impact: " .. spell, time, icon)
+		addon:SendMessage("BigWigs_StartImpactBar", addon, spell, spell, time, icon)
 	end
 end
 

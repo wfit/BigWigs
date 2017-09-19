@@ -1320,21 +1320,24 @@ end
 -- Stopping bars
 --
 
-function plugin:StopSpecificBar(_, module, text)
+function plugin:StopSpecificBar(_, module, text, impact)
 	if not normalAnchor then return end
-	for k in next, normalAnchor.bars do
-		if k:Get("bigwigs:module") == module and k:GetLabel() == text then
-			k:Stop()
+	if not impact then
+		for k in next, normalAnchor.bars do
+			if k:Get("bigwigs:module") == module and k:GetLabel() == text then
+				k:Stop()
+			end
 		end
-	end
-	for k in next, emphasizeAnchor.bars do
-		if k:Get("bigwigs:module") == module and k:GetLabel() == text then
-			k:Stop()
+		for k in next, emphasizeAnchor.bars do
+			if k:Get("bigwigs:module") == module and k:GetLabel() == text then
+				k:Stop()
+			end
 		end
-	end
-	for k in next, impactAnchor.bars do
-		if k:Get("bigwigs:module") == module and k:GetLabel() == text then
-			k:Stop()
+	else
+		for k in next, impactAnchor.bars do
+			if k:Get("bigwigs:module") == module and k:GetLabel() == text then
+				k:Stop()
+			end
 		end
 	end
 end
@@ -1579,7 +1582,7 @@ end
 function plugin:StartImpactBar(_, module, key, text, time, icon, color)
 	if createAnchors then createAnchors() end
 	if not text then text = "" end
-	self:StopSpecificBar(nil, module, text)
+	self:StopSpecificBar(nil, module, text, true)
 	local bar = candy:New(media:Fetch("statusbar", db.texture), 200, 14)
 	bar.candyBarBackground:SetVertexColor(colors:GetColor("barBackground", module, key))
 	bar:Set("bigwigs:module", module)
@@ -1624,7 +1627,7 @@ function plugin:StartImpactBar(_, module, key, text, time, icon, color)
 
 	rearrangeBars(bar:Get("bigwigs:anchor"))
 
-	self:SendMessage("BigWigs_BarCreated", self, bar, module, key, text, time, icon, color)
+	self:SendMessage("BigWigs_ImpactBarCreated", self, bar, module, key, text, time, icon, color)
 end
 
 --------------------------------------------------------------------------------
