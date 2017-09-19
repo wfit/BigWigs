@@ -33,8 +33,8 @@ function mod:GetOptions()
 		{231363, "TANK", "SAY"}, -- Burning Armor
 		233514, -- Infernal Spike
 		{232249, "FLASH", "SAY"}, -- Crashing Comet
-		{233279, "FLASH", "SAY"}, -- Shattering Star
-		233062, -- Infernal Burning
+		{233279, "FLASH", "SAY", "IMPACT"}, -- Shattering Star
+		{233062, "IMPACT"}, -- Infernal Burning
 		234346, -- Fel Eruption
 		238588, -- Rain of Brimstone
 	},{
@@ -127,7 +127,7 @@ end
 
 function mod:ShatteringStarDebuff(args)
 	self:TargetMessage(233279, args.destName, "Attention", "Alarm", CL.count:format(args.spellName, shatteringCounter))
-	self:CastBar(233279, 6, CL.count:format(args.spellName, shatteringCounter)) -- <cast: Shattering Star>
+	self:ImpactBar(233279, 6, CL.count:format(args.spellName, shatteringCounter)) -- <cast: Shattering Star>
 	shatteringCounter = shatteringCounter + 1
 	local t = (self:Mythic() and shatteringTimersMythic[shatteringCounter] or shatteringTimers[shatteringCounter]) or (self:Mythic() and 29 or (shatteringCounter % 2 == 0 and 19 or 41))
 	self:Bar(233279, t, CL.count:format(args.spellName, shatteringCounter)) -- Shattering Star
@@ -140,7 +140,7 @@ end
 function mod:InfernalBurning(args)
 	burningCounter = burningCounter + 1
 	self:Message(args.spellId, "Urgent", "Warning", CL.casting:format(args.spellName))
-	self:CastBar(args.spellId, self:LFR() and 10 or 6)
+	self:ImpactBar(args.spellId, self:LFR() and 10 or 6)
 	self:Bar(args.spellId, self:LFR() and 64.4 or 60.5)
 end
 
