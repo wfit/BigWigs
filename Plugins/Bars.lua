@@ -1008,7 +1008,7 @@ end
 local defaultPositions = {
 	BigWigsAnchor = {"CENTER", "UIParent", "CENTER", 0, -120},
 	BigWigsEmphasizeAnchor = {"TOP", RaidWarningFrame, "BOTTOM", 0, -35}, --Below the Blizzard "Raid Warning" frame
-	BigWigsImpactAnchor = {"CENTER", "UIParent", "CENTER", 0, 100},
+	BigWigsImpactAnchor = {"CENTER", "UIParent", "CENTER", 0, 80},
 }
 
 local function onDragHandleMouseDown(self) self:GetParent():StartSizing("BOTTOMRIGHT") end
@@ -1576,7 +1576,7 @@ end
 -- Impact Bars
 --
 
-function plugin:StartImpactBar(_, module, key, text, time, icon, isApprox)
+function plugin:StartImpactBar(_, module, key, text, time, icon, color)
 	if createAnchors then createAnchors() end
 	if not text then text = "" end
 	self:StopSpecificBar(nil, module, text)
@@ -1586,7 +1586,11 @@ function plugin:StartImpactBar(_, module, key, text, time, icon, isApprox)
 	bar:Set("bigwigs:anchor", impactAnchor)
 	bar:Set("bigwigs:option", key)
 	bar:Set("bigwigs:impact", true)
-	bar:SetColor(colors:GetColor("barEmphasized", module, key))
+	if color then
+		bar:SetColor(unpack(color))
+	else
+		bar:SetColor(colors:GetColor("barImpact", module, key))
+	end
 	bar:SetTextColor(colors:GetColor("barText", module, key))
 	bar:SetShadowColor(colors:GetColor("barTextShadow", module, key))
 	bar.candyBarLabel:SetJustifyH(db.alignText)
@@ -1606,7 +1610,7 @@ function plugin:StartImpactBar(_, module, key, text, time, icon, isApprox)
 	bar.candyBarDuration:SetFont(f, db.fontSize, flags)
 
 	bar:SetLabel(text)
-	bar:SetDuration(time, isApprox)
+	bar:SetDuration(time)
 	bar:SetTimeVisibility(db.time)
 	bar:SetIcon(db.icon and icon or nil)
 	bar:SetScale(db.impactScale)
@@ -1620,7 +1624,7 @@ function plugin:StartImpactBar(_, module, key, text, time, icon, isApprox)
 
 	rearrangeBars(bar:Get("bigwigs:anchor"))
 
-	self:SendMessage("BigWigs_BarCreated", self, bar, module, key, text, time, icon, isApprox)
+	self:SendMessage("BigWigs_BarCreated", self, bar, module, key, text, time, icon, color)
 end
 
 --------------------------------------------------------------------------------
