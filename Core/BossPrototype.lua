@@ -1929,17 +1929,21 @@ do
 			self:SendMessage("BigWigs_StartEmphasize", self, key, msg, length)
 		end
 	end
-end
 
---------------
--- Impact Bar.
-
-do
-	function boss:ImpactBar(key, length)
-		local msg = spells[key]
-		self:SendMessage("BigWigs_StartImpactBar", self, key, msg, length, icons[key], null, true)
+	function boss:ImpactBar(key, length, text, icon, color)
+		if type(length) ~= "number" then core:Print(format(msg, key)) return end
+		local textType = type(text)
+		local msg = textType == "string" and text or spells[text or key]
+		if checkFlag(self, key, C.IMPACT) then
+			local icon = icons[icon or textType == "number" and text or key]
+			self:SendMessage("BigWigs_StartImpactBar", self, key, msg, length, icon, color)
+		end
+		if checkFlag(self, key, C.IMPACT_COUNTDOWN) then
+			self:SendMessage("BigWigs_StartEmphasize", self, key, msg, length)
+		end
 	end
 end
+
 --- Stop a bar.
 -- @param text the bar text, or a spellId which is converted into the spell name and used
 -- @string[opt] player the player name if stopping a target bar
