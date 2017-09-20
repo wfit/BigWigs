@@ -168,8 +168,7 @@ function mod:GetOptions()
 		"stages",
 		"berserk",
 		{239932, "TANK"}, -- Felclaws
-		235059, -- Rupturing Singularity
-		"rupturingKnock",
+		{235059, "IMPACT"}, -- Rupturing Singularity
 		240910, -- Armageddon
 		{meteors_impact, "COUNTDOWN", "HUD"},
 		{236710, "SAY", "FLASH"}, -- Shadow Reflection: Erupting
@@ -314,7 +313,7 @@ function mod:CHAT_MSG_RAID_BOSS_EMOTE(_, msg, _, _, _, target)
 		self:ScheduleTimer("FocusedDreadflameSuccess", 5.5)
 	elseif msg:find("235059", nil, true) then -- Rupturing Singularity
 		self:Message(235059, "Urgent", "Warning", CL.count:format(self:SpellName(235059), singularityCount))
-		self:Bar("rupturingKnock", 9.85, CL.count:format(L.singularityImpact, singularityCount), 235059)
+		self:ImpactBar(235059, 9.85, CL.count:format(L.singularityImpact, singularityCount), 235059)
 		singularityCount = singularityCount + 1
 		local timer = 0
 		if inIntermission then -- Intermission timer

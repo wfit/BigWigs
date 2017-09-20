@@ -91,8 +91,8 @@ function mod:GetOptions()
 		236072, -- Wailing Souls
 		{236515, "ME_ONLY", "HUD"}, -- Shattering Scream
 		236361, -- Spirit Chains
-		236542, -- Sundering Doom
-		236544, -- Doomed Sundering
+		{236542, "IMPACT"}, -- Sundering Doom
+		{236544, "IMPACT"}, -- Doomed Sundering
 		236548, -- Torment
 	},{
 		["infobox"] = "general",
@@ -507,13 +507,13 @@ end
 function mod:SunderingDoom(args)
 	self:Message(args.spellId, "Important", "Warning")
 	self:Bar(args.spellId, self:Easy() and 26.5 or 25)
-	self:CastBar(args.spellId, self:Easy() and 6 or self:Heroic() and 5 or 4)
+	self:ImpactBar(args.spellId, self:Easy() and 6 or self:Heroic() and 5 or 4)
 end
 
 function mod:DoomedSundering(args)
 	self:Message(args.spellId, "Important", "Warning")
 	self:Bar(args.spellId, self:Easy() and 26.5 or 25)
-	self:CastBar(args.spellId, self:Easy() and 6 or self:Heroic() and 5 or 4)
+	self:ImpactBar(args.spellId, self:Easy() and 6 or self:Heroic() and 5 or 4)
 end
 
 do

@@ -334,7 +334,7 @@ end
 local function getSlaveToggle(label, desc, key, module, flag, master)
 	local toggle = AceGUI:Create("CheckBox")
 	toggle:SetLabel(colorize[label])
-	if flag == C.MESSAGE or flag == C.ME_ONLY or flag == C.FLASH or flag == C.PULSE or flag == C.EMPHASIZE or flag == C.COUNTDOWN then
+	if flag == C.MESSAGE or flag == C.ME_ONLY or flag == C.FLASH or flag == C.PULSE or flag == C.EMPHASIZE or flag == C.COUNTDOWN or flag == C.IMPACT or flag == C.IMPACT_COUNTDOWN then
 		toggle:SetRelativeWidth(0.5)
 	else
 		toggle:SetFullWidth(true)
@@ -381,6 +381,19 @@ local function advancedToggles(dbKey, module, check)
 				flashGroup:AddChild(pulse)
 
 				advancedOptions[#advancedOptions + 1] = flashGroup
+			elseif key == "IMPACT" then
+				local impactGroup = AceGUI:Create("InlineGroup")
+				impactGroup:SetLayout("Flow")
+				impactGroup:SetFullWidth(true)
+
+				local name, desc = BigWigs:GetOptionDetails(key)
+				local impact = getSlaveToggle(name, desc, dbKey, module, flag, check)
+				impactGroup:AddChild(impact)
+
+				local countdown = getSlaveToggle(L.IMPACT_COUNTDOWN, L.IMPACT_COUNTDOWN_desc, dbKey, module, C.IMPACT_COUNTDOWN, check)
+				impactGroup:AddChild(countdown)
+
+				advancedOptions[#advancedOptions + 1] = impactGroup
 			elseif key == "VOICE" then
 				if API:HasVoicePack() then
 					local name, desc = BigWigs:GetOptionDetails(key)

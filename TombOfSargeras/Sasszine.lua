@@ -43,7 +43,7 @@ function mod:GetOptions()
 	return {
 		"stages",
 		"berserk",
-		230139, -- Hydra Shot
+		{230139, "IMPACT"}, -- Hydra Shot
 		hydraShotMarker,
 		{230201, "TANK", "FLASH"}, -- Burden of Pain
 		230227, -- From the Abyss // Showing this as an alternative to Burden of Pain for non-tanks, they are the same spell
@@ -210,7 +210,7 @@ do
 
 		if count == 1 then
 			self:StopBar(CL.count:format(self:SpellName(230139), hydraShotCounter)) -- Stop previous one if early
-			self:CastBar(args.spellId, 6, CL.count:format(args.spellName, hydraShotCounter))
+			self:ImpactBar(args.spellId, 6, CL.count:format(args.spellName, hydraShotCounter))
 			self:ScheduleTimer("TargetMessage", 0.3, args.spellId, list, "Important", "Warning", nil, nil, true)
 			hydraShotCounter = hydraShotCounter + 1
 			-- Normal stage 3 seems to swing between 41-43 or 51-53

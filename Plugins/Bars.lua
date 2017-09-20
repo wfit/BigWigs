@@ -38,7 +38,7 @@ local media = LibStub("LibSharedMedia-3.0")
 local next = next
 local tremove = tremove
 local db = nil
-local normalAnchor, emphasizeAnchor = nil, nil
+local normalAnchor, emphasizeAnchor, impactAnchor = nil, nil
 local empUpdate = nil -- emphasize updater frame
 
 local clickHandlers = {}
@@ -442,6 +442,8 @@ end
 -- Options
 --
 
+
+-- TODO: Add default emphasized bar
 plugin.defaultDB = {
 	scale = 1.0,
 	fontSize = 10,
@@ -462,8 +464,12 @@ plugin.defaultDB = {
 	emphasizeGrowup = nil,
 	emphasizeRestart = true,
 	emphasizeTime = 11,
+	impact = true,
+	impactGrowup = true,
+	impactScale = 1.8,
 	BigWigsAnchor_width = 200,
 	BigWigsEmphasizeAnchor_width = 300,
+	BigWigsImpactAnchor_width = 250,
 	interceptMouse = nil,
 	onlyInterceptOnKeypress = nil,
 	interceptKey = "CTRL",
@@ -867,6 +873,60 @@ do
 					},
 				},
 			},
+			impact = {
+				type = "group",
+				name = "Impact Bars",
+				order = 5,
+				args = {
+					impact = {
+						type = "toggle",
+						name = L.enable,
+						order = 1,
+					},
+					impactGrowup = {
+						type = "toggle",
+						name = L.growingUpwards,
+						desc = L.growingUpwardsDesc,
+						order = 4,
+					},
+					impactScale = {
+						type = "range",
+						name = L.scale,
+						order = 6,
+						min = 0.2,
+						max = 3.0,
+						step = 0.1,
+					},
+					exactPositioning = {
+						type = "group",
+						name = L.positionExact,
+						order = 7,
+						inline = true,
+						args = {
+							BigWigsImpactAnchor_x = {
+								type = "range",
+								name = L.positionX,
+								desc = L.positionDesc,
+								min = 0,
+								max = 2048,
+								step = 1,
+								order = 1,
+								width = "full",
+							},
+							BigWigsImpactAnchor_y = {
+								type = "range",
+								name = L.positionY,
+								desc = L.positionDesc,
+								min = 0,
+								max = 2048,
+								step = 1,
+								order = 2,
+								width = "full",
+							},
+						},
+					},
+				},
+			},
 		},
 	}
 end
@@ -899,7 +959,13 @@ do
 		table.sort(tmp, barSorter)
 		local lastBar = nil
 		local up = nil
-		if anchor == normalAnchor then up = db.growup else up = db.emphasizeGrowup end
+		if anchor == normalAnchor then
+			up = db.growup
+		elseif anchor == emphasizeAnchor then
+			up = db.emphasizeGrowup
+		elseif anchor == impactAnchor then
+			up = db.impactGrowup
+		end
 		for i = 1, #tmp do
 			local bar = tmp[i]
 			local spacing = currentBarStyler.GetSpacing(bar) or 0
@@ -943,6 +1009,7 @@ end
 local defaultPositions = {
 	BigWigsAnchor = {"CENTER", "UIParent", "CENTER", 0, -120},
 	BigWigsEmphasizeAnchor = {"TOP", RaidWarningFrame, "BOTTOM", 0, -35}, --Below the Blizzard "Raid Warning" frame
+	BigWigsImpactAnchor = {"CENTER", "UIParent", "CENTER", 0, 80},
 }
 
 local function onDragHandleMouseDown(self) self:GetParent():StartSizing("BOTTOMRIGHT") end
@@ -1027,6 +1094,7 @@ end
 local function createAnchors()
 	normalAnchor = createAnchor("BigWigsAnchor", L.bars)
 	emphasizeAnchor = createAnchor("BigWigsEmphasizeAnchor", L.emphasizedBars)
+	impactAnchor = createAnchor("BigWigsImpactAnchor", "Impact Bar")
 
 	createAnchors = nil
 	createAnchor = nil
@@ -1036,16 +1104,19 @@ local function showAnchors()
 	if createAnchors then createAnchors() end
 	normalAnchor:Show()
 	emphasizeAnchor:Show()
+	impactAnchor:Show()
 end
 
 local function hideAnchors()
 	normalAnchor:Hide()
 	emphasizeAnchor:Hide()
+	impactAnchor:Hide()
 end
 
 local function resetAnchors()
 	normalAnchor:Reset()
 	emphasizeAnchor:Reset()
+	impactAnchor:Reset()
 end
 
 local function updateProfile()
@@ -1054,6 +1125,7 @@ local function updateProfile()
 	if normalAnchor then
 		normalAnchor:RefixPosition()
 		emphasizeAnchor:RefixPosition()
+		impactAnchor:RefixPosition()
 	end
 	if plugin:IsEnabled() then
 		if not media:Fetch("statusbar", db.texture, true) then db.texture = "BantoBar" end
@@ -1093,6 +1165,7 @@ function plugin:OnPluginEnable()
 	self:RegisterMessage("BigWigs_ResumeBar", "ResumeBar")
 	self:RegisterMessage("BigWigs_StopBar", "StopSpecificBar")
 	self:RegisterMessage("BigWigs_StopBars", "StopModuleBars")
+	self:RegisterMessage("BigWigs_StartImpactBar", "StartImpactBar")
 	self:RegisterMessage("BigWigs_OnBossDisable", "StopModuleBars")
 	self:RegisterMessage("BigWigs_OnBossReboot", "StopModuleBars")
 	self:RegisterMessage("BigWigs_OnPluginDisable", "StopModuleBars")
@@ -1214,6 +1287,12 @@ function plugin:PauseBar(_, module, text)
 			return
 		end
 	end
+	for k in next, impactAnchor.bars do
+		if k:Get("bigwigs:module") == module and k:GetLabel() == text then
+			k:Pause()
+			return
+		end
+	end
 end
 
 function plugin:ResumeBar(_, module, text)
@@ -1230,22 +1309,36 @@ function plugin:ResumeBar(_, module, text)
 			return
 		end
 	end
+	for k in next, impactAnchor.bars do
+		if k:Get("bigwigs:module") == module and k:GetLabel() == text then
+			k:Resume()
+			return
+		end
+	end
 end
 
 --------------------------------------------------------------------------------
 -- Stopping bars
 --
 
-function plugin:StopSpecificBar(_, module, text)
+function plugin:StopSpecificBar(_, module, text, impact)
 	if not normalAnchor then return end
-	for k in next, normalAnchor.bars do
-		if k:Get("bigwigs:module") == module and k:GetLabel() == text then
-			k:Stop()
+	if not impact then
+		for k in next, normalAnchor.bars do
+			if k:Get("bigwigs:module") == module and k:GetLabel() == text then
+				k:Stop()
+			end
 		end
-	end
-	for k in next, emphasizeAnchor.bars do
-		if k:Get("bigwigs:module") == module and k:GetLabel() == text then
-			k:Stop()
+		for k in next, emphasizeAnchor.bars do
+			if k:Get("bigwigs:module") == module and k:GetLabel() == text then
+				k:Stop()
+			end
+		end
+	else
+		for k in next, impactAnchor.bars do
+			if k:Get("bigwigs:module") == module and k:GetLabel() == text then
+				k:Stop()
+			end
 		end
 	end
 end
@@ -1258,6 +1351,11 @@ function plugin:StopModuleBars(_, module)
 		end
 	end
 	for k in next, emphasizeAnchor.bars do
+		if k:Get("bigwigs:module") == module then
+			k:Stop()
+		end
+	end
+	for k in next, impactAnchor.bars do
 		if k:Get("bigwigs:module") == module then
 			k:Stop()
 		end
@@ -1276,6 +1374,11 @@ function plugin:GetBarTimeLeft(module, text)
 			end
 		end
 		for k in next, emphasizeAnchor.bars do
+			if k:Get("bigwigs:module") == module and k:GetLabel() == text then
+				return k.remaining
+			end
+		end
+		for k in next, impactAnchor.bars do
 			if k:Get("bigwigs:module") == module and k:GetLabel() == text then
 				return k.remaining
 			end
@@ -1397,6 +1500,14 @@ clickHandlers.removeOther = function(bar)
 			end
 		end
 	end
+	if impactAnchor then
+		for k in next, impactAnchor.bars do
+			if k ~= bar then
+				plugin:SendMessage("BigWigs_SilenceOption", k:Get("bigwigs:option"), k.remaining + 0.3)
+				k:Stop()
+			end
+		end
+	end
 end
 
 -- Disables the option that launched this bar
@@ -1463,6 +1574,61 @@ function plugin:BigWigs_StartBar(_, module, key, text, time, icon, isApprox)
 	if bar:Get("bigwigs:emphasized") then
 		self:SendMessage("BigWigs_BarEmphasized", self, bar)
 	end
+end
+
+-----------------------------------------------------------------------
+-- Impact Bars
+--
+
+function plugin:StartImpactBar(_, module, key, text, time, icon, color)
+	if createAnchors then createAnchors() end
+	if not text then text = "" end
+	self:StopSpecificBar(nil, module, text, true)
+	local bar = candy:New(media:Fetch("statusbar", db.texture), 200, 14)
+	bar.candyBarBackground:SetVertexColor(colors:GetColor("barBackground", module, key))
+	bar:Set("bigwigs:module", module)
+	bar:Set("bigwigs:anchor", impactAnchor)
+	bar:Set("bigwigs:option", key)
+	bar:Set("bigwigs:impact", true)
+	if color then
+		bar:SetColor(unpack(color))
+	else
+		bar:SetColor(colors:GetColor("barImpact", module, key))
+	end
+	bar:SetTextColor(colors:GetColor("barText", module, key))
+	bar:SetShadowColor(colors:GetColor("barTextShadow", module, key))
+	bar.candyBarLabel:SetJustifyH(db.alignText)
+	bar.candyBarDuration:SetJustifyH(db.alignTime)
+	impactAnchor.bars[bar] = true
+
+	local flags = nil
+	if db.monochrome and db.outline ~= "NONE" then
+		flags = "MONOCHROME," .. db.outline
+	elseif db.monochrome then
+		flags = "MONOCHROME"
+	elseif db.outline ~= "NONE" then
+		flags = db.outline
+	end
+	local f = media:Fetch("font", db.font)
+	bar.candyBarLabel:SetFont(f, db.fontSize, flags)
+	bar.candyBarDuration:SetFont(f, db.fontSize, flags)
+
+	bar:SetLabel(text)
+	bar:SetDuration(time)
+	bar:SetTimeVisibility(db.time)
+	bar:SetIcon(db.icon and icon or nil)
+	bar:SetScale(db.impactScale)
+	bar:SetFill(db.fill)
+	if db.interceptMouse and not db.onlyInterceptOnKeypress then
+		refixClickOnBar(true, bar)
+	end
+	currentBarStyler.ApplyStyle(bar)
+
+	bar:Start()
+
+	rearrangeBars(bar:Get("bigwigs:anchor"))
+
+	self:SendMessage("BigWigs_ImpactBarCreated", self, bar, module, key, text, time, icon, color)
 end
 
 --------------------------------------------------------------------------------

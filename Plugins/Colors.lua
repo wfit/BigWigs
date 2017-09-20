@@ -24,6 +24,7 @@ plugin.defaultDB = {
 	barTextShadow = { ["*"] = { ["*"] = { 0, 0, 0, 1 } } },
 	barColor = { ["*"] = { ["*"] = { 0.25, 0.33, 0.68, 1 } } },
 	barEmphasized = { ["*"] = { ["*"] = { 1, 0, 0, 1 } } },
+	barImpact = { ["*"] = { ["*"] = { 1, 0, 0, 1 } } },
 
 	flash = { ["*"] = { ["*"] = { 0, 0, 1 } } },
 }
@@ -142,6 +143,12 @@ local colorOptions = {
 					type = "color",
 					hasAlpha = true,
 					order = 2,
+				},
+				barImpact = {
+					name = "Impact",
+					type = "color",
+					hasAlpha = true,
+					order = 2.5,
 				},
 				barBackground = {
 					name = L.background,

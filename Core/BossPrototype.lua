@@ -1929,6 +1929,19 @@ do
 			self:SendMessage("BigWigs_StartEmphasize", self, key, msg, length)
 		end
 	end
+
+	function boss:ImpactBar(key, length, text, icon, color)
+		if type(length) ~= "number" then core:Print(format(msg, key)) return end
+		local textType = type(text)
+		local msg = textType == "string" and text or spells[text or key]
+		if checkFlag(self, key, C.IMPACT) then
+			local icon = icons[icon or textType == "number" and text or key]
+			self:SendMessage("BigWigs_StartImpactBar", self, key, msg, length, icon, color)
+		end
+		if checkFlag(self, key, C.IMPACT_COUNTDOWN) then
+			self:SendMessage("BigWigs_StartEmphasize", self, key, msg, length)
+		end
+	end
 end
 
 --- Stop a bar.
