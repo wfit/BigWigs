@@ -350,7 +350,6 @@ do
 	end
 
 	function mod:StarSignApplied(args)
-		self:AddPlate(args.spellId, args.destName, 10)
 		if self:Hud(205408) then
 			local me = self:Me(args.destGUID)
 			local sign = args.spellId
@@ -390,7 +389,6 @@ do
 	end
 
 	function mod:StarSignRemoved(args)
-		self:RemovePlate(args.spellId, args.destName)
 		Hud:RemoveObject(args.destKey)
 	end
 end
@@ -448,10 +446,6 @@ function mod:GravitationalPull(args)
 	if phase == 3 then
 		self:SetIcon(marks, args.destUnit, 8)
 	end
-
-	if self:GetOption("custom_on_gravitational_pull_nameplates") then
-		self:AddPlate(args.spellId, args.destName, remaining)
-	end
 end
 
 function mod:GravitationalPullRemoved(args)
@@ -462,7 +456,6 @@ function mod:GravitationalPullRemoved(args)
 			gravPullSayTimers[i] = nil
 		end
 	end
-	self:RemovePlate(args.spellId, args.destName)
 end
 
 function mod:IcyEjection(args)
@@ -492,10 +485,6 @@ do
 			self:ScheduleTimer("WarnIcyEjection", 8, args.spellName, args.spellId, 2)
 			self:ScheduleTimer("WarnIcyEjection", 9, args.spellName, args.spellId, 1)
 		end
-
-		if self:GetOption("custom_off_icy_ejection_nameplates") then
-			self:AddPlate(args.spellId, args.destName, 8)
-		end
 	end
 
 	function mod:WarnIcyEjection(spellName, spellId, count)
@@ -509,7 +498,6 @@ function mod:IcyEjectionRemoved(args)
 	if self:Me(args.destGUID) then
 		self:CloseProximity(args.spellId)
 	end
-	self:RemovePlate(args.spellId, args.destName)
 end
 
 function mod:FrigidNova(args)
@@ -566,14 +554,6 @@ do
 			self:TargetBar(args.spellId, 8, args.destName)
 			self:ScheduleTimer("Message", 8, args.spellId, "Positive", "Info", CL.removed:format(args.spellName))
 		end
-
-		if self:GetOption("custom_on_fel_ejection_nameplates") then
-			self:AddPlate(args.spellId, args.destName, 8)
-		end
-	end
-
-	function mod:FelEjectionRemoved(args)
-		self:RemovePlate(args.spellId, args.destName)
 	end
 end
 
