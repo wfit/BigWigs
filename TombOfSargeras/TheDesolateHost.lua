@@ -57,8 +57,6 @@ local L = mod:GetLocale()
 if L then
 	L.infobox_players = "Players"
 	L.armor_remaining = "%s Remaining (%d)" -- Bonecage Armor Remaining (#)
-	L.custom_on_mythic_armor = "Ignore Bonecage Armor on Reanimated Templars in Mythic Difficulty"
-	L.custom_on_mythic_armor_desc = "Leave this option enabled if you are offtanking Reanimated Templars to ignore warnings and counting the Bonecage Armor on the Ranimated Templars"
 	L.custom_on_armor_plates = "Bonecage Armor icon on Enemy Nameplate"
 	L.custom_on_armor_plates_desc = "Show an icon on the nameplate of Reanimated Templars who have Bonecage Armor.\nRequires the use of Enemy Nameplates. This feature is currently only supported by KuiNameplates."
 	L.custom_on_armor_plates_icon = 236513
@@ -84,7 +82,6 @@ function mod:GetOptions()
 		235927, -- Rupturing Slam
 		236513, -- Bonecage Armor
 		"custom_on_armor_plates",
-		"custom_on_mythic_armor",
 		236131, -- Wither
 		{236459, "ME_ONLY", "FLASH", "PULSE"}, -- Soulbind
 		soulBindMarker,
@@ -388,7 +385,6 @@ do
 	end
 
 	function mod:BonecageArmor(args)
-		if self:Mythic() and self:GetOption("custom_on_mythic_armor") and self:MobId(args.destGUID) == 118715 then return end -- Reanimated Templar
 		boneArmorCounter = boneArmorCounter + 1
 		self:SetInfo("infobox", 2, boneArmorCounter)
 		if self:GetOption("custom_on_armor_plates") then
@@ -400,7 +396,6 @@ do
 	end
 
 	function mod:BonecageArmorRemoved(args)
-		if self:Mythic() and self:GetOption("custom_on_mythic_armor") and self:MobId(args.destGUID) == 118715 then return end -- Reanimated Templar
 		boneArmorCounter = boneArmorCounter - 1
 		self:SetInfo("infobox", 2, boneArmorCounter)
 		if self:GetOption("custom_on_armor_plates") then
