@@ -88,6 +88,7 @@ function mod:GetOptions()
 		236072, -- Wailing Souls
 		{236515, "ME_ONLY", "HUD"}, -- Shattering Scream
 		236361, -- Spirit Chains
+		236241, -- Soul Rot
 		{236542, "IMPACT"}, -- Sundering Doom
 		{236544, "IMPACT"}, -- Doomed Sundering
 		236548, -- Torment
@@ -109,9 +110,9 @@ function mod:OnBossEnable()
 	self:Log("SPELL_AURA_APPLIED", "SpiritualBarrier", 235732)
 	self:Log("SPELL_AURA_REMOVED", "SpiritualBarrierRemoved", 235732)
 
-	self:Log("SPELL_AURA_APPLIED", "GroundEffectDamage", 236011, 238018, 235907) -- Tormented Cries (x2), Collapsing Fissure
-	self:Log("SPELL_PERIODIC_DAMAGE", "GroundEffectDamage", 236011, 238018, 235907) -- Tormented Cries (x2), Collapsing Fissure
-	self:Log("SPELL_PERIODIC_MISSED", "GroundEffectDamage", 236011, 238018, 235907) -- Tormented Cries (x2), Collapsing Fissure
+	self:Log("SPELL_AURA_APPLIED", "GroundEffectDamage", 236011, 238018, 235907, 236241) -- Tormented Cries (x2), Collapsing Fissure, Soul Rot
+	self:Log("SPELL_PERIODIC_DAMAGE", "GroundEffectDamage", 236011, 238018, 235907, 236241) -- Tormented Cries (x2), Collapsing Fissure, Soul Rot
+	self:Log("SPELL_PERIODIC_MISSED", "GroundEffectDamage", 236011, 238018, 235907, 236241) -- Tormented Cries (x2), Collapsing Fissure, Soul Rot
 
 
 	-- Corporeal Realm
@@ -432,9 +433,7 @@ do
 			if self:GetOption(soulBindMarker) then
 				SetRaidTarget(args.destName, 3)
 			end
-			if self:Me(args.destGUID) then
-				linkOnMe = true
-			end
+			linkOnMe = self:Me(args.destGUID)
 		elseif #soulList == 2 then -- Announce at 2
 			if self:GetOption(soulBindMarker) then
 				SetRaidTarget(args.destName, 4)
