@@ -21,6 +21,8 @@ mod.respawnTime = 30
 
 local Hud = WFI.Hud
 
+local previousDensity
+
 local stage = 1
 local inIntermission = nil
 local singularityCount = 1
@@ -157,6 +159,8 @@ end
 -- Initialization
 --
 
+local lower_particules = mod:AddCustomOption { "lower_particules", "Lower Particle Density", default = true,
+	icon = 64615, desc = "Lower the Particle Density setting while the Kil'jaeden module is loaded." }
 local meteors_impact = mod:AddCustomOption { "meteors_landing", "Armageddon Meteors Impact", default = true,
 	configurable = true, icon = 87701, desc = "Countdown until meteors impact during Armageddon" }
 local obelisks_explosion = mod:AddCustomOption { "obelisks_explosion", "Demonic Obelisks Explosion", default = true,
@@ -173,6 +177,7 @@ function mod:GetOptions()
 		{meteors_impact, "COUNTDOWN", "HUD"},
 		{236710, "SAY", "FLASH"}, -- Shadow Reflection: Erupting
 		eruptingMarker,
+		lower_particules,
 		{238430, "SAY", "FLASH", "SMARTCOLOR"}, -- Bursting Dreadflame
 		{238505, "SAY", "ICON", "FLASH", "PROXIMITY"}, -- Focused Dreadflame
 		{236378, "SAY", "FLASH"}, -- Shadow Reflection: Wailing
@@ -247,6 +252,11 @@ function mod:OnBossEnable()
 	-- Mythic
 	self:Log("SPELL_AURA_APPLIED", "ShadowReflectionHopeless", 237590) -- Shadow Reflection: Hopeless
 	self:Log("SPELL_AURA_REMOVED", "ShadowReflectionHopelessRemoved", 237590) -- Shadow Reflection: Hopeless
+
+	if self:GetOption(lower_particules) then
+		previousDensity = GetCVar("particleDensity")
+		SetCVar("particleDensity", "10.000000")
+	end
 end
 
 function mod:OnEngage()
@@ -286,6 +296,13 @@ end
 function mod:OnWipe()
 	if inIntermission and stage == 2 then
 		resetMinimap(self)
+	end
+end
+
+function mod:OnBossDisable()
+	if self:GetOption(lower_particules) and previousDensity then
+		SetCVar("particleDensity", previousDensity)
+		previousDensity = nil
 	end
 end
 
