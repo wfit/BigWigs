@@ -21,6 +21,14 @@ mod.respawnTime = 30
 
 local Hud = WFI.Hud
 
+local densitySettings = {
+	["graphicsParticleDensity"] = "1",
+	["particleDensity"] = "10.000000",
+	["particleMTDensity"] = "20.000000",
+	["raidGraphicsParticleDensity"] = "1",
+	["RAIDparticleDensity"] = "10.000000",
+	["RAIDparticleMTDensity"] = "20.000000",
+}
 local previousDensity
 
 local stage = 1
@@ -254,8 +262,11 @@ function mod:OnBossEnable()
 	self:Log("SPELL_AURA_REMOVED", "ShadowReflectionHopelessRemoved", 237590) -- Shadow Reflection: Hopeless
 
 	if self:GetOption(lower_particules) then
-		previousDensity = GetCVar("particleDensity")
-		SetCVar("particleDensity", "10.000000")
+		previousDensity = {}
+		for key, value in pairs(densitySettings) do
+			previousDensity[key] = GetCVar(key)
+			SetCVar(key, value)
+		end
 	end
 end
 
@@ -301,7 +312,9 @@ end
 
 function mod:OnBossDisable()
 	if self:GetOption(lower_particules) and previousDensity then
-		SetCVar("particleDensity", previousDensity)
+		for key, value in pairs(previousDensity) do
+			SetCVar(key, value)
+		end
 		previousDensity = nil
 	end
 end
