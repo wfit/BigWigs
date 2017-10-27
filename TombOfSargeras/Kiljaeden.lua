@@ -23,11 +23,7 @@ local Hud = WFI.Hud
 
 local densitySettings = {
 	["graphicsParticleDensity"] = "1",
-	["particleDensity"] = "10.000000",
-	["particleMTDensity"] = "20.000000",
 	["raidGraphicsParticleDensity"] = "1",
-	["RAIDparticleDensity"] = "10.000000",
-	["RAIDparticleMTDensity"] = "20.000000",
 }
 local previousDensity
 
@@ -168,7 +164,7 @@ end
 --
 
 local lower_particules = mod:AddCustomOption { "lower_particules", "Lower Particle Density", default = true,
-	icon = 64615, desc = "Lower the Particle Density setting while the Kil'jaeden module is loaded." }
+	icon = 64615, desc = "Lower the Particle Density setting during Lingering Eruption." }
 local meteors_impact = mod:AddCustomOption { "meteors_landing", "Armageddon Meteors Impact", default = true,
 	configurable = true, icon = 87701, desc = "Countdown until meteors impact during Armageddon" }
 local obelisks_explosion = mod:AddCustomOption { "obelisks_explosion", "Demonic Obelisks Explosion", default = true,
@@ -230,6 +226,7 @@ function mod:OnBossEnable()
 
 	self:Log("SPELL_AURA_APPLIED", "ShadowReflectionErupting", 236710) -- Shadow Reflection: Erupting
 	self:Log("SPELL_AURA_REMOVED", "ShadowReflectionEruptingRemoved", 236710) -- Shadow Reflection: Erupting
+	self:Log("SPELL_AURA_APPLIED", "LingeringEruption", 243536) -- Lingering Eruption, Mythic, Remove marks later than the normal debuff
 	self:Log("SPELL_AURA_REMOVED", "LingeringEruptionRemoved", 243536) -- Lingering Eruption, Mythic, Remove marks later than the normal debuff
 
 	-- Intermission: Eternal Flame
@@ -260,14 +257,6 @@ function mod:OnBossEnable()
 	-- Mythic
 	self:Log("SPELL_AURA_APPLIED", "ShadowReflectionHopeless", 237590) -- Shadow Reflection: Hopeless
 	self:Log("SPELL_AURA_REMOVED", "ShadowReflectionHopelessRemoved", 237590) -- Shadow Reflection: Hopeless
-
-	if self:GetOption(lower_particules) then
-		previousDensity = {}
-		for key, value in pairs(densitySettings) do
-			previousDensity[key] = GetCVar(key)
-			SetCVar(key, value)
-		end
-	end
 end
 
 function mod:OnEngage()
@@ -308,9 +297,20 @@ function mod:OnWipe()
 	if inIntermission and stage == 2 then
 		resetMinimap(self)
 	end
+	self:RestoreParticles()
 end
 
-function mod:OnBossDisable()
+function mod:LowerParticles()
+	if self:GetOption(lower_particules) and not previousDensity then
+		previousDensity = {}
+		for key, value in pairs(densitySettings) do
+			previousDensity[key] = GetCVar(key)
+			SetCVar(key, value)
+		end
+	end
+end
+
+function mod:RestoreParticles()
 	if self:GetOption(lower_particules) and previousDensity then
 		for key, value in pairs(previousDensity) do
 			SetCVar(key, value)
@@ -446,6 +446,8 @@ end
 
 do
 	local playerList = mod:NewTargetList()
+	local activeEruptions = 0
+
 	function mod:ShadowReflectionErupting(args)
 		playerList[#playerList+1] = args.destName
 		if self:Me(args.destGUID) then
@@ -454,6 +456,7 @@ do
 			self:SayCountdown(args.spellId, 8)
 		end
 		if #playerList == 1 then
+			activeEruptions = 0
 			self:Bar(args.spellId, 8, INLINE_DAMAGER_ICON.." "..CL.adds)
 			if stage == 2 and not self:Mythic() then
 				self:Bar(args.spellId, self:LFR() and 124.4 or 112, INLINE_DAMAGER_ICON.." "..L.reflectionErupting)
@@ -477,7 +480,18 @@ do
 		end
 	end
 
+	function mod:LingeringEruption(args)
+		activeEruptions = activeEruptions + 1
+		if activeEruptions == 1 then
+			self:LowerParticles()
+		end
+	end
+
 	function mod:LingeringEruptionRemoved(args) -- Mythic only, Remove icons after this debuff instead
+		activeEruptions = activeEruptions - 1
+		if activeEruptions == 0 then
+			self:RestoreParticles()
+		end
 		if self:GetOption(eruptingMarker) then
 			SetRaidTarget(args.destName, 0)
 		end
