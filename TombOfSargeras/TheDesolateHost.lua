@@ -83,7 +83,7 @@ function mod:GetOptions()
 		236513, -- Bonecage Armor
 		"custom_on_armor_plates",
 		236131, -- Wither
-		{236459, "ME_ONLY", "FLASH", "PULSE", "AURA"}, -- Soulbind
+		{236459, "ME_ONLY", "FLASH", "AURA"}, -- Soulbind
 		soulBindMarker,
 		236072, -- Wailing Souls
 		{236515, "ME_ONLY", "HUD"}, -- Shattering Scream

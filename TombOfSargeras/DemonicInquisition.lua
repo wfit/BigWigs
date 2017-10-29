@@ -277,7 +277,7 @@ do
 		if self:Me(guid) then
 			self:Say(233431, nil, nil, "YELL")
 			self:Flash(233431)
-			self:ShowAura(233431, 5, true)
+			self:ShowAura(233431, 5, "Move out", true)
 		end
 	end
 	function mod:CalcifiedQuills(args)
