@@ -134,12 +134,7 @@ function mod:ShatteringStarDebuff(args)
 	if self:Me(args.destGUID) then
 		self:Say(233279)
 		self:Flash(233279)
-		self:ShowAura(args.spellId, {
-			icon = args.spellIcon,
-			duration = 6,
-			text = "Hide",
-			autoremove = true
-		})
+		self:ShowAura(args.spellId, 6, "Hide", true)
 	end
 end
 
@@ -167,11 +162,7 @@ do
 			self:Say(args.spellId)
 			self:Flash(args.spellId)
 			self:SayCountdown(args.spellId, 5)
-			self:ShowAura(args.spellId, {
-				icon = args.spellIcon,
-				duration = 5,
-				text = "Move out"
-			})
+			self:ShowAura(args.spellId, 5, "Move out")
 		end
 	end
 end

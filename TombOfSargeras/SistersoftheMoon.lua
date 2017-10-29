@@ -195,9 +195,7 @@ function mod:AstralVulnerabilityApplied(args)
 	if self:Me(args.destGUID) then
 		local amount = args.amount or 1
 		vulnerabilitiesCount = amount
-		self:ShowAura(args.spellId, {
-			icon = args.spellIcon,
-			duration = args.debuffDuration,
+		self:ShowAura(args.spellId, args.debuffDuration, {
 			countdown = false,
 			stacks = amount,
 			pulse = amount > 4,
@@ -280,11 +278,7 @@ do
 		self:TargetMessage(236442, name, "Attention", "Alert", nil, nil, true)
 		if self:Me(guid) then
 			self:Say(236442)
-			self:ShowAura(236442, {
-				icon = self:SpellIcon(236442),
-				duration = 3,
-				text = "Move out"
-			})
+			self:ShowAura(236442, 3, "Move out")
 		end
 	end
 	function mod:TwilightVolley(args)
@@ -407,10 +401,7 @@ do
 		end
 		if self:Me(args.destGUID) then
 			self:Flash(args.spellId)
-			self:ShowAura(args.spellId, {
-				icon = args.spellIcon,
-				text = "Moon Burn"
-			})
+			self:ShowAura(args.spellId, "Moon Burn")
 		end
 	end
 
@@ -442,11 +433,7 @@ do
 		end
 		if self:Me(args.destGUID) then
 			self:SayCountdown(args.spellId, 6)
-			self:ShowAura(args.spellId, {
-				icon = args.spellIcon,
-				duration = args.debuffDuration,
-				text = "Move out"
-			})
+			self:ShowAura(args.spellId, args.debuffDuration, "Move out")
 		end
 	end
 

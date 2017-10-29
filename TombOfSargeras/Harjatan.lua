@@ -201,11 +201,7 @@ do
 		if self:Me(args.destGUID) then
 			self:Flash(args.spellId)
 			self:Say(args.spellId)
-			self:ShowAura(args.spellId, {
-				icon = args.spellIcon,
-				duration = args.debuffDuration,
-				text = "Move out"
-			})
+			self:ShowAura(args.spellId, args.debuffDuration, "Move out")
 		end
 
 		playerList[#playerList+1] = args.destName

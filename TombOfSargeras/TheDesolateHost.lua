@@ -420,10 +420,7 @@ do
 		soulList[#soulList+1] = args.destName
 		if self:Me(args.destGUID) then
 			self:Flash(236459)
-			self:ShowAura(236459, {
-				icon = args:SpellIcon(236459),
-				text = "Spirit Chain"
-			})
+			self:ShowAura(236459, "Spirit Chain")
 		end
 		if #soulList == 1 then
 			local t = stage == 2 and 19.4 or 24.3

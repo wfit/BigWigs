@@ -277,11 +277,7 @@ do
 		if self:Me(guid) then
 			self:Say(233431, nil, nil, "YELL")
 			self:Flash(233431)
-			self:ShowAura(233431, {
-				icon = self:SpellIcon(233431),
-				duration = 5,
-				autoremove = true
-			})
+			self:ShowAura(233431, 5, true)
 		end
 	end
 	function mod:CalcifiedQuills(args)
@@ -322,10 +318,7 @@ do
 		if self:Me(args.destGUID) then
 			self:Flash(args.spellId)
 			self:Say(args.spellId)
-			self:ShowAura(args.spellId, {
-				icon = args.spellIcon,
-				text = "Move out"
-			})
+			self:ShowAura(args.spellId, "Move out")
 
 			-- Check dispell staus
 			rangeCheck = self:ScheduleRepeatingTimer("CheckAnguishRange", 0.2, args.spellId)

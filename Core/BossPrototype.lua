@@ -2238,8 +2238,39 @@ end
 -- @section aura_tracker
 --
 
-function boss:ShowAura(key, options)
+local function pickArgument(t, ...)
+	for i = 1, select("#", ...) do
+		local arg = select(i, ...)
+		if type(arg) == t then
+			return arg
+		end
+	end
+end
+
+function boss:ShowAura(key, ...)
 	if not checkFlag(self, key, C.AURA) then return end
+	local options = {}
+
+	for i = 1, select("#", ...) do
+		local arg = select(i, ...)
+		local tpe = type(arg)
+		if tpe == "table" then
+			for key, value in pairs(arg) do
+				options[key] = value
+			end
+		elseif tpe == "string" then
+			options.text = arg
+		elseif tpe == "number" then
+			options.duration = arg
+		elseif arg == true then
+			options.autoremove = true
+		end
+	end
+
+	if options.icon == nil and type(key) == "number" then
+		options.icon = icons[key]
+	end
+
 	if checkFlag(self, key, C.PULSE) then options.pulse = true end
 	self:SendMessage("BigWigs_ShowAura", self, key, options)
 end
