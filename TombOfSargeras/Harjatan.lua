@@ -42,7 +42,7 @@ function mod:GetOptions()
 		232061, -- Draw In
 		233429, -- Frigid Blows
 		232174, -- Frosty Discharge
-		{231729, "SAY", "FLASH"}, -- Aqueous Burst
+		{231729, "SAY", "FLASH", "AURA"}, -- Aqueous Burst
 		231768, -- Drenching Waters
 		{234128, "SAY", "FLASH"}, -- Driven Assault
 		"custom_on_fixate_plates",
@@ -73,7 +73,6 @@ function mod:OnBossEnable()
 	self:Log("SPELL_AURA_APPLIED", "DrawIn", 232061)
 	self:Log("SPELL_AURA_REMOVED_DOSE", "FrigidBlows", 233429)
 	self:Log("SPELL_CAST_START", "FrostyDischarge", 232174)
-
 	-- Adds
 	self:Log("SPELL_AURA_APPLIED", "AqueousBurst", 231729)
 	self:Log("SPELL_AURA_REMOVED", "AqueousBurstRemoved", 231729)
