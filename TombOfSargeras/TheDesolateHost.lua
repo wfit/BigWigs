@@ -83,11 +83,11 @@ function mod:GetOptions()
 		236513, -- Bonecage Armor
 		"custom_on_armor_plates",
 		236131, -- Wither
-		{236459, "ME_ONLY", "FLASH", "PULSE"}, -- Soulbind
+		{236459, "ME_ONLY", "FLASH", "PULSE", "AURA"}, -- Soulbind
 		soulBindMarker,
 		236072, -- Wailing Souls
 		{236515, "ME_ONLY", "HUD"}, -- Shattering Scream
-		{236361, "AURA"}, -- Spirit Chains
+		{236361}, -- Spirit Chains
 		236241, -- Soul Rot
 		{236542, "IMPACT"}, -- Sundering Doom
 		{236544, "IMPACT"}, -- Doomed Sundering
@@ -135,7 +135,6 @@ function mod:OnBossEnable()
 	self:Log("SPELL_AURA_APPLIED", "ShatteringScream", 236515)
 	self:Log("SPELL_AURA_REMOVED", "ShatteringScreamRemoved", 236515)
 	self:Log("SPELL_AURA_APPLIED", "SpiritChains", 236361)
-	self:Log("SPELL_AURA_REMOVED", "SpiritChainsRemoved", 236361)
 
 	-- Tormented Souls
 	self:Log("SPELL_CAST_START", "SunderingDoom", 236542)
@@ -421,6 +420,10 @@ do
 		soulList[#soulList+1] = args.destName
 		if self:Me(args.destGUID) then
 			self:Flash(236459)
+			self:ShowAura(236459, {
+				icon = args:SpellIcon(236459),
+				text = "Spirit Chain"
+			})
 		end
 		if #soulList == 1 then
 			local t = stage == 2 and 19.4 or 24.3
@@ -454,6 +457,7 @@ end
 function mod:SoulbindRemoved(args)
 	if self:Me(args.destGUID) then
 		self:Message(args.spellId, "Personal", "Long", CL.link_removed)
+		self:HideAura(args.spellId)
 	end
 	if self:GetOption(soulBindMarker) then
 		SetRaidTarget(args.destName, 0)
@@ -496,16 +500,6 @@ end
 function mod:SpiritChains(args)
 	if self:Me(args.destGUID) then
 		self:TargetMessage(args.spellId, args.destName, "Personal", "Alert")
-		self:ShowAura(args.spellId, {
-			icon = args.spellIcon,
-			text = "Spirit Chain"
-		})
-	end
-end
-
-function mod:SpiritChainsRemoved(args)
-	if self:Me(args.destGUID) then
-		self:HideAura(args.spellId)
 	end
 end
 
