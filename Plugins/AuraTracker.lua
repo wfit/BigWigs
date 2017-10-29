@@ -37,7 +37,7 @@ do
 	plugin.defaultDB = {
 		size = defaultSize,
 		font = font,
-		grow = "UP"
+		grow = "RIGHT"
 	}
 end
 
