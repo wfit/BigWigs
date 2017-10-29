@@ -87,7 +87,7 @@ function mod:GetOptions()
 		soulBindMarker,
 		236072, -- Wailing Souls
 		{236515, "ME_ONLY", "HUD"}, -- Shattering Scream
-		236361, -- Spirit Chains
+		{236361, "AURA"}, -- Spirit Chains
 		236241, -- Soul Rot
 		{236542, "IMPACT"}, -- Sundering Doom
 		{236544, "IMPACT"}, -- Doomed Sundering
@@ -135,6 +135,7 @@ function mod:OnBossEnable()
 	self:Log("SPELL_AURA_APPLIED", "ShatteringScream", 236515)
 	self:Log("SPELL_AURA_REMOVED", "ShatteringScreamRemoved", 236515)
 	self:Log("SPELL_AURA_APPLIED", "SpiritChains", 236361)
+	self:Log("SPELL_AURA_REMOVED", "SpiritChainsRemoved", 236361)
 
 	-- Tormented Souls
 	self:Log("SPELL_CAST_START", "SunderingDoom", 236542)
@@ -495,6 +496,16 @@ end
 function mod:SpiritChains(args)
 	if self:Me(args.destGUID) then
 		self:TargetMessage(args.spellId, args.destName, "Personal", "Alert")
+		self:ShowAura(args.spellId, {
+			icon = args.spellIcon,
+			text = "Spirit Chain"
+		})
+	end
+end
+
+function mod:SpiritChainsRemoved(args)
+	if self:Me(args.destGUID) then
+		self:HideAura(args.spellId)
 	end
 end
 
