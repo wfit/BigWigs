@@ -2,6 +2,7 @@
 ..\FrameXML\UI.xsd">
 
 <Script file="AltPower.lua"/>
+<Script file="AuraTracker.lua"/>
 <Script file="Colors.lua"/>
 <Script file="Sound.lua"/>
 <Script file="Messages.lua"/>

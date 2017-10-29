@@ -1198,9 +1198,11 @@ function plugin:BigWigs_SetConfigureTarget(event, module)
 	if module == self then
 		normalAnchor.background:SetColorTexture(0.2, 1, 0.2, 0.3)
 		emphasizeAnchor.background:SetColorTexture(0.2, 1, 0.2, 0.3)
+		impactAnchor.background:SetColorTexture(0.2, 1, 0.2, 0.3)
 	else
 		normalAnchor.background:SetColorTexture(0, 0, 0, 0.3)
 		emphasizeAnchor.background:SetColorTexture(0, 0, 0, 0.3)
+		impactAnchor.background:SetColorTexture(0, 0, 0, 0.3)
 	end
 end
 
