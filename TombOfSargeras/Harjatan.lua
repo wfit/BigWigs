@@ -202,6 +202,11 @@ do
 		if self:Me(args.destGUID) then
 			self:Flash(args.spellId)
 			self:Say(args.spellId)
+			self:ShowAura(args.spellId, {
+				icon = args.spellIcon,
+				duration = args.debuffDuration,
+				text = "Move out"
+			})
 		end
 
 		playerList[#playerList+1] = args.destName
@@ -212,8 +217,11 @@ do
 	end
 end
 
-function mod:AqueousBurstRemoved()
+function mod:AqueousBurstRemoved(args)
 	skipDrawIn = false -- Drenching Waters confirmed, no more skipping
+	if self:Me(args.destGUID) then
+		self:HideAura(args.spellId)
+	end
 end
 
 function mod:DrivenAssault(args)
