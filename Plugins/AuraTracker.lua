@@ -11,6 +11,7 @@ if not plugin then return end
 
 local tinsert, tremove, tsort = tinsert, tremove, table.sort
 local pairs, ipairs = pairs, ipairs
+local wipe = wipe
 local tostring = tostring
 local GetTime = GetTime
 
@@ -512,15 +513,18 @@ function plugin:BigWigs_HideAura(_, module, key)
 	end
 end
 
-function plugin:BigWigs_OnBossDisable(_, module)
+do
 	local collectable = {}
-	for key, entry in pairs(auras) do
-		if entry.modules == module then
-			tinsert(collectable, entry)
+	function plugin:BigWigs_OnBossDisable(_, module)
+		wipe(collectable)
+		for _, entry in ipairs(rack) do
+			if entry.module == module then
+				tinsert(collectable, entry)
+			end
 		end
-	end
-	for _, entry in ipairs(auras) do
-		freeAura(entry)
+		for _, entry in ipairs(auras) do
+			freeAura(entry)
+		end
 	end
 end
 
