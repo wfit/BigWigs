@@ -10,7 +10,7 @@ if not plugin then return end
 --
 
 local tinsert, tremove, tsort = tinsert, tremove, table.sort
-local ipairs = ipairs
+local pairs, ipairs = pairs, ipairs
 local tostring = tostring
 local GetTime = GetTime
 
@@ -114,7 +114,7 @@ function plugin:OnPluginEnable()
 end
 
 function plugin:OnPluginDisable()
-	self:Close()
+	--self:Close()
 end
 
 -------------------------------------------------------------------------------
@@ -273,10 +273,9 @@ local function alloc()
 		cd:SetHideCountdownNumbers(false)
 		cd:SetReverse(true)
 		cd:SetDrawBling(false)
+		cd.noCooldownCount = true
 		icon.cd = cd
-
-		local cdText = cd:GetRegions()
-		cdText:SetFont(cdText:GetFont(), 42, "OUTLINE")
+		icon.cdText = cd:GetRegions()
 
 		local overlay = CreateFrame("Frame", nil, widgets)
 		overlay:SetAllPoints(icon)
@@ -289,7 +288,7 @@ local function alloc()
 		icon.text = text
 
 		local stacks = overlay:CreateFontString(nil, "OVERLAY", "GameFontHighlightLarge")
-		stacks:SetPoint("BOTTOMRIGHT", -8, 5)
+		stacks:SetPoint("BOTTOMRIGHT", -13, 8)
 		icon.stacks = stacks
 	end
 
@@ -297,7 +296,8 @@ local function alloc()
 
 	icon:SetSize(db.size, db.size)
 	icon.text:SetFont(font, 18, "OUTLINE")
-	icon.stacks:SetFont(font, 36, "OUTLINE")
+	icon.stacks:SetFont(font, 42, "OUTLINE")
+	icon.cdText:SetFont(font, 42, "OUTLINE")
 	icon.text:SetText("")
 	icon.stacks:SetText("")
 
@@ -416,7 +416,12 @@ local function newAura(module, key)
 	}
 end
 
+local function auraId(module, key)
+	return (tostring(module) or "<nil>") .. "::" .. (tostring(key) or "<nil>")
+end
+
 local function freeAura(entry)
+	auras[auraId(entry.module, entry.key)] = nil
 	for key, rackEntry in ipairs(rack) do
 		if rackEntry == entry then
 			tremove(rack, key)
@@ -425,10 +430,6 @@ local function freeAura(entry)
 		end
 	end
 	free(entry.icon)
-end
-
-local function auraId(module, key)
-	return (tostring(module) or "<nil>") .. "::" .. (tostring(key) or "<nil>")
 end
 
 function plugin:BigWigs_ShowAura(_, module, key, options)
@@ -496,7 +497,6 @@ function plugin:BigWigs_HideAura(_, module, key)
 	local id = auraId(module, key)
 	local entry = auras[id]
 	if entry then
-		auras[id] = nil
 		freeAura(entry)
 	end
 end
@@ -530,6 +530,15 @@ function TEST()
 end
 
 function plugin:BigWigs_OnBossDisable(_, module)
+	local collectable = {}
+	for key, entry in pairs(auras) do
+		if entry.modules == module then
+			tinsert(collectable, entry)
+		end
+	end
+	for _, entry in ipairs(auras) do
+		freeAura(entry)
+	end
 end
 
 function plugin:BigWigs_SetConfigureTarget(_, module)

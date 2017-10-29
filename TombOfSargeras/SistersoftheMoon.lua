@@ -35,7 +35,7 @@ local print_purges = mod:AddCustomOption { "print_purges", "Print Astral Purge i
 function mod:GetOptions()
 	return {
 		"stages",
-		{236330}, -- Astral Vulnerability
+		{236330, "AURA"}, -- Astral Vulnerability
 		print_purges,
 		{236541, "SAY", "ICON"}, -- Twilight Glaive
 		{236547, "TANK"}, -- Moon Glaive

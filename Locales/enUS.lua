@@ -119,9 +119,11 @@ L.COUNTDOWN_desc = "If enabled, a vocal and visual countdown will be added for t
 L.INFOBOX = L.infobox
 L.INFOBOX_desc = L.infobox_desc
 L.HUD = "HUD"
-L.HUD_desc = "Display HUD indicators bound to unit nameplates"
+L.HUD_desc = "Display HUD indicators bound to unit nameplates."
 L.SMARTCOLOR = "SmartColor™"
-L.SMARTCOLOR_desc = "Enable SmartColor™ for this ability"
+L.SMARTCOLOR_desc = "Enable SmartColor™ for this ability."
+L.AURA = "Aura Tracker"
+L.AURA_desc = "Display this ability on the aura tracker."
 
 L.advanced = "Advanced options"
 L.back = "<< Back"
