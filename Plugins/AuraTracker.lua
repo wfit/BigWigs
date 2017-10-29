@@ -11,9 +11,8 @@ if not plugin then return end
 
 local tinsert, tremove, tsort = tinsert, tremove, table.sort
 local pairs, ipairs = pairs, ipairs
-local wipe = wipe
-local tostring = tostring
-local GetTime = GetTime
+local wipe, type, tostring = wipe, type, tostring
+local GetTime, C_Timer = GetTime, C_Timer
 
 local L = BigWigsAPI:GetLocale("BigWigs: Plugins")
 local media = LibStub("LibSharedMedia-3.0")
@@ -501,7 +500,8 @@ function plugin:BigWigs_ShowAura(_, module, key, options)
 	entry.fresh = false
 
 	if not key or options.autoremove then
-		C_Timer.After(options.duration, function() freeAura(entry) end)
+		local delay = type(options.autoremove) == "number" and options.autoremove or options.duration
+		C_Timer.After(delay, function() freeAura(entry) end)
 	end
 end
 
