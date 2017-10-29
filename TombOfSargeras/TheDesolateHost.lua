@@ -77,7 +77,7 @@ function mod:GetOptions()
 		236678, -- Quietus
 		{235924, "SAY"}, -- Spear of Anguish
 		235907, -- Collapsing Fissure
-		{238570, "SAY", "ICON"}, -- Tormented Cries
+		{238570, "SAY", "ICON", "AURA"}, -- Tormented Cries
 		"adds",
 		235927, -- Rupturing Slam
 		236513, -- Bonecage Armor
@@ -353,6 +353,7 @@ function mod:TormentedCriesApplied(args)
 	if self:Me(args.destGUID) then
 		self:Say(238570, L.tormentingCriesSay)
 		self:SayCountdown(238570, 4)
+		self:ShowAura(238570, 4, "Behind Boss")
 	end
 	self:PrimaryIcon(238570, args.destName)
 end
@@ -361,6 +362,7 @@ function mod:TormentedCriesRemoved(args)
 	self:PrimaryIcon(238570)
 	if self:Me(args.destGUID) then
 		self:CancelSayCountdown(238570)
+		self:HideAura(238570)
 	end
 end
 
@@ -419,8 +421,8 @@ do
 	function mod:Soulbind(args)
 		soulList[#soulList+1] = args.destName
 		if self:Me(args.destGUID) then
-			self:Flash(236459)
-			self:ShowAura(236459, "Spirit Chain")
+			self:Flash(args.spellId)
+			self:ShowAura(args.spellId, "Spirit Chain")
 		end
 		if #soulList == 1 then
 			local t = stage == 2 and 19.4 or 24.3
