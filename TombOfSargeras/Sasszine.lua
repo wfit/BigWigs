@@ -50,7 +50,7 @@ function mod:GetOptions()
 		230959, -- Concealing Murk
 		232722, -- Slicing Tornado
 		230358, -- Thundering Shock
-		{230384, "ME_ONLY", "FLASH"}, -- Consuming Hunger
+		{230384, "ME_ONLY", "FLASH", "AURA"}, -- Consuming Hunger
 		{234621, "INFOBOX"}, -- Devouring Maw
 		232913, -- Befouling Ink
 		232827, -- Crashing Wave
@@ -80,6 +80,7 @@ function mod:OnBossEnable()
 	self:Log("SPELL_CAST_START", "SlicingTornado", 232722)
 	self:Log("SPELL_CAST_START", "ThunderingShock", 230358)
 	self:Log("SPELL_AURA_APPLIED", "ConsumingHungerApplied", 230384, 234661) -- Stage 1, Stage 3
+	self:Log("SPELL_AURA_REMOVED", "ConsumingHungerRemoved", 230384, 234661)
 
 	-- Stage Two: Terrors of the Deep
 	self:Log("SPELL_CAST_SUCCESS", "BeckonSarukel", 232746) -- Devouring Maw
@@ -152,6 +153,8 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(_, _, _, _, spellId)
 		self:StopBar(CL.count:format(self:SpellName(230139), hydraShotCounter)) -- Hydra Shot
 		self:StopBar(CL.count:format(self:SpellName(230201), burdenCounter)) -- Burden of Pain
 		self:StopBar(CL.count:format(self:SpellName(230227), burdenCounter)) -- From the Abyss
+
+		self:HideAura(230384) -- Consuming Hunger
 
 		slicingTornadoCounter = 1
 		waveCounter = 1
@@ -282,8 +285,15 @@ do
 		if #list == 1 then
 			self:ScheduleTimer("TargetMessage", 0.3, 230384, list, "Attention", "Alert", nil, nil, true)
 		end
-		if stage == 1 and self:Me(args.destGUID) then
+		if self:Me(args.destGUID) and (stage == 1 or select(2, UnitClass("player")) == "PALADIN") then
 			self:Flash(230384)
+			self:ShowAura(230384, stage == 1 and "Take stun" or "Use Divine Steed")
+		end
+	end
+
+	function mod:ConsumingHungerRemoved(args)
+		if self:Me(args.destGUID) then
+			self:HideAura(230384)
 		end
 	end
 end
