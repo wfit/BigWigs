@@ -101,6 +101,9 @@ local function updateProfile()
 end
 
 function plugin:OnPluginEnable()
+	self:RegisterMessage("BigWigs_ShowAura")
+	self:RegisterMessage("BigWigs_HideAura")
+
 	self:RegisterMessage("BigWigs_OnBossDisable")
 	self:RegisterMessage("BigWigs_OnBossReboot", "BigWigs_OnBossDisable")
 
@@ -410,7 +413,7 @@ local function newAura(module, key)
 		icon = setLevels(alloc(), auraId),
 		module = module,
 		key = key,
-		first = true,
+		fresh = true,
 		offset = -1,
 		idx = -1
 	}
@@ -437,7 +440,15 @@ function plugin:BigWigs_ShowAura(_, module, key, options)
 	if key then
 		local id = auraId(module, key)
 		entry = auras[id] or newAura(module, key)
-		auras[id] = entry
+		if entry.fresh then
+			auras[id] = entry
+		else
+			for idx, rackEntry in ipairs(rack) do
+				if rackEntry == entry then
+					tremove(rack, idx)
+				end
+			end
+		end
 	elseif not options.duration then
 		error("Cannot show a nil-keyed aura with no duration.")
 		return
@@ -468,14 +479,14 @@ function plugin:BigWigs_ShowAura(_, module, key, options)
 		icon.stacks:SetText("")
 	end
 
-	if options.start and options.duration then
-		icon.cd:SetCooldown(options.start, options.duration)
+	if options.duration then
+		icon.cd:SetCooldown(options.start or GetTime(), options.duration)
 		icon.cd:SetHideCountdownNumbers(options.countdown == false)
 	elseif options.duration == false then
 		icon.cd:SetCooldown(0, 0)
 	end
 
-	if (options.pulse == nil and entry.first) or options.pulse then
+	if (options.pulse == nil and entry.fresh) or options.pulse then
 		icon.fadeIn:Play()
 		icon.pulseIn:Play()
 	end
@@ -486,7 +497,7 @@ function plugin:BigWigs_ShowAura(_, module, key, options)
 	updateRack()
 
 	icon:Show()
-	entry.first = false
+	entry.fresh = false
 
 	if not key then
 		C_Timer.After(options.duration, function() freeAura(entry) end)
@@ -499,34 +510,6 @@ function plugin:BigWigs_HideAura(_, module, key)
 	if entry then
 		freeAura(entry)
 	end
-end
-
-function TEST()
-	local cases = {
-		{
-			icon = GetSpellTexture(236604),
-			start = GetTime(),
-			duration = 5,
-			text = "Blade"
-		},
-		{
-			icon = GetSpellTexture(236330),
-			start = GetTime(),
-			duration = 7,
-			stacks = 4,
-			countdown = false,
-			pulse = false,
-			pin = -1
-		},
-		{
-			icon = GetSpellTexture(216331),
-			start = GetTime(),
-			duration = 3,
-			pin = 1
-		}
-	}
-	local i = math.floor(math.random() * #cases) + 1
-	plugin:BigWigs_ShowAura(nil, nil, nil, cases[i])
 end
 
 function plugin:BigWigs_OnBossDisable(_, module)
