@@ -134,7 +134,7 @@ function mod:ShatteringStarDebuff(args)
 	if self:Me(args.destGUID) then
 		self:Say(233279)
 		self:Flash(233279)
-		self:ShowAura(args.spellId, 6, "Hide", true)
+		self:ShowAura(233279, 6, "Hide", true)
 	end
 end
 
