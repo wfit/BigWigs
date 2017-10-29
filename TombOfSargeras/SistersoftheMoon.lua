@@ -42,13 +42,13 @@ function mod:GetOptions()
 		{236550, "TANK"}, -- Discorporate
 		236480,	-- Glaive Storm
 		{236305, "SAY", "ICON", "FLASH"}, -- Incorporeal Shot
-		{236442, "SAY"}, -- Twilight Volley
+		{236442, "SAY", "AURA"}, -- Twilight Volley
 		236694, -- Call Moontalon
 		236697, -- Deadly Screech
 		{236603, "SMARTCOLOR"}, -- Rapid Shot
 		{233263, "PROXIMITY", "SMARTCOLOR"}, -- Embrace of the Eclipse
-		{236519, "FLASH"}, -- Moon Burn
-		{236712, "SAY", "FLASH"}, -- Lunar Beacon
+		{236519, "FLASH", "AURA"}, -- Moon Burn
+		{236712, "SAY", "FLASH", "AURA"}, -- Lunar Beacon
 		237351, -- Lunar Barrage
 		{239264, "TANK"}, -- Lunar Fire
 	},{
@@ -98,6 +98,7 @@ function mod:OnBossEnable()
 	self:Log("SPELL_AURA_REMOVED", "EmbraceoftheEclipseRemoved", 233263) -- Embrace of the Eclipse
 	self:Log("SPELL_CAST_SUCCESS", "MoonBurn", 236518) -- Moon Burn
 	self:Log("SPELL_AURA_APPLIED", "MoonBurnApplied", 236519) -- Moon Burn
+	self:Log("SPELL_AURA_REMOVED", "MoonBurnRemoved", 236519) -- Moon Burn
 	-- Stage Three: Wrath of Elune
 	self:Log("SPELL_AURA_APPLIED", "LunarBeaconApplied", 236712) -- Lunar Beacon (Debuff)
 	self:Log("SPELL_AURA_REMOVED", "LunarBeaconRemoved", 236712) -- Lunar Beacon (Debuff)
@@ -194,6 +195,14 @@ function mod:AstralVulnerabilityApplied(args)
 	if self:Me(args.destGUID) then
 		local amount = args.amount or 1
 		vulnerabilitiesCount = amount
+		self:ShowAura(args.spellId, {
+			icon = args.spellIcon,
+			duration = args.debuffDuration,
+			countdown = false,
+			stacks = amount,
+			pulse = amount > 4,
+			pin = -1
+		})
 		if amount > 4 then
 			self:StackMessage(args.spellId, args.destName, amount, "Urgent" or "Personal", "Warning")
 		end
@@ -202,6 +211,7 @@ end
 
 function mod:AstralVulnerabilityRemoved(args)
 	if self:Me(args.destGUID) then
+		self:HideAura(args.spellId)
 		vulnerabilitiesCount = 0
 	end
 end
@@ -270,6 +280,11 @@ do
 		self:TargetMessage(236442, name, "Attention", "Alert", nil, nil, true)
 		if self:Me(guid) then
 			self:Say(236442)
+			self:ShowAura(236442, {
+				icon = self:SpellIcon(236442),
+				duration = 3,
+				text = "Move out"
+			})
 		end
 	end
 	function mod:TwilightVolley(args)
@@ -289,6 +304,7 @@ function mod:TwilightVolleySuccess(args)
 		timer = timer + 7
 	end
 	self:CDBar(args.spellId, timer)
+	self:HideAura(236442)
 end
 
 do
@@ -391,6 +407,16 @@ do
 		end
 		if self:Me(args.destGUID) then
 			self:Flash(args.spellId)
+			self:ShowAura(args.spellId, {
+				icon = args.spellIcon,
+				text = "Moon Burn"
+			})
+		end
+	end
+
+	function mod:MoonBurnRemoved(args)
+		if self:Me(args.destGUID) then
+			self:HideAura(args.spellId)
 		end
 	end
 end
@@ -416,12 +442,18 @@ do
 		end
 		if self:Me(args.destGUID) then
 			self:SayCountdown(args.spellId, 6)
+			self:ShowAura(args.spellId, {
+				icon = args.spellIcon,
+				duration = args.debuffDuration,
+				text = "Move out"
+			})
 		end
 	end
 
 	function mod:LunarBeaconRemoved(args)
 		if self:Me(args.destGUID) then
 			self:CancelSayCountdown(args.spellId)
+			self:HideAura(args.spellId)
 		end
 	end
 

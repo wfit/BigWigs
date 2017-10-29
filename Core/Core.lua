@@ -365,7 +365,7 @@ do
 		addon:SendMessage("BigWigs_StartImpactBar", addon, spell, spell, time, icon)
 
 		-- Aura Tracker
-		addon:SendMessage("BigWigs_ShowAura", addon, spell, {
+		addon:SendMessage("BigWigs_ShowAura", addon, nil, {
 			icon = icon,
 			duration = time / 2,
 			text = spell,

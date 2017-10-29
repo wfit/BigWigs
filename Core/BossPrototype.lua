@@ -2052,7 +2052,7 @@ function boss:Flash(key, icon)
 end
 
 function boss:Pulse(key, icon)
-	if checkFlag(self, key, C.PULSE) then
+	if checkFlag(self, key, C.PULSE) and not checkFlag(self, key, C.AURA) then
 		self:SendMessage("BigWigs_Pulse", self, key, icons[icon or key])
 	end
 end
@@ -2109,7 +2109,6 @@ function boss:PlaySound(key, sound)
 		self:SendMessage("BigWigs_Sound", self, key, sound)
 	end
 end
-
 
 do
 	local SendAddonMessage, IsInGroup = BigWigsLoader.SendAddonMessage, IsInGroup
@@ -2232,6 +2231,22 @@ function boss:Berserk(seconds, noEngageMessage, customBoss, customBerserk, custo
 	self:DelayedMessage(key, seconds - 10, "Urgent", format(L.custom_sec, berserk, 10))
 	self:DelayedMessage(key, seconds - 5, "Important", format(L.custom_sec, berserk, 5))
 	self:DelayedMessage(key, seconds, "Important", customFinalMessage or format(L.custom_end, name, berserk), icon, "Alarm")
+end
+
+-------------------------------------------------------------------------------
+-- Aura Tracker
+-- @section aura_tracker
+--
+
+function boss:ShowAura(key, options)
+	if not checkFlag(self, key, C.AURA) then return end
+	if checkFlag(self, key, C.PULSE) then options.pulse = true end
+	self:SendMessage("BigWigs_ShowAura", self, key, options)
+end
+
+function boss:HideAura(key, opts)
+	if not checkFlag(self, key, C.AURA) then return end
+	self:SendMessage("BigWigs_HideAura", self, key)
 end
 
 -------------------------------------------------------------------------------
@@ -2446,4 +2461,12 @@ end
 
 function argsVirtuals.destKey(args)
 	return boss:HudKey(args.spellId, args.destGUID)
+end
+
+function argsVirtuals.debuffDuration(args)
+	return select(6, UnitDebuff("player", args.spellName))
+end
+
+function argsVirtuals.buffDuration(args)
+	return select(6, UnitBuff("player", args.spellName))
 end

@@ -499,7 +499,7 @@ function plugin:BigWigs_ShowAura(_, module, key, options)
 	icon:Show()
 	entry.fresh = false
 
-	if not key then
+	if not key or options.autoremove then
 		C_Timer.After(options.duration, function() freeAura(entry) end)
 	end
 end
