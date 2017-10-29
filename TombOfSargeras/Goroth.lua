@@ -32,8 +32,8 @@ function mod:GetOptions()
 	return {
 		{231363, "TANK", "SAY"}, -- Burning Armor
 		233514, -- Infernal Spike
-		{232249, "FLASH", "SAY"}, -- Crashing Comet
-		{233279, "FLASH", "SAY", "IMPACT"}, -- Shattering Star
+		{232249, "FLASH", "SAY", "AURA"}, -- Crashing Comet
+		{233279, "FLASH", "SAY", "IMPACT", "AURA"}, -- Shattering Star
 		{233062, "IMPACT"}, -- Infernal Burning
 		234346, -- Fel Eruption
 		238588, -- Rain of Brimstone
@@ -134,6 +134,12 @@ function mod:ShatteringStarDebuff(args)
 	if self:Me(args.destGUID) then
 		self:Say(233279)
 		self:Flash(233279)
+		self:ShowAura(args.spellId, {
+			icon = args.spellIcon,
+			duration = 6,
+			text = "Hide",
+			autoremove = true
+		})
 	end
 end
 
@@ -161,6 +167,11 @@ do
 			self:Say(args.spellId)
 			self:Flash(args.spellId)
 			self:SayCountdown(args.spellId, 5)
+			self:ShowAura(args.spellId, {
+				icon = args.spellIcon,
+				duration = 5,
+				text = "Move out"
+			})
 		end
 	end
 end
@@ -168,6 +179,7 @@ end
 function mod:CrashingCometRemoved(args)
 	if self:Me(args.destGUID) then
 		self:CancelSayCountdown(args.spellId)
+		self:HideAura(args.spellId)
 	end
 end
 

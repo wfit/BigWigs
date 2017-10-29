@@ -65,10 +65,10 @@ function mod:GetOptions()
 		233104, -- Torment
 		248671, -- Unbridled Torment (Berserk)
 		{233426, "TANK"}, -- Scythe Sweep
-		{233431, "SAY", "FLASH"}, -- Calcified Quills
+		{233431, "SAY", "FLASH", "AURA"}, -- Calcified Quills
 		233441, -- Bone Saw
 		239401, -- Pangs of Guilt
-		{233983, "FLASH", "SAY", "PROXIMITY", "SMARTCOLOR"}, -- Echoing Anguish
+		{233983, "FLASH", "SAY", "PROXIMITY", "SMARTCOLOR", "AURA"}, -- Echoing Anguish
 		anguishMarker,
 		233895, -- Suffocating Dark
 		234015, -- Tormenting Burst
@@ -277,6 +277,11 @@ do
 		if self:Me(guid) then
 			self:Say(233431, nil, nil, "YELL")
 			self:Flash(233431)
+			self:ShowAura(233431, {
+				icon = self:SpellIcon(233431),
+				duration = 5,
+				autoremove = true
+			})
 		end
 	end
 	function mod:CalcifiedQuills(args)
@@ -317,6 +322,10 @@ do
 		if self:Me(args.destGUID) then
 			self:Flash(args.spellId)
 			self:Say(args.spellId)
+			self:ShowAura(args.spellId, {
+				icon = args.spellIcon,
+				text = "Move out"
+			})
 
 			-- Check dispell staus
 			rangeCheck = self:ScheduleRepeatingTimer("CheckAnguishRange", 0.2, args.spellId)
@@ -343,6 +352,7 @@ do
 		if self:Me(args.destGUID) then
 			self:CancelTimer(rangeCheck)
 			self:SmartColorUnset(args.spellId)
+			self:HideAura(args.spellId)
 			lastStatus = -1
 		end
 	end
