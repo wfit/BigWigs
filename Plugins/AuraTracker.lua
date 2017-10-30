@@ -444,7 +444,7 @@ end
 
 function plugin:BigWigs_ShowAura(_, module, key, options)
 	local entry
-	if key then
+	if key ~= nil then
 		local id = auraId(module, key)
 		entry = auras[id] or newAura(module, key, options.transparent)
 		if entry.fresh then
@@ -515,7 +515,7 @@ function plugin:BigWigs_ShowAura(_, module, key, options)
 	icon:Show()
 	entry.fresh = false
 
-	if not key or options.autoremove then
+	if key == nil or options.autoremove then
 		local delay = type(options.autoremove) == "number" and options.autoremove or options.duration
 		C_Timer.After(delay, function() freeAura(entry) end)
 	end

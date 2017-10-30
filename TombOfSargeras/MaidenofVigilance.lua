@@ -37,30 +37,30 @@ local wrathStacks = 0
 local bossSide = 1
 local direction = {
 	[1] = {
+		fel = 241870, -- Right
+		light = 241868 -- Left
+	},
+	[2] = {
 		fel = 241868, -- Left
 		light = 241870 -- Right
 	},
-	[2] = {
-		fel = 241870, -- Right
-		light = 241868 -- Left
-	}
 }
 
 local massInstabilityGrace = 0
 
 local soakerLabel = {
-	["1-1"] = "Fel Melee Extérieur",
+	["1-1"] = "Fel Melee Trou",
 	["1-2"] = "Fel Melee Centre",
-	["1-3"] = "Fel Melee Intérieur",
-	["2-1"] = "Fel Ranged Extérieur",
+	["1-3"] = "Fel Melee Mur",
+	["2-1"] = "Fel Ranged Mur",
 	["2-2"] = "Fel Ranged Centre",
-	["2-3"] = "Fel Ranged Intérieur",
-	["3-1"] = "Light Melee Extérieur",
+	["2-3"] = "Fel Ranged Trou",
+	["3-1"] = "Light Melee Trou",
 	["3-2"] = "Light Melee Centre",
-	["3-3"] = "Light Melee Intérieur",
-	["4-1"] = "Light Ranged Extérieur",
+	["3-3"] = "Light Melee Mur",
+	["4-1"] = "Light Ranged Mur",
 	["4-2"] = "Light Ranged Centre",
-	["4-3"] = "Light Ranged Intérieur",
+	["4-3"] = "Light Ranged Trou",
 }
 
 --------------------------------------------------------------------------------
@@ -251,25 +251,30 @@ function mod:GenMythicSoakers()
 		light_melee,
 		light_ranged
 	}
-	self:Emit("MAIDEN_SOAKERS", soakers)
+	self:Emit("MAIDEN_SOAKERS2", soakers)
 
 	-- Player role
 	local function selfAttribs()
 		for i, group in ipairs(soakers) do
 			for j, unit in ipairs(group) do
 				if UnitIsUnit("player", unit) then
-					local side = (i < 3) and (bossSide == 1 and "<" or ">") or (bossSide == 1 and ">" or "<")
-					local direction = ""
 					local unusual = (i % 2 == 1 and mod:Ranged()) or (i % 2 == 0 and mod:Melee())
-					for i = 1, 4 - j do direction = direction .. side end
-					return (soakerLabel[i .. "-" .. j] .. "\n" .. direction),
+					return (soakerLabel[i .. "-" .. j]),
 					       (i < 3 and mod.icons[235240] or mod.icons[235213]),
 					       unusual
 				end
 			end
 		end
 	end
-	self:Emit("MAIDEN_ROLE", selfAttribs())
+
+	local label, icon, unusual = selfAttribs()
+	self:Emit("MAIDEN_ROLE2", label, icon, unusual)
+
+	if label then
+		self:ShowAura(false, label, { icon = icon })
+	else
+		self:HideAura(false)
+	end
 end
 
 function mod:UnitDied(args)
@@ -366,7 +371,7 @@ function mod:Infusion(args)
 		self:Bar(args.spellId, 38.0)
 	end
 	if self:Mythic() then
-		self:ScheduleTimer("GenMythicSoakers", 3.2)
+		self:ScheduleTimer("GenMythicSoakers", 3.5)
 	end
 end
 
