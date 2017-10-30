@@ -53,7 +53,7 @@ function mod:GetOptions()
 		230358, -- Thundering Shock
 		{230384, "ME_ONLY", "FLASH", "AURA"}, -- Consuming Hunger
 		{234621, "INFOBOX"}, -- Devouring Maw
-		232913, -- Befouling Ink
+		{232913, "AURA"}, -- Befouling Ink
 		232827, -- Crashing Wave
 		239436, -- Dread Shark
 		239362, -- Delicious Bufferfish
@@ -361,6 +361,9 @@ do
 		for unit in self:IterateGroup() do
 			local _, _, _, _, _, _, expires = UnitDebuff(unit, inkName)
 			debuffs[self:UnitName(unit)] = expires
+			if expires and UnitIsUnit(unit, "player") then
+				self:ShowAura(232913, "Feed")
+			end
 		end
 	end
 
@@ -368,10 +371,16 @@ do
 		if devouringMawActive then
 			local _, _, _, _, _, _, expires = UnitDebuff(args.destName, args.spellName)
 			debuffs[args.destName] = expires
+			if self:Me(args.destGUID) then
+				self:ShowAura(232913, "Feed")
+			end
 		end
 	end
 
 	function mod:InkRemoved(args)
+		if self:Me(args.destGUID) then
+			self:HideAura(232913)
+		end
 		if devouringMawActive then
 			local name = args.destName
 			local expires = debuffs[name] -- time when the debuff should expire
