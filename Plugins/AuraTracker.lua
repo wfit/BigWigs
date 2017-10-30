@@ -493,7 +493,11 @@ function plugin:BigWigs_ShowAura(_, module, key, options)
 		icon.pulseIn:Play()
 	end
 
-	entry.pin = tonumber(options.pin) or 0
+	if options.pin then
+		entry.pin = tonumber(options.pin) or 0
+	elseif entry.pin == nil then
+		entry.pin = 0
+	end
 
 	tinsert(rack, entry)
 	updateRack()

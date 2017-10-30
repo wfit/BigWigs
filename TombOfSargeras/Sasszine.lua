@@ -22,6 +22,7 @@ local crashingWaveStage3Mythic = {32.5, 33, 42, 39}
 local hydraShotCounter = 1
 local bufferfishCounter = 1
 local devouringMawActive = false
+local hasMurloc = false
 local abs = math.abs
 
 --------------------------------------------------------------------------------
@@ -105,6 +106,7 @@ function mod:OnEngage()
 	hydraShotCounter = 1
 	bufferfishCounter = 1
 	devouringMawActive = false
+	hasMurloc = false
 
 	self:Bar(230358, 10.5) -- Thundering Shock
 	-- Tanks: Burden of Pain
@@ -276,6 +278,9 @@ end
 function mod:ThunderingShock(args)
 	self:Message(args.spellId, "Important", "Info")
 	self:CDBar(args.spellId, 32.8) -- Can be delayed sometimes by other casts
+	if hasMurloc then
+		self:ShowAura(230384, { pulse = true })
+	end
 end
 
 do
@@ -285,14 +290,18 @@ do
 		if #list == 1 then
 			self:ScheduleTimer("TargetMessage", 0.3, 230384, list, "Attention", "Alert", nil, nil, true)
 		end
-		if self:Me(args.destGUID) and (stage == 1 or select(2, UnitClass("player")) == "PALADIN") then
-			self:Flash(230384)
-			self:ShowAura(230384, stage == 1 and "Take stun" or "Use Divine Steed")
+		if self:Me(args.destGUID) then
+			hasMurloc = true
+			if stage == 1 or select(2, UnitClass("player")) == "PALADIN" then
+				self:Flash(230384)
+				self:ShowAura(230384, stage == 1 and "Get stunned!" or "Use Divine Steed")
+			end
 		end
 	end
 
 	function mod:ConsumingHungerRemoved(args)
 		if self:Me(args.destGUID) then
+			hasMurloc = false
 			self:HideAura(230384)
 		end
 	end
