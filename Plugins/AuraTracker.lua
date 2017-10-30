@@ -210,6 +210,7 @@ end
 --
 
 local pool = {}
+local poolTransparent = {}
 
 local function inset(frame, inset)
 	frame:SetPoint("LEFT", inset, 0)
@@ -218,10 +219,11 @@ local function inset(frame, inset)
 	frame:SetPoint("BOTTOM", 0, inset)
 end
 
-local function alloc()
-	local icon = tremove(pool)
+local function alloc(transparent)
+	local icon = tremove(transparent and poolTransparent or pool)
 	if not icon then
 		icon = CreateFrame("Frame", nil, anchor)
+		icon.transparent = transparent
 
 		local container = CreateFrame("Frame", nil, icon)
 		container:SetAllPoints(icon)
@@ -243,17 +245,21 @@ local function alloc()
 		pulseIn3:SetScale(0.5, 0.5)
 		pulseIn3:SetOrder(3)
 
-		local border1 = container:CreateTexture(nil, "BORDER")
-		border1:SetAllPoints(container)
-		border1:SetColorTexture(0, 0, 0, 0.75)
+		if not transparent then
+			local border1 = container:CreateTexture(nil, "BORDER")
+			border1:SetAllPoints(container)
+			border1:SetColorTexture(0, 0, 0, 0.75)
 
-		local border2 = container:CreateTexture(nil, "BORDER")
-		inset(border2, 2)
-		border2:SetColorTexture(0, 0, 0, 1)
+			local border2 = container:CreateTexture(nil, "BORDER")
+			inset(border2, 2)
+			border2:SetColorTexture(0, 0, 0, 1)
+		end
 
 		local tex = container:CreateTexture(nil, "ARTWORK")
 		inset(tex, 3)
-		tex:SetTexCoord(0.125, 0.875, 0.125, 0.875)
+		if not transparent then
+			tex:SetTexCoord(0.125, 0.875, 0.125, 0.875)
+		end
 		icon.tex = tex
 
 		local widgets = CreateFrame("Frame", nil, icon)
@@ -310,7 +316,7 @@ end
 
 local function free(icon)
 	icon:Hide()
-	tinsert(pool, icon)
+	tinsert(icon.transparent and poolTransparent or pool, icon)
 end
 
 -------------------------------------------------------------------------------
@@ -407,11 +413,11 @@ local function updateRack()
 	end
 end
 
-local function newAura(module, key)
+local function newAura(module, key, transparent)
 	auraId = auraId + 1
 	return {
 		id = auraId,
-		icon = setLevels(alloc(), auraId),
+		icon = setLevels(alloc(transparent), auraId),
 		module = module,
 		key = key,
 		fresh = true,
@@ -440,7 +446,7 @@ function plugin:BigWigs_ShowAura(_, module, key, options)
 	local entry
 	if key then
 		local id = auraId(module, key)
-		entry = auras[id] or newAura(module, key)
+		entry = auras[id] or newAura(module, key, options.transparent)
 		if entry.fresh then
 			auras[id] = entry
 		else
@@ -454,7 +460,7 @@ function plugin:BigWigs_ShowAura(_, module, key, options)
 		error("Cannot show a nil-keyed aura with no duration.")
 		return
 	else
-		entry = newAura(module, key)
+		entry = newAura(module, key, options.transparent)
 	end
 
 	local icon = entry.icon
@@ -468,6 +474,11 @@ function plugin:BigWigs_ShowAura(_, module, key, options)
 
 	if options.text then
 		entry.hasText = options.text ~= ""
+		if entry.hasText then
+			options.text = options.text:gsub("{rt([1-8])}", function(icon)
+				return "|T" .. (tonumber(icon) + 137000) .. ":16:16:0:-11|t"
+			end)
+		end
 		icon.text:SetText(options.text)
 	elseif options.text == false then
 		entry.hasText = false
