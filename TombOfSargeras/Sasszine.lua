@@ -44,7 +44,7 @@ function mod:GetOptions()
 	return {
 		"stages",
 		"berserk",
-		{230139, "IMPACT"}, -- Hydra Shot
+		{230139, "IMPACT", "AURA"}, -- Hydra Shot
 		hydraShotMarker,
 		{230201, "TANK", "FLASH"}, -- Burden of Pain
 		230227, -- From the Abyss // Showing this as an alternative to Burden of Pain for non-tanks, they are the same spell
@@ -198,6 +198,7 @@ end
 
 do
 	local list = mod:NewTargetList()
+	local onMe = false
 	function mod:HydraShot(args)
 		local count = #list+1
 		list[count] = args.destName
@@ -214,15 +215,51 @@ do
 		]]
 
 		if count == 1 then
+			onMe = false
 			self:StopBar(CL.count:format(self:SpellName(230139), hydraShotCounter)) -- Stop previous one if early
 			self:ImpactBar(args.spellId, 6, CL.count:format(args.spellName, hydraShotCounter))
 			self:ScheduleTimer("TargetMessage", 0.3, args.spellId, list, "Important", "Warning", nil, nil, true)
+			if self:Mythic() then
+				self:ScheduleTimer("HydraShotAura", 0.3, args.spellId)
+			end
 			hydraShotCounter = hydraShotCounter + 1
 			-- Normal stage 3 seems to swing between 41-43 or 51-53
 			self:CDBar(args.spellId, self:Mythic() and 30.5 or stage == 2 and 30 or (self:Normal() and stage == 3 and 41.3) or 40, CL.count:format(args.spellName, hydraShotCounter))
 		end
+		if self:Me(args.destGUID) then
+			onMe = count
+		end
 		if self:GetOption(hydraShotMarker) then -- Targets: LFR: 0, 1 Normal, 3 Heroic, 4 Mythic
 			SetRaidTarget(args.destName, count)
+		end
+	end
+
+	function mod:HydraShotAura(spellId)
+		if onMe then
+			self:ShowAura(spellId, "Spread out", { autoremove = 6 })
+		else
+			local _, _, _, instanceId = UnitPosition("player")
+			local buff, debuff = GetSpellInfo(239362), GetSpellInfo(230139)
+
+			local count = 0
+			local pos = false
+
+			for i = 1, 30 do
+				local unit = ("raid%d"):format(i)
+				local _, _, _, tarInstanceId = UnitPosition(unit)
+
+				if tarInstanceId == instanceId and UnitIsConnected(unit) and not UnitDebuff(unit, buff) and not UnitDebuff(unit, debuff) and not UnitIsDead(unit) then
+					count = count + 1
+					if UnitIsUnit(unit, "player") then
+						pos = count % 4 + 1
+						break
+					end
+				end
+			end
+
+			if pos then
+				self:ShowAura(false, "Soak!", { icon = pos, autoremove = 6 })
+			end
 		end
 	end
 

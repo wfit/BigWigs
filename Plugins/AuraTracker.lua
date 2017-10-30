@@ -443,6 +443,11 @@ local function freeAura(entry)
 end
 
 function plugin:BigWigs_ShowAura(_, module, key, options)
+	if type(options.icon) == "number" and 1 <= options.icon and options.icon <= 8 then
+		options.icon = options.icon + 137000
+		options.transparent = true
+	end
+
 	local entry
 	if key ~= nil then
 		local id = auraId(module, key)
@@ -456,7 +461,7 @@ function plugin:BigWigs_ShowAura(_, module, key, options)
 				end
 			end
 		end
-	elseif not options.duration then
+	elseif not options.duration and not options.autoremove then
 		error("Cannot show a nil-keyed aura with no duration.")
 		return
 	else
