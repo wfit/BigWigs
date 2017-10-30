@@ -89,7 +89,7 @@ function mod:GetOptions()
 		{239207, "IMPACT"}, -- Touch of Sargeras
 		239132, -- Rupture Realities
 		234059, -- Unbound Chaos
-		{236604, "SAY", "FLASH", "SMARTCOLOR"}, -- Shadowy Blades
+		{236604, "SAY", "FLASH", "SMARTCOLOR", "AURA"}, -- Shadowy Blades
 		blades_marker,
 		239212, -- Lingering Darkness
 		{236494, "TANK"}, -- Desolate
@@ -298,6 +298,7 @@ do
 			self:SmartColorSet(236604, 1, 0, 0)
 			self:ScheduleTimer("SmartColorUnset", 5, 236604)
 			self:Send("RequestBladeMark", { guid = UnitGUID("player") })
+			self:ShowAura(236604, 5, "Move out", true)
 		end
 	end
 

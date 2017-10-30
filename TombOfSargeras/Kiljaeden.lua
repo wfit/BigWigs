@@ -179,11 +179,11 @@ function mod:GetOptions()
 		{235059, "IMPACT"}, -- Rupturing Singularity
 		240910, -- Armageddon
 		{meteors_impact, "COUNTDOWN", "HUD"},
-		{236710, "SAY", "FLASH"}, -- Shadow Reflection: Erupting
+		{236710, "SAY", "FLASH", "AURA"}, -- Shadow Reflection: Erupting
 		eruptingMarker,
 		lower_particules,
-		{238430, "SAY", "FLASH", "SMARTCOLOR"}, -- Bursting Dreadflame
-		{238505, "SAY", "ICON", "FLASH", "PROXIMITY"}, -- Focused Dreadflame
+		{238430, "SAY", "FLASH", "SMARTCOLOR", "AURA"}, -- Bursting Dreadflame
+		{238505, "SAY", "ICON", "FLASH", "PROXIMITY", "AURA"}, -- Focused Dreadflame
 		{236378, "SAY", "FLASH"}, -- Shadow Reflection: Wailing
 		241564, -- Sorrowful Wail
 		241721, -- Illidan's Sightless Gaze
@@ -197,7 +197,7 @@ function mod:GetOptions()
 		243982, -- Tear Rift
 		244856, -- Flaming Orb
 		240262, -- Burning
-		{237590, "SAY", "FLASH"}, -- Shadow Reflection: Hopeless
+		{237590, "SAY", "FLASH", "AURA"}, -- Shadow Reflection: Hopeless
 	},{
 		["stages"] = "general",
 		[239932] = -14921, -- Stage One: The Betrayer
@@ -335,6 +335,7 @@ function mod:CHAT_MSG_RAID_BOSS_EMOTE(_, msg, _, _, _, target)
 			self:Say(238505)
 			self:Flash(238505)
 			self:SayCountdown(238505, 5)
+			self:ShowAura(238505, 5, "Pas bouger!", true)
 		end
 		if not self:Easy() then
 			self:OpenProximity(238505, 5)
@@ -454,6 +455,7 @@ do
 			self:Flash(args.spellId)
 			self:Say(args.spellId, self:Easy() and L.reflectionErupting or CL.count_rticon:format(L.reflectionErupting, #playerList, #playerList+2))
 			self:SayCountdown(args.spellId, 8)
+			self:ShowAura(args.spellId, "Add on YOU!", { icon = #playerList + 2, autoremove = 8 })
 		end
 		if #playerList == 1 then
 			activeEruptions = 0
@@ -549,6 +551,7 @@ do
 			self:SayCountdown(args.spellId, 5)
 			self:SmartColorSet(args.spellId, 1, 0.5, 0)
 			self:ScheduleTimer("SmartColorUnset", 5, args.spellId)
+			self:ShowAura(args.spellId, 5, "Move out", true)
 		end
 		playerList[#playerList+1] = args.destName
 		if #playerList == 1 then
@@ -922,6 +925,7 @@ do
 			self:Flash(args.spellId)
 			self:Say(args.spellId, L.reflectionHopeless)
 			self:SayCountdown(args.spellId, 8)
+			self:ShowAura(args.spellId, 8, "Add HEAL!")
 		end
 		playerList[#playerList+1] = args.destName
 		if #playerList == 1 then
@@ -933,6 +937,7 @@ do
 	function mod:ShadowReflectionHopelessRemoved(args)
 		if self:Me(args.destGUID) then
 			self:CancelSayCountdown(args.spellId)
+			self:HideAura(args.spellId)
 		end
 	end
 end
