@@ -353,7 +353,7 @@ function mod:TormentedCriesApplied(args)
 	if self:Me(args.destGUID) then
 		self:Say(238570, L.tormentingCriesSay)
 		self:SayCountdown(238570, 4)
-		self:ShowAura(238570, 4, "Behind Boss")
+		self:ShowAura(238570, 4, "Derrière boss")
 	end
 	self:PrimaryIcon(238570, args.destName)
 end
