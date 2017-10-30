@@ -538,7 +538,7 @@ do
 				tinsert(collectable, entry)
 			end
 		end
-		for _, entry in ipairs(auras) do
+		for _, entry in ipairs(collectable) do
 			freeAura(entry)
 		end
 	end
