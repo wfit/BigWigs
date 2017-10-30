@@ -278,7 +278,6 @@ local function alloc()
 		cd:SetHideCountdownNumbers(false)
 		cd:SetReverse(true)
 		cd:SetDrawBling(false)
-		cd.noCooldownCount = true
 		icon.cd = cd
 		icon.cdText = cd:GetRegions()
 
