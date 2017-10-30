@@ -70,6 +70,8 @@ do
 
 	anchor.background:Hide()
 	anchor.header:Hide()
+
+	anchor:EnableMouse(false)
 end
 
 -------------------------------------------------------------------------------
