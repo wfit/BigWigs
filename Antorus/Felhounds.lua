@@ -37,7 +37,7 @@ function mod:GetOptions()
 		{248819, "SAY"}, -- Siphoned
 
 		--[[ General ]]--
-		244050, -- Destroyer's Boon
+		{244050, "AURA"}, -- Destroyer's Boon
 		251356, -- Focusing Power
 	},{
 		[251445] = -15842, -- F'harg
@@ -67,6 +67,7 @@ function mod:OnBossEnable()
 
 	--[[ General ]]--
 	self:Log("SPELL_AURA_APPLIED", "SargerasBlessing", 246057) -- Destroyer's Boon buff
+	self:Log("SPELL_AURA_REMOVED", "SargerasBlessingRemoved", 246057) -- Destroyer's Boon buff
 	self:Log("SPELL_AURA_APPLIED", "FocusingPower", 251356)
 end
 
@@ -195,6 +196,15 @@ do
 		if t-prev > 0.5 then
 			prev = t
 			self:Message(244050, "Urgent", "Warning", args.spellName, args.spellId)
+			if self:Tank() then
+				self:ShowAura(244050, "Spread Boss")
+			end
+		end
+	end
+
+	function mod:SargerasBlessingRemoved()
+		if self:Tank() then
+			self:HideAura(244050)
 		end
 	end
 end
