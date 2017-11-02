@@ -35,7 +35,7 @@ function mod:GetOptions()
 		{254919, "TANK"}, -- Forging Strike
 		254926, -- Reverberating Strike
 		248214, -- Diabolic Bomb
-		246833, -- Ruiner
+		{246833, "IMPACT"}, -- Ruiner
 		248375, -- Shattering Strike
 
 		--[[ Stage: Construction ]]--
@@ -158,6 +158,7 @@ end
 
 function mod:Ruiner(args)
 	self:Message(args.spellId, "Urgent", "Warning", CL.casting:format(args.spellName))
+	self:ImpactBar(args.spellId, 8)
 	local cooldown = 25.5
 	if (GetTime() + cooldown) > nextApocalypseProtocol then
 		self:CDBar(args.spellId, cooldown)
