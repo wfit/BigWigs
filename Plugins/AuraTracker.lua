@@ -282,6 +282,7 @@ local function alloc(transparent)
 		cd:SetAllPoints(tex)
 		cd:SetDrawEdge(false)
 		cd:SetHideCountdownNumbers(false)
+		cd.noCooldownCount = false
 		cd:SetReverse(true)
 		cd:SetDrawBling(false)
 		icon.cd = cd
@@ -499,6 +500,7 @@ function plugin:BigWigs_ShowAura(_, module, key, options)
 	if options.duration then
 		icon.cd:SetCooldown(options.start or GetTime(), options.duration)
 		icon.cd:SetHideCountdownNumbers(options.countdown == false)
+		icon.cd.noCooldownCount = (options.countdown == false)
 	elseif options.duration == false then
 		icon.cd:SetCooldown(0, 0)
 	end
