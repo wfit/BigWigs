@@ -39,7 +39,7 @@ end
 
 function mod:GetOptions()
 	return {
-		{246220, "TANK", "SAY"}, -- Fel Bombardment
+		{246220, "TANK", "SAY", "AURA"}, -- Fel Bombardment
 		240277, -- Apocalypse Drive
 		{244969, "IMPACT"}, -- Eradication
 		244106, -- Carnage
@@ -111,6 +111,7 @@ function mod:FelBombardment(args)
 		self:Say(args.spellId)
 		self:SayCountdown(args.spellId, 7)
 		self:TargetBar(args.spellId, 7, args.destName)
+		self:ShowAura(args.spellId, 7, "Run away")
 	end
 end
 
