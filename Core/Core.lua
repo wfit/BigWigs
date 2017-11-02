@@ -369,7 +369,7 @@ do
 			icon = icon,
 			duration = time / 2,
 			text = spell,
-			pulse = math.random() < 0.3,
+			pulse = math.random() < 0.8,
 			countdown = math.random() < 0.7,
 			stacks = math.random() < 0.4 and math.ceil(math.random() * 9) or nil,
 			pin = math.random() < 0.2 and -1 or nil,

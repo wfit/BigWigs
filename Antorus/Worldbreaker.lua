@@ -41,7 +41,7 @@ function mod:GetOptions()
 	return {
 		{246220, "TANK", "SAY"}, -- Fel Bombardment
 		240277, -- Apocalypse Drive
-		244969, -- Eradication
+		{244969, "IMPACT"}, -- Eradication
 		244106, -- Carnage
 		"cannon_ability", -- Cannon Assault
 		{244410, "SAY"}, -- Decimation
@@ -158,7 +158,7 @@ end
 
 function mod:Eradication(args)
 	self:Message(args.spellId, "Urgent", "Warning", CL.casting:format(args.spellName))
-	self:CastBar(args.spellId, 5.5)
+	self:ImpactBar(args.spellId, 5.5)
 end
 
 function mod:Carnage(args)
