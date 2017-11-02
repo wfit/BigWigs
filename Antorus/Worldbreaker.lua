@@ -44,7 +44,7 @@ function mod:GetOptions()
 		{244969, "IMPACT"}, -- Eradication
 		244106, -- Carnage
 		"cannon_ability", -- Cannon Assault
-		{244410, "SAY"}, -- Decimation
+		{244410, "SAY", "AURA"}, -- Decimation
 		244761, -- Annihilation
 	},{
 		[246220] = "general",
@@ -86,6 +86,7 @@ function mod:RAID_BOSS_WHISPER(_, msg)
 		self:Message(244410, "Personal", "Warning", CL.you:format(self:SpellName(244410)))
 		self:Say(244410)
 		self:SayCountdown(244410, 3)
+		self:ShowAura(244410, 5, "Move")
 	end
 end
 
@@ -151,7 +152,7 @@ function mod:WeaponDeath(args)
 		end
 	elseif args.mobId == 122773 then -- Decimator death
 		decimatorAlive = false
-		if stage == 2 then
+		if stage == 2  then
 			self:Bar(244761, 21.9) -- Annihilation
 		end
 	end
