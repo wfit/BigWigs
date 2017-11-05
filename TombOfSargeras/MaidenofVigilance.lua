@@ -200,6 +200,7 @@ end
 
 function mod:GenMythicSoakers()
 	if not bossActive then return end
+	if infusionCounter == 2 then return end
 	local roster = self:EnumerateGroup { strict = true, alive = true }
 
 	-- Colors name
@@ -271,7 +272,7 @@ function mod:GenMythicSoakers()
 	self:Emit("MAIDEN_ROLE2", label, icon, unusual)
 
 	if label then
-		self:ShowAura(false, label, { icon = icon })
+		self:ShowAura(false, label, { icon = icon, pulse = true })
 	else
 		self:HideAura(false)
 	end
@@ -279,7 +280,7 @@ end
 
 function mod:UnitDied(args)
 	if not args.mobId then -- Player died
-		self:GenMythicSoakers()
+		--self:GenMythicSoakers()
 	end
 end
 
@@ -501,6 +502,7 @@ do
 
 	function mod:TitanicBulwarkApplied(args)
 		wrathStacks = 0
+		self:ScheduleTimer("HideAura", false)
 		if self:CheckOption(args.spellId, "INFOBOX") then
 			self:OpenInfo(args.spellId, args.spellName)
 			self:SetInfo(args.spellId, 1, L.absorb)
