@@ -502,7 +502,7 @@ do
 
 	function mod:TitanicBulwarkApplied(args)
 		wrathStacks = 0
-		self:ScheduleTimer("HideAura", false)
+		self:ScheduleTimer("HideAura", 20, false)
 		if self:CheckOption(args.spellId, "INFOBOX") then
 			self:OpenInfo(args.spellId, args.spellName)
 			self:SetInfo(args.spellId, 1, L.absorb)
