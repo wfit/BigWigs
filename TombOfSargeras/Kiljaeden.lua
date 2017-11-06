@@ -226,7 +226,6 @@ function mod:OnBossEnable()
 
 	self:Log("SPELL_AURA_APPLIED", "ShadowReflectionErupting", 236710) -- Shadow Reflection: Erupting
 	self:Log("SPELL_AURA_REMOVED", "ShadowReflectionEruptingRemoved", 236710) -- Shadow Reflection: Erupting
-	self:Log("SPELL_AURA_APPLIED", "LingeringEruption", 243536) -- Lingering Eruption, Mythic, Remove marks later than the normal debuff
 	self:Log("SPELL_AURA_REMOVED", "LingeringEruptionRemoved", 243536) -- Lingering Eruption, Mythic, Remove marks later than the normal debuff
 
 	-- Intermission: Eternal Flame
@@ -471,6 +470,13 @@ do
 		if self:GetOption(eruptingMarker) then
 			SetRaidTarget(args.destName, #playerList+2)  -- Skip marks 1 + 2 for visibility
 		end
+
+		if self:Mythic() then
+			activeEruptions = activeEruptions + 1
+			if activeEruptions == 1 then
+				self:LowerParticles()
+			end
+		end
 	end
 
 	function mod:ShadowReflectionEruptingRemoved(args)
@@ -482,15 +488,8 @@ do
 		end
 	end
 
-	function mod:LingeringEruption(args)
-		activeEruptions = activeEruptions + 1
-		if activeEruptions == 1 then
-			self:LowerParticles()
-		end
-	end
-
 	function mod:LingeringEruptionRemoved(args) -- Mythic only, Remove icons after this debuff instead
-		C_Timer.After(10, function()
+		C_Timer.After(15, function()
 			activeEruptions = activeEruptions - 1
 			if activeEruptions == 0 then
 				self:RestoreParticles()
