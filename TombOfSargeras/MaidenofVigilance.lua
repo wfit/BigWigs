@@ -259,8 +259,9 @@ function mod:GenMythicSoakers()
 		for i, group in ipairs(soakers) do
 			for j, unit in ipairs(group) do
 				if UnitIsUnit("player", unit) then
+					local side = (i < 3) and (bossSide == 1 and ">>>" or "<<<") or (bossSide == 1 and "<<<" or ">>>")
 					local unusual = (i % 2 == 1 and mod:Ranged()) or (i % 2 == 0 and mod:Melee())
-					return (soakerLabel[i .. "-" .. j]),
+					return (side .. "\n" .. soakerLabel[i .. "-" .. j]),
 					       (i < 3 and mod.icons[235240] or mod.icons[235213]),
 					       unusual
 				end
@@ -470,6 +471,7 @@ end
 
 function mod:Blowback(args)
 	self:Message(args.spellId, "Important", "Warning")
+	if bossSide == 1 then bossSide = 2 else bossSide = 1 end
 end
 
 do
