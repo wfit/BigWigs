@@ -490,10 +490,12 @@ do
 	end
 
 	function mod:LingeringEruptionRemoved(args) -- Mythic only, Remove icons after this debuff instead
-		activeEruptions = activeEruptions - 1
-		if activeEruptions == 0 then
-			self:RestoreParticles()
-		end
+		C_Timer.After(10, function()
+			activeEruptions = activeEruptions - 1
+			if activeEruptions == 0 then
+				self:RestoreParticles()
+			end
+		end)
 		if self:GetOption(eruptingMarker) then
 			SetRaidTarget(args.destName, 0)
 		end
