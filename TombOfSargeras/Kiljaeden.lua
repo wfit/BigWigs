@@ -292,7 +292,7 @@ function mod:OnEngage()
 	end
 end
 
-function mod:OnWipe()
+function mod:OnBossDisable()
 	if inIntermission and stage == 2 then
 		resetMinimap(self)
 	end
