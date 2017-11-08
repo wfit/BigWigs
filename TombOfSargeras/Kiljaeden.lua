@@ -186,6 +186,7 @@ function mod:GetOptions()
 		{238505, "SAY", "ICON", "FLASH", "PROXIMITY", "AURA"}, -- Focused Dreadflame
 		{236378, "SAY", "FLASH"}, -- Shadow Reflection: Wailing
 		241564, -- Sorrowful Wail
+		{241983, "IMPACT"}, -- Deceiver's Veil
 		241721, -- Illidan's Sightless Gaze
 		{"shadowsoul", "INFOBOX"}, -- Shadowsoul
 		shadowsoulMarker,
@@ -740,6 +741,8 @@ do
 		self:StopBar(238505) -- Focused Dreadflame
 		self:StopBar(CL.count:format(self:SpellName(235059), singularityCount)) -- Rupturing Singularity
 		self:StopBar(INLINE_HEALER_ICON.." "..L.reflectionHopeless) -- Shadow Reflection: Hopeless
+
+		self:ImpactBar(241983, 7.5)
 
 		singularityCount = 1
 		if self:Mythic() then
