@@ -14,7 +14,7 @@ mod.instanceId = 1530
 -- Locals
 --
 
-local Hud = WFI.Hud
+local Hud = Oken.Hud
 
 local phase = 1
 local mobCollector = {}

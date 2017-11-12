@@ -77,9 +77,9 @@ local updateData = function(module)
 	UpdateInterruptStatus()
 end
 
-local Token = WFI.Token
-local Roster = WFI.Roster
-local Hud = WFI.Hud
+local Token = Oken.Token
+local Roster = Oken.Roster
+local Hud = Oken.Hud
 
 -------------------------------------------------------------------------------
 -- Debug
@@ -2346,7 +2346,7 @@ end
 --
 
 function boss:Send(event, data, ...)
-	WFI:Send("BW_NET_MSG", { event = event, data = data }, ...)
+	Oken:Send("BW_NET_MSG", { event = event, data = data }, ...)
 end
 
 function boss:RegisterNetMessage(event, handler)
@@ -2362,7 +2362,7 @@ function boss:BW_NET_MSG(_, msg, channel, source)
 end
 
 function boss:Emit(msg, ...)
-	WFI:SendMessage(msg, ...)
+	Oken:SendMessage(msg, ...)
 end
 
 -------------------------------------------------------------------------------
@@ -2464,7 +2464,7 @@ function boss:SmartColorSet(key, guid, r, g, b, targets)
 	if r > 1 then r = r / 255 end
 	if g > 1 then g = g / 255 end
 	if b > 1 then b = b / 255 end
-	WFI:Send("SMARTCOLOR", { action = "set", guid = guid, key = key, color = { r = r, g = g, b = b } }, targets)
+	Oken:Send("SMARTCOLOR", { action = "set", guid = guid, key = key, color = { r = r, g = g, b = b } }, targets)
 end
 
 function boss:SmartColorUnset(key, guid, targets)
@@ -2474,11 +2474,11 @@ function boss:SmartColorUnset(key, guid, targets)
 	end
 	if not guid then guid = myGUID end
 	if UnitExists(guid) then guid = UnitGUID(guid) end
-	WFI:Send("SMARTCOLOR", { action = "unset", guid = guid, key = key }, targets)
+	Oken:Send("SMARTCOLOR", { action = "unset", guid = guid, key = key }, targets)
 end
 
 function boss:SmartColorUnsetAll(key, targets)
-	WFI:Send("SMARTCOLOR", { action = "unsetall", key = key }, targets)
+	Oken:Send("SMARTCOLOR", { action = "unsetall", key = key }, targets)
 end
 
 function boss:SmartColorFilter(key)

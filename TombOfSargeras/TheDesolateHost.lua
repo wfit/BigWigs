@@ -21,7 +21,7 @@ mod.respawnTime = 40
 -- Locals
 --
 
-local Hud = WFI.Hud
+local Hud = Oken.Hud
 
 local myRealm = 0 -- 1 = Spirit Realm, 0 = Corporeal Realm
 local phasedList = {}

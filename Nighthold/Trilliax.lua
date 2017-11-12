@@ -18,7 +18,7 @@ mod.instanceId = 1530
 -- Locals
 --
 
-local Hud = WFI.Hud
+local Hud = Oken.Hud
 
 local phase = 1 -- 1 = Cleaner, 2 = Maniac, 3 = Caretaker
 local imprintCount = 1

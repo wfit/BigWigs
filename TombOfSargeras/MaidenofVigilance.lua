@@ -19,7 +19,7 @@ mod.respawnTime = 30
 -- Locals
 --
 
-local Hud = WFI.Hud
+local Hud = Oken.Hud
 
 local bossActive = false
 local shieldActive = false

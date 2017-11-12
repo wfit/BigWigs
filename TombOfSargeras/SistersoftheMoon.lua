@@ -17,7 +17,7 @@ mod.respawnTime = 15
 -- Locals
 --
 
-local Hud = WFI.Hud
+local Hud = Oken.Hud
 
 local stage = 1
 local twilightGlaiveCounter = 1
