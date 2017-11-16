@@ -10,9 +10,10 @@ if not plugin then return end
 --
 
 local tinsert, tremove, tsort = tinsert, tremove, table.sort
-local pairs, ipairs = pairs, ipairs
-local wipe, type, tostring = wipe, type, tostring
+local pairs, ipairs, next = pairs, ipairs, next
+local wipe, type, tostring, tonumber = wipe, type, tostring, tonumber
 local GetTime, C_Timer = GetTime, C_Timer
+local CreateFrame = CreateFrame
 
 local L = BigWigsAPI:GetLocale("BigWigs: Plugins")
 local media = LibStub("LibSharedMedia-3.0")
@@ -210,7 +211,7 @@ end
 --
 
 local pool = {}
-local poolTransparent = {}
+local borderlessPool = {}
 
 local function inset(frame, inset)
 	frame:SetPoint("LEFT", inset, 0)
@@ -219,16 +220,21 @@ local function inset(frame, inset)
 	frame:SetPoint("BOTTOM", 0, inset)
 end
 
-local function alloc(transparent)
-	local icon = tremove(transparent and poolTransparent or pool)
+local function allocIcon(borderless)
+	-- Attempt to remove icon from the pool
+	local icon = tremove(borderless and borderlessPool or pool)
+
+	-- A new icon need to be created (pool is empty)
 	if not icon then
 		icon = CreateFrame("Frame", nil, anchor)
-		icon.transparent = transparent
+		icon.borderless = borderless
 
+		-- The container is the border + main texture object
 		local container = CreateFrame("Frame", nil, icon)
 		container:SetAllPoints(icon)
 		icon.container = container
 
+		-- Pulse In animation
 		local pulseIn = container:CreateAnimationGroup()
 		icon.pulseIn = pulseIn
 		local pulseIn1 = pulseIn:CreateAnimation("Scale")
@@ -245,7 +251,8 @@ local function alloc(transparent)
 		pulseIn3:SetScale(0.5, 0.5)
 		pulseIn3:SetOrder(3)
 
-		if not transparent then
+		-- Create border frames
+		if not borderless then
 			local border1 = container:CreateTexture(nil, "BORDER")
 			border1:SetAllPoints(container)
 			border1:SetColorTexture(0, 0, 0, 0.75)
@@ -255,13 +262,15 @@ local function alloc(transparent)
 			border2:SetColorTexture(0, 0, 0, 1)
 		end
 
+		-- Main texture object
 		local tex = container:CreateTexture(nil, "ARTWORK")
-		inset(tex, 3)
-		if not transparent then
+		inset(tex, borderless and 0 or 3)
+		if not borderless then
 			tex:SetTexCoord(0.125, 0.875, 0.125, 0.875)
 		end
 		icon.tex = tex
 
+		-- Widgets is stack cooldown + stacks + label
 		local widgets = CreateFrame("Frame", nil, icon)
 		widgets:SetAllPoints(icon)
 
@@ -278,6 +287,7 @@ local function alloc(transparent)
 		fadeIn2:SetToAlpha(1)
 		fadeIn2:SetOrder(2)
 
+		-- Cooldown spinner
 		local cd = CreateFrame("Cooldown", nil, widgets, "CooldownFrameTemplate")
 		cd:SetAllPoints(tex)
 		cd:SetDrawEdge(false)
@@ -288,16 +298,19 @@ local function alloc(transparent)
 		icon.cd = cd
 		icon.cdText = cd:GetRegions()
 
+		-- A layer that is higher than the cooldown frame
 		local overlay = CreateFrame("Frame", nil, widgets)
 		overlay:SetAllPoints(icon)
 		icon.overlay = overlay
 
+		-- Main label under the icon
 		local text = overlay:CreateFontString(nil, "OVERLAY", "GameFontHighlightLarge")
 		text:SetPoint("BOTTOM", 0, -25)
 		text:SetJustifyH("CENTER")
 		text:SetJustifyV("BOTTOM")
 		icon.text = text
 
+		-- Stack counter
 		local stacks = overlay:CreateFontString(nil, "OVERLAY", "GameFontHighlightLarge")
 		stacks:SetPoint("BOTTOMRIGHT", -13, 8)
 		icon.stacks = stacks
@@ -315,27 +328,36 @@ local function alloc(transparent)
 	return icon
 end
 
-local function free(icon)
+local function freeIcon(icon)
+	icon.fadeIn:Stop()
+	icon.pulseIn:Stop()
 	icon:Hide()
-	tinsert(icon.transparent and poolTransparent or pool, icon)
+	tinsert(icon.borderless and borderlessPool or pool, icon)
 end
 
 -------------------------------------------------------------------------------
--- Event Handlers
+-- Aura rack management
 --
 
+-- The set of named auras
 local auras = {}
+
+-- The set of visible auras
 local rack = {}
-local auraId = 0
+
+-- The next aura serial number
+local serial = 0
 
 local animationLength = 0.4
 local animator = CreateFrame("Frame")
 animator:Hide()
 
+-- Easing function for animating
 local function ease(t)
 	return (t-1)^3+1
 end
 
+-- Compute offset wrt settings
 local function offset(value)
 	if db.grow == "UP" then
 		return 0, value
@@ -348,6 +370,7 @@ local function offset(value)
 	end
 end
 
+-- Main animation loop
 local function animate()
 	local now = GetTime()
 	local done = true
@@ -355,7 +378,7 @@ local function animate()
 		local target, start = entry.targetOffset, entry.startOffset
 		if target ~= start then
 			local current = (start == -1) and target or start + ((target - start) * ease((now - entry.animationStart) / animationLength))
-			if start == -1  or ((target > start and current >= target) or (target < start and current <= target)) then
+			if (target > start and current >= target) or (target < start and current <= target) then
 				entry.icon:SetPoint("CENTER", offset(target))
 				entry.offset = target
 				entry.startOffset = target
@@ -374,15 +397,14 @@ animator:SetScript("OnUpdate", animate)
 
 local function order(a, b)
 	if a.pin ~= b.pin then return a.pin < b.pin end
-	return a.id < b.id
+	return a.serial < b.serial
 end
 
-local function setLevels(aura, id)
-	id = id * 10
-	aura:SetFrameLevel(id)
-	aura.cd:SetFrameLevel(id + 3)
-	aura.overlay:SetFrameLevel(id + 5)
-	return aura
+local function setLevels(aura, idx)
+	idx = idx * 10
+	aura:SetFrameLevel(idx)
+	aura.cd:SetFrameLevel(idx + 3)
+	aura.overlay:SetFrameLevel(idx + 5)
 end
 
 local function updateRack()
@@ -414,62 +436,80 @@ local function updateRack()
 	end
 end
 
-local function newAura(module, key, transparent)
-	auraId = auraId + 1
-	return {
-		id = auraId,
-		icon = setLevels(alloc(transparent), auraId),
-		module = module,
-		key = key,
-		fresh = true,
-		offset = -1,
-		idx = -1
-	}
-end
-
 local function auraId(module, key)
 	return (tostring(module) or "<nil>") .. "::" .. (tostring(key) or "<nil>")
 end
 
-local function freeAura(entry)
-	auras[auraId(entry.module, entry.key)] = nil
-	for key, rackEntry in ipairs(rack) do
-		if rackEntry == entry then
-			tremove(rack, key)
-			updateRack()
+local function fetchAura(module, key, borderless)
+	local aura
+	local id = auraId(module, key)
+
+	-- If there is a key, attempt to fetch a already existing aura
+	if key ~= nil then
+		aura = auras[id]
+	end
+
+	-- Aura need to be created
+	if not aura then
+		serial = serial + 1
+		aura = {
+			serial = serial,
+			icon = allocIcon(borderless),
+			module = module,
+			key = key,
+			id = id,
+			idx = -1,
+			offset = -1,
+			fresh = true,
+			active = true
+		}
+	else
+		aura.fresh = false
+	end
+
+	-- Link the aura with its ID
+	if key ~= nil and aura.fresh then
+		auras[id] = aura
+	end
+
+	return aura
+end
+
+local function freeAura(aura)
+	if not aura.active then return end
+	aura.active = false
+	auras[aura.id] = nil
+	for idx, entry in ipairs(rack) do
+		if entry == aura then
+			tremove(rack, idx)
 			break
 		end
 	end
-	free(entry.icon)
+	freeIcon(aura.icon)
 end
 
 function plugin:BigWigs_ShowAura(_, module, key, options)
-	if type(options.icon) == "number" and 1 <= options.icon and options.icon <= 8 then
-		options.icon = options.icon + 137000
-		options.transparent = true
-	end
-
-	local entry
-	if key ~= nil then
-		local id = auraId(module, key)
-		entry = auras[id] or newAura(module, key, options.transparent)
-		if entry.fresh then
-			auras[id] = entry
-		else
-			for idx, rackEntry in ipairs(rack) do
-				if rackEntry == entry then
-					tremove(rack, idx)
-				end
-			end
-		end
-	elseif not options.duration and not options.autoremove then
+	-- Nil-keyed aura cannot be explicitly removed, so ensure that they will be
+	-- automatically collected once their duration expires.
+	if key == nil and not options.duration then
 		error("Cannot show a nil-keyed aura with no duration.")
 		return
-	else
-		entry = newAura(module, key, options.transparent)
+	end
+	if type(options.autoremove) ~= "number" and not options.duration then
+		error("Cannot show an auto-removed aura with no duration.")
+		return
 	end
 
-	local icon = entry.icon
+	-- Handle raid target icons aura
+	if type(options.icon) == "number" and 1 <= options.icon and options.icon <= 8 then
+		options.icon = options.icon + 137000
+		if options.borderless == nil then
+			options.borderless = true
+		end
+	end
+
+	local aura = fetchAura(module, key, options.borderless)
+	local icon = aura.icon
 
 	if options.icon then
 		icon.tex:SetTexture(options.icon)
@@ -479,15 +519,15 @@ function plugin:BigWigs_ShowAura(_, module, key, options)
 	end
 
 	if options.text then
-		entry.hasText = options.text ~= ""
-		if entry.hasText then
+		aura.hasText = options.text ~= ""
+		if aura.hasText then
 			options.text = options.text:gsub("{rt([1-8])}", function(icon)
 				return "|T" .. (tonumber(icon) + 137000) .. ":16:16:0:-11|t"
 			end)
 		end
 		icon.text:SetText(options.text)
 	elseif options.text == false then
-		entry.hasText = false
+		aura.hasText = false
 		icon.text:SetText("")
 	end
 
@@ -505,34 +545,41 @@ function plugin:BigWigs_ShowAura(_, module, key, options)
 		icon.cd:SetCooldown(0, 0)
 	end
 
-	if (options.pulse == nil and entry.fresh) or options.pulse then
+	if (options.pulse == nil and aura.fresh) or options.pulse then
+		icon.fadeIn:Stop()
+		icon.pulseIn:Stop()
 		icon.fadeIn:Play()
 		icon.pulseIn:Play()
 	end
 
 	if options.pin then
-		entry.pin = tonumber(options.pin) or 0
-	elseif entry.pin == nil then
-		entry.pin = 0
+		aura.pin = tonumber(options.pin) or 0
+	elseif aura.pin == nil then
+		aura.pin = 0
 	end
 
-	tinsert(rack, entry)
-	updateRack()
+	if aura.fresh then
+		tinsert(rack, aura)
+	end
 
 	icon:Show()
-	entry.fresh = false
+	updateRack()
 
 	if key == nil or options.autoremove then
+		if aura.timer then aura.timer:Cancel() end
 		local delay = type(options.autoremove) == "number" and options.autoremove or options.duration
-		C_Timer.After(delay, function() freeAura(entry) end)
+		aura.timer = C_Timer.NewTimer(delay, function()
+			freeAura(aura)
+			updateRack()
+		end)
 	end
 end
 
 function plugin:BigWigs_HideAura(_, module, key)
-	local id = auraId(module, key)
-	local entry = auras[id]
-	if entry then
-		freeAura(entry)
+	local aura = auras[auraId(module, key)]
+	if aura then
+		freeAura(aura)
+		updateRack()
 	end
 end
 
@@ -540,13 +587,16 @@ do
 	local collectable = {}
 	function plugin:BigWigs_OnBossDisable(_, module)
 		wipe(collectable)
-		for _, entry in ipairs(rack) do
-			if entry.module == module then
-				tinsert(collectable, entry)
+		for _, aura in ipairs(rack) do
+			if aura.module == module then
+				tinsert(collectable, aura)
 			end
 		end
-		for _, entry in ipairs(collectable) do
-			freeAura(entry)
+		if #collectable > 0 then
+			for _, entry in ipairs(collectable) do
+				freeAura(entry)
+			end
+			updateRack()
 		end
 	end
 end
