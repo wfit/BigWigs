@@ -168,8 +168,6 @@ local lower_particules = mod:AddCustomOption { "lower_particules", "Lower Partic
 	icon = 64615, desc = "Lower the Particle Density setting during Lingering Eruption." }
 local meteors_impact = mod:AddCustomOption { "meteors_landing", "Armageddon Meteors Impact", default = true,
 	configurable = true, icon = 87701, desc = "Countdown until meteors impact during Armageddon" }
-local obelisks_explosion = mod:AddCustomOption { "obelisks_explosion", "Demonic Obelisks Explosion", default = true,
-	configurable = true, icon = 87701, desc = "Countdown until Demonic Obelisks explosion" }
 local eruptingMarker = mod:AddMarkerOption(false, "player", 3, 236710, 3, 4, 5) -- Skip marks 1 + 2 for visibility
 local shadowsoulMarker = mod:AddMarkerOption(false, "npc", 1, -15397, 1, 2, 3, 4, 5) -- Shadowsoul
 function mod:GetOptions()
@@ -195,8 +193,7 @@ function mod:GetOptions()
 		"custom_on_track_illidan",
 		"custom_on_zoom_in",
 		{238999, "HUD"}, -- Darkness of a Thousand Souls
-		-15543, -- Demonic Obelisk
-		{obelisks_explosion, "COUNTDOWN"},
+		{-15543, "IMPACT", "IMPACT_COUNTDOWN"}, -- Demonic Obelisk
 		243982, -- Tear Rift
 		244856, -- Flaming Orb
 		240262, -- Burning
@@ -920,7 +917,7 @@ do
 		local t = GetTime()
 		if t-prev > 1.5 then
 			prev = t
-			self:CastBar(obelisks_explosion, 5, L.obeliskExplosion, -15543)
+			self:ImpactBar(-15543, 5, L.obeliskExplosion, -15543)
 		end
 	end
 end
@@ -929,7 +926,7 @@ function mod:StartObeliskTimer(t)
 	local obeliskCounter = self:Mythic() and (obeliskCount+2) or self:Heroic() and (darknessCount+1) or darknessCount -- Mythic: 3-4-5-6-7... Heroic: 3-3-4-4-5... Normal: 2-2-3-3-4...
 	self:Bar(-15543, t, L.countx:format(self:SpellName(-15543), obeliskCounter))
 	self:ScheduleTimer("Message", t, -15543, "Attention", "Info", CL.spawned:format(L.countx:format(self:SpellName(-15543), obeliskCounter)))
-	self:ScheduleTimer("CastBar", t, obelisks_explosion, 13, L.obeliskExplosion, -15543) -- will get readjusted in :DemonicObelisk()
+	self:ScheduleTimer("ImpactBar", t, -15543, 13, L.obeliskExplosion, -15543) -- will get readjusted in :DemonicObelisk()
 	obeliskCount = obeliskCount + 1
 	if obeliskCount % 2 == 0 then
 		self:ScheduleTimer("StartObeliskTimer", t, 36)
