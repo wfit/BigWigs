@@ -163,6 +163,7 @@ end
 -- Initialization
 --
 
+local reflection_marker = mod:AddCustomOption { "reflection_marker", "Set marker on tank affected by Shadow Reflection: Wailing", default = true }
 local lower_particules = mod:AddCustomOption { "lower_particules", "Lower Particle Density", default = true,
 	icon = 64615, desc = "Lower the Particle Density setting during Lingering Eruption." }
 local meteors_impact = mod:AddCustomOption { "meteors_landing", "Armageddon Meteors Impact", default = true,
@@ -185,6 +186,7 @@ function mod:GetOptions()
 		{238430, "SAY", "FLASH", "SMARTCOLOR", "AURA"}, -- Bursting Dreadflame
 		{238505, "SAY", "ICON", "FLASH", "PROXIMITY", "AURA"}, -- Focused Dreadflame
 		{236378, "SAY", "FLASH"}, -- Shadow Reflection: Wailing
+		reflection_marker,
 		241564, -- Sorrowful Wail
 		{241983, "IMPACT"}, -- Deceiver's Veil
 		241721, -- Illidan's Sightless Gaze
@@ -239,6 +241,7 @@ function mod:OnBossEnable()
 	-- Stage Two: Reflected Souls
 	self:Log("SPELL_AURA_APPLIED", "ShadowReflectionWailing", 236378) -- Shadow Reflection: Wailing
 	self:Log("SPELL_AURA_REMOVED", "ShadowReflectionWailingRemoved", 236378) -- Shadow Reflection: Wailing
+	self:Log("SPELL_AURA_REMOVED", "LingeringWailRemoved", 243624) -- Lingering Wail
 	self:Log("SPELL_CAST_SUCCESS", "SorrowfulWail", 241564) -- Sorrowful Wail
 	self:Death("WailingReflectionDeath", 119107) -- Wailing Add
 
@@ -296,6 +299,14 @@ end
 function mod:OnBossDisable()
 	if inIntermission and stage == 2 then
 		resetMinimap(self)
+	end
+	if self:GetOption(reflection_marker) and self:Mythic() then
+		for unit in self:IterateGroup() do
+			local icon = GetRaidTargetIndex(unit)
+			if icon and self:Tank(unit) and icon == 7 then
+				SetRaidTarget(unit, 0)
+			end
+		end
 	end
 	self:RestoreParticles()
 end
@@ -599,6 +610,9 @@ do
 		local timer = 114
 		if self:Mythic() and stage == 2 then
 			timer = wailingMythicTimers[wailingCounter]
+			if self:GetOption(reflection_marker) then
+				SetRaidTarget(args.destName, 7)
+			end
 		end
 		self:Bar(args.spellId, timer, INLINE_TANK_ICON.." "..CL.count:format(L.reflectionWailing, wailingCounter)) -- Not seen 2nd add in P1
 		if self:Me(args.destGUID) then
@@ -618,6 +632,12 @@ do
 	function mod:SorrowfulWail(args)
 		self:Message(args.spellId, "Attention", "Alarm")
 		self:Bar(args.spellId, 15.8)
+	end
+
+	function mod:LingeringWailRemoved(args)
+		if self:GetOption(reflection_marker) then
+			SetRaidTarget(args.destName, 0)
+		end
 	end
 
 	function mod:WailingReflectionDeath()
