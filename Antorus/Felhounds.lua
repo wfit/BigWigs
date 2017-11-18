@@ -16,12 +16,21 @@ mod.respawnTime = 5
 -- Locals
 --
 
+local FEL = "Fel"
+local FIRE = "Fire"
+
+local colors = {}
+local color
+
 --------------------------------------------------------------------------------
 -- Initialization
 --
 
+local color_aura = mod:AddCustomOption { "color_aura", "Show attributed color as Aura when pulling the boss." }
 function mod:GetOptions()
 	return {
+		color_aura,
+
 		--[[ F'harg ]]--
 		251445, -- Burning Maw
 		244072, -- Molten Touch
@@ -49,6 +58,8 @@ end
 function mod:OnBossEnable()
 	self:RegisterUnitEvent("UNIT_SPELLCAST_SUCCEEDED", nil, "boss1", "boss2")
 
+	self:Log("SPELL_AURA_APPLIED", "FlametouchedOrShadowtouched", 244054, 244055)
+
 	--[[ F'harg ]]--
 	self:Log("SPELL_CAST_SUCCESS", "BurningMaw", 251445)
 	self:Log("SPELL_AURA_APPLIED", "MoltenTouchApplied", 244072)
@@ -72,6 +83,9 @@ function mod:OnBossEnable()
 end
 
 function mod:OnEngage()
+	wipe(colors)
+	color = nil
+
 	self:CDBar(251445, 10.5) -- Burning Maw
 	self:CDBar(245098, 10.5) -- Corrupting Maw
 	self:Bar(244072, 19.5) -- Molten Touch
@@ -90,6 +104,15 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(_, spellName, _, _, spellId)
 	if spellId == 244159 then -- Consuming Sphere
 		self:Message(244131, "Attention", "Alert")
 		self:Bar(244131, 78.0)
+	end
+end
+
+function mod:FlametouchedOrShadowtouched(args)
+	local c = args.spellId == 244054 and FIRE or FEL
+	colors[args.destGUID] = c
+	if self:Me(args.destGUID) then
+		color = c
+		self:ShowAura(color_aura, 7, c, { icon = args.spellIcon, countdown = false }, true)
 	end
 end
 
