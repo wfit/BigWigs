@@ -495,7 +495,7 @@ function plugin:BigWigs_ShowAura(_, module, key, options)
 		error("Cannot show a nil-keyed aura with no duration.")
 		return
 	end
-	if type(options.autoremove) ~= "number" and not options.duration then
+	if options.autoremove and type(options.autoremove) ~= "number" and not options.duration then
 		error("Cannot show an auto-removed aura with no duration.")
 		return
 	end
