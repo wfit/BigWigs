@@ -312,10 +312,8 @@ do
 		local status = math.ceil(10 * amount / maxAmount) / 10
 		if status ~= lastStatus then
 			lastStatus = status
-			self:SmartColorSet(spellId,
-				status * 1.0 + (1 - status) * 0.2,
-				status * 0.2 + (1 - status) * 0.8,
-				0.2)
+			local r, g, b = Oken:ColorGradient(status, 0.2, 0.8, 0.2, 0.8, 0.8, 0.2, 1, 0.2, 0.2)
+			self:SmartColorSet(spellId, r, g, b)
 		end
 	end
 end
