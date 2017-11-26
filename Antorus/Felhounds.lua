@@ -41,6 +41,7 @@ function mod:GetOptions()
 		--[[ Shatug ]]--
 		245098, -- Corrupting Maw
 		244131, -- Consuming Sphere
+		{245024, "AURA"}, -- Consumed
 		{244069, "SAY", "ICON"}, -- Weight of Darkness
 		244056, -- Siphon Corruption
 		{248819, "SAY"}, -- Siphoned
@@ -72,6 +73,8 @@ function mod:OnBossEnable()
 
 	--[[ Shatug ]]--
 	self:Log("SPELL_CAST_SUCCESS", "CorruptingMaw", 245098)
+	self:Log("SPELL_AURA_APPLIED", "ConsumedApplied", 245024)
+	self:Log("SPELL_AURA_REMOVED", "ConsumedRemoved", 245024)
 	self:Log("SPELL_AURA_APPLIED", "WeightofDarknessApplied", 244069)
 	self:Log("SPELL_AURA_REMOVED", "WeightofDarknessRemoved", 244069)
 	self:Log("SPELL_CAST_SUCCESS", "SiphonCorruption", 244056)
@@ -188,6 +191,18 @@ end
 function mod:CorruptingMaw(args)
 	self:Message(args.spellId, "Important", "Alarm")
 	self:CDBar(args.spellId, 10.5)
+end
+
+function mod:ConsumedApplied(args)
+	if self:Me(args.destGUID) then
+		self:ShowAura(args.spellId, "Move out")
+	end
+end
+
+function mod:ConsumedRemoved(args)
+	if self:Me(args.destGUID) then
+		self:HideAura(args.spellId)
+	end
 end
 
 do
