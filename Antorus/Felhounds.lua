@@ -36,7 +36,7 @@ function mod:GetOptions()
 		{244072, "SMARTCOLOR"}, -- Molten Touch
 		{244768, "SAY", "AURA"}, -- Desolate Gaze
 		244057, -- Enflame Corruption
-		{248815, "SAY"}, -- Enflamed
+		{248815, "SAY", "AURA"}, -- Enflamed
 
 		--[[ Shatug ]]--
 		245098, -- Corrupting Maw
@@ -44,7 +44,7 @@ function mod:GetOptions()
 		{245024, "AURA"}, -- Consumed
 		{244069, "SAY", "ICON"}, -- Weight of Darkness
 		244056, -- Siphon Corruption
-		{248819, "SAY"}, -- Siphoned
+		{248819, "SAY", "AURA"}, -- Siphoned
 
 		--[[ General ]]--
 		{244050, "AURA"}, -- Destroyer's Boon
@@ -174,17 +174,49 @@ function mod:EnflameCorruption(args)
 	self:CastBar(args.spellId, 9)
 end
 
-function mod:Enflamed(args)
-	if self:Me(args.destGUID) then
-		self:TargetMessage(args.spellId, args.destName, "Personal", "Warning")
-		self:Say(args.spellId)
-		self:SayCountdown(args.spellId, 4)
-	end
-end
+do
+	local rangeCheck
+	local lastStatus = -1
 
-function mod:EnflamedRemoved(args)
-	if self:Me(args.destGUID) then
-		self:CancelSayCountdown(args.spellId)
+	function mod:CheckEnflamedRange(spellId)
+		local status = 1
+		for unit in mod:IterateGroup() do
+			if not UnitIsUnit(unit, "player") and not UnitIsDead(unit) and mod:Range(unit) <= 8 then
+				status = 0
+				break
+			end
+		end
+		if status ~= lastStatus then
+			lastStatus = status
+			if status == 0 then
+				-- Too close to someone else
+				self:ShowAura(spellId, { stack = "|cffff0000<!>" })
+			elseif status == 1 then
+				-- Alright
+				self:ShowAura(spellId, { stack = "|cff00ff00OK" })
+			end
+		end
+	end
+
+	function mod:Enflamed(args)
+		if self:Me(args.destGUID) then
+			self:TargetMessage(args.spellId, args.destName, "Personal", "Warning")
+			self:Say(args.spellId)
+			self:SayCountdown(args.spellId, 4)
+
+			self:ShowAura(args.spellId, 4, "Move out")
+			rangeCheck = self:ScheduleRepeatingTimer("CheckEnflamedRange", 0.2, args.spellId)
+			lastStatus = -1
+			self:CheckAnguishRange(args.spellId)
+		end
+	end
+
+	function mod:EnflamedRemoved(args)
+		if self:Me(args.destGUID) then
+			self:CancelSayCountdown(args.spellId)
+			self:CancelTimer(rangeCheck)
+			self:HideAura(args.spellId)
+		end
 	end
 end
 
@@ -195,7 +227,7 @@ end
 
 function mod:ConsumedApplied(args)
 	if self:Me(args.destGUID) then
-		self:ShowAura(args.spellId, "Move out")
+		self:ShowAura(args.spellId, "Orb !")
 	end
 end
 
@@ -237,12 +269,14 @@ function mod:Siphoned(args)
 		self:TargetMessage(args.spellId, args.destName, "Personal", "Warning")
 		self:Say(args.spellId)
 		self:SayCountdown(args.spellId, 4)
+		self:ShowAura(args.spellId, 4, "Stack up")
 	end
 end
 
 function mod:SiphonedRemoved(args)
 	if self:Me(args.destGUID) then
 		self:CancelSayCountdown(args.spellId)
+		self:HideAura(args.spellId)
 	end
 end
 
