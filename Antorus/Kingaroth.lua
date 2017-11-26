@@ -48,16 +48,19 @@ function mod:GetOptions()
 		--[[ Stage: Deployment ]]--
 		{254919, "TANK"}, -- Forging Strike
 		254926, -- Reverberating Strike
+		{249680, "AURA"}, -- Reverberating Decimation
 		248214, -- Diabolic Bomb
+		{249535, "TANK", "AURA"}, -- Demolished
 		{246833, "IMPACT"}, -- Ruiner
 		248375, -- Shattering Strike
 
 		--[[ Stage: Construction ]]--
 		246516, -- Apocalypse Protocol
+		{248061, "IMPACT"}, -- Purging Protocol
 
 		--[[ Adds ]]--
 		246657, -- Annihilation
-		246686, -- Decimation
+		{246686, "AURA"}, -- Decimation
 		{246698, "SAY"}, -- Demolish
 	},{
 		[244312] = -16151, -- Stage: Deployment
@@ -74,6 +77,7 @@ function mod:OnBossEnable()
 	self:Log("SPELL_AURA_APPLIED", "ForgingStrikeApplied", 254919)
 	self:Log("SPELL_CAST_START", "ReverberatingStrike", 254926)
 	self:Log("SPELL_CAST_SUCCESS", "DiabolicBomb", 248214)
+	self:Log("SPELL_AURA_APPLIED", "Demolished", 249535)
 	self:Log("SPELL_CAST_START", "Ruiner", 246833)
 
 	--[[ Stage: Construction ]]--
@@ -188,6 +192,17 @@ function mod:DiabolicBomb(args)
 	end
 end
 
+do
+	local prev = 0
+	function mod:Demolished(args)
+		local t = GetTime()
+		if t - prev > 0.5 then
+			prev = t
+			self:ShowAura(args.spellId, 7, "Wait", { pulse = false }, true)
+		end
+	end
+end
+
 function mod:Ruiner(args)
 	self:Message(args.spellId, "Urgent", "Warning", CL.casting:format(args.spellName))
 	self:ImpactBar(args.spellId, 8)
@@ -212,6 +227,8 @@ function mod:ApocalypseProtocol(args)
 	self:StopBar(L.empowered:format(self:SpellName(246833))) -- (E) Ruiner
 	self:Message(args.spellId, "Positive", "Long")
 	self:CastBar(args.spellId, 40)
+	self:ScheduleTimer("Message", 32, 248061, "Attention", "Info", CL.soon:format(self:SpellName(248061))) -- Purging Protocol
+	self:ScheduleTimer("ImpactBar", 32, 248061, 8) -- Purging Protocol
 	nextApocalypseProtocol = GetTime() + 129
 	self:Bar(args.spellId, 129)
 end
@@ -260,7 +277,8 @@ do
 	function mod:Decimation(args)
 		if self:Me(args.destGUID) then
 			self:Say(246686)
-			self:SayCountdown(246686, 6)
+			self:SayCountdown(246686, 5)
+			self:ShowAura(args.spellId, 5, "Move", true)
 		end
 		playerList[#playerList+1] = args.destName
 		if #playerList == 1 then
@@ -305,6 +323,7 @@ do
 		if self:Me(args.destGUID) then
 			self:Say(args.spellId)
 			self:SayCountdown(args.spellId, 4)
+			self:ShowAura(args.spellId, 4, "Move", true)
 		end
 		playerList[#playerList+1] = args.destName
 		if #playerList == 1 then
