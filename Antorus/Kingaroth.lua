@@ -62,10 +62,14 @@ function mod:GetOptions()
 		246657, -- Annihilation
 		{246686, "AURA"}, -- Decimation
 		{246698, "SAY"}, -- Demolish
+
+		--[[ Mythic ]]--
+		{249680, "SAY"}, -- Reverberating Decimation
 	},{
 		[244312] = -16151, -- Stage: Deployment
 		[246516] = -16152, -- Stage: Construction
 		[246657] = CL.adds,
+		[249680] = "mythic",
 	}
 end
 
@@ -303,18 +307,21 @@ function mod:EmpoweredRuiner(args)
 	self:Message(246833, "Neutral", "Info", L.gains:format(args.spellName))
 	empRuiner = true
 	self:Bar(246833, self:BarTimeLeft(self:SpellName(246833)), L.empowered:format(self:SpellName(246833))) -- (E) Ruiner
+	self:StopBar(246833)
 end
 
 function mod:EmpoweredReverberatingStrike(args)
 	self:Message(254926, "Neutral", "Info", L.gains:format(args.spellName))
 	empStrike = true
 	self:Bar(254926, self:BarTimeLeft(self:SpellName(254926)), L.empowered:format(self:SpellName(254926))) -- (E) Reverberating Strike
+	self:StopBar(254926)
 end
 
 function mod:EmpoweredDiabolicBomb(args)
 	self:Message(248214, "Neutral", "Info", L.gains:format(args.spellName))
 	empBomb = true
 	self:Bar(248214, self:BarTimeLeft(self:SpellName(248214)), L.empowered:format(self:SpellName(248214))) -- (E) Diabolic Bomb
+	self:StopBar(248214)
 end
 
 do
