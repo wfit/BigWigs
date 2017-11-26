@@ -33,7 +33,7 @@ function mod:GetOptions()
 
 		--[[ F'harg ]]--
 		251445, -- Burning Maw
-		244072, -- Molten Touch
+		{244072, "SMARTCOLOR"}, -- Molten Touch
 		{244768, "SAY", "AURA"}, -- Desolate Gaze
 		244057, -- Enflame Corruption
 		{248815, "SAY"}, -- Enflamed
@@ -63,6 +63,7 @@ function mod:OnBossEnable()
 	--[[ F'harg ]]--
 	self:Log("SPELL_CAST_SUCCESS", "BurningMaw", 251445)
 	self:Log("SPELL_AURA_APPLIED", "MoltenTouchApplied", 244072)
+	self:Log("SPELL_AURA_REMOVED", "SingedRemoved", 244091)
 	self:Log("SPELL_AURA_APPLIED", "DesolateGazeApplied", 244768)
 	self:Log("SPELL_AURA_REMOVED", "DesolateGazeRemoved", 244768)
 	self:Log("SPELL_CAST_SUCCESS", "EnflameCorruption", 244057)
@@ -129,6 +130,16 @@ do
 		if #playerList == 1 then
 			self:Bar(args.spellId, 95.5)
 			self:ScheduleTimer("TargetMessage", 0.3, args.spellId, playerList, "Attention", "Warning")
+		end
+		if self:Me(args.destGUID) then
+			self:SmartColorSet(244072, 1, 0.5, 0)
+			self:ScheduleTimer("SmartColorUnset", 13, 244072)
+		end
+	end
+
+	function mod:SingedRemoved(args)
+		if self:Me(args.destGUID) then
+			self:SmartColorUnset(244072)
 		end
 	end
 end
