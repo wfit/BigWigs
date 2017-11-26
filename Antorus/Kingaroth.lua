@@ -48,9 +48,7 @@ function mod:GetOptions()
 		--[[ Stage: Deployment ]]--
 		{254919, "TANK"}, -- Forging Strike
 		254926, -- Reverberating Strike
-		{249680, "AURA"}, -- Reverberating Decimation
 		248214, -- Diabolic Bomb
-		{249535, "TANK", "AURA"}, -- Demolished
 		{246833, "IMPACT"}, -- Ruiner
 		248375, -- Shattering Strike
 
@@ -64,7 +62,8 @@ function mod:GetOptions()
 		{246698, "SAY"}, -- Demolish
 
 		--[[ Mythic ]]--
-		{249680, "SAY"}, -- Reverberating Decimation
+		{249680, "SAY", "AURA"}, -- Reverberating Decimation
+		{249535, "TANK", "AURA"}, -- Demolished
 	},{
 		[244312] = -16151, -- Stage: Deployment
 		[246516] = -16152, -- Stage: Construction
