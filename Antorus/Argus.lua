@@ -89,7 +89,7 @@ function mod:GetOptions()
 
 		--[[ Stage 4 ]]--
 		{256544, "IMPACT"}, -- End of All Things
-		{257299, "AURA"}, -- Ember of Rage
+		---{257299, "AURA"}, -- Ember of Rage
 		258039, -- Deadly Scythe
 		256388, -- Initialization Sequence
 		257214, -- Titanforging
@@ -149,9 +149,9 @@ function mod:OnBossEnable()
 
 	self:Log("SPELL_CAST_START", "EndofAllThings", 256544)
 	self:Log("SPELL_INTERRUPT", "EndofAllThingsInterupted", 256544)
-	self:Log("SPELL_AURA_APPLIED", "EmberOfRage", 257299)
-	self:Log("SPELL_AURA_APPLIED_DOSE", "EmberOfRage", 257299)
-	self:Log("SPELL_AURA_REMOVED", "EmberOfRageRemoved", 257299)
+	--self:Log("SPELL_AURA_APPLIED", "EmberOfRage", 257299)
+	--self:Log("SPELL_AURA_APPLIED_DOSE", "EmberOfRage", 257299)
+	--self:Log("SPELL_AURA_REMOVED", "EmberOfRageRemoved", 257299)
 	self:Log("SPELL_CAST_START", "DeadlyScythe", 258039)
 	self:Log("SPELL_AURA_APPLIED", "DeadlyScytheStack", 258039)
 	self:Log("SPELL_AURA_APPLIED_DOSE", "DeadlyScytheStack", 258039)
