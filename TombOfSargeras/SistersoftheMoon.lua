@@ -346,6 +346,7 @@ end
 
 do
 	local colorUpdater
+	local maxAmount = -1
 	local lastStatus = -1
 
 	function mod:EmbraceoftheEclipseApplied(args)
@@ -367,23 +368,15 @@ do
 
 	function mod:CheckShieldStatus(spellId, spellName)
 		local amount = select(17, UnitDebuff("player", spellName))
-		if amount then
-			local status = 0
-			if amount > 500000 then
-				status = 2
-			elseif amount > 100000 then
-				status = 1
-			end
-			if status ~= lastStatus then
-				lastStatus = status
-				if status == 0 then
-					self:SmartColorSet(spellId, 0.2, 0.8, 0.2)
-				elseif status == 1 then
-					self:SmartColorSet(spellId, 1, 0.5, 0)
-				elseif status == 2 then
-					self:SmartColorSet(spellId, 1, 0.2, 0.2)
-				end
-			end
+		if not amount then return end
+		if lastStatus == -1 then maxAmount = amount end
+		local status = math.ceil(10 * amount / maxAmount) / 10
+		if status ~= lastStatus then
+			lastStatus = status
+			self:SmartColorSet(spellId,
+				status * 1.0 + (1 - status) * 0.2,
+				status * 0.2 + (1 - status) * 0.8,
+				0.2)
 		end
 	end
 end
