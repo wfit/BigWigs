@@ -287,16 +287,12 @@ do
 		if t-prev > 0.5 then
 			prev = t
 			self:Message(244050, "Urgent", "Warning", args.spellName, args.spellId)
-			if self:Tank() then
-				self:ShowAura(244050, "Spread Boss")
-			end
+			self:ShowAura(244050, "Spread Boss")
 		end
 	end
 
 	function mod:SargerasBlessingRemoved()
-		if self:Tank() then
-			self:HideAura(244050)
-		end
+		self:HideAura(244050)
 	end
 end
 

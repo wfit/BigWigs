@@ -86,7 +86,7 @@ function mod:RAID_BOSS_WHISPER(_, msg)
 		self:Message(244410, "Personal", "Warning", CL.you:format(self:SpellName(244410)))
 		self:Say(244410)
 		self:SayCountdown(244410, 3)
-		self:ShowAura(244410, 5, "Move")
+		self:ShowAura(244410, 5, "Move", true)
 	end
 end
 
@@ -112,7 +112,7 @@ function mod:FelBombardment(args)
 		self:Say(args.spellId)
 		self:SayCountdown(args.spellId, 7)
 		self:TargetBar(args.spellId, 7, args.destName)
-		self:ShowAura(args.spellId, 7, "Run away")
+		self:ShowAura(args.spellId, 7, "Run", true)
 	end
 end
 

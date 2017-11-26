@@ -13,6 +13,9 @@ mod:RegisterEnableMob(122468, 122467, 122469, 125436) -- Noura, Asara, Diima, Th
 mod.engageId = 2073
 mod.respawnTime = 15
 
+local shivanPactCount = 0
+local TORMENT_AURA_DURATION = 5
+
 --------------------------------------------------------------------------------
 -- Localization
 --
@@ -22,19 +25,24 @@ if L then
 	L.torment_of_the_titans = mod:SpellName(-16138) -- Torment of the Titans
 	L.torment_of_the_titans_desc = "The Shivvara will force the titan souls to use their abilities against the players."
 	L.torment_of_the_titans_icon = 245910 -- Spectral Army of Norgannon
+
+	L.amanthulEffect = "Adds"
+	L.golgannethEffect = "Spread"
+	L.kazgorothEffect = "Flames"
+	L.norgannonEffect = "Walls"
 end
 
 --------------------------------------------------------------------------------
 -- Initialization
 --
 
-local cosmicGlareMarker = mod:AddMarkerOption(false, "player", 3, 250912, 3,4)
+local cosmicGlareMarker = mod:AddMarkerOption(true, "player", 3, 250912, 3,4)
 function mod:GetOptions()
 	return {
 		--[[ General ]]--
 		"stages",
-		253203, -- Shivan Pact
-		"torment_of_the_titans",
+		{253203, "AURA"}, -- Shivan Pact
+		{"torment_of_the_titans", "AURA"},
 
 		--[[ Noura, Mother of Flame ]]--
 		{244899, "TANK"}, -- Fiery Strike
@@ -68,7 +76,9 @@ function mod:OnBossEnable()
 	--[[ General ]]--
 	self:RegisterUnitEvent("UNIT_TARGETABLE_CHANGED", nil, "boss1", "boss2", "boss3", "boss4")
 	self:Log("SPELL_AURA_APPLIED", "ShivanPact", 253203)
+	self:Log("SPELL_AURA_REMOVED", "ShivanPactRemoved", 253203)
 	self:RegisterEvent("CHAT_MSG_RAID_BOSS_EMOTE")
+	self:Log("SPELL_CAST_SUCCESS", "Torments", 250335, 249793, 250333, 250334) -- Aman'Thul, Golganneth, Kaz'goroth, Norgannon
 
 	--[[ Noura, Mother of Flame ]]--
 	self:Log("SPELL_AURA_APPLIED", "FieryStrike", 244899)
@@ -88,6 +98,7 @@ function mod:OnBossEnable()
 	self:Log("SPELL_AURA_APPLIED", "Flashfreeze", 245518)
 	self:Log("SPELL_AURA_APPLIED_DOSE", "Flashfreeze", 245518)
 	self:Log("SPELL_AURA_APPLIED", "ChilledBlood", 245586)
+	self:Log("SPELL_AURA_REMOVED", "ChilledBloodRemoved", 245586)
 	self:Log("SPELL_CAST_START", "OrbofFrost", 253650)
 
 	--[[ Thu'raya, Mother of the Cosmos (Mythic) ]]--
@@ -97,6 +108,8 @@ function mod:OnBossEnable()
 end
 
 function mod:OnEngage()
+	shivanPactCount = 0
+
 	self:Bar(245627, 8.5) -- Whirling Saber
 	self:Bar(244899, 12.1) -- Fiery Strike
 	self:Bar(253429, 20.6) -- Fulminating Pulse
@@ -159,6 +172,17 @@ do
 			prev = t
 			self:Message(args.spellId, "Important", "Info")
 		end
+		if shivanPactCount == 0 then
+			self:ShowAura(args.spellId, "Shivan Pact", { pulse = false })
+		end
+		shivanPactCount = shivanPactCount + 1
+	end
+
+	function mod:ShivanPactRemoved(args)
+		shivanPactCount = shivanPactCount - 1
+		if shivanPactCount == 0 then
+			self:HideAura(args.spellId)
+		end
 	end
 end
 
@@ -166,16 +190,28 @@ function mod:CHAT_MSG_RAID_BOSS_EMOTE(_, msg)
 	if msg:find("250095", nil, true) then -- Machinations of Aman'thul
 		self:Message("torment_of_the_titans", "Important", "Warning", CL.incoming:format(self:SpellName(250095)), 250095) -- Machinations of Aman'thul
 		self:CDBar("torment_of_the_titans", 93.5, L.torment_of_the_titans, L.torment_of_the_titans_icon)
+		self:ShowAura("torment_of_the_titans", L.amanthulEffect, { icon = self:SpellIcon(250095), autoremove = TORMENT_AURA_DURATION })
 	elseif msg:find("245671", nil, true) then -- Flames of Khaz'goroth
 		self:Message("torment_of_the_titans", "Important", "Warning", CL.incoming:format(self:SpellName(245671)), 245671) -- Machinations of Aman'thul
 		self:CDBar("torment_of_the_titans", 93.5, L.torment_of_the_titans, L.torment_of_the_titans_icon)
+		self:ShowAura("torment_of_the_titans", L.kazgorothEffect, { icon = self:SpellIcon(245671), autoremove = TORMENT_AURA_DURATION })
 	elseif msg:find("246763", nil, true) then -- Fury of Golganneth
 		self:Message("torment_of_the_titans", "Important", "Warning", CL.incoming:format(self:SpellName(246763)), 246763) -- Machinations of Aman'thul
 		self:CDBar("torment_of_the_titans", 93.5, L.torment_of_the_titans, L.torment_of_the_titans_icon)
+		self:ShowAura("torment_of_the_titans", L.golgannethEffect, { icon = self:SpellIcon(246763), autoremove = TORMENT_AURA_DURATION })
 	elseif msg:find("245910", nil, true) then -- Spectral Army of Norgannon
 		self:Message("torment_of_the_titans", "Important", "Warning", CL.incoming:format(self:SpellName(245910)), 245910) -- Machinations of Aman'thul
 		self:CDBar("torment_of_the_titans", 93.5, L.torment_of_the_titans, L.torment_of_the_titans_icon)
+		self:ShowAura("torment_of_the_titans", L.norgannonEffect, { icon = self:SpellIcon(245910), autoremove = TORMENT_AURA_DURATION })
 	end
+end
+
+function mod:Torments(args)
+	local effect = args.spellId == 250335 and L.amanthulEffect or
+		args.spellId == 249793 and L.golgannethEffect or
+		args.spellId == 249793 and L.kazgorothEffect or
+		args.spellId == 250334 and L.norgannonEffect
+	self:Emit("COVEN_NEXT_EFFECT", effect)
 end
 
 --[[ Noura, Mother of Flame ]]--
@@ -244,12 +280,42 @@ function mod:FlashfreezeSuccess(args)
 end
 
 do
+	local colorUpdater
+	local maxAmount = -1
+	local lastStatus = -1
+
 	local playerList = mod:NewTargetList()
 	function mod:ChilledBlood(args)
 		playerList[#playerList+1] = args.destName
 		if #playerList == 1 then
 			self:ScheduleTimer("TargetMessage", 0.3, args.spellId, playerList, "Positive", "Alarm", nil, nil, self:Healer() and true) -- Always play a sound for healers
 			self:Bar(args.spellId, 25.5)
+		end
+		if self:Me(args.destGUID) then
+			lastStatus = -1
+			colorUpdater = self:ScheduleRepeatingTimer("CheckShieldStatus", 0.2, args.spellId, args.spellName)
+			self:CheckShieldStatus(args.spellId, args.spellName)
+		end
+	end
+
+	function mod:ChilledBloodRemoved(args)
+		if self:Me(args.destGUID) then
+			self:CancelTimer(colorUpdater)
+			self:SmartColorUnset(args.spellId)
+		end
+	end
+
+	function mod:CheckShieldStatus(spellId, spellName)
+		local amount = select(17, UnitDebuff("player", spellName))
+		if not amount then return end
+		if lastStatus == -1 then maxAmount = amount end
+		local status = math.ceil(10 * amount / maxAmount) / 10
+		if status ~= lastStatus then
+			lastStatus = status
+			self:SmartColorSet(spellId,
+				status * 1.0 + (1 - status) * 0.2,
+				status * 0.2 + (1 - status) * 0.8,
+				0.2)
 		end
 	end
 end
