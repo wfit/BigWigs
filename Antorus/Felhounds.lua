@@ -35,7 +35,7 @@ function mod:GetOptions()
 		251445, -- Burning Maw
 		{244072, "SMARTCOLOR"}, -- Molten Touch
 		{244768, "SAY", "AURA"}, -- Desolate Gaze
-		244057, -- Enflame Corruption
+		{244057, "IMPACT"}, -- Enflame Corruption
 		{248815, "SAY", "AURA"}, -- Enflamed
 
 		--[[ Shatug ]]--
@@ -43,7 +43,7 @@ function mod:GetOptions()
 		244131, -- Consuming Sphere
 		{245024, "AURA"}, -- Consumed
 		{244069, "SAY", "ICON"}, -- Weight of Darkness
-		244056, -- Siphon Corruption
+		{244056, "IMPACT"}, -- Siphon Corruption
 		{248819, "SAY", "AURA"}, -- Siphoned
 
 		--[[ General ]]--
@@ -171,7 +171,7 @@ end
 function mod:EnflameCorruption(args)
 	self:Message(args.spellId, "Attention", "Alert")
 	self:Bar(args.spellId, 95.5)
-	self:CastBar(args.spellId, 9)
+	self:ImpactBar(args.spellId, self:Mythic() and 15 or 9)
 end
 
 do
@@ -261,7 +261,7 @@ end
 function mod:SiphonCorruption(args)
 	self:Message(args.spellId, "Attention", "Alert")
 	self:Bar(args.spellId, 78.0)
-	self:CastBar(args.spellId, 9)
+	self:ImpactBar(args.spellId, self:Mythic() and 15 or 9)
 end
 
 function mod:Siphoned(args)
@@ -269,7 +269,7 @@ function mod:Siphoned(args)
 		self:TargetMessage(args.spellId, args.destName, "Personal", "Warning")
 		self:Say(args.spellId)
 		self:SayCountdown(args.spellId, 4)
-		self:ShowAura(args.spellId, 4, "Stack up")
+		self:ShowAura(args.spellId, 4, "Pack")
 	end
 end
 

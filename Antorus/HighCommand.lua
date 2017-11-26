@@ -30,7 +30,7 @@ local incomingBoss = {
 function mod:GetOptions()
 	return {
 		--[[ In Pod: Admiral Svirax ]] --
-		244625, -- Fusillade
+		{244625, "IMPACT"}, -- Fusillade
 
 		--[[ In Pod: Chief Engineer Ishkar ]] --
 		245161, -- Entropic Mine
@@ -139,7 +139,7 @@ end
 
 function mod:Fusillade(args)
 	self:Message(args.spellId, "Urgent", "Warning")
-	self:CastBar(args.spellId, 5)
+	self:ImpactBar(args.spellId, 5)
 	self:CDBar(args.spellId, 30) -- ~29.8-33.2s
 end
 

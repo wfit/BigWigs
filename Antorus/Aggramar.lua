@@ -18,6 +18,7 @@ local techniqueStarted = 0
 local comboTime = nil
 local foeBreakerCount = 1
 local flameRendCount = 1
+local searingTempestCount = 1
 
 --------------------------------------------------------------------------------
 -- Initialization
@@ -31,11 +32,11 @@ function mod:GetOptions()
 		--[[ Stage One: Wrath of Aggramar ]]--
 		{245990, "TANK"}, -- Taeshalach's Reach
 		{245994, "SAY", "FLASH"}, -- Scorching Blaze
-		{244693, "SAY"}, -- Wake of Flame
-		244688, -- Taeshalach Technique
+		{244693, "SAY", "AURA"}, -- Wake of Flame
+		{244688, "AURA"}, -- Taeshalach Technique
 		245458, -- Foe Breaker
 		245463, -- Flame Rend
-		245301, -- Searing Tempest
+		{245301, "IMPACT"}, -- Searing Tempest
 
 		--[[ Stage Two: Champion of Sargeras ]]--
 		245983, -- Flare
@@ -44,7 +45,7 @@ function mod:GetOptions()
 		246037, -- Empowered Flare
 
 		--[[ Mythic ]]--
-		254452, -- Ravenous Blaze
+		{254452, "AURA"}, -- Ravenous Blaze
 		255058, -- Empowered Flame Rend
 		255061 -- Empowered Searing Tempest
 	},{
@@ -102,9 +103,12 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(_, _, _, _, spellId)
 		techniqueStarted = 1
 		foeBreakerCount = 1
 		flameRendCount = 1
+		searingTempestCount = 1
 		comboTime = GetTime() + 60.8
 
 		self:Bar(spellId, 60.8)
+		self:ShowAura(244688, { pin = -1, pulse = false })
+		self:Emit("ARGUS_TAESHALACH_STARTS")
 		if not self:Mythic() then -- Random Combo in Mythic
 			self:Bar(245463, 4, CL.count:format(self:SpellName(244033), flameRendCount)) -- Flame Rend
 			self:Bar(245301, 15.7) -- Searing Tempest
@@ -112,6 +116,7 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(_, _, _, _, spellId)
 	elseif spellId == 244792 then -- Burning Will of Taeshalach, end of Taeshalach Technique but also casted in intermission
 		if techniqueStarted == 1 then -- Check if he actually ends the combo, instead of being in intermission
 			techniqueStarted = 0
+			self:HideAura(244688)
 			self:Bar(245994, 4) -- Scorching Blaze
 			if stage == 1 then
 				self:Bar(244693, 5) -- Wake of Flame
@@ -164,6 +169,7 @@ do
 		self:TargetMessage(244693, name, "Attention", "Alert", nil, nil, true)
 		if self:Me(guid) then
 			self:Say(244693)
+			self:ShowAura(244693, 2, "On YOU", { countdown = false }, true)
 		end
 	end
 	function mod:WakeofFlame(args)
@@ -177,6 +183,7 @@ end
 
 function mod:FoeBreaker(args)
 	self:Message(args.spellId, "Neutral", "Info", CL.count:format(args.spellName, foeBreakerCount))
+	self:ShowAura(244688, "Tank", { icon = args.spellIcon, stacks = "#" .. foeBreakerCount })
 	foeBreakerCount = foeBreakerCount + 1
 	if foeBreakerCount == 2 and not self:Mythic() then -- Random Combo in Mythic
 		self:Bar(args.spellId, 7.5, CL.count:format(args.spellName, foeBreakerCount))
@@ -185,6 +192,7 @@ end
 
 function mod:FlameRend(args)
 	self:Message(args.spellId, "Important", "Alarm", CL.count:format(args.spellName, flameRendCount))
+	self:ShowAura(244688, "Raid", { icon = args.spellIcon, stacks = "#" .. flameRendCount })
 	flameRendCount = flameRendCount + 1
 	if flameRendCount == 2 and not self:Mythic() then -- Random Combo in Mythic
 		self:Bar(args.spellId, 7.5, CL.count:format(args.spellName, flameRendCount))
@@ -192,8 +200,10 @@ function mod:FlameRend(args)
 end
 
 function mod:SearingTempest(args)
+	self:ShowAura(244688, "AoE", { icon = args.spellIcon, stacks = "#" .. searingTempestCount })
 	self:Message(args.spellId, "Urgent", "Warning")
-	self:CastBar(args.spellId, 6)
+	self:ImpactBar(args.spellId, 6)
+	searingTempestCount = searingTempestCount + 1
 end
 
 --[[ Intermission: Fires of Taeshalach ]]--
@@ -230,6 +240,7 @@ do
 		if self:Me(args.destGUID) then
 			self:Flash(args.spellId)
 			self:Say(args.spellId)
+			self:ShowAura(args.spellId, 8, "Move", true)
 		end
 		playerList[#playerList+1] = args.destName
 		if #playerList == 1 then

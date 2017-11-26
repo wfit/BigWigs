@@ -88,7 +88,7 @@ function mod:GetOptions()
 		255935, -- Cosmic Power
 
 		--[[ Stage 4 ]]--
-		256544, -- End of All Things
+		{256544, "IMPACT"}, -- End of All Things
 		{257299, "AURA"}, -- Ember of Rage
 		258039, -- Deadly Scythe
 		256388, -- Initialization Sequence
@@ -520,7 +520,7 @@ end
 
 function mod:EndofAllThings(args)
 	self:Message(args.spellId, "Important", "Warning", CL.casting:format(args.spellName))
-	self:CastBar(args.spellId, 15)
+	self:ImpactBar(args.spellId, 15)
 end
 
 function mod:EndofAllThingsInterupted(args)
