@@ -46,6 +46,8 @@ if L then
 	L.stellarArmory = "{-17077}"
 	L.stellarArmory_desc = armoryDesc
 	L.stellarArmory_icon = "inv_sword_2h_pandaraid_d_01"
+
+	L.orbsDespawn = "Orbs despawn"
 end
 
 --------------------------------------------------------------------------------
@@ -62,16 +64,16 @@ function mod:GetOptions()
 		--[[ Stage 1 ]]--
 		248165, -- Cone of Death
 		248317, -- Soul Blight Orb
-		{248396, "ME_ONLY", "SAY", "FLASH"}, -- Soul Blight
+		{248396, "ME_ONLY", "SAY", "FLASH", "AURA"}, -- Soul Blight
 		248167, -- Death Fog
 		257296, -- Tortured Rage
 		248499, -- Sweeping Scythe
-		{255594, "SAY"}, -- Sky and Sea
+		{255594, "SAY", "AURA", "IMPACT"}, -- Sky and Sea
 
 		--[[ Stage 2 ]]--
-		{250669, "SAY"}, -- Soul Burst
+		{250669, "SAY", "AURA"}, -- Soul Burst
 		burstMarker,
-		{251570, "SAY"}, -- Soul Bomb
+		{251570, "SAY", "AURA"}, -- Soul Bomb
 		bombMarker,
 		255826, -- Edge of Obliteration
 		255199, -- Avatar of Aggramar
@@ -80,13 +82,14 @@ function mod:GetOptions()
 		--[[ Stage 3 ]]--
 		252516, -- The Discs of Norgannon
 		constellarMarker,
-		{252729, "SAY"}, -- Cosmic Ray
+		{252729, "SAY", "AURA"}, -- Cosmic Ray
 		{252616, "SAY"}, -- Cosmic Beacon
 		"stellarArmory",
 		255935, -- Cosmic Power
 
 		--[[ Stage 4 ]]--
 		256544, -- End of All Things
+		{257299, "AURA"}, -- Ember of Rage
 		258039, -- Deadly Scythe
 		256388, -- Initialization Sequence
 		257214, -- Titanforging
@@ -133,6 +136,7 @@ function mod:OnBossEnable()
 	self:Log("SPELL_AURA_APPLIED", "VulnerabilityApplied", 255433, 255429, 255425, 255419, 255422, 255418, 255430)
 
 	self:Log("SPELL_AURA_APPLIED", "CosmicRayApplied", 252729)
+	self:Log("SPELL_AURA_REMOVED", "CosmicRayRemoved", 252729)
 	self:Log("SPELL_CAST_START", "CosmicBeacon", 252616)
 	self:Log("SPELL_AURA_APPLIED", "CosmicBeaconApplied", 252616)
 	self:Log("SPELL_AURA_APPLIED", "StellarArmoryBuffs", 255496, 255478) -- Sword of the Cosmos, Blades of the Eternal
@@ -145,6 +149,9 @@ function mod:OnBossEnable()
 
 	self:Log("SPELL_CAST_START", "EndofAllThings", 256544)
 	self:Log("SPELL_INTERRUPT", "EndofAllThingsInterupted", 256544)
+	self:Log("SPELL_AURA_APPLIED", "EmberOfRage", 257299)
+	self:Log("SPELL_AURA_APPLIED_DOSE", "EmberOfRage", 257299)
+	self:Log("SPELL_AURA_REMOVED", "EmberOfRageRemoved", 257299)
 	self:Log("SPELL_CAST_START", "DeadlyScythe", 258039)
 	self:Log("SPELL_AURA_APPLIED", "DeadlyScytheStack", 258039)
 	self:Log("SPELL_AURA_APPLIED_DOSE", "DeadlyScytheStack", 258039)
@@ -217,6 +224,7 @@ function mod:SoulBlight(args)
 		self:Flash(args.spellId)
 		self:Say(args.spellId)
 		self:TargetBar(args.spellId, 8, args.destName)
+		self:ShowAura(args.spellId, 8, "Move", true)
 	end
 	self:TargetMessage(args.spellId, args.destName, "Neutral", "Warning")
 end
@@ -246,6 +254,7 @@ end
 
 function mod:SkyandSea(args)
 	self:CDBar(args.spellId, 27)
+	self:ScheduleTimer("ImpactBar", 5, args.spellId, 10, L.orbsDespawn)
 end
 
 -- XXX 2 message perhaps too much, maybe combine?
@@ -253,6 +262,7 @@ function mod:GiftoftheSea(args)
 	self:TargetMessage(255594, args.destName, "Positive", "Long", args.spellName, nil, true)
 	if self:Me(args.destGUID) then
 		self:Say(255594, args.spellName)
+		self:ShowAura(255594, 5, "Sea", true)
 	end
 end
 
@@ -260,11 +270,13 @@ function mod:GiftoftheSky(args)
 	self:TargetMessage(255594, args.destName, "Positive", "Long", args.spellName, nil, true)
 	if self:Me(args.destGUID) then
 		self:Say(255594, args.spellName)
+		self:ShowAura(255594, 5, "Sky", true)
 	end
 end
 
 function mod:StrengthoftheSkyandSea(args)
 	if self:Me(args.destGUID) then
+		self:StopBar(L.orbsDespawn)
 		local amount = args.amount or 1
 		self:Message(255594, "Positive", "Info", CL.stackyou:format(amount, args.spellName))
 	end
@@ -295,6 +307,11 @@ do
 		if self:Me(args.destGUID) then
 			self:Say(args.spellId)
 			self:SayCountdown(args.spellId, 15)
+			if #playerList == 0 then
+				self:ShowAura(args.spellId, 15, "Move", { icon = 450906 }, true)
+			else
+				self:ShowAura(args.spellId, 15, "Move", { icon = 450908 }, true)
+			end
 		end
 		playerList[#playerList+1] = args.destName
 		if #playerList == 1 then
@@ -321,6 +338,7 @@ function mod:Soulbomb(args)
 	if self:Me(args.destGUID) then
 		self:Say(args.spellId)
 		self:SayCountdown(args.spellId, 15)
+		self:ShowAura(args.spellId, 15, "Move", { icon = 450905 }, true)
 	end
 	self:TargetMessage(args.spellId, args.destName, "Urgent", "Warning")
 	self:Bar(args.spellId, stage == 4 and 54 or 42)
@@ -425,11 +443,18 @@ do
 		if self:Me(args.destGUID) then
 			self:Say(args.spellId)
 			self:Flash(args.spellId)
+			self:ShowAura(args.spellId, 6, "Don't move")
 		end
 		playerList[#playerList+1] = args.destName
 		if #playerList == 1 then
 			self:ScheduleTimer("TargetMessage", 0.3, args.spellId, playerList, "Urgent", "Warning", nil, nil, true)
 			self:Bar(args.spellId, 20)
+		end
+	end
+
+	function mod:CosmicRayRemoved(args)
+		if self:Me(args.destGUID) then
+			self:HideAura(args.spellId)
 		end
 	end
 end
@@ -508,6 +533,18 @@ function mod:EndofAllThingsInterupted(args)
 	--self:Bar(250669, 6) -- Soulburst -- XXX Depends on energy going out of stage 2 atm
 	self:Bar(257296, 11) -- Tortured Rage
 	self:Bar(256396, 18.5) -- Initialization Sequence
+end
+
+function mod:EmberOfRage(args)
+	if self:Me(args.destGUID) then
+		self:ShowAura(args.spellId, 20, "Dodge Embers", { stacks = args.amount or 1, countdown = false })
+	end
+end
+
+function mod:EmberOfRageRemoved(args)
+	if self:Me(args.destGUID) then
+		self:HideAura(args.spellId)
+	end
 end
 
 function mod:DeadlyScythe(args)

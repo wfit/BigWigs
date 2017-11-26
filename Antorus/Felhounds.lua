@@ -204,7 +204,7 @@ do
 			self:Say(args.spellId)
 			self:SayCountdown(args.spellId, 4)
 
-			self:ShowAura(args.spellId, 4, "Move out")
+			self:ShowAura(args.spellId, 4, "Move", { countdown = false })
 			rangeCheck = self:ScheduleRepeatingTimer("CheckEnflamedRange", 0.2, args.spellId)
 			lastStatus = -1
 			self:CheckAnguishRange(args.spellId)
@@ -227,7 +227,7 @@ end
 
 function mod:ConsumedApplied(args)
 	if self:Me(args.destGUID) then
-		self:ShowAura(args.spellId, "Orb !")
+		self:ShowAura(args.spellId, "Move")
 	end
 end
 
