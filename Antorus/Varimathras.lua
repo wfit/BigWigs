@@ -39,8 +39,9 @@ function mod:GetOptions()
 		{243960, "TANK"}, -- Shadow Strike
 		243999, -- Dark Fissure
 		{244042, "SAY", "FLASH", "ICON"}, -- Marked Prey
-		{244094, "SAY", "FLASH", "ICON"}, -- Necrotic Embrace
+		{244094, "SAY", "FLASH", "ICON", "AURA"}, -- Necrotic Embrace
 		"shadowOfVarmathras",
+		{248732, "SAY", "AURA"}, -- Echoes of Doom
 	}
 end
 
@@ -66,6 +67,8 @@ function mod:OnBossEnable()
 
 	--[[ Mythic ]]--
 	self:Log("SPELL_CAST_SUCCESS", "EchoesofDoom", 248732)
+	self:Log("SPELL_AURA_APPLIED", "EchoesofDoomApplied", 248732)
+	self:Log("SPELL_AURA_REMOVED", "EchoesofDoomRemoved", 248732)
 end
 
 function mod:OnEngage()
@@ -84,6 +87,16 @@ end
 --------------------------------------------------------------------------------
 -- Event Handlers
 --
+
+function mod:CheckRange(spellId)
+	local inRange = 0
+	for unit in mod:IterateGroup() do
+		if not UnitIsUnit(unit, "player") and not UnitIsDead(unit) and self:Range(unit) <= 8 then
+			inRange = inRange + 1
+		end
+	end
+	self:ShowAura(spellId, { stacks = inRange < 2 and "|cff33ff33OK" or "|cffff3333Move" })
+end
 
 function mod:TormentofFlames(args)
 	if tormentActive ~= 1 then
@@ -161,12 +174,17 @@ function mod:NecroticEmbraceSuccess()
 end
 
 do
+	local rangeCheck
 	local playerList = mod:NewTargetList()
 	function mod:NecroticEmbrace(args)
 		if self:Me(args.destGUID) then
 			self:Say(args.spellId)
 			self:Flash(args.spellId)
 			self:SayCountdown(args.spellId, 6)
+
+			self:ShowAura(args.spellId, 6, "Necrotic", { icon = 450908, countdown = false })
+			rangeCheck = self:ScheduleRepeatingTimer("CheckRange", 0.1, args.spellId)
+			self:CheckRange(args.spellId)
 		end
 		playerList[#playerList+1] = args.destName
 		if #playerList == 1 then
@@ -180,6 +198,8 @@ do
 		self:SecondaryIcon(args.spellId)
 		if self:Me(args.destGUID) then
 			self:CancelSayCountdown(args.spellId)
+			self:CancelTimer(rangeCheck)
+			self:HideAura(args.spellId)
 		end
 	end
 end
@@ -208,5 +228,28 @@ do
 			end
 		end
 
+	end
+end
+
+do
+	local rangeCheck
+	function mod:EchoesofDoomApplied(args)
+		if self:Me(args.destGUID) then
+			self:Say(args.spellId)
+			self:Flash(args.spellId)
+			self:SayCountdown(args.spellId, 5)
+
+			self:ShowAura(args.spellId, 6, "Echoes", { icon = 450906, countdown = false })
+			rangeCheck = self:ScheduleRepeatingTimer("CheckRange", 0.1, args.spellId)
+			self:CheckRange(args.spellId)
+		end
+	end
+
+	function mod:EchoesofDoomRemoved(args)
+		if self:Me(args.destGUID) then
+			self:CancelSayCountdown(args.spellId)
+			self:CancelTimer(rangeCheck)
+			self:HideAura(args.spellId)
+		end
 	end
 end
