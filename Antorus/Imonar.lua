@@ -12,6 +12,8 @@ mod.respawnTime = 30
 -- Locals
 --
 
+local Hud = Oken.Hud
+
 local stage = 1
 local empoweredSchrapnelBlastCount = 1
 local timers = {
@@ -29,7 +31,7 @@ function mod:GetOptions()
 
 		--[[ Stage One: Attack Force ]]--
 		{247367, "TANK"}, -- Shock Lance
-		{254244, "SAY", "FLASH"}, -- Sleep Canister
+		{254244, "SAY", "FLASH", "AURA", "SMARTCOLOR", "HUD"}, -- Sleep Canister
 		247376, -- Pulse Grenade
 
 		--[[ Stage Two: Contract to Kill ]]--
@@ -64,6 +66,8 @@ function mod:OnBossEnable()
 	self:Log("SPELL_AURA_APPLIED_DOSE", "ShockLance", 247367)
 	self:Log("SPELL_CAST_SUCCESS", "ShockLanceSuccess", 247367)
 	self:Log("SPELL_CAST_SUCCESS", "SleepCanister", 254244)
+	self:Log("SPELL_AURA_APPLIED", "SleepCanisterApplied", 255029)
+	self:Log("SPELL_CAST_REMOVED", "SleepCanisterRemoved", 255029)
 	self:Log("SPELL_CAST_START", "PulseGrenade", 247376)
 
 	--[[ Stage Two: Contract to Kill ]]--
@@ -100,6 +104,7 @@ function mod:RAID_BOSS_WHISPER(_, msg)
 		self:Message(254244, "Personal", "Alarm", CL.you:format(self:SpellName(254244)))
 		self:Flash(254244)
 		self:Say(254244)
+		self:ShowAura(254244, "On YOU")
 	end
 end
 
@@ -146,6 +151,78 @@ end
 function mod:SleepCanister(args)
 	self:Message(args.spellId, "Important") -- Play sound only if targetted: See RAID_BOSS_WHISPER
 	self:Bar(args.spellId, 10.9)
+end
+
+-- Sleep Canister stuff
+do
+	local rangeCheck
+	local lastStatus = -1
+
+	function mod:CheckSleepRange(spellId)
+		local status = 1
+		for unit in mod:IterateGroup() do
+			if not UnitIsUnit(unit, "player") and not UnitIsDead(unit) and mod:Range(unit) <= 10 then
+				status = 0
+				break
+			end
+		end
+		if status ~= lastStatus then
+			lastStatus = status
+			if status == 0 then
+				-- Cannot be dispelled
+				self:SmartColorSet(spellId, 1, 0.5, 0)
+			elseif status == 1 then
+				-- Can be dispelled
+				self:SmartColorSet(spellId, 0.2, 1, 0.2)
+			end
+		end
+	end
+
+	local targets = {}
+	local selfRangeCheck
+	local selfRangeObject
+
+	function mod:CheckSelfSleepRange()
+		for _, unit in ipairs(targets) do
+			if not UnitIsUnit(unit, "player") and mod:Range(unit) <= 10 then
+				selfRangeObject:SetColor(1, 0.2, 0.2)
+				return
+			end
+		end
+		selfRangeObject:SetColor(0.2, 1, 0.2)
+	end
+
+	function mod:SleepCanisterApplied(args)
+		if self:Me(args.destGUID) then
+			self:HideAura(254244)
+			lastStatus = -1
+			rangeCheck = self:ScheduleRepeatingTimer("CheckSleepRange", 0.2, 254244)
+			self:CheckSleepRange(254244)
+		end
+		targets[#targets + 1] = args.destUnit
+		if #targets == 1 and self:Hud(254244) then
+			selfRangeObject = Hud:DrawSpinner("player", 50)
+			selfRangeCheck = self:ScheduleRepeatingTimer("CheckSelfSleepRange", 0.2)
+			self:CheckSelfSleepRange()
+		end
+	end
+
+	function mod:SleepCanisterRemoved(args)
+		for i, unit in ipairs(targets) do
+			if UnitIsUnit(unit, args.destUnit) then
+				table.remove(targets, i)
+			end
+		end
+		if #targets == 0 and selfRangeObject then
+			self:CancelTimer(selfRangeCheck)
+			selfRangeObject:Remove()
+			selfRangeObject = nil
+		end
+		if self:Me(args.destGUID) then
+			self:CancelTimer(rangeCheck)
+			self:SmartColorUnset(254244)
+		end
+	end
 end
 
 function mod:PulseGrenade(args)

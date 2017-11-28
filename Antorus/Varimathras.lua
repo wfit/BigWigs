@@ -12,6 +12,8 @@ mod.respawnTime = 30
 -- Locals
 --
 
+local Hud = Oken.Hud
+
 local tormentActive = 0 -- 1: Flames, 2: Frost, 3: Fel, 4: Shadows
 local _, shadowDesc = EJ_GetSectionInfo(16350)
 local mobCollector = {}
@@ -39,9 +41,9 @@ function mod:GetOptions()
 		{243960, "TANK"}, -- Shadow Strike
 		243999, -- Dark Fissure
 		{244042, "SAY", "FLASH", "ICON"}, -- Marked Prey
-		{244094, "SAY", "FLASH", "ICON", "AURA"}, -- Necrotic Embrace
+		{244094, "SAY", "FLASH", "ICON", "AURA", "HUD"}, -- Necrotic Embrace
 		"shadowOfVarmathras",
-		{248732, "SAY", "AURA"}, -- Echoes of Doom
+		{248732, "SAY", "AURA", "HUD"}, -- Echoes of Doom
 	}
 end
 
@@ -88,14 +90,18 @@ end
 -- Event Handlers
 --
 
-function mod:CheckRange(spellId)
+function mod:CheckRange(object)
 	local inRange = 0
 	for unit in mod:IterateGroup() do
-		if not UnitIsUnit(unit, "player") and not UnitIsDead(unit) and self:Range(unit) <= 8 then
+		if not UnitIsUnit(unit, "player") and not UnitIsDead(unit) and self:Range(unit) <= 10 then
 			inRange = inRange + 1
+			if inRange >= 2 then
+				object:SetColor(1, 0.2, 0.2)
+				return
+			end
 		end
 	end
-	self:ShowAura(spellId, { stacks = inRange < 2 and "|cff33ff33OK" or "|cffff3333Move" })
+	object:SetColor(0.2, 1, 0.2)
 end
 
 function mod:TormentofFlames(args)
@@ -175,6 +181,8 @@ end
 
 do
 	local rangeCheck
+	local rangeObject
+
 	local playerList = mod:NewTargetList()
 	function mod:NecroticEmbrace(args)
 		if self:Me(args.destGUID) then
@@ -182,9 +190,12 @@ do
 			self:Flash(args.spellId)
 			self:SayCountdown(args.spellId, 6)
 
-			self:ShowAura(args.spellId, 6, "Necrotic", { icon = 450908, countdown = false })
-			rangeCheck = self:ScheduleRepeatingTimer("CheckRange", 0.1, args.spellId)
-			self:CheckRange(args.spellId)
+			self:ShowAura(args.spellId, 6, "Move", { icon = 450908 })
+			if self:Hud(args.spellId) then
+				rangeObject = Hud:DrawSpinner("player", 50)
+				rangeCheck = self:ScheduleRepeatingTimer("CheckRange", 0.1, rangeObject)
+				self:CheckRange(rangeObject)
+			end
 		end
 		playerList[#playerList+1] = args.destName
 		if #playerList == 1 then
@@ -198,8 +209,12 @@ do
 		self:SecondaryIcon(args.spellId)
 		if self:Me(args.destGUID) then
 			self:CancelSayCountdown(args.spellId)
-			self:CancelTimer(rangeCheck)
 			self:HideAura(args.spellId)
+			if rangeObject then
+				self:CancelTimer(rangeCheck)
+				rangeObject:Remove()
+				rangeObject = nil
+			end
 		end
 	end
 end
@@ -233,23 +248,32 @@ end
 
 do
 	local rangeCheck
+	local rangeObject
+
 	function mod:EchoesofDoomApplied(args)
 		if self:Me(args.destGUID) then
 			self:Say(args.spellId)
 			self:Flash(args.spellId)
 			self:SayCountdown(args.spellId, 5)
 
-			self:ShowAura(args.spellId, 6, "Echoes", { icon = 450906, countdown = false })
-			rangeCheck = self:ScheduleRepeatingTimer("CheckRange", 0.1, args.spellId)
-			self:CheckRange(args.spellId)
+			self:ShowAura(args.spellId, 6, "Move", { icon = 450906 })
+			if self:Hud(args.spellId) then
+				rangeObject = Hud:DrawSpinner("player", 50)
+				rangeCheck = self:ScheduleRepeatingTimer("CheckRange", 0.1, rangeObject)
+				self:CheckRange(rangeObject)
+			end
 		end
 	end
 
 	function mod:EchoesofDoomRemoved(args)
 		if self:Me(args.destGUID) then
 			self:CancelSayCountdown(args.spellId)
-			self:CancelTimer(rangeCheck)
 			self:HideAura(args.spellId)
+			if rangeObject then
+				self:CancelTimer(rangeCheck)
+				rangeObject:Remove()
+				rangeObject = nil
+			end
 		end
 	end
 end

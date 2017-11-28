@@ -16,6 +16,8 @@ mod.respawnTime = 5
 -- Locals
 --
 
+local Hud = Oken.Hud
+
 local FEL = "Fel"
 local FIRE = "Fire"
 
@@ -36,7 +38,7 @@ function mod:GetOptions()
 		{244072, "SMARTCOLOR"}, -- Molten Touch
 		{244768, "SAY", "AURA"}, -- Desolate Gaze
 		{244057, "IMPACT"}, -- Enflame Corruption
-		{248815, "SAY", "AURA"}, -- Enflamed
+		{248815, "SAY", "AURA", "HUD"}, -- Enflamed
 
 		--[[ Shatug ]]--
 		245098, -- Corrupting Maw
@@ -152,7 +154,7 @@ do
 	function mod:DesolateGazeApplied(args)
 		if self:Me(args.destGUID) then
 			self:Say(args.spellId)
-			self:ShowAura(args.spellId, "Don't move")
+			self:ShowAura(args.spellId, "Ray on YOU")
 		end
 		playerList[#playerList+1] = args.destName
 		if #playerList == 1 then
@@ -171,31 +173,21 @@ end
 function mod:EnflameCorruption(args)
 	self:Message(args.spellId, "Attention", "Alert")
 	self:Bar(args.spellId, 95.5)
-	self:ImpactBar(args.spellId, self:Mythic() and 15 or 9)
+	self:ImpactBar(args.spellId, self:Mythic() and 15 or 9, CL.cast:format(args.spellName))
 end
 
 do
 	local rangeCheck
-	local lastStatus = -1
+	local rangeObject
 
-	function mod:CheckEnflamedRange(spellId)
-		local status = 1
+	function mod:CheckEnflamedRange()
 		for unit in mod:IterateGroup() do
 			if not UnitIsUnit(unit, "player") and not UnitIsDead(unit) and mod:Range(unit) <= 8 then
-				status = 0
-				break
+				rangeObject:SetColor(1, 0.2, 0.2)
+				return
 			end
 		end
-		if status ~= lastStatus then
-			lastStatus = status
-			if status == 0 then
-				-- Too close to someone else
-				self:ShowAura(spellId, { stack = "|cffff0000<!>" })
-			elseif status == 1 then
-				-- Alright
-				self:ShowAura(spellId, { stack = "|cff00ff00OK" })
-			end
-		end
+		rangeObject:SetColor(0.2, 1, 0.2)
 	end
 
 	function mod:Enflamed(args)
@@ -203,19 +195,25 @@ do
 			self:TargetMessage(args.spellId, args.destName, "Personal", "Warning")
 			self:Say(args.spellId)
 			self:SayCountdown(args.spellId, 4)
+			self:ShowAura(args.spellId, 4, "Move")
 
-			self:ShowAura(args.spellId, 4, "Move", { countdown = false })
-			rangeCheck = self:ScheduleRepeatingTimer("CheckEnflamedRange", 0.2, args.spellId)
-			lastStatus = -1
-			self:CheckAnguishRange(args.spellId)
+			if self:Hud(args.spellId) then
+				rangeObject = Hud:DrawSpinner("player", 50)
+				rangeCheck = self:ScheduleRepeatingTimer("CheckEnflamedRange", 0.2)
+				self:CheckEnflamedRange()
+			end
 		end
 	end
 
 	function mod:EnflamedRemoved(args)
 		if self:Me(args.destGUID) then
 			self:CancelSayCountdown(args.spellId)
-			self:CancelTimer(rangeCheck)
 			self:HideAura(args.spellId)
+			if rangeObject then
+				self:CancelTimer(rangeCheck)
+				rangeObject:Remove()
+				rangeObject = nil
+			end
 		end
 	end
 end
@@ -261,7 +259,7 @@ end
 function mod:SiphonCorruption(args)
 	self:Message(args.spellId, "Attention", "Alert")
 	self:Bar(args.spellId, 78.0)
-	self:ImpactBar(args.spellId, self:Mythic() and 15 or 9)
+	self:ImpactBar(args.spellId, self:Mythic() and 15 or 9, CL.cast:format(args.spellName))
 end
 
 function mod:Siphoned(args)

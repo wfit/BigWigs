@@ -46,7 +46,7 @@ function mod:GetOptions()
 
 		--[[ Platform: Nexus ]]--
 		{244016, "TANK"}, -- Reality Tear
-		243983, -- Collapsing World
+		{243983, "IMPACT"}, -- Collapsing World
 		244000, -- Felstorm Barrage
 		244689, -- Transport Portal
 		245504, -- Howling Shadows
@@ -168,6 +168,7 @@ end
 
 function mod:CollapsingWorld(args)
 	self:Message(args.spellId, "Important", "Warning")
+	self:ImpactBar(args.spellId, 8, CL.cast:format(args.spellName))
 	collapsingWorldCount = collapsingWorldCount + 1
 	self:Bar(args.spellId, 32.8) -- XXX See if there is a pattern for delayed casts
 end

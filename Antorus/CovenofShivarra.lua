@@ -13,6 +13,8 @@ mod:RegisterEnableMob(122468, 122467, 122469, 125436) -- Noura, Asara, Diima, Th
 mod.engageId = 2073
 mod.respawnTime = 15
 
+local Hud = Oken.Hud
+
 local shivanPactCount = 0
 local TORMENT_AURA_DURATION = 5
 
@@ -43,6 +45,7 @@ function mod:GetOptions()
 		"stages",
 		{253203, "AURA"}, -- Shivan Pact
 		{"torment_of_the_titans", "AURA"},
+		{246763, "HUD"}, -- Fury of Golganneth
 
 		--[[ Noura, Mother of Flame ]]--
 		{244899, "TANK"}, -- Fiery Strike
@@ -105,6 +108,9 @@ function mod:OnBossEnable()
 	self:Log("SPELL_CAST_START", "TouchoftheCosmos", 250648)
 	self:Log("SPELL_AURA_APPLIED", "CosmicGlare", 250757)
 	self:Log("SPELL_AURA_REMOVED", "CosmicGlareRemoved", 250757)
+
+	self:Log("SPELL_AURA_APPLIED", "FuryOfGolganneth", 246763)
+	self:Log("SPELL_AURA_REMOVED", "FuryOfGolgannethRemoved", 246763)
 end
 
 function mod:OnEngage()
@@ -359,5 +365,38 @@ function mod:CosmicGlareRemoved(args)
 	end
 	if self:GetOption(cosmicGlareMarker) then
 		SetRaidTarget(args.destName, 0)
+	end
+end
+
+do
+	local rangeCheck
+	local rangeObject
+
+	function mod:CheckFuryRange()
+		for unit in mod:IterateGroup() do
+			if not UnitIsUnit(unit, "player") and not UnitIsDead(unit) and mod:Range(unit) <= 5 then
+				rangeObject:SetColor(1, 0.2, 0.2)
+				return
+			end
+		end
+		rangeObject:SetColor(0.2, 1, 0.2)
+	end
+
+	function mod:FuryOfGolganneth(args)
+		if self:Me(args.destGUID) and self:Hud(args.spellId) then
+			rangeObject = Hud:DrawSpinner("player", 50)
+			rangeCheck = self:ScheduleRepeatingTimer("CheckFuryRange", 0.1)
+			self:CheckFuryRange()
+		end
+	end
+
+	function mod:FuryOfGolgannethRemoved(args)
+		if self:Me(args.destGUID) and rangeObject then
+			if rangeObject then
+				self:CancelTimer(rangeCheck)
+				rangeObject:Remove()
+				rangeObject = nil
+			end
+		end
 	end
 end

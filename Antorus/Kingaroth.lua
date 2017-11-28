@@ -208,7 +208,7 @@ end
 
 function mod:Ruiner(args)
 	self:Message(args.spellId, "Urgent", "Warning", CL.casting:format(args.spellName))
-	self:ImpactBar(args.spellId, 8)
+	self:ImpactBar(args.spellId, 8, CL.cast:format(args.spellName))
 	local cooldown = 25.5
 	if nextApocalypseProtocol > GetTime() + cooldown then
 		if empRuiner then -- Empowered

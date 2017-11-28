@@ -47,7 +47,7 @@ function mod:GetOptions()
 		244910, -- Felshield
 
 		--[[ Mythic ]]--
-		244737, -- Shock Grenade
+		{244737, "AURA"}, -- Shock Grenade
 	},{
 		[244625] = CL.other:format(mod:SpellName(-16099), mod:SpellName(-16100)), -- In Pod: Admiral Svirax
 		[245161] = CL.other:format(mod:SpellName(-16099), mod:SpellName(-16116)), -- In Pod: Chief Engineer Ishkar
@@ -139,7 +139,7 @@ end
 
 function mod:Fusillade(args)
 	self:Message(args.spellId, "Urgent", "Warning")
-	self:ImpactBar(args.spellId, 5)
+	self:ImpactBar(args.spellId, 5, CL.cast:format(args.spellName))
 	self:CDBar(args.spellId, 30) -- ~29.8-33.2s
 end
 
@@ -154,12 +154,14 @@ function mod:ShockGrenade(args)
 		self:Say(args.spellId)
 		self:SayCountdown(args.spellId, 5)
 		self:TargetMessage(args.spellId, args.destName, "Personal", "Alarm")
+		self:ShowAura(args.spellId, 5, "Move")
 	end
 end
 
 function mod:ShockGrenadeRemoved(args)
 	if self:Me(args.destGUID) then
 		self:CancelSayCountdown(args.spellId)
+		self:HideAura(args.spellId)
 	end
 end
 
