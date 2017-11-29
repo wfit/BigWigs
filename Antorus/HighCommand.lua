@@ -53,6 +53,7 @@ function mod:GetOptions()
 		{ 244892, "TANK" }, -- Sundering Claws
 
 		--[[ Stealing Power ]] --
+		{244172, "IMPACT"}, -- Psychic Assault
 		244910, -- Felshield
 		{244420, "AURA"}, -- Chaos Pulse
 
@@ -217,25 +218,27 @@ function mod:ShockGrenadeRemoved(args)
 	end
 end
 
-function mod:Felshield(args)
-	if self:Me(args.destGUID) then
-		self:Message(args.spellId, "Positive", "Info")
-	end
-end
-
 function mod:PsychicAssault(args)
 	if self:Me(args.destGUID) then
 		inPod = true
 		wipe(chaosPulseTargets)
+		self:ImpactBar(args.spellId, 59)
 	end
 end
 
 function mod:PsychicAssaultRemoved(args)
 	if self:Me(args.destGUID) then
 		inPod = false
+		self:StopBar(args.spellId)
 		for guid in pairs(chaosPulseTargets) do
 			self:HideAura(guid)
 		end
+	end
+end
+
+function mod:Felshield(args)
+	if self:Me(args.destGUID) then
+		self:Message(args.spellId, "Positive", "Info")
 	end
 end
 
