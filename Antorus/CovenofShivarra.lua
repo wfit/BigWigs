@@ -50,7 +50,7 @@ function mod:GetOptions()
 		--[[ Noura, Mother of Flame ]]--
 		{244899, "TANK"}, -- Fiery Strike
 		245627, -- Whirling Saber
-		{253429, "AURA"}, -- Fulminating Pulse
+		{253429, "SAY", "AURA"}, -- Fulminating Pulse
 
 		--[[ Asara, Mother of Night ]]--
 		245303, -- Touch of Darkness
