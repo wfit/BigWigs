@@ -28,10 +28,12 @@ local color
 -- Initialization
 --
 
-local color_aura = mod:AddCustomOption { "color_aura", "Show attributed color as Aura when pulling the boss." }
+local color_aura = mod:AddCustomOption { "color_aura", "Show attributed color as Aura when pulling the boss" }
+local corruption_filter = mod:AddCustomOption { "corruption_filter", "Filter Enflame Corruption / Siphon Corruption Impact Bars based on your own color", default = false }
 function mod:GetOptions()
 	return {
 		color_aura,
+		corruption_filter,
 
 		--[[ F'harg ]]--
 		251445, -- Burning Maw
@@ -76,6 +78,7 @@ function mod:OnBossEnable()
 	--[[ Shatug ]]--
 	self:Log("SPELL_CAST_SUCCESS", "CorruptingMaw", 245098)
 	self:Log("SPELL_AURA_APPLIED", "ConsumedApplied", 245024)
+	self:Log("SPELL_AURA_APPLIED_DOSE", "ConsumedApplied", 245024)
 	self:Log("SPELL_AURA_REMOVED", "ConsumedRemoved", 245024)
 	self:Log("SPELL_AURA_APPLIED", "WeightofDarknessApplied", 244069)
 	self:Log("SPELL_AURA_REMOVED", "WeightofDarknessRemoved", 244069)
@@ -173,7 +176,9 @@ end
 function mod:EnflameCorruption(args)
 	self:Message(args.spellId, "Attention", "Alert")
 	self:Bar(args.spellId, 95.5)
-	self:ImpactBar(args.spellId, self:Mythic() and 15 or 9, CL.cast:format(args.spellName))
+	if not self:GetOption(corruption_filter) or color == FEL then
+		self:ImpactBar(args.spellId, self:Mythic() and 15 or 9, CL.cast:format(args.spellName))
+	end
 end
 
 do
@@ -225,7 +230,7 @@ end
 
 function mod:ConsumedApplied(args)
 	if self:Me(args.destGUID) then
-		self:ShowAura(args.spellId, "Move")
+		self:ShowAura(args.spellId, "Move", { stacks = args.amount or 1 })
 	end
 end
 
@@ -259,7 +264,9 @@ end
 function mod:SiphonCorruption(args)
 	self:Message(args.spellId, "Attention", "Alert")
 	self:Bar(args.spellId, 78.0)
-	self:ImpactBar(args.spellId, self:Mythic() and 15 or 9, CL.cast:format(args.spellName))
+	if not self:GetOption(corruption_filter) or color == FIRE then
+		self:ImpactBar(args.spellId, self:Mythic() and 15 or 9, CL.cast:format(args.spellName))
+	end
 end
 
 function mod:Siphoned(args)

@@ -2275,8 +2275,7 @@ function boss:ShowAura(key, ...)
 	self:SendMessage("BigWigs_ShowAura", self, key, options)
 end
 
-function boss:HideAura(key, opts)
-	if not checkFlag(self, key, C.AURA) then return end
+function boss:HideAura(key)
 	self:SendMessage("BigWigs_HideAura", self, key)
 end
 

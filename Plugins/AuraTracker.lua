@@ -489,6 +489,12 @@ local function freeAura(aura)
 end
 
 function plugin:BigWigs_ShowAura(_, module, key, options)
+	-- Allow key to be given as option to allow options filtering to work
+	-- on a different key while allowing multiple auras for the same spell
+	if options.key then
+		key = options.key
+	end
+
 	-- Nil-keyed aura cannot be explicitly removed, so ensure that they will be
 	-- automatically collected once their duration expires.
 	if key == nil and not options.duration then

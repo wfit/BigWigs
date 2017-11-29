@@ -16,6 +16,10 @@ mod.respawnTime = 30
 -- Locals
 --
 
+local mobCollector = {}
+local chaosPulseTargets = {}
+local inPod = false
+
 local assumeCommandCount = 1
 local incomingBoss = {
 	[0] = mod:SpellName(-16100), -- Admiral Svirax
@@ -27,10 +31,15 @@ local incomingBoss = {
 -- Initialization
 --
 
+local tanksMarker = mod:AddMarkerOption(true, "player", 7, -14884, 7, 8)
+local pyroMarker = mod:AddMarkerOption(true, "npc", 6, -16121, 6)
 function mod:GetOptions()
 	return {
+		tanksMarker,
+		pyroMarker,
+
 		--[[ In Pod: Admiral Svirax ]] --
-		{244625, "IMPACT"}, -- Fusillade
+		{ 244625, "IMPACT" }, -- Fusillade
 
 		--[[ In Pod: Chief Engineer Ishkar ]] --
 		245161, -- Entropic Mine
@@ -41,14 +50,15 @@ function mod:GetOptions()
 
 		--[[ Out of Pod ]] --
 		245227, -- Assume Command
-		{244892, "TANK"}, -- Sundering Claws
+		{ 244892, "TANK" }, -- Sundering Claws
 
-		--[[ Stealing Power ]]--
+		--[[ Stealing Power ]] --
 		244910, -- Felshield
+		{244420, "AURA"}, -- Chaos Pulse
 
-		--[[ Mythic ]]--
-		{244737, "AURA"}, -- Shock Grenade
-	},{
+		--[[ Mythic ]] --
+		{ 244737, "AURA" }, -- Shock Grenade
+	}, {
 		[244625] = CL.other:format(mod:SpellName(-16099), mod:SpellName(-16100)), -- In Pod: Admiral Svirax
 		[245161] = CL.other:format(mod:SpellName(-16099), mod:SpellName(-16116)), -- In Pod: Chief Engineer Ishkar
 		[245546] = CL.other:format(mod:SpellName(-16099), mod:SpellName(-16118)), -- In Pod: General Erodus
@@ -73,21 +83,63 @@ function mod:OnBossEnable()
 	self:Log("SPELL_AURA_APPLIED", "SunderingClawsApplied", 244892)
 	self:Log("SPELL_AURA_APPLIED_DOSE", "SunderingClawsApplied", 244892)
 
-	--[[ Stealing Power ]]--
+	--[[ Stealing Power ]] --
 	self:Log("SPELL_AURA_APPLIED", "Felshield", 244910)
+	self:Log("SPELL_AURA_APPLIED", "PsychicAssault", 244172)
+	self:Log("SPELL_AURA_REMOVED", "PsychicAssaultRemoved", 244172)
+	self:Log("SPELL_AURA_APPLIED", "ChaosPulse", 244420)
+	self:Log("SPELL_AURA_APPLIED_DOSE", "ChaosPulse", 244420)
+	self:Log("SPELL_AURA_REMOVED", "ChaosPulseRemoved", 244420)
 
-	--[[ Mythic ]]--
+	--[[ Mythic ]] --
 	self:Log("SPELL_CAST_START", "ShockGrenadeStart", 244722)
 	self:Log("SPELL_AURA_APPLIED", "ShockGrenade", 244737)
 	self:Log("SPELL_AURA_REMOVED", "ShockGrenadeRemoved", 244737)
-
 end
 
 function mod:OnEngage()
+	wipe(mobCollector)
+	wipe(chaosPulseTargets)
+	inPod = false
 	assumeCommandCount = 1
+
+	self:RegisterTargetEvents("AddsMark")
 
 	self:Bar(244892, 8.4) -- Sundering Claws
 	self:Bar(245227, 93, incomingBoss[assumeCommandCount]) -- Chief Engineer Ishkar (Assume Command Bar)
+
+	if self:GetOption(tanksMarker) then
+		local marked = 0
+		for unit in self:IterateGroup() do
+			if self:Tank(unit) then
+				SetRaidTarget(unit, 8 - marked)
+				marked = marked + 1
+				if marked == 2 then break end
+			end
+		end
+	end
+end
+
+function mod:OnBossDisable()
+	self:UnregisterTargetEvents()
+	if self:GetOption(tanksMarker) then
+		for unit in self:IterateGroup() do
+			if self:Tank(unit) then
+				SetRaidTarget(unit, 0)
+			end
+		end
+	end
+end
+
+do
+	function mod:AddsMark(event, unit, guid)
+		if not mobCollector[guid] then
+			if self:MobId(guid) == 122890 and self:GetOption(pyroMarker) then
+				mobCollector[guid] = true
+				SetRaidTarget(unit, 6)
+			end
+		end
+	end
 end
 
 --------------------------------------------------------------------------------
@@ -139,7 +191,7 @@ end
 
 function mod:Fusillade(args)
 	self:Message(args.spellId, "Urgent", "Warning")
-	self:ImpactBar(args.spellId, 5, CL.cast:format(args.spellName))
+	self:ImpactBar(args.spellId, 7, CL.cast:format(args.spellName))
 	self:CDBar(args.spellId, 30) -- ~29.8-33.2s
 end
 
@@ -169,4 +221,32 @@ function mod:Felshield(args)
 	if self:Me(args.destGUID) then
 		self:Message(args.spellId, "Positive", "Info")
 	end
+end
+
+function mod:PsychicAssault(args)
+	if self:Me(args.destGUID) then
+		inPod = true
+		wipe(chaosPulseTargets)
+	end
+end
+
+function mod:PsychicAssaultRemoved(args)
+	if self:Me(args.destGUID) then
+		inPod = false
+		for guid in pairs(chaosPulseTargets) do
+			self:HideAura(guid)
+		end
+	end
+end
+
+function mod:ChaosPulse(args)
+	if inPod then
+		chaosPulseTargets[args.destGUID] = true
+		self:ShowAura(244420, 6, args.destName, { stacks = args.amount or 1, key = args.destGUID, countdown = false })
+	end
+end
+
+function mod:ChaosPulseRemoved(args)
+	chaosPulseTargets[args.destGUID] = nil
+	self:HideAura(args.destGUID)
 end

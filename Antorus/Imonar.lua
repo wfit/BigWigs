@@ -41,7 +41,7 @@ function mod:GetOptions()
 
 		--[[ Stage Three: The Perfect Weapon ]]--
 		{250255, "TANK"}, -- Empowered Shock Lance
-		248068, -- Empowered Pulse Grenade
+		{248068, "AURA", "SAY", "FLASH"}, -- Empowered Pulse Grenade
 		248070, -- Empowered Shrapnel Blast
 
 		--[[ Intermission: On Deadly Ground ]]--
@@ -82,6 +82,8 @@ function mod:OnBossEnable()
 	self:Log("SPELL_AURA_APPLIED_DOSE", "EmpoweredShockLance", 250255)
 	self:Log("SPELL_CAST_SUCCESS", "EmpoweredShockLanceSuccess", 250255)
 	self:Log("SPELL_CAST_START", "EmpoweredPulseGrenade", 248068)
+	self:Log("SPELL_AURA_APPLIED", "EmpoweredPulseGrenadeApplied", 250006)
+	self:Log("SPELL_CAST_REMOVED", "EmpoweredPulseGrenadeRemoved", 250006)
 	self:Log("SPELL_CAST_START", "EmpoweredShrapnelBlast", 248070)
 
 	--[[ Intermission: On Deadly Ground ]]--
@@ -264,7 +266,21 @@ end
 function mod:EmpoweredPulseGrenade(args)
 	self:Message(args.spellId, "Attention", "Alert")
 	self:Bar(args.spellId, 26.7)
+end
 
+function mod:EmpoweredPulseGrenadeApplied(args)
+	if self:Me(args.destGUID) then
+		self:Message(248068, "Personal", "Alarm", CL.you:format(self:SpellName(248068)))
+		self:Flash(248068)
+		self:Say(248068)
+		self:ShowAura(248068, "Spread")
+	end
+end
+
+function mod:EmpoweredPulseGrenadeRemoved(args)
+	if self:Me(args.destGUID) then
+		self:HideAura(248068)
+	end
 end
 
 function mod:EmpoweredShrapnelBlast(args)
