@@ -92,6 +92,7 @@ function mod:OnBossEnable()
 	self:Log("SPELL_AURA_REMOVED", "PsychicAssaultRemoved", 244172)
 	self:Log("SPELL_AURA_APPLIED", "ChaosPulse", 244420)
 	self:Log("SPELL_AURA_APPLIED_DOSE", "ChaosPulse", 244420)
+	self:Log("SPELL_AURA_REFRESH", "ChaosPulse", 244420)
 	self:Log("SPELL_AURA_REMOVED", "ChaosPulseRemoved", 244420)
 
 	--[[ Mythic ]] --
@@ -246,8 +247,9 @@ end
 
 function mod:ChaosPulse(args)
 	if inPod or self:GetOption(always_show_chaos_pulse) then
+		local amount = args.amount or chaosPulseTargets[args.destGUID] and 15 or 1
 		chaosPulseTargets[args.destGUID] = true
-		self:ShowAura(244420, 6, args.destName, { stacks = args.amount or 1, key = args.destGUID, countdown = false })
+		self:ShowAura(244420, 6, args.destName, { stacks = amount, key = args.destGUID, countdown = false })
 	end
 end
 
