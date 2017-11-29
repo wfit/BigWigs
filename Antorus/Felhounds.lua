@@ -157,7 +157,8 @@ do
 	function mod:DesolateGazeApplied(args)
 		if self:Me(args.destGUID) then
 			self:Say(args.spellId)
-			self:ShowAura(args.spellId, "Ray on YOU")
+			self:SayCountdown(args.spellId, 8)
+			self:ShowAura(args.spellId, "On YOU")
 		end
 		playerList[#playerList+1] = args.destName
 		if #playerList == 1 then
@@ -168,6 +169,7 @@ do
 
 	function mod:DesolateGazeRemoved(args)
 		if self:Me(args.destGUID) then
+			self:CancelSayCountdown(args.spellId)
 			self:HideAura(args.spellId)
 		end
 	end
