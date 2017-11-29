@@ -40,7 +40,7 @@ function mod:GetOptions()
 		243961, -- Misery
 		{243960, "TANK"}, -- Shadow Strike
 		243999, -- Dark Fissure
-		{244042, "SAY", "FLASH", "ICON"}, -- Marked Prey
+		{244042, "SAY", "FLASH", "ICON", "AURA"}, -- Marked Prey
 		{244094, "SAY", "FLASH", "ICON", "AURA", "HUD"}, -- Necrotic Embrace
 		"shadowOfVarmathras",
 		{248732, "SAY", "AURA", "HUD"}, -- Echoes of Doom
@@ -160,6 +160,7 @@ function mod:MarkedPrey(args)
 		self:Flash(args.spellId)
 		self:Say(args.spellId)
 		self:SayCountdown(args.spellId, 5)
+		self:ShowAura(args.spellId, 5, "On YOU")
 	end
 	self:PrimaryIcon(args.spellId, args.destName)
 	self:TargetMessage(args.spellId, args.destName, "Important", "Alarm")
@@ -172,6 +173,7 @@ function mod:MarkedPreyRemoved(args)
 	self:StopBar(args.spellId, args.destName)
 	if self:Me(args.destGUID) then
 		self:CancelSayCountdown(args.spellId)
+		self:HideAura(args.spellId)
 	end
 end
 
