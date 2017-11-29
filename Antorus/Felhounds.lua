@@ -176,7 +176,7 @@ end
 function mod:EnflameCorruption(args)
 	self:Message(args.spellId, "Attention", "Alert")
 	self:Bar(args.spellId, 95.5)
-	if not self:GetOption(corruption_filter) or color == FEL then
+	if not self:GetOption(corruption_filter) or color ~= FIRE then
 		self:ImpactBar(args.spellId, self:Mythic() and 15 or 9, CL.cast:format(args.spellName))
 	end
 end
@@ -264,7 +264,7 @@ end
 function mod:SiphonCorruption(args)
 	self:Message(args.spellId, "Attention", "Alert")
 	self:Bar(args.spellId, 78.0)
-	if not self:GetOption(corruption_filter) or color == FIRE then
+	if not self:GetOption(corruption_filter) or color ~= FEL then
 		self:ImpactBar(args.spellId, self:Mythic() and 15 or 9, CL.cast:format(args.spellName))
 	end
 end
