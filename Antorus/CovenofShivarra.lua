@@ -50,7 +50,7 @@ function mod:GetOptions()
 		--[[ Noura, Mother of Flame ]]--
 		{244899, "TANK"}, -- Fiery Strike
 		245627, -- Whirling Saber
-		253429, -- Fulminating Pulse
+		{253429, "AURA"}, -- Fulminating Pulse
 
 		--[[ Asara, Mother of Night ]]--
 		245303, -- Touch of Darkness
@@ -243,6 +243,7 @@ do
 		if self:Me(args.destGUID) then
 			self:Say(args.spellId)
 			self:SayCountdown(args.spellId, 10)
+			self:ShowAura(args.spellId, 10, "Move")
 		end
 		playerList[#playerList+1] = args.destName
 		if #playerList == 1 then
@@ -254,6 +255,7 @@ do
 	function mod:FulminatingPulseRemoved(args)
 		if self:Me(args.destGUID) then
 			self:CancelSayCountdown(args.spellId)
+			self:HideAura(args.spellId)
 		end
 	end
 end
