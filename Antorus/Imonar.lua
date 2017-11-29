@@ -67,7 +67,7 @@ function mod:OnBossEnable()
 	self:Log("SPELL_CAST_SUCCESS", "ShockLanceSuccess", 247367)
 	self:Log("SPELL_CAST_SUCCESS", "SleepCanister", 254244)
 	self:Log("SPELL_AURA_APPLIED", "SleepCanisterApplied", 255029)
-	self:Log("SPELL_CAST_REMOVED", "SleepCanisterRemoved", 255029)
+	self:Log("SPELL_AURA_REMOVED", "SleepCanisterRemoved", 255029)
 	self:Log("SPELL_CAST_START", "PulseGrenade", 247376)
 
 	--[[ Stage Two: Contract to Kill ]]--
