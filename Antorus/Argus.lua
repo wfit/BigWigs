@@ -275,7 +275,7 @@ end
 
 function mod:StrengthoftheSkyandSea(args)
 	if self:Me(args.destGUID) then
-		self:StopBar(L.orbsDespawn)
+		self:StopImpactBar(L.orbsDespawn)
 		local amount = args.amount or 1
 		self:Message(255594, "Positive", "Info", CL.stackyou:format(amount, args.spellName))
 	end

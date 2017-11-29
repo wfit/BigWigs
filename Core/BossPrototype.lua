@@ -1963,6 +1963,11 @@ function boss:StopBar(text, player)
 	end
 end
 
+function boss:StopImpactBar(text)
+	local msg = type(text) == "number" and spells[text] or text
+	self:SendMessage("BigWigs_StopBar", self, msg, true)
+end
+
 --- Pause a bar.
 -- @param key the option key
 -- @param[opt] text the bar text

@@ -195,7 +195,7 @@ end
 
 function mod:Fusillade(args)
 	self:Message(args.spellId, "Urgent", "Warning")
-	self:ImpactBar(args.spellId, 7, CL.cast:format(args.spellName))
+	self:ImpactBar(args.spellId, 7)
 	self:CDBar(args.spellId, 30) -- ~29.8-33.2s
 end
 

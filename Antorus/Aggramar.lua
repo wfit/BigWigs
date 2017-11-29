@@ -202,7 +202,7 @@ end
 function mod:SearingTempest(args)
 	self:ShowAura(244688, "AoE", { icon = args.spellIcon, stacks = "#" .. searingTempestCount })
 	self:Message(args.spellId, "Urgent", "Warning")
-	self:ImpactBar(args.spellId, 6, CL.cast:format(args.spellName))
+	self:ImpactBar(args.spellId, 6)
 	searingTempestCount = searingTempestCount + 1
 end
 
