@@ -33,10 +33,12 @@ local incomingBoss = {
 
 local tanksMarker = mod:AddMarkerOption(true, "player", 7, -14884, 7, 8)
 local pyroMarker = mod:AddMarkerOption(true, "npc", 6, -16121, 6)
+local always_show_chaos_pulse = mod:AddCustomOption { "always_show_chaos_pulse", "Always show Chaos Pulse stacks even when not in a Pod.", default = false }
 function mod:GetOptions()
 	return {
 		tanksMarker,
 		pyroMarker,
+		always_show_chaos_pulse,
 
 		--[[ In Pod: Admiral Svirax ]] --
 		{ 244625, "IMPACT" }, -- Fusillade
@@ -243,7 +245,7 @@ function mod:Felshield(args)
 end
 
 function mod:ChaosPulse(args)
-	if inPod then
+	if inPod or self:GetOption(always_show_chaos_pulse) then
 		chaosPulseTargets[args.destGUID] = true
 		self:ShowAura(244420, 6, args.destName, { stacks = args.amount or 1, key = args.destGUID, countdown = false })
 	end
