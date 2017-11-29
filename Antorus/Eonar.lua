@@ -122,7 +122,7 @@ function mod:GetOptions()
 		"warp_in",
 		250048, -- Life Force
 		248861, -- Spear of Doom
-		{248332, "SAY", "FLASH"}, -- Rain of Fel
+		{248332, "SAY", "FLASH", "AURA"}, -- Rain of Fel
 		249121, -- Final Doom
 		249934, -- Purge
 		{250693, "SAY", "FLASH"}, -- Arcane Buildup
@@ -250,6 +250,7 @@ do
 			self:Say(args.spellId)
 			self:Flash(args.spellId)
 			self:SayCountdown(args.spellId, 5)
+			self:ShowAura(args.spellId, 5, "Move")
 		end
 		playerList[#playerList+1] = args.destName
 		if #playerList == 1 then
@@ -262,6 +263,7 @@ do
 	function mod:RainofFelRemoved(args)
 		if self:Me(args.destGUID) then
 			self:CancelSayCountdown(args.spellId)
+			self:HideAura(args.spellId)
 		end
 	end
 end
