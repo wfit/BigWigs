@@ -59,7 +59,7 @@ function mod:GetOptions()
 
 		--[[ Diima, Mother of Gloom ]]--
 		{245518, "TANK_HEALER"}, -- Flashfreeze
-		245586, -- Chilled Blood
+		{245586, "SMARTCOLOR"}, -- Chilled Blood
 		253650, -- Orb of Frost
 
 		--[[ Thu'raya, Mother of the Cosmos (Mythic) ]]--
