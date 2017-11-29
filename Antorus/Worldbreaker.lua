@@ -131,7 +131,7 @@ do
 			self:Message(args.spellId, "Personal", "Warning", CL.you:format(args.spellName))
 			self:Say(args.spellId)
 			self:SayCountdown(args.spellId, 3, nil, 2)
-			self:ShowAura(244410, 3, "Move", true)
+			self:ShowAura(244410, 3, "Pack", true)
 		end
 	end
 end
