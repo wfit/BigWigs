@@ -209,6 +209,7 @@ end
 --[[ Intermission: Fires of Taeshalach ]]--
 function mod:CorruptAegis()
 	techniqueStarted = 0 -- End current technique
+	self:HideAura(244688) -- Taeshalach Technique
 	self:Message("stages", "Neutral", "Long", CL.intermission, false)
 	self:StopBar(245994) -- Scorching Blaze
 	self:StopBar(244693) -- Wake of Flame
