@@ -230,8 +230,8 @@ function mod:ApocalypseProtocol(args)
 	self:StopBar(L.empowered:format(self:SpellName(246833))) -- (E) Ruiner
 	self:Message(args.spellId, "Positive", "Long")
 	self:CastBar(args.spellId, 40)
-	self:ScheduleTimer("Message", 32, 248061, "Attention", "Info", CL.soon:format(self:SpellName(248061))) -- Purging Protocol
-	self:ScheduleTimer("ImpactBar", 32, 248061, 8) -- Purging Protocol
+	self:ScheduleTimer("Message", 35, 248061, "Attention", "Info", CL.soon:format(self:SpellName(248061))) -- Purging Protocol
+	self:ScheduleTimer("ImpactBar", 35, 248061, 5) -- Purging Protocol
 	nextApocalypseProtocol = GetTime() + 129
 	self:Bar(args.spellId, 129)
 end
