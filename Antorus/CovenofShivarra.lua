@@ -196,19 +196,20 @@ function mod:CHAT_MSG_RAID_BOSS_EMOTE(_, msg)
 	if msg:find("250095", nil, true) then -- Machinations of Aman'thul
 		self:Message("torment_of_the_titans", "Important", "Warning", CL.incoming:format(self:SpellName(250095)), 250095) -- Machinations of Aman'thul
 		self:CDBar("torment_of_the_titans", 93.5, L.torment_of_the_titans, L.torment_of_the_titans_icon)
-		self:ShowAura("torment_of_the_titans", L.amanthulEffect, { icon = self:SpellIcon(250095), autoremove = TORMENT_AURA_DURATION })
+		self:ShowAura("torment_of_the_titans", L.amanthulEffect, { icon = self:SpellIcon(250095), key = "amanthul", autoremove = TORMENT_AURA_DURATION })
 	elseif msg:find("245671", nil, true) then -- Flames of Khaz'goroth
 		self:Message("torment_of_the_titans", "Important", "Warning", CL.incoming:format(self:SpellName(245671)), 245671) -- Machinations of Aman'thul
 		self:CDBar("torment_of_the_titans", 93.5, L.torment_of_the_titans, L.torment_of_the_titans_icon)
-		self:ShowAura("torment_of_the_titans", L.kazgorothEffect, { icon = self:SpellIcon(245671), autoremove = TORMENT_AURA_DURATION })
+		self:ShowAura("torment_of_the_titans", L.kazgorothEffect, { icon = self:SpellIcon(245671), key = "kazgoroth", autoremove = TORMENT_AURA_DURATION })
 	elseif msg:find("246763", nil, true) then -- Fury of Golganneth
 		self:Message("torment_of_the_titans", "Important", "Warning", CL.incoming:format(self:SpellName(246763)), 246763) -- Machinations of Aman'thul
 		self:CDBar("torment_of_the_titans", 93.5, L.torment_of_the_titans, L.torment_of_the_titans_icon)
-		self:ShowAura("torment_of_the_titans", L.golgannethEffect, { icon = self:SpellIcon(246763), autoremove = TORMENT_AURA_DURATION })
+		self:ShowAura("torment_of_the_titans", L.golgannethEffect, { icon = self:SpellIcon(246763), key = "golganneth", autoremove = TORMENT_AURA_DURATION })
+		self:StartFuryHUD()
 	elseif msg:find("245910", nil, true) then -- Spectral Army of Norgannon
 		self:Message("torment_of_the_titans", "Important", "Warning", CL.incoming:format(self:SpellName(245910)), 245910) -- Machinations of Aman'thul
 		self:CDBar("torment_of_the_titans", 93.5, L.torment_of_the_titans, L.torment_of_the_titans_icon)
-		self:ShowAura("torment_of_the_titans", L.norgannonEffect, { icon = self:SpellIcon(245910), autoremove = TORMENT_AURA_DURATION })
+		self:ShowAura("torment_of_the_titans", L.norgannonEffect, { icon = self:SpellIcon(245910), key = "norgannon", autoremove = TORMENT_AURA_DURATION })
 	end
 end
 
@@ -384,11 +385,17 @@ do
 		rangeObject:SetColor(0.2, 1, 0.2)
 	end
 
-	function mod:FuryOfGolganneth(args)
-		if self:Me(args.destGUID) and self:Hud(args.spellId) then
+	function mod:StartFuryHUD()
+		if self:Hud(246763) and not rangeObject then
 			rangeObject = Hud:DrawSpinner("player", 50)
 			rangeCheck = self:ScheduleRepeatingTimer("CheckFuryRange", 0.1)
 			self:CheckFuryRange()
+		end
+	end
+
+	function mod:FuryOfGolganneth(args)
+		if self:Me(args.destGUID) then
+			self:StartFuryHUD()
 		end
 	end
 
