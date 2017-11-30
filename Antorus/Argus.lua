@@ -57,6 +57,7 @@ end
 -- Initialization
 --
 
+local skyAndSeaMarker = mod:AddMarkerOption(true, "player", 1, 251570, 1, 3) -- Sky and Sea
 local burstMarker = mod:AddMarkerOption(true, "player", 3, 250669, 3, 7) -- Soul Burst
 local bombMarker = mod:AddMarkerOption(true, "player", 2, 251570, 2) -- Soul Bomb
 local constellarMarker = mod:AddMarkerOption(true, "npc", 1, 252516, 1, 2, 3, 4, 5, 6, 7) -- The Discs of Norgannon
@@ -72,6 +73,7 @@ function mod:GetOptions()
 		257296, -- Tortured Rage
 		248499, -- Sweeping Scythe
 		{255594, "SAY", "AURA", "IMPACT"}, -- Sky and Sea
+		skyAndSeaMarker,
 
 		--[[ Stage 2 ]]--
 		{250669, "SAY", "AURA"}, -- Soul Burst
@@ -266,6 +268,10 @@ function mod:GiftoftheSea(args)
 		self:Say(255594, args.spellName)
 		self:ShowAura(255594, 5, "Sea", true)
 	end
+	if self:GetOption(skyAndSeaMarker) then
+		SetRaidTarget(args.destName, 1)
+		self:ScheduleTimer(SetRaidTarget, 5, args.destName, 0)
+	end
 end
 
 function mod:GiftoftheSky(args)
@@ -273,6 +279,10 @@ function mod:GiftoftheSky(args)
 	if self:Me(args.destGUID) then
 		self:Say(255594, args.spellName)
 		self:ShowAura(255594, 5, "Sky", true)
+	end
+	if self:GetOption(skyAndSeaMarker) then
+		SetRaidTarget(args.destName, 3)
+		self:ScheduleTimer(SetRaidTarget, 5, args.destName, 0)
 	end
 end
 
