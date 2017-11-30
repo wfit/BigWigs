@@ -56,7 +56,7 @@ function mod:OnBossEnable()
 
 	--[[ General ]]--
 	self:Log("SPELL_AURA_APPLIED", "Misery", 243961)
-	self:Log("SPELL_CAST_SUCCESS", "ShadowStrike", 243960)
+	self:Log("SPELL_CAST_SUCCESS", "ShadowStrike", 243960, 257644) -- Heroic, Normal
 	self:Log("SPELL_CAST_SUCCESS", "DarkFissure", 243999)
 	self:Log("SPELL_AURA_APPLIED", "MarkedPrey", 244042)
 	self:Log("SPELL_AURA_REMOVED", "MarkedPreyRemoved", 244042)
@@ -146,8 +146,8 @@ function mod:Misery(args)
 end
 
 function mod:ShadowStrike(args)
-	self:Message(args.spellId, "Neutral", "Info")
-	self:CDBar(args.spellId, 9.8)
+	self:Message(243960, "Urgent", "Warning")
+	self:CDBar(243960, 9.8)
 end
 
 function mod:DarkFissure(args)

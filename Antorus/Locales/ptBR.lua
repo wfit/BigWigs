@@ -29,6 +29,7 @@ if L then
 	--L.custom_on_filter_platforms = "Filter Side Platform Warnings and Bars"
 	--L.custom_on_filter_platforms_desc = "Removes unnecessary messages and bars if you are not on a side platform. It will always show bars and warnings from the main Platform: Nexus."
 	--L.platform_active = "%s Active!" -- Platform: Xoroth Active!
+	--L.add_killed = "%s killed!"
 end
 
 L = BigWigs:NewBossLocale("Kin'garoth", "ptBR")
@@ -37,10 +38,14 @@ if L then
 	--L.gains = "Kin'garoth gains %s" -- Kin'garoth gains Empowered Ruiner
 end
 
+L = BigWigs:NewBossLocale("Antoran High Command", "ptBR")
+if L then
+	--L.felshieldActivated = "Felshield Activated by %s"
+	--L.felshieldUp = "Felshield Up"
+end
+
 L = BigWigs:NewBossLocale("Gorothi Worldbreaker", "ptBR")
 if L then
 	--L.cannon_ability_desc = "Display Messages and Bars related to the 2 cannons on the Gorothi Worldbreaker's back."
+	--L.missileImpact_desc = "Show a timer for the Annihilation missiles landing."
 end
-
-
-

@@ -20,7 +20,7 @@ local rainofFelCounter = 1
 local spearCounter = 1
 local finalDoomCounter = 1
 local lifeForceCounter = 1
-local lifeForceNeeded = 5
+local lifeForceNeeded = 4
 local engageTime = 0
 
 local timersNormal = {
@@ -40,19 +40,32 @@ local timersNormal = {
 
 local timersHeroic = {
 	--[[ Rain of Fel ]]--
-	[248332] = {15, 41, 10, 45, 35, 19, 19, 29, 45, 35, 97},
+	[248332] = {15, 38.5, 10, 45, 34.5, 19, 19, 29, 44.5, 35, 97},
 
 	--[[ Spear of Doom ]] --
-	[248861] = {},
+	[248861] = {29.7, 59.6, 64.5, 40.3, 84.6, 35.2, 65.7},
 
-	--[[ Waves ]]--
+	--[[ Waves ]]-- -- XXX Check these after implementation
 	["top"] = {
+		{65, "obfuscator"},
+		{80, "destructor"},
+		{200, nil},
+		{311, "destructor"},
 	},
 	["mid"] = {
+		{7.5, "destructor"},
+		{110, "purifier"},
+		{215, "purifier"}, -- Also spawns a obfuscator
+		{311, "destructor"},
 	},
 	["bot"] = {
+		{29, "destructor"},
+		{183, "destructor"}, -- Also spawns a purifier
+		{311, "obfuscator"},
 	},
 	["air"] = {
+		{150, nil},
+		{277, nil},
 	}
 }
 
