@@ -57,7 +57,7 @@ end
 -- Initialization
 --
 
-local skyAndSeaMarker = mod:AddMarkerOption(true, "player", 1, 251570, 1, 3) -- Sky and Sea
+local skyAndSeaMarker = mod:AddMarkerOption(true, "player", 1, 255594, 1, 3) -- Sky and Sea
 local burstMarker = mod:AddMarkerOption(true, "player", 3, 250669, 3, 7) -- Soul Burst
 local bombMarker = mod:AddMarkerOption(true, "player", 2, 251570, 2) -- Soul Bomb
 local constellarMarker = mod:AddMarkerOption(true, "npc", 1, 252516, 1, 2, 3, 4, 5, 6, 7) -- The Discs of Norgannon
