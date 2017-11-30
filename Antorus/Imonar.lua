@@ -181,7 +181,6 @@ do
 	end
 
 	local targets = {}
-	local targetsCount = 0
 	local selfRangeCheck
 	local selfRangeObject
 
@@ -202,9 +201,9 @@ do
 			rangeCheck = self:ScheduleRepeatingTimer("CheckSleepRange", 0.2, 254244)
 			self:CheckSleepRange(254244)
 		end
+		local first = not next(targets)
 		targets[args.destUnit] = true
-		targetsCount = targetsCount + 1
-		if targetsCount == 1 and self:Hud(254244) then
+		if first and self:Hud(254244) then
 			selfRangeObject = Hud:DrawSpinner("player", 50)
 			selfRangeCheck = self:ScheduleRepeatingTimer("CheckSelfSleepRange", 0.2)
 			self:CheckSelfSleepRange()
@@ -213,8 +212,7 @@ do
 
 	function mod:SleepCanisterRemoved(args)
 		targets[args.destUnit] = nil
-		targetsCount = targetsCount - 1
-		if targetsCount == 0 and selfRangeObject then
+		if not next(targets) and selfRangeObject then
 			self:CancelTimer(selfRangeCheck)
 			selfRangeObject:Remove()
 			selfRangeObject = nil
