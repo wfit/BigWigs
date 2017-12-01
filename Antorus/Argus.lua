@@ -265,7 +265,7 @@ end
 function mod:GiftoftheSea(args)
 	self:TargetMessage(255594, args.destName, "Positive", "Long", args.spellName, nil, true)
 	if self:Me(args.destGUID) then
-		self:Say(255594, args.spellName)
+		--self:Say(255594, args.spellName)
 		self:ShowAura(255594, 5, "Sea", true)
 	end
 	if self:GetOption(skyAndSeaMarker) then
@@ -277,7 +277,7 @@ end
 function mod:GiftoftheSky(args)
 	self:TargetMessage(255594, args.destName, "Positive", "Long", args.spellName, nil, true)
 	if self:Me(args.destGUID) then
-		self:Say(255594, args.spellName)
+		--self:Say(255594, args.spellName)
 		self:ShowAura(255594, 5, "Sky", true)
 	end
 	if self:GetOption(skyAndSeaMarker) then
