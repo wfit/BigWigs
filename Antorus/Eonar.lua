@@ -1,6 +1,6 @@
 --------------------------------------------------------------------------------
 -- TODO List:
--- Wave Data for all difficulties
+-- Normal mode wave data
 
 --------------------------------------------------------------------------------
 -- Module Declaration
@@ -29,12 +29,22 @@ local timersNormal = {
 
 	--[[ Waves ]]--
 	["top"] = {
+		{120, "destructor"}, -- XXX not confirmed
+		{240, "destructor"} -- XXX estimate
 	},
 	["mid"] = {
+		{6, "destructor"},
+		{74, "destructor"},
+		{175, "obfuscator"}, -- XXX not confirmed
+		{300, "destructor"} -- XXX not confirmed
 	},
 	["bot"] = {
+		{44, "destructor"},
+		{130, nil}, -- XXX not confirmed
+		{225, "destructor"}
 	},
 	["air"] = {
+		{230, nil} -- XXX not confirmed
 	}
 }
 
@@ -47,25 +57,25 @@ local timersHeroic = {
 
 	--[[ Waves ]]-- -- XXX Check these after implementation
 	["top"] = {
-		{65, "obfuscator"},
-		{80, "destructor"},
-		{192, nil},
-		{316, "destructor"},
+		{68, "obfuscator"},
+		{87, "destructor"},
+		{192, "small_adds"},
+		{320, "destructor"},
 	},
 	["mid"] = {
-		{7.5, "destructor"},
-		{110, "purifier"},
+		{6.8, "destructor"},
+		{114, "purifier"},
 		{215, "purifier"}, -- Also spawns a obfuscator
-		{311, "destructor"},
+		{320, "destructor"},
 	},
 	["bot"] = {
-		{29, "destructor"},
-		{183, "destructor"}, -- Also spawns a purifier
-		{311, "obfuscator"},
+		{35, "destructor"},
+		{190, "destructor"}, -- Also spawns a purifier
+		{320, "obfuscator"},
 	},
 	["air"] = {
-		{150, nil},
-		{277, nil},
+		{159, nil},
+		{285, nil},
 	}
 }
 
@@ -91,8 +101,8 @@ local timersMythic = {
 		{110.5, "destructor"},
 	},
 	["bot"] = {
-		{35, nil},
-		{110.5, nil},
+		{35, "small_adds"},
+		{110.5, "small_adds"},
 		{335, "obfuscator"},
 	},
 	["air"] = {
@@ -124,6 +134,7 @@ if L then
 	L.destructor = "Destructor" -- Fel-Infused Destructor
 	L.obfuscator = "Obfuscator" -- Fel-Charged Obfuscator
 	L.bats = "Fel Bats"
+	L.small_adds = CL.small_adds
 end
 
 --------------------------------------------------------------------------------
@@ -223,7 +234,7 @@ function mod:StartWaveTimer(lane, count)
 		icon = "inv_batpet"
 	end
 
-	local addTypeText = addType == "purifier" and L.purifier or addType == "destructor" and L.destructor or addType == "obfuscator" and L.obfuscator
+	local addTypeText = L[addType]
 	local barText = addTypeText and L.lane_text:format(laneText, addTypeText) or laneText
 
 	self:Bar("warp_in", length, barText, icon)
