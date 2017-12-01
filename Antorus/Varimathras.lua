@@ -192,7 +192,7 @@ do
 			self:Flash(args.spellId)
 			self:SayCountdown(args.spellId, 6)
 
-			self:ShowAura(args.spellId, 6, "Move", { icon = 450908 })
+			self:ShowAura(args.spellId, 6, "Necro") -- { icon = 450908 }
 			if self:Hud(args.spellId) then
 				rangeObject = Hud:DrawSpinner("player", 50)
 				rangeCheck = self:ScheduleRepeatingTimer("CheckRange", 0.1, rangeObject)
@@ -258,7 +258,7 @@ do
 			self:Flash(args.spellId)
 			self:SayCountdown(args.spellId, 5)
 
-			self:ShowAura(args.spellId, 6, "Move", { icon = 450906 })
+			self:ShowAura(args.spellId, 6, "Doom") -- { icon = 450906 }
 			if self:Hud(args.spellId) then
 				rangeObject = Hud:DrawSpinner("player", 50)
 				rangeCheck = self:ScheduleRepeatingTimer("CheckRange", 0.1, rangeObject)
