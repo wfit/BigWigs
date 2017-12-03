@@ -146,7 +146,7 @@ do
 		if t - prev > 1.5 then
 			prev = t
 			felTick = felTick + 1
-			self:ShowAura(243980, 5, { stacks = felTick })
+			self:ShowAura(243980, 5, { stacks = felTick, countdown = false })
 		end
 	end
 end
