@@ -120,43 +120,6 @@ function mod:UNIT_HEALTH_FREQUENT(unit)
 end
 
 do
-	local playerList, proxList, isOnMe, scheduled = mod:NewTargetList(), {}, nil, nil
-	local canisterMarks = {false, false}
-
-	local function warn(self)
-		if not isOnMe then
-			self:TargetMessage(254244, playerList, "Important")
-		end
-		scheduled = nil
-	end
-
-	local function addPlayerToList(self, name)
-		if not tContains(proxList, name) then
-			proxList[#proxList+1] = name
-			playerList[#playerList+1] = name
-
-			if self:GetOption(canisterMarker) then
-				for i = 3, 4 do
-					if not canisterMarks[i] then
-						canisterMarks[i] = self:UnitName(name)
-						SetRaidTarget(name, i)
-						break
-					end
-				end
-			end
-
-			if #playerList == (self:Easy() and 1 or 2) then
-				if scheduled then
-					self:CancelTimer(scheduled)
-				end
-				warn(self)
-			elseif not scheduled then
-				scheduled = self:ScheduleTimer(warn, 0.3, self)
-			end
-		end
-		self:OpenProximity(254244, 10, proxList)
-	end
-
 	local rangeCheck
 	local lastStatus = -1
 
@@ -193,13 +156,65 @@ do
 		selfRangeObject:SetColor(0.2, 1, 0.2)
 	end
 
+	local function nameToUnit(name)
+		for unit in mod:IterateGroup() do
+			if UnitIsUnit(name, unit) then
+				return unit
+			end
+		end
+		return name
+	end
+
+	local playerList, proxList, isOnMe, scheduled = mod:NewTargetList(), {}, nil, nil
+	local canisterMarks = {false, false}
+
+	local function warn(self)
+		if not isOnMe then
+			self:TargetMessage(254244, playerList, "Important")
+		end
+		scheduled = nil
+	end
+
+	local function addPlayerToList(self, name)
+		local unit = nameToUnit(name)
+		if #proxList == 0 and self:Hud(254244) then
+			selfRangeObject = Hud:DrawSpinner("player", 50)
+			selfRangeCheck = self:ScheduleRepeatingTimer("CheckSelfSleepRange", 0.2)
+			self:CheckSelfSleepRange()
+		end
+		if not tContains(proxList, unit) then
+			proxList[#proxList+1] = unit
+			playerList[#playerList+1] = name
+
+			if self:GetOption(canisterMarker) then
+				for i = 3, 4 do
+					if not canisterMarks[i] then
+						canisterMarks[i] = unit
+						SetRaidTarget(unit, i)
+						break
+					end
+				end
+			end
+
+			if #playerList == (self:Easy() and 1 or 2) then
+				if scheduled then
+					self:CancelTimer(scheduled)
+				end
+				warn(self)
+			elseif not scheduled then
+				scheduled = self:ScheduleTimer(warn, 0.3, self)
+			end
+		end
+		self:OpenProximity(254244, 10, proxList)
+	end
+
 	function mod:RAID_BOSS_WHISPER(_, msg)
 		if msg:find("254244", nil, true) then -- Sleep Canister
 			isOnMe = true
 			self:Message(254244, "Personal", "Alarm", CL.you:format(self:SpellName(254244)))
 			self:Flash(254244)
 			self:Say(254244)
-			self:ShowAura(254244, "On YOU")
+			self:ShowAura(254244, "On YOU", { autoremove = 3 })
 			addPlayerToList(self, self:UnitName("player"))
 			self:Sync("SleepCanister")
 		end
@@ -225,11 +240,6 @@ do
 			rangeCheck = self:ScheduleRepeatingTimer("CheckSleepRange", 0.2, 254244)
 			self:CheckSleepRange(254244)
 		end
-		if #proxList == 0 and self:Hud(254244) then
-			selfRangeObject = Hud:DrawSpinner("player", 50)
-			selfRangeCheck = self:ScheduleRepeatingTimer("CheckSelfSleepRange", 0.2)
-			self:CheckSelfSleepRange()
-		end
 		addPlayerToList(self, args.destName)
 		if #proxList > 0 then
 			if self:Healer() then
@@ -239,7 +249,7 @@ do
 	end
 
 	function mod:SleepCanisterRemoved(args)
-		tDeleteItem(proxList, args.destName)
+		tDeleteItem(proxList, nameToUnit(args.destName))
 		if #proxList == 0 then
 			self:CloseProximity(254244)
 			if selfRangeObject then
