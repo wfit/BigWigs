@@ -16,11 +16,13 @@ local Hud = Oken.Hud
 
 local stage = 1
 local empoweredSchrapnelBlastCount = 1
+local nextIntermissionWarning = 0
+local canisterProxList = {}
+
 local timers = {
 	--[[ Empowered Shrapnel Blast ]]--
 	[248070] = {15.3, 22, 19.5, 18, 16, 16, 13.5, 10}, -- XXX Need more data to confirm
 }
-local nextIntermissionWarning = 0
 
 --------------------------------------------------------------------------------
 -- Initialization
@@ -96,6 +98,8 @@ end
 
 function mod:OnEngage()
 	stage = 1
+	wipe(canisterProxList)
+
 	self:CDBar(247367, 4.5) -- Shock Lance
 	self:CDBar(254244, 7.3) -- Sleep Canister
 	self:CDBar(247376, 12.2) -- Pulse Grenade
@@ -120,7 +124,7 @@ function mod:UNIT_HEALTH_FREQUENT(unit)
 end
 
 do
-	local playerList, proxList, isOnMe, scheduled = mod:NewTargetList(), {}, nil, nil
+	local playerList, isOnMe, scheduled = mod:NewTargetList(), nil, nil
 	local canisterMarks = { false, false }
 
 	local rangeCheck
@@ -150,7 +154,7 @@ do
 	end
 
 	function mod:CheckSelfSleepRange()
-		for _, unit in ipairs(proxList) do
+		for _, unit in ipairs(canisterProxList) do
 			if not UnitIsUnit(unit, "player") and mod:Range(unit) <= 10 then
 				selfRangeObject:SetColor(1, 0.2, 0.2)
 				return
@@ -177,13 +181,13 @@ do
 
 	local function addPlayerToList(self, name)
 		local unit = nameToUnit(name)
-		if #proxList == 0 and self:Hud(254244) then
+		if #canisterProxList == 0 and self:Hud(254244) then
 			selfRangeObject = Hud:DrawSpinner("player", 50)
 			selfRangeCheck = self:ScheduleRepeatingTimer("CheckSelfSleepRange", 0.2)
 			self:CheckSelfSleepRange()
 		end
-		if not tContains(proxList, unit) then
-			proxList[#proxList+1] = unit
+		if not tContains(canisterProxList, unit) then
+			canisterProxList[#canisterProxList+1] = unit
 			playerList[#playerList+1] = name
 
 			if self:GetOption(canisterMarker) then
@@ -205,7 +209,7 @@ do
 				scheduled = self:ScheduleTimer(warn, 0.3, self)
 			end
 		end
-		self:OpenProximity(254244, 10, proxList)
+		self:OpenProximity(254244, 10, canisterProxList)
 	end
 
 	function mod:RAID_BOSS_WHISPER(_, msg)
@@ -241,16 +245,14 @@ do
 			self:CheckSleepRange(254244)
 		end
 		addPlayerToList(self, args.destName)
-		if #proxList > 0 then
-			if self:Healer() then
-				self:PlaySound(254244, "Alert")
-			end
+		if self:Healer() and #canisterProxList > 0 then
+			self:PlaySound(254244, "Alert")
 		end
 	end
 
 	function mod:SleepCanisterRemoved(args)
-		tDeleteItem(proxList, nameToUnit(args.destName))
-		if #proxList == 0 then
+		tDeleteItem(canisterProxList, nameToUnit(args.destName))
+		if #canisterProxList == 0 then
 			self:CloseProximity(254244)
 			if selfRangeObject then
 				self:CancelTimer(selfRangeCheck)
@@ -258,7 +260,7 @@ do
 				selfRangeObject = nil
 			end
 		else
-			self:OpenProximity(254244, 10, proxList)
+			self:OpenProximity(254244, 10, canisterProxList)
 		end
 		if self:Me(args.destGUID) then
 			self:HideAura(254244)
