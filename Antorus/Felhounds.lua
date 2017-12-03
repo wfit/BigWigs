@@ -47,7 +47,7 @@ function mod:GetOptions()
 		245098, -- Corrupting Maw
 		244131, -- Consuming Sphere
 		{245024, "AURA"}, -- Consumed
-		{254429, "SAY"}, -- Weight of Darkness
+		{254429, "SAY", "AURA"}, -- Weight of Darkness
 		{244056, "IMPACT"}, -- Siphon Corruption
 		{248819, "SAY", "AURA"}, -- Siphoned
 
@@ -145,7 +145,7 @@ do
 		playerList[#playerList+1] = args.destName
 		if #playerList == 1 then
 			self:Bar(args.spellId, 96.5)
-			self:ScheduleTimer("TargetMessage", 0.3, args.spellId, playerList, "Attention", "Warning")
+			self:ScheduleTimer("TargetMessage", 0.3, args.spellId, playerList, "Attention", "Beware")
 		end
 		if self:Me(args.destGUID) then
 			self:SmartColorSet(244072, 1, 0.5, 0)
@@ -207,7 +207,7 @@ do
 	function mod:Enflamed(args)
 		if self:Me(args.destGUID) then
 			self:TargetMessage(args.spellId, args.destName, "Personal", "Warning")
-			self:Say(args.spellId)
+			--self:Say(args.spellId)
 			self:SayCountdown(args.spellId, 4)
 			self:ShowAura(args.spellId, 4, "Move")
 
@@ -253,8 +253,9 @@ do
 	local playerList = mod:NewTargetList()
 	function mod:WeightofDarknessApplied(args)
 		if self:Me(args.destGUID) then
-			self:Say(args.spellId)
+			--self:Say(args.spellId)
 			self:SayCountdown(args.spellId, 5)
+			self:ShowAura(args.spellId, 5, "Fear")
 		end
 		playerList[#playerList+1] = args.destName
 		if #playerList == 1 then
@@ -266,6 +267,7 @@ end
 function mod:WeightofDarknessRemoved(args)
 	if self:Me(args.destGUID) then
 		self:CancelSayCountdown(args.spellId)
+		self:HideAura(args.spellId)
 	end
 end
 
