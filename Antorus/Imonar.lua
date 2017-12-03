@@ -120,8 +120,14 @@ function mod:UNIT_HEALTH_FREQUENT(unit)
 end
 
 do
+	local playerList, proxList, isOnMe, scheduled = mod:NewTargetList(), {}, nil, nil
+	local canisterMarks = { false, false }
+
 	local rangeCheck
 	local lastStatus = -1
+
+	local selfRangeCheck
+	local selfRangeObject
 
 	function mod:CheckSleepRange(spellId)
 		local status = 1
@@ -143,12 +149,9 @@ do
 		end
 	end
 
-	local selfRangeCheck
-	local selfRangeObject
-
 	function mod:CheckSelfSleepRange()
-		for name in pairs(playerList) do
-			if not UnitIsUnit(name, "player") and mod:Range(name) <= 10 then
+		for _, unit in ipairs(proxList) do
+			if not UnitIsUnit(unit, "player") and mod:Range(unit) <= 10 then
 				selfRangeObject:SetColor(1, 0.2, 0.2)
 				return
 			end
@@ -164,9 +167,6 @@ do
 		end
 		return name
 	end
-
-	local playerList, proxList, isOnMe, scheduled = mod:NewTargetList(), {}, nil, nil
-	local canisterMarks = {false, false}
 
 	local function warn(self)
 		if not isOnMe then
