@@ -17,6 +17,7 @@ local Hud = Oken.Hud
 local tormentActive = 0 -- 1: Flames, 2: Frost, 3: Fel, 4: Shadows
 local _, shadowDesc = EJ_GetSectionInfo(16350)
 local mobCollector = {}
+local felTick = 0
 
 --------------------------------------------------------------------------------
 -- Localization
@@ -42,6 +43,7 @@ function mod:GetOptions()
 		243999, -- Dark Fissure
 		{244042, "SAY", "FLASH", "ICON", "AURA"}, -- Marked Prey
 		{244094, "SAY", "FLASH", "ICON", "AURA", "HUD"}, -- Necrotic Embrace
+		{243980, "AURA"}, -- Torment of Fel
 		"shadowOfVarmathras",
 		{248732, "SAY", "AURA", "HUD"}, -- Echoes of Doom
 	}
@@ -127,8 +129,25 @@ end
 function mod:TormentofFel(args)
 	if tormentActive ~= 3 then
 		tormentActive = 3
+		felTick = 0
 		self:Message("stages", "Positive", "Long", args.spellName, args.spellId)
 		self:CDBar("stages", 121, self:SpellName(243973), 243973) -- Torment of Shadows
+
+		self:ShowAura(243980, 5, { pulse = false })
+		self:Log("SPELL_PERIODIC_DAMAGE", "TormentofFelTick", 243980)
+		self:Log("SPELL_PERIODIC_MISSED", "TormentofFelTick", 243980)
+	end
+end
+
+do
+	local prev = 0
+	function mod:TormentofFelTick()
+		local t = GetTime()
+		if t - prev > 1.5 then
+			prev = t
+			felTick = felTick + 1
+			self:ShowAura(243980, 5, { stacks = felTick })
+		end
 	end
 end
 
@@ -136,6 +155,10 @@ function mod:TormentofShadows(args)
 	if tormentActive ~= 4 then
 		tormentActive = 4
 		self:Message(args.spellId, "Positive", "Long", args.spellName, args.spellId)
+
+		self:RemoveLog("SPELL_PERIODIC_DAMAGE", "TormentofFelTick", 243980)
+		self:RemoveLog("SPELL_PERIODIC_MISSED", "TormentofFelTick", 243980)
+		self:HideAura(243980)
 	end
 end
 
