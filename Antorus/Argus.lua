@@ -78,9 +78,9 @@ function mod:GetOptions()
 		skyAndSeaMarker,
 
 		--[[ Stage 2 ]]--
-		{250669, "SAY", "AURA"}, -- Soul Burst
+		{250669, "SAY", "AURA", "IMPACT"}, -- Soul Burst
 		burstMarker,
-		{251570, "SAY", "AURA"}, -- Soul Bomb
+		{251570, "SAY", "AURA", "IMPACT"}, -- Soul Bomb
 		bombMarker,
 		255826, -- Edge of Obliteration
 		255199, -- Avatar of Aggramar
@@ -332,7 +332,7 @@ do
 		playerList[#playerList+1] = args.destName
 		if #playerList == 1 then
 			self:ScheduleTimer("TargetMessage", 0.3, args.spellId, playerList, "Important", "Alarm")
-			self:Bar(250669, 15, L.explosion:format(args.spellName)) -- Soulburst Explosion
+			self:ImpactBar(250669, 15, L.explosion:format(args.spellName)) -- Soulburst Explosion
 			if self:GetOption(burstMarker) then
 				SetRaidTarget(args.destName, 3)
 			end
@@ -355,11 +355,13 @@ function mod:Soulbomb(args)
 	if self:Me(args.destGUID) then
 		self:Say(args.spellId)
 		self:SayCountdown(args.spellId, 15)
-		self:ShowAura(args.spellId, 15, "Move", { icon = 450905 }, true)
+		self:ShowAura(args.spellId, self:Mythic() and 12 or 15, "Move", { icon = 450905 }, true)
 	end
 	self:TargetMessage(args.spellId, args.destName, "Urgent", "Warning")
-	self:TargetBar(args.spellId, self:Mythic() and 12 or 15, args.destName)
 	self:Bar(args.spellId, stage == 4 and 54 or 42)
+	if self:Mythic() then
+		self:ImpactBar(args.spellId, 12, L.explosion:format(args.spellName))
+	end
 
 	self:Bar(250669, stage == 4 and 54 or 42) -- Soulburst
 	self:Bar(250669, stage == 4 and 24.5 or 20, CL.count:format(self:SpellName(250669), 2)) -- Soulburst (2)
