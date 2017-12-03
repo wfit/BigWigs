@@ -251,6 +251,7 @@ do
 			self:OpenProximity(254244, 10, proxList)
 		end
 		if self:Me(args.destGUID) then
+			self:HideAura(254244)
 			self:CancelTimer(rangeCheck)
 			self:SmartColorUnset(254244)
 		end
