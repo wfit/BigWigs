@@ -301,7 +301,9 @@ do
 		if t-prev > 0.5 then
 			prev = t
 			self:Message(244050, "Urgent", "Warning", args.spellName, args.spellId)
-			self:ShowAura(244050, "Spread Boss")
+			if not self:Easy() then
+				self:ShowAura(244050, "Spread Boss")
+			end
 		end
 	end
 
