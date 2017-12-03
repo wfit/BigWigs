@@ -133,7 +133,7 @@ function mod:TormentofFel(args)
 		self:Message("stages", "Positive", "Long", args.spellName, args.spellId)
 		self:CDBar("stages", 121, self:SpellName(243973), 243973) -- Torment of Shadows
 
-		self:ShowAura(243980, 5, { pulse = false })
+		self:ShowAura(243980, 5, { pulse = false, pin = -1 })
 		self:Log("SPELL_PERIODIC_DAMAGE", "TormentofFelTick", 243980)
 		self:Log("SPELL_PERIODIC_MISSED", "TormentofFelTick", 243980)
 	end
