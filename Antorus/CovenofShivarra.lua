@@ -54,6 +54,7 @@ end
 -- Initialization
 --
 
+local cleave_hud = mod:AddCustomOption { "cleave_hud", "Display a Cleave HUD on Noura, Mother of Flame" }
 local cosmicGlareMarker = mod:AddMarkerOption(true, "player", 3, 250912, 3,4)
 function mod:GetOptions()
 	return {
@@ -69,6 +70,7 @@ function mod:GetOptions()
 		{244899, "TANK"}, -- Fiery Strike
 		245627, -- Whirling Saber
 		{253520, "SAY", "AURA"}, -- Fulminating Pulse
+		cleave_hud,
 
 		--[[ Asara, Mother of Night ]]--
 		246329, -- Shadow Blades
@@ -157,6 +159,17 @@ function mod:OnEngage()
 
 	self:CDBar("torment_of_the_titans", 82, L.torment_of_the_titans, L.torment_of_the_titans_icon)
 	self:CDBar("stages", 190, self:SpellName(-15969), "achievement_boss_argus_shivan") -- Diima, Mother of Gloom
+
+	if self:GetOption(cleave_hud) then
+		for i = 1, 4 do
+			local guid = UnitGUID("boss" .. i)
+			if guid and self:MobId(guid) == 122468 then -- Noura, Mother of Flames
+				Hud:DrawRadius(guid, 60):SetOffset(0, -100)
+				Hud:DrawText(guid, "Cleave"):SetOffset(0, -100)
+				break
+			end
+		end
+	end
 
 	self:Berserk(720)
 end
