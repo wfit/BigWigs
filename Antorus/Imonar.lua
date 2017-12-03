@@ -20,18 +20,21 @@ local timers = {
 	--[[ Empowered Shrapnel Blast ]]--
 	[248070] = {15.3, 22, 19.5, 18, 16, 16, 13.5, 10}, -- XXX Need more data to confirm
 }
+local nextIntermissionWarning = 0
+
 --------------------------------------------------------------------------------
 -- Initialization
 --
 
+local canisterMarker = mod:AddMarkerOption(false, "player", 1, 254244, 1, 2)
 function mod:GetOptions()
 	return {
 		"stages",
-		"berserk",
 
 		--[[ Stage One: Attack Force ]]--
 		{247367, "TANK"}, -- Shock Lance
-		{254244, "SAY", "FLASH", "AURA", "SMARTCOLOR", "HUD"}, -- Sleep Canister
+		{254244, "SAY", "FLASH", "PROXIMITY", "AURA", "SMARTCOLOR", "HUD"}, -- Sleep Canister
+		canisterMarker,
 		247376, -- Pulse Grenade
 
 		--[[ Stage Two: Contract to Kill ]]--
@@ -58,6 +61,7 @@ end
 
 function mod:OnBossEnable()
 	self:RegisterEvent("RAID_BOSS_WHISPER")
+	self:RegisterMessage("BigWigs_BossComm") -- Syncing the Sleep Canisters
 	self:RegisterUnitEvent("UNIT_SPELLCAST_SUCCEEDED", nil, "boss1")
 	self:Log("SPELL_AURA_REMOVED", "IntermissionOver", 248233, 250135) -- Conflagration: Intermission 1, Intermission 2
 
@@ -68,6 +72,7 @@ function mod:OnBossEnable()
 	self:Log("SPELL_CAST_SUCCESS", "SleepCanister", 254244)
 	self:Log("SPELL_AURA_APPLIED", "SleepCanisterApplied", 255029)
 	self:Log("SPELL_AURA_REMOVED", "SleepCanisterRemoved", 255029)
+	self:Log("SPELL_MISSED", "SleepCanisterRemoved", 254244)
 	self:Log("SPELL_CAST_START", "PulseGrenade", 247376)
 
 	--[[ Stage Two: Contract to Kill ]]--
@@ -95,18 +100,169 @@ function mod:OnEngage()
 	self:CDBar(254244, 7.3) -- Sleep Canister
 	self:CDBar(247376, 12.2) -- Pulse Grenade
 
-	self:Berserk(420)
+	nextIntermissionWarning = 69
+	self:RegisterUnitEvent("UNIT_HEALTH_FREQUENT", nil, "boss1")
 end
 
 --------------------------------------------------------------------------------
 -- Event Handlers
 --
-function mod:RAID_BOSS_WHISPER(_, msg)
-	if msg:find("254244", nil, true) then -- Sleep Canister
-		self:Message(254244, "Personal", "Alarm", CL.you:format(self:SpellName(254244)))
-		self:Flash(254244)
-		self:Say(254244)
-		self:ShowAura(254244, "On YOU")
+
+function mod:UNIT_HEALTH_FREQUENT(unit)
+	local hp = UnitHealth(unit) / UnitHealthMax(unit) * 100
+	if hp < nextIntermissionWarning then
+		self:Message("stages", "Positive", nil, CL.soon:format(CL.intermission), false)
+		nextIntermissionWarning = nextIntermissionWarning - 33
+		if nextIntermissionWarning < 30 then
+			self:UnregisterUnitEvent("UNIT_HEALTH_FREQUENT", unit)
+		end
+	end
+end
+
+do
+	local playerList, proxList, isOnMe, scheduled = mod:NewTargetList(), {}, nil, nil
+	local canisterMarks = {false, false}
+
+	local function warn(self)
+		if not isOnMe then
+			self:TargetMessage(254244, playerList, "Important")
+		end
+		scheduled = nil
+	end
+
+	local function addPlayerToList(self, name)
+		if not tContains(proxList, name) then
+			proxList[#proxList+1] = name
+			playerList[#playerList+1] = name
+
+			if self:GetOption(canisterMarker) then
+				for i = 1, 2 do
+					if not canisterMarks[i] then
+						canisterMarks[i] = self:UnitName(name)
+						SetRaidTarget(name, i)
+						break
+					end
+				end
+			end
+
+			if #playerList == (self:Easy() and 1 or 2) then
+				if scheduled then
+					self:CancelTimer(scheduled)
+				end
+				warn(self)
+			elseif not scheduled then
+				scheduled = self:ScheduleTimer(warn, 0.3, self)
+			end
+		end
+		self:OpenProximity(254244, 10, proxList)
+	end
+
+	local rangeCheck
+	local lastStatus = -1
+
+	function mod:CheckSleepRange(spellId)
+		local status = 1
+		for unit in mod:IterateGroup() do
+			if not UnitIsUnit(unit, "player") and not UnitIsDead(unit) and mod:Range(unit) <= 10 then
+				status = 0
+				break
+			end
+		end
+		if status ~= lastStatus then
+			lastStatus = status
+			if status == 0 then
+				-- Cannot be dispelled
+				self:SmartColorSet(spellId, 1, 0.5, 0)
+			elseif status == 1 then
+				-- Can be dispelled
+				self:SmartColorSet(spellId, 0.2, 1, 0.2)
+			end
+		end
+	end
+
+	local selfRangeCheck
+	local selfRangeObject
+
+	function mod:CheckSelfSleepRange()
+		for name in pairs(playerList) do
+			if not UnitIsUnit(name, "player") and mod:Range(name) <= 10 then
+				selfRangeObject:SetColor(1, 0.2, 0.2)
+				return
+			end
+		end
+		selfRangeObject:SetColor(0.2, 1, 0.2)
+	end
+
+	function mod:RAID_BOSS_WHISPER(_, msg)
+		if msg:find("254244", nil, true) then -- Sleep Canister
+			isOnMe = true
+			self:Message(254244, "Personal", "Alarm", CL.you:format(self:SpellName(254244)))
+			self:Flash(254244)
+			self:Say(254244)
+			self:ShowAura(254244, "On YOU")
+			addPlayerToList(self, self:UnitName("player"))
+			self:Sync("SleepCanister")
+		end
+	end
+
+	function mod:BigWigs_BossComm(_, msg, _, name)
+		if msg == "SleepCanister" then
+			addPlayerToList(self, name)
+		end
+	end
+
+	function mod:SleepCanister(args)
+		isOnMe = nil
+		wipe(playerList)
+		canisterMarks = {false, false}
+		self:Bar(args.spellId, 10.9)
+	end
+
+	function mod:SleepCanisterApplied(args)
+		if self:Me(args.destGUID) then
+			self:HideAura(254244)
+			lastStatus = -1
+			rangeCheck = self:ScheduleRepeatingTimer("CheckSleepRange", 0.2, 254244)
+			self:CheckSleepRange(254244)
+		end
+		addPlayerToList(self, args.destName)
+		if #proxList > 0 then
+			if self:Hud(254244) then
+				selfRangeObject = Hud:DrawSpinner("player", 50)
+				selfRangeCheck = self:ScheduleRepeatingTimer("CheckSelfSleepRange", 0.2)
+				self:CheckSelfSleepRange()
+			end
+			if self:Healer() then
+				self:PlaySound(254244, "Alert")
+			end
+		end
+	end
+
+	function mod:SleepCanisterRemoved(args)
+		tDeleteItem(proxList, args.destName)
+		if #proxList == 0 then
+			self:CloseProximity(254244)
+			if selfRangeObject then
+				self:CancelTimer(selfRangeCheck)
+				selfRangeObject:Remove()
+				selfRangeObject = nil
+			end
+		else
+			self:OpenProximity(254244, 10, proxList)
+		end
+		if self:Me(args.destGUID) then
+			self:CancelTimer(rangeCheck)
+			self:SmartColorUnset(254244)
+		end
+		if self:GetOption(canisterMarker) then
+			for i = 1, 2 do
+				if canisterMarks[i] == self:UnitName(args.destName) then
+					canisterMarks[i] = false
+					SetRaidTarget(args.destName, 0)
+					break
+				end
+			end
+		end
 	end
 end
 
@@ -148,80 +304,6 @@ end
 
 function mod:ShockLanceSuccess(args)
 	self:Bar(args.spellId, 4.9)
-end
-
-function mod:SleepCanister(args)
-	self:Message(args.spellId, "Important") -- Play sound only if targetted: See RAID_BOSS_WHISPER
-	self:Bar(args.spellId, 10.9)
-end
-
--- Sleep Canister stuff
-do
-	local rangeCheck
-	local lastStatus = -1
-
-	function mod:CheckSleepRange(spellId)
-		local status = 1
-		for unit in mod:IterateGroup() do
-			if not UnitIsUnit(unit, "player") and not UnitIsDead(unit) and mod:Range(unit) <= 10 then
-				status = 0
-				break
-			end
-		end
-		if status ~= lastStatus then
-			lastStatus = status
-			if status == 0 then
-				-- Cannot be dispelled
-				self:SmartColorSet(spellId, 1, 0.5, 0)
-			elseif status == 1 then
-				-- Can be dispelled
-				self:SmartColorSet(spellId, 0.2, 1, 0.2)
-			end
-		end
-	end
-
-	local targets = {}
-	local selfRangeCheck
-	local selfRangeObject
-
-	function mod:CheckSelfSleepRange()
-		for unit in pairs(targets) do
-			if not UnitIsUnit(unit, "player") and mod:Range(unit) <= 10 then
-				selfRangeObject:SetColor(1, 0.2, 0.2)
-				return
-			end
-		end
-		selfRangeObject:SetColor(0.2, 1, 0.2)
-	end
-
-	function mod:SleepCanisterApplied(args)
-		if self:Me(args.destGUID) then
-			self:HideAura(254244)
-			lastStatus = -1
-			rangeCheck = self:ScheduleRepeatingTimer("CheckSleepRange", 0.2, 254244)
-			self:CheckSleepRange(254244)
-		end
-		local first = not next(targets)
-		targets[args.destUnit] = true
-		if first and self:Hud(254244) then
-			selfRangeObject = Hud:DrawSpinner("player", 50)
-			selfRangeCheck = self:ScheduleRepeatingTimer("CheckSelfSleepRange", 0.2)
-			self:CheckSelfSleepRange()
-		end
-	end
-
-	function mod:SleepCanisterRemoved(args)
-		targets[args.destUnit] = nil
-		if not next(targets) and selfRangeObject then
-			self:CancelTimer(selfRangeCheck)
-			selfRangeObject:Remove()
-			selfRangeObject = nil
-		end
-		if self:Me(args.destGUID) then
-			self:CancelTimer(rangeCheck)
-			self:SmartColorUnset(254244)
-		end
-	end
 end
 
 function mod:PulseGrenade(args)
