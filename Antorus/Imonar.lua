@@ -225,13 +225,13 @@ do
 			rangeCheck = self:ScheduleRepeatingTimer("CheckSleepRange", 0.2, 254244)
 			self:CheckSleepRange(254244)
 		end
+		if #proxList == 0 and self:Hud(254244) then
+			selfRangeObject = Hud:DrawSpinner("player", 50)
+			selfRangeCheck = self:ScheduleRepeatingTimer("CheckSelfSleepRange", 0.2)
+			self:CheckSelfSleepRange()
+		end
 		addPlayerToList(self, args.destName)
 		if #proxList > 0 then
-			if self:Hud(254244) then
-				selfRangeObject = Hud:DrawSpinner("player", 50)
-				selfRangeCheck = self:ScheduleRepeatingTimer("CheckSelfSleepRange", 0.2)
-				self:CheckSelfSleepRange()
-			end
 			if self:Healer() then
 				self:PlaySound(254244, "Alert")
 			end

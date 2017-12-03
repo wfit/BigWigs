@@ -44,15 +44,10 @@ if L then
 	L.torment = "Torment: %s"
 	L.nextTorment = "Next Torment: |cffffffff%s|r"
 	L.nextTorments = "Next Torments:"
-	L.tormentHeal = "Adds"
+	L.tormentHeal = "Self Heal"
 	L.tormentLightning = "Spread" -- short for Chain Lightning
 	L.tormentArmy = "Walls"
 	L.tormentFlames = "Flames"
-
-	L.amanthulEffect = "Adds"
-	L.golgannethEffect = "Spread"
-	L.kazgorothEffect = "Flames"
-	L.norgannonEffect = "Walls"
 end
 
 --------------------------------------------------------------------------------
@@ -322,17 +317,17 @@ end
 function mod:CHAT_MSG_RAID_BOSS_EMOTE(_, msg)
 	if msg:find("250095", nil, true) then -- Machinations of Aman'thul
 		self:Message("torment_of_the_titans", "Urgent", nil, CL.soon:format(L.torment:format(L.tormentHeal)), tormentIcons["AmanThul"])
-		self:ShowAura("torment_of_the_titans", L.amanthulEffect, { icon = self:SpellIcon(250095), key = "amanthul", autoremove = TORMENT_AURA_DURATION })
+		self:ShowAura("torment_of_the_titans", L.tormentHeal, { icon = self:SpellIcon(250095), key = "amanthul", autoremove = TORMENT_AURA_DURATION })
 	elseif msg:find("245671", nil, true) then -- Flames of Khaz'goroth
 		self:Message("torment_of_the_titans", "Urgent", nil, CL.soon:format(L.torment:format(L.tormentFlames)), tormentIcons["Khazgoroth"])
-		self:ShowAura("torment_of_the_titans", L.kazgorothEffect, { icon = self:SpellIcon(245671), key = "kazgoroth", autoremove = TORMENT_AURA_DURATION })
+		self:ShowAura("torment_of_the_titans", L.tormentFlames, { icon = self:SpellIcon(245671), key = "kazgoroth", autoremove = TORMENT_AURA_DURATION })
 	elseif msg:find("246763", nil, true) then -- Fury of Golganneth
 		self:Message("torment_of_the_titans", "Urgent", nil, CL.soon:format(L.torment:format(L.tormentLightning)), tormentIcons["Golganneth"])
-		self:ShowAura("torment_of_the_titans", L.golgannethEffect, { icon = self:SpellIcon(246763), key = "golganneth", autoremove = TORMENT_AURA_DURATION })
+		self:ShowAura("torment_of_the_titans", L.tormentLightning, { icon = self:SpellIcon(246763), key = "golganneth", autoremove = TORMENT_AURA_DURATION })
 		self:StartFuryHUD()
 	elseif msg:find("245910", nil, true) then -- Spectral Army of Norgannon
 		self:Message("torment_of_the_titans", "Urgent", nil, CL.soon:format(L.torment:format(L.tormentArmy)), tormentIcons["Norgannon"])
-		self:ShowAura("torment_of_the_titans", L.norgannonEffect, { icon = self:SpellIcon(245910), key = "norgannon", autoremove = TORMENT_AURA_DURATION })
+		self:ShowAura("torment_of_the_titans", L.tormentArmy, { icon = self:SpellIcon(245910), key = "norgannon", autoremove = TORMENT_AURA_DURATION })
 	end
 end
 
