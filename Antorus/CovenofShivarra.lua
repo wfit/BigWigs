@@ -171,8 +171,8 @@ function mod:NouraHUD()
 	for i = 1, 4 do
 		local guid = UnitGUID("boss" .. i)
 		if guid and self:MobId(guid) == 122468 then -- Noura, Mother of Flames
-			Hud:DrawRadius(guid, 60):SetOffset(0, -200)
-			Hud:DrawText(guid, "Cleave"):SetOffset(0, -200)
+			Hud:DrawArea(guid, 60):SetColor(1, 0.2, 0.2, 1):SetOffset(0, -150)
+			Hud:DrawText(guid, "Cleave"):SetOffset(0, -150)
 			break
 		end
 	end
