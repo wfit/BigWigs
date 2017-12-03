@@ -61,7 +61,7 @@ end
 
 local skyAndSeaMarker = mod:AddMarkerOption(true, "player", 1, 255594, 1, 3) -- Sky and Sea
 local burstMarker = mod:AddMarkerOption(true, "player", 3, 250669, 3, 7) -- Soul Burst
-local bombMarker = mod:AddMarkerOption(true, "player", 2, 251570, 2) -- Soul Bomb
+local bombMarker = mod:AddMarkerOption(true, "player", 1, 251570, 1) -- Soul Bomb
 local constellarMarker = mod:AddMarkerOption(true, "npc", 1, 252516, 1, 2, 3, 4, 5, 6, 7) -- The Discs of Norgannon
 function mod:GetOptions()
 	return {
@@ -366,8 +366,8 @@ function mod:Soulbomb(args)
 	self:Bar(250669, stage == 4 and 54 or 42) -- Soulburst
 	self:Bar(250669, stage == 4 and 24.5 or 20, CL.count:format(self:SpellName(250669), 2)) -- Soulburst (2)
 
-	if self:GetOption(burstMarker) then
-		SetRaidTarget(args.destName, 2)
+	if self:GetOption(bombMarker) then
+		SetRaidTarget(args.destName, 1)
 	end
 end
 

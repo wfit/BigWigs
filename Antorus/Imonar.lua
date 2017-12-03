@@ -26,7 +26,7 @@ local nextIntermissionWarning = 0
 -- Initialization
 --
 
-local canisterMarker = mod:AddMarkerOption(false, "player", 1, 254244, 1, 2)
+local canisterMarker = mod:AddMarkerOption(true, "player", 3, 254244, 3, 4)
 function mod:GetOptions()
 	return {
 		"stages",
@@ -136,7 +136,7 @@ do
 			playerList[#playerList+1] = name
 
 			if self:GetOption(canisterMarker) then
-				for i = 1, 2 do
+				for i = 3, 4 do
 					if not canisterMarks[i] then
 						canisterMarks[i] = self:UnitName(name)
 						SetRaidTarget(name, i)
@@ -256,7 +256,7 @@ do
 			self:SmartColorUnset(254244)
 		end
 		if self:GetOption(canisterMarker) then
-			for i = 1, 2 do
+			for i = 3, 4 do
 				if canisterMarks[i] == self:UnitName(args.destName) then
 					canisterMarks[i] = false
 					SetRaidTarget(args.destName, 0)
