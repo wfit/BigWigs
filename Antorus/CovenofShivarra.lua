@@ -68,7 +68,7 @@ function mod:GetOptions()
 		--[[ Noura, Mother of Flame ]]--
 		{244899, "TANK"}, -- Fiery Strike
 		245627, -- Whirling Saber
-		{253429, "SAY", "AURA"}, -- Fulminating Pulse
+		{253520, "SAY", "AURA"}, -- Fulminating Pulse
 
 		--[[ Asara, Mother of Night ]]--
 		246329, -- Shadow Blades
@@ -109,8 +109,8 @@ function mod:OnBossEnable()
 	self:Log("SPELL_AURA_APPLIED_DOSE", "FieryStrike", 244899)
 	self:Log("SPELL_CAST_SUCCESS", "FieryStrikeSuccess", 244899)
 	self:Log("SPELL_CAST_START", "WhirlingSaber", 245627)
-	self:Log("SPELL_AURA_APPLIED", "FulminatingPulse", 253429)
-	self:Log("SPELL_AURA_REMOVED", "FulminatingPulseRemoved", 253429)
+	self:Log("SPELL_AURA_APPLIED", "FulminatingPulse", 253520)
+	self:Log("SPELL_AURA_REMOVED", "FulminatingPulseRemoved", 253520)
 
 	--[[ Asara, Mother of Night ]]--
 	self:Log("SPELL_CAST_SUCCESS", "ShadowBlades", 246329)
@@ -150,7 +150,7 @@ function mod:OnEngage()
 
 	self:Bar(245627, 8.5) -- Whirling Saber
 	self:Bar(244899, 12.1) -- Fiery Strike
-	self:Bar(253429, 20.6) -- Fulminating Pulse
+	self:Bar(253520, 20.6) -- Fulminating Pulse
 
 	self:Bar(246329, 12.1) -- Shadow Blades
 	self:Bar(252861, 27.9) -- Storm of Darkness
@@ -256,12 +256,12 @@ function mod:UNIT_TARGETABLE_CHANGED(unit)
 			self:Message("stages", "Positive", "Long", self:SpellName(-15967), false) -- Noura, Mother of Flame
 			self:Bar(245627, 8.9) -- Whirling Saber
 			self:Bar(244899, 12.5) -- Fiery Strike
-			self:Bar(253429, 21.1) -- Fulminating Pulse
+			self:Bar(253520, 21.1) -- Fulminating Pulse
 			self:StopBar(self:SpellName(-15967)) -- Noura, Mother of Flame
 		else
 			self:StopBar(244899) -- Fiery Strike
 			self:StopBar(245627) -- Whirling Saber
-			self:StopBar(253429) -- Fulminating Pulse
+			self:StopBar(253520) -- Fulminating Pulse
 		end
 	elseif self:MobId(UnitGUID(unit)) == 122467 then -- Asara
 		if UnitCanAttack("player", unit) then
