@@ -161,17 +161,21 @@ function mod:OnEngage()
 	self:CDBar("stages", 190, self:SpellName(-15969), "achievement_boss_argus_shivan") -- Diima, Mother of Gloom
 
 	if self:GetOption(cleave_hud) then
-		for i = 1, 4 do
-			local guid = UnitGUID("boss" .. i)
-			if guid and self:MobId(guid) == 122468 then -- Noura, Mother of Flames
-				Hud:DrawRadius(guid, 60):SetOffset(0, -100)
-				Hud:DrawText(guid, "Cleave"):SetOffset(0, -100)
-				break
-			end
-		end
+		self:ScheduleTimer("NouraHUD", 2)
 	end
 
 	self:Berserk(720)
+end
+
+function mod:NouraHUD()
+	for i = 1, 4 do
+		local guid = UnitGUID("boss" .. i)
+		if guid and self:MobId(guid) == 122468 then -- Noura, Mother of Flames
+			Hud:DrawRadius(guid, 60):SetOffset(0, -100)
+			Hud:DrawText(guid, "Cleave"):SetOffset(0, -100)
+			break
+		end
+	end
 end
 
 --------------------------------------------------------------------------------
