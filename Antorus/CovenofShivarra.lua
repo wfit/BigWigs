@@ -83,7 +83,7 @@ function mod:GetOptions()
 
 		--[[ Thu'raya, Mother of the Cosmos (Mythic) ]]--
 		250648, -- Touch of the Cosmos
-		{250757, "SAY", "FLASH"}, -- Cosmic Glare
+		{250757, "SAY", "FLASH", "AURA"}, -- Cosmic Glare
 		cosmicGlareMarker,
 	},{
 		["stages"] = "general",
@@ -532,6 +532,7 @@ do
 			self:Flash(args.spellId)
 			self:Say(args.spellId)
 			self:SayCountdown(args.spellId, 4)
+			self:ShowAura(args.spellId, 4, "Link")
 		end
 
 		playerList[#playerList+1] = args.destName
@@ -551,6 +552,7 @@ end
 function mod:CosmicGlareRemoved(args)
 	if self:Me(args.destGUID) then
 		self:CancelSayCountdown(args.spellId)
+		self:HideAura(args.spellId)
 	end
 	if self:GetOption(cosmicGlareMarker) then
 		SetRaidTarget(args.destName, 0)
