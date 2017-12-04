@@ -12,7 +12,6 @@ mod.respawnTime = 30
 -- Locals
 --
 
-local _, armoryDesc = EJ_GetSectionInfo(17077)
 local stage = 1
 local coneOfDeathCounter = 1
 local soulBlightOrbCounter = 1
@@ -41,14 +40,19 @@ local timers = {
 
 local L = mod:GetLocale()
 if L then
+	L.combinedBurstAndBomb = "Combine Soulburst and Soulbomb"
+	L.combinedBurstAndBomb_desc = "|cff71d5ffSoulbombs|r are always applied in combination with |cff71d5ffSoulbursts|r. Enable this option to combine those two messages into one."
+
+	L.custom_off_always_show_combined = "Always show the combined Soulburst and Soulbomb message"
+	L.custom_off_always_show_combined_desc = "The combined message won't be displayed if you get the |cff71d5ffSoulbomb|r or the |cff71d5ffSoulburst|r. Enable this option to always show the combined message, even when you're affected. |cff33ff99Useful for raid leaders.|r"
+
 	L.stage2_early = "Let the fury of the sea wash away this corruption!" -- Yell is 6s before the actual cast start
 	L.stage3_early = "No hope. Just pain. Only pain!"  -- Yell is 14.5s before the actual cast start
 
-	L.stellarArmory = "{-17077}"
-	L.stellarArmory_desc = armoryDesc
-	L.stellarArmory_icon = "inv_sword_2h_pandaraid_d_01"
-
 	L.explosion = "%s Explosion"
+	L.gifts = "Gifts: %s (Sky), %s (Sea)"
+	L.burst = "|T1778229:15:15:0:0:64:64:4:60:4:60|tBurst:%s" -- short for Soulburst
+	L.bomb = "|T1778228:15:15:0:0:64:64:4:60:4:60|tBomb:%s" -- short for Soulbomb
 
 	L.countx = "%s (%dx)"
 
@@ -78,10 +82,12 @@ function mod:GetOptions()
 		skyAndSeaMarker,
 
 		--[[ Stage 2 ]]--
-		{250669, "SAY", "AURA", "IMPACT"}, -- Soul Burst
+		{250669, "SAY", "AURA", "IMPACT"}, -- Soulburst
 		burstMarker,
-		{251570, "SAY", "AURA", "IMPACT"}, -- Soul Bomb
+		{251570, "SAY", "AURA", "IMPACT"}, -- Soulbomb
 		bombMarker,
+		"combinedBurstAndBomb",
+		"custom_off_always_show_combined",
 		255826, -- Edge of Obliteration
 		255199, -- Avatar of Aggramar
 		255200, -- Aggramar's Boon
@@ -91,7 +97,7 @@ function mod:GetOptions()
 		constellarMarker,
 		{252729, "SAY", "AURA"}, -- Cosmic Ray
 		{252616, "SAY"}, -- Cosmic Beacon
-		"stellarArmory",
+		-17077, -- Stellar Armory
 		255935, -- Cosmic Power
 
 		--[[ Stage 4 ]]--
@@ -104,7 +110,7 @@ function mod:GetOptions()
 		["stages"] = "general",
 		[248165] = CL.stage:format(1),
 		[250669] = CL.stage:format(2),
-		[constellarMarker] = CL.stage:format(3),
+		[252516] = CL.stage:format(3),
 		[256544] = CL.stage:format(4),
 	}
 end
@@ -265,28 +271,42 @@ function mod:SkyandSea(args)
 	self:ScheduleTimer("ImpactBar", 5, args.spellId, 10, L.orbsDespawn)
 end
 
--- XXX 2 message perhaps too much, maybe combine?
-function mod:GiftoftheSea(args)
-	self:TargetMessage(255594, args.destName, "Positive", "Long", args.spellName, nil, true)
-	if self:Me(args.destGUID) then
-		--self:Say(255594, args.spellName)
-		self:ShowAura(255594, 5, "Sea", true)
-	end
-	if self:GetOption(skyAndSeaMarker) then
-		SetRaidTarget(args.destName, 1)
-		self:ScheduleTimer(SetRaidTarget, 5, args.destName, 0)
-	end
-end
+do
+	local skyName, seaName = nil, nil
 
-function mod:GiftoftheSky(args)
-	self:TargetMessage(255594, args.destName, "Positive", "Long", args.spellName, nil, true)
-	if self:Me(args.destGUID) then
-		--self:Say(255594, args.spellName)
-		self:ShowAura(255594, 5, "Sky", true)
+	local function announce(self)
+		if skyName and seaName then
+			local text = L.gifts:format(self:ColorName(skyName), self:ColorName(seaName))
+			self:Message(255594, "Positive", "Long", text, 255594)
+			skyName = nil
+			seaName = nil
+		end
 	end
-	if self:GetOption(skyAndSeaMarker) then
-		SetRaidTarget(args.destName, 3)
-		self:ScheduleTimer(SetRaidTarget, 5, args.destName, 0)
+
+	function mod:GiftoftheSea(args)
+		if self:Me(args.destGUID) then
+			--self:Say(255594, args.spellName)
+			self:ShowAura(255594, 5, "Sea", true)
+		end
+		if self:GetOption(skyAndSeaMarker) then
+			SetRaidTarget(args.destName, 1)
+			self:ScheduleTimer(SetRaidTarget, 5, args.destName, 0)
+		end
+		seaName = args.destName
+		announce(self)
+	end
+
+	function mod:GiftoftheSky(args)
+		if self:Me(args.destGUID) then
+			--self:Say(255594, args.spellName)
+			self:ShowAura(255594, 5, "Sky", true)
+		end
+		if self:GetOption(skyAndSeaMarker) then
+			SetRaidTarget(args.destName, 3)
+			self:ScheduleTimer(SetRaidTarget, 5, args.destName, 0)
+		end
+		skyName = args.destName
+		announce(self)
 	end
 end
 
@@ -318,21 +338,62 @@ function mod:GolgannethsWrath()
 end
 
 do
-	local playerList = mod:NewTargetList()
+	local burstList, bombName, isOnMe, scheduled = {}, nil, nil, nil
+
+	local function getPlayerIcon(unit)
+		return (UnitExists(unit) and GetRaidTargetIndex(unit) and ("|T%d:0|t"):format(137000+GetRaidTargetIndex(unit))) or " "
+	end
+
+	local function announce(self)
+		if isOnMe == "burst" then
+			self:Message(250669, "Personal", "Alarm", CL.you:format(self:SpellName(250669) .. getPlayerIcon("player")))
+		elseif isOnMe == "bomb" then
+			self:Message(251570, "Personal", "Warning", CL.you:format(self:SpellName(251570) .. getPlayerIcon("player")))
+		end
+		if self:CheckOption("combinedBurstAndBomb", "MESSAGE") then
+			if not isOnMe or self:GetOption("custom_off_always_show_combined") then
+				local msg = ""
+				if bombName then
+					msg = L.bomb:format(getPlayerIcon(bombName) .. self:ColorName(bombName)) .. " - "
+				end
+				local burstMsg = ""
+				for _, player in pairs(burstList) do
+					burstMsg = burstMsg .. getPlayerIcon(player) .. self:ColorName(player) .. ","
+				end
+				msg = msg .. L.burst:format(burstMsg:sub(0, burstMsg:len()-1))
+				self:Message("combinedBurstAndBomb", "Important", nil, msg, false)
+			end
+		else
+			if isOnMe ~= "burst" then
+				self:TargetMessage(250669, self:ColorName(burstList), "Important")
+			end
+			if isOnMe ~="bomb" then
+				self:TargetMessage(251570, bombName, "Urgent")
+			end
+		end
+		wipe(burstList)
+		scheduled = nil
+		bombName = nil
+		isOnMe = nil
+	end
+
 	function mod:Soulburst(args)
+		burstList[#burstList+1] = args.destName
 		if self:Me(args.destGUID) then
 			self:Say(args.spellId)
 			self:SayCountdown(args.spellId, 15)
-			if #playerList == 0 then
+			isOnMe = "burst"
+			if #burstList == 1 then
 				self:ShowAura(args.spellId, 15, "Move", { icon = 450906 }, true)
 			else
 				self:ShowAura(args.spellId, 15, "Move", { icon = 450908 }, true)
 			end
 		end
-		playerList[#playerList+1] = args.destName
-		if #playerList == 1 then
-			self:ScheduleTimer("TargetMessage", 0.3, args.spellId, playerList, "Important", "Alarm")
-			self:ImpactBar(250669, 15, L.explosion:format(args.spellName)) -- Soulburst Explosion
+		if #burstList == 1 then
+			if not scheduled then
+				scheduled = self:ScheduleTimer(announce, 0.1, self)
+			end
+			self:ImpactBar(args.spellId, 15, L.explosion:format(args.spellName)) -- Soulburst Explosion
 			if self:GetOption(burstMarker) then
 				SetRaidTarget(args.destName, 3)
 			end
@@ -349,25 +410,32 @@ do
 			SetRaidTarget(args.destName, 0)
 		end
 	end
-end
 
-function mod:Soulbomb(args)
-	if self:Me(args.destGUID) then
-		self:Say(args.spellId)
-		self:SayCountdown(args.spellId, 15)
-		self:ShowAura(args.spellId, self:Mythic() and 12 or 15, "Move", { icon = 450905 }, true)
-	end
-	self:TargetMessage(args.spellId, args.destName, "Urgent", "Warning")
-	self:Bar(args.spellId, stage == 4 and 54 or 42)
-	if self:Mythic() then
-		self:ImpactBar(args.spellId, 12, L.explosion:format(args.spellName))
-	end
+	function mod:Soulbomb(args)
+		if self:Me(args.destGUID) then
+			self:Say(args.spellId)
+			self:SayCountdown(args.spellId, 15)
+			self:ShowAura(args.spellId, self:Mythic() and 12 or 15, "Move", { icon = 450905 }, true)
+			isOnMe = "bomb"
+		end
 
-	self:Bar(250669, stage == 4 and 54 or 42) -- Soulburst
-	self:Bar(250669, stage == 4 and 24.5 or 20, CL.count:format(self:SpellName(250669), 2)) -- Soulburst (2)
+		bombName = args.destName
 
-	if self:GetOption(bombMarker) then
-		SetRaidTarget(args.destName, 1)
+		if not scheduled then
+			scheduled = self:ScheduleTimer(announce, 0.1, self)
+		end
+
+		if self:Mythic() then
+			self:ImpactBar(args.spellId, 12, L.explosion:format(args.spellName))
+		end
+		self:Bar(args.spellId, stage == 4 and 54 or 42)
+
+		self:Bar(250669, stage == 4 and 54 or 42) -- Soulburst
+		self:Bar(250669, stage == 4 and 24.5 or 20, CL.count:format(self:SpellName(250669), 2)) -- Soulburst (2)
+
+		if self:GetOption(bombMarker) then
+			SetRaidTarget(args.destName, 1)
+		end
 	end
 end
 
@@ -420,7 +488,7 @@ function mod:TemporalBlast()
 	end
 
 	self:Bar("stages", 16.6, CL.incoming:format(self:SpellName(-17070)), "achievement_boss_algalon_01") -- The Constellar Designates Incoming!
-	self:Bar("stellarArmory", 26.3, self:SpellName(-17077), L.stellarArmory_icon) -- The Stellar Armory
+	self:Bar(-17077, 26.3, nil, "inv_sword_2h_pandaraid_d_01") -- The Stellar Armory
 	self:Bar(252516, 27.3) -- The Discs of Norgannon
 	self:Bar(252616, 41.3) -- Cosmic Beacon
 end
@@ -512,8 +580,8 @@ do
 		local t = GetTime()
 		if t-prev > 2 then
 			prev = t
-			self:Message("stellarArmory", "Attention", "Alert", self:SpellName(-17077), L.stellarArmory_icon)
-			self:Bar("stellarArmory", 40, self:SpellName(-17077), L.stellarArmory_icon)
+			self:Message(-17077, "Attention", "Alert", nil, "inv_sword_2h_pandaraid_d_01")
+			self:Bar(-17077, 40, nil, "inv_sword_2h_pandaraid_d_01")
 		end
 	end
 end
@@ -547,7 +615,7 @@ end
 function mod:EndofAllThingsInterupted(args)
 	if args.extraSpellId == 256544 then
 		self:Message(args.extraSpellId, "Positive", "Info", CL.interrupted:format(args.extraSpellName))
-		self:StopBar(CL.cast:format(args.extraSpellName))
+		self:StopImpactBar(args.extraSpellName)
 		initializationCount = 3
 
 		-- XXX All timers seem to start from cast interupt
@@ -572,7 +640,9 @@ function mod:EmberOfRageRemoved(args)
 end
 
 function mod:DeadlyScythe(args)
-	self:Message(args.spellId, "Neutral", "Alert")
+	if self:Tank() then
+		self:Message(args.spellId, "Neutral", "Alert")
+	end
 	self:Bar(args.spellId, 6.6)
 end
 

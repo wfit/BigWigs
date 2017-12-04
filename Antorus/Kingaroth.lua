@@ -79,6 +79,7 @@ function mod:OnBossEnable()
 	--[[ Stage: Deployment ]]--
 	self:Log("SPELL_CAST_START", "ForgingStrike", 254919)
 	self:Log("SPELL_AURA_APPLIED", "ForgingStrikeApplied", 254919)
+	self:Log("SPELL_AURA_APPLIED_DOSE", "ForgingStrikeApplied", 254919)
 	self:Log("SPELL_CAST_START", "ReverberatingStrike", 254926)
 	self:Log("SPELL_CAST_SUCCESS", "DiabolicBomb", 248214)
 	self:Log("SPELL_AURA_APPLIED", "Demolished", 249535)
@@ -169,7 +170,8 @@ function mod:ForgingStrike(args)
 end
 
 function mod:ForgingStrikeApplied(args)
-	self:TargetMessage(args.spellId, args.destName, "Urgent", "Warning", nil, nil, self:Tank())
+	local amount = args.amount or 1
+	self:StackMessage(args.spellId, args.destName, amount, "Urgent", "Warning")
 end
 
 do
