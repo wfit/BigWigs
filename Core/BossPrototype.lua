@@ -1215,9 +1215,25 @@ end
 
 --- Check if your talent tree role is TANK or MELEE.
 -- @return boolean
-function boss:Melee(unit, strict)
-	local role = self:Role(unit)
-	return role == "melee" or (not strict and role == "tank")
+do
+	local function meleeHealer(unit)
+		unit = UnitExists(unit) and unit or (unit == myGUID and "player")
+		if unit then
+			local _, _, classId = UnitClass(unit)
+			return classId == 2 or classId == 10
+		else
+			return false
+		end
+	end
+
+	function boss:Melee(unit, strict)
+		local role = self:Role(unit)
+		if strict then
+			return role == "melee"
+		else
+			return role == "melee" or role == "tank" or (role == "healer" and meleeHealer(unit or "player"))
+		end
+	end
 end
 
 --- Check if your talent tree role is HEALER or RANGED.
