@@ -15,9 +15,17 @@ mod.respawnTime = 30
 local Hud = Oken.Hud
 
 local stage = 1
+local inIntermission = false
 local empoweredSchrapnelBlastCount = 1
 local nextIntermissionWarning = 0
 local canisterProxList = {}
+
+local canisterRole
+local canisterHUD
+local canisterActive
+local canisterTimer
+local canisterInFlight
+local canisterOnMe
 
 local timers = {
 	--[[ Empowered Shrapnel Blast ]]--
@@ -98,6 +106,7 @@ end
 
 function mod:OnEngage()
 	stage = 1
+	inIntermission = false
 	wipe(canisterProxList)
 
 	self:CDBar(247367, 4.5) -- Shock Lance
@@ -106,6 +115,102 @@ function mod:OnEngage()
 
 	nextIntermissionWarning = 69
 	self:RegisterUnitEvent("UNIT_HEALTH_FREQUENT", nil, "boss1")
+
+	self:InitSleepCanisterHUD()
+end
+
+function mod:OnBossDisable()
+	if canisterTimer then
+		self:CancelTimer(canisterTimer)
+	end
+	if canisterHUD then
+		canisterHUD:Remove()
+		canisterHUD = nil
+	end
+end
+
+function mod:InitSleepCanisterHUD()
+	if not self:Hud(254244) then return end
+	canisterRole = self:Melee() and "melee" or "ranged"
+	canisterActive = false
+	canisterHUD = Hud:DrawSpinner("player", 50)
+	canisterHUD:SetColor(0, 0, 0, 0)
+	function canisterHUD:OnRemove()
+		canisterHUD = nil
+	end
+	canisterInFlight = false
+	canisterOnMe = false
+	self:UpdateSleepCanisterHUD()
+end
+
+do
+	local since = 0
+	local status, lastStatus = 0, 0 -- 0 -> Invisible; 1 -> Green; 2 -> Red
+
+	function mod:UpdateSleepCanisterHUD()
+		if not self:Hud(254244) then return end
+
+		-- Current time
+		local now = GetTime()
+
+		-- Check whether this phase requires
+		if not inIntermission and ((self:Mythic() and stage ~= 2) or (not self:Mythic() and stage == 1)) then
+			-- Invisible if ok since more than 2 sec, green otherwise
+			status = (now - since > 2) and 0 or 1
+			canisterActive = true
+			if canisterRole == "ranged" and stage == 1 then
+				for unit in mod:IterateGroup() do
+					if not UnitIsUnit(unit, "player") and not UnitIsDead(unit) and mod:Range(unit) <= 10 then
+						status = 2
+						break
+					end
+				end
+			elseif canisterInFlight and canisterOnMe then
+				for unit in mod:IterateGroup() do
+					if not UnitIsUnit(unit, "player") and not UnitIsDead(unit) and mod:Range(unit) <= 10 then
+						status = 2
+						break
+					end
+				end
+			elseif not canisterInFlight and not canisterOnMe and #canisterProxList > 0 then
+				for _, unit in ipairs(canisterProxList) do
+					if not UnitIsUnit(unit, "player") and mod:Range(unit) <= 10 then
+						status = 2
+						break
+					end
+				end
+			else
+				canisterActive = false
+			end
+		else
+			canisterActive = false -- No canister during this phase
+		end
+
+		-- HUD activation state
+		if canisterActive then
+			if not not canisterTimer then
+				canisterTimer = self:ScheduleRepeatingTimer("UpdateSleepCanisterHUD", 0.2)
+			end
+		else
+			status = 0
+			if canisterTimer then
+				self:CancelTimer(canisterTimer)
+			end
+		end
+
+		-- HUD visibility and color
+		if status ~= lastStatus then
+			lastStatus = status
+			if status == 0 then
+				canisterHUD:SetColor(0, 0, 0, 0) -- Invisibe
+			elseif status == 1 then
+				canisterHUD:SetColor(0.2, 1.0, 0.2, 1) -- Green
+			elseif status == 2 then
+				canisterHUD:SetColor(1.0, 0.2, 0.2, 1) -- Red
+				since = now
+			end
+		end
+	end
 end
 
 --------------------------------------------------------------------------------
@@ -130,9 +235,6 @@ do
 	local rangeCheck
 	local lastStatus = -1
 
-	local selfRangeCheck
-	local selfRangeObject
-
 	function mod:CheckSleepRange(spellId)
 		local status = 1
 		for unit in mod:IterateGroup() do
@@ -153,16 +255,6 @@ do
 		end
 	end
 
-	function mod:CheckSelfSleepRange()
-		for _, unit in ipairs(canisterProxList) do
-			if not UnitIsUnit(unit, "player") and mod:Range(unit) <= 10 then
-				selfRangeObject:SetColor(1, 0.2, 0.2)
-				return
-			end
-		end
-		selfRangeObject:SetColor(0.2, 1, 0.2)
-	end
-
 	local function nameToUnit(name)
 		for unit in mod:IterateGroup() do
 			if UnitIsUnit(name, unit) then
@@ -181,11 +273,6 @@ do
 
 	local function addPlayerToList(self, name)
 		local unit = nameToUnit(name)
-		if #canisterProxList == 0 and self:Hud(254244) then
-			selfRangeObject = Hud:DrawSpinner("player", 50)
-			selfRangeCheck = self:ScheduleRepeatingTimer("CheckSelfSleepRange", 0.2)
-			self:CheckSelfSleepRange()
-		end
 		if not tContains(canisterProxList, unit) then
 			canisterProxList[#canisterProxList+1] = unit
 			playerList[#playerList+1] = name
@@ -221,6 +308,8 @@ do
 			self:ShowAura(254244, "On YOU", { autoremove = 3 })
 			addPlayerToList(self, self:UnitName("player"))
 			self:Sync("SleepCanister")
+			canisterOnMe = true
+			self:UpdateSleepCanisterHUD()
 		end
 	end
 
@@ -235,6 +324,9 @@ do
 		wipe(playerList)
 		canisterMarks = {false, false}
 		self:Bar(args.spellId, 10.9)
+		canisterOnMe = false
+		canisterInFlight = true
+		self:UpdateSleepCanisterHUD()
 	end
 
 	function mod:SleepCanisterApplied(args)
@@ -243,29 +335,26 @@ do
 			lastStatus = -1
 			rangeCheck = self:ScheduleRepeatingTimer("CheckSleepRange", 0.2, 254244)
 			self:CheckSleepRange(254244)
+			canisterOnMe = true
 		end
 		addPlayerToList(self, args.destName)
 		if self:Healer() and #canisterProxList > 0 then
 			self:PlaySound(254244, "Alert")
 		end
+		canisterInFlight = false
+		self:UpdateSleepCanisterHUD()
 	end
 
 	function mod:SleepCanisterRemoved(args)
 		tDeleteItem(canisterProxList, nameToUnit(args.destName))
-		if #canisterProxList == 0 then
-			self:CloseProximity(254244)
-			if selfRangeObject then
-				self:CancelTimer(selfRangeCheck)
-				selfRangeObject:Remove()
-				selfRangeObject = nil
-			end
-		else
+		if #canisterProxList > 0 then
 			self:OpenProximity(254244, 10, canisterProxList)
 		end
 		if self:Me(args.destGUID) then
 			self:HideAura(254244)
 			self:CancelTimer(rangeCheck)
 			self:SmartColorUnset(254244)
+			canisterOnMe = false
 		end
 		if self:GetOption(canisterMarker) then
 			for i = 3, 4 do
@@ -276,6 +365,8 @@ do
 				end
 			end
 		end
+		canisterInFlight = false
+		self:UpdateSleepCanisterHUD()
 	end
 end
 
@@ -289,7 +380,10 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(_, _, _, _, spellId)
 		-- Stage 2 timers
 		self:StopBar(247687) -- Sever
 		self:StopBar(248254) -- Charged Blast
-		self:StopBar(247923) -- Shrapnel Blast
+		self:StopBar(247923) -- Shrapnel
+
+		inIntermission = true
+		self:UpdateSleepCanisterHUD()
 	end
 end
 
@@ -307,6 +401,8 @@ function mod:IntermissionOver()
 		self:CDBar(248068, 6.8) -- Empowered Pulse Grenade
 		self:CDBar(248070, timers[248070][empoweredSchrapnelBlastCount]) -- Empowered Shrapnel Blast
 	end
+	inIntermission = false
+	self:UpdateSleepCanisterHUD()
 end
 
 --[[ Stage One: Attack Force ]]--
