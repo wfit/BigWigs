@@ -460,7 +460,7 @@ function mod:ShadowBlades(args)
 	self:CDBar(args.spellId, 29.2)
 	if self:Hud(args.spellId) then
 		local area = Hud:DrawArea(args.sourceGUID, 60):SetColor(0.8, 0.5, 1):SetOffset(0, -150)
-		local spinner = Hud:DrawSpinner(args.sourceGUID, 70, 3):SetColor(0.8, 0.5, 1):SetOffset(0, -150)
+		local spinner = Hud:DrawSpinner(args.sourceGUID, 70, 4):SetColor(0.8, 0.5, 1):SetOffset(0, -150)
 		local text = Hud:DrawText(args.sourceGUID, "Blades"):SetOffset(0, -150)
 		C_Timer.After(3, function()
 			area:Remove()
