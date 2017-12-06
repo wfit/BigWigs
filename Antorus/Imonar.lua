@@ -154,7 +154,7 @@ do
 			-- Invisible if ok since more than 2 sec, green otherwise
 			status = (now - since > 2) and 0 or 1
 			canisterActive = true
-			if canisterRole == "ranged" and stage == 1 then
+			if canisterRole == "ranged" and stage >= 3 then
 				for unit in mod:IterateGroup() do
 					if not UnitIsUnit(unit, "player") and not UnitIsDead(unit) and mod:Range(unit) <= 10 then
 						status = 2
