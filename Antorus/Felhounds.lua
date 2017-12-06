@@ -1,7 +1,3 @@
---------------------------------------------------------------------------------
--- TODO:
--- -- Raid Markers for Weigt of Darkness and/or Siphon Corruption?
--- -- Check which debuffs for Weight of Darkness are the correct ones
 
 --------------------------------------------------------------------------------
 -- Module Declaration
@@ -24,6 +20,12 @@ local FIRE = "Fire"
 
 local colors = {}
 local color
+
+local moltenTouchCount = 0
+local enflameCorruptionCount = 0
+local siphonCorruptionCount = 0
+local weightofDarknessCount = 0
+local consumingSphereCount = 0
 
 --------------------------------------------------------------------------------
 -- Initialization
@@ -97,16 +99,22 @@ function mod:OnEngage()
 	wipe(colors)
 	color = nil
 
-	self:CDBar(251445, 10.5) -- Burning Maw
-	self:CDBar(245098, 10.5) -- Corrupting Maw
-	self:Bar(244056, self:Easy() and 29 or 28) -- Siphon Corruption
-	self:Bar(244057, self:Easy() and 56 or 52) -- Enflame Corruption
-	self:Bar(244131, self:Easy() and 54.5 or 52.5) -- Consuming Sphere
-	self:Bar(244768, self:Easy() and 89 or 84.5) -- Desolate Gaze
+	moltenTouchCount = 1
+	enflameCorruptionCount = 1
+	siphonCorruptionCount = 1
+	weightofDarknessCount = 1
+	consumingSphereCount = 1
+
+	self:CDBar(251445, self:Mythic() and 10.9 or 10.5) -- Burning Maw
+	self:CDBar(245098, self:Mythic() and 10.9 or 10.5) -- Corrupting Maw
+	self:Bar(244056, self:Mythic() and 26.5 or self:Easy() and 29 or 28) -- Siphon Corruption
+	self:Bar(244057, self:Mythic() and 49.6 or self:Easy() and 56 or 52) -- Enflame Corruption
+	self:Bar(244131, self:Mythic() and 49 or self:Easy() and 54.5 or 52.5) -- Consuming Sphere
+	self:Bar(244768, self:Mythic() and 77.5 or self:Easy() and 89 or 84.5) -- Desolate Gaze
 
 	if not self:Easy() then
-		self:Bar(244072, 20) -- Molten Touch
-		self:Bar(254429, 78) -- Weight of Darkness
+		self:Bar(244072, self:Mythic() and 18 or 20) -- Molten Touch
+		self:Bar(254429, self:Mythic() and 73 or 78) -- Weight of Darkness
 	end
 end
 
@@ -117,11 +125,13 @@ end
 function mod:UNIT_SPELLCAST_SUCCEEDED(_, spellName, _, _, spellId)
 	if spellId == 244159 then -- Consuming Sphere
 		self:Message(244131, "Attention", "Alert")
-		self:Bar(244131, self:Easy() and 85 or 78.5)
+		consumingSphereCount = consumingSphereCount + 1
+		self:Bar(244131, self:Mythic() and (consumingSphereCount % 2 == 1 and 86 or 72.5) or self:Easy() and 85 or 78.5)
 	elseif spellId == 244069 then -- Weight of Darkness
-		self:Bar(254429, 78.5)
+		weightofDarknessCount = weightofDarknessCount + 1
+		self:Bar(254429, self:Mythic() and (weightofDarknessCount % 2 == 1 and 72.5 or 86) or 78.5)
 	elseif spellId == 244064 then -- Desolate Gaze
-		self:Bar(244768, self:Easy() and 104 or 96.5)
+		self:Bar(244768, self:Mythic() and 103 or self:Easy() and 104 or 96.5)
 	end
 end
 
@@ -136,7 +146,7 @@ end
 
 function mod:BurningMaw(args)
 	self:Message(args.spellId, "Important", "Alarm")
-	self:CDBar(args.spellId, 11)
+	self:CDBar(args.spellId, self:Mythic() and 10.9 or 11)
 end
 
 do
@@ -144,9 +154,10 @@ do
 	function mod:MoltenTouchApplied(args)
 		playerList[#playerList+1] = args.destName
 		if #playerList == 1 then
-			self:Bar(args.spellId, 96.5)
 			self:ScheduleTimer("TargetMessage", 0.3, args.spellId, playerList, "Attention", "Beware")
 		end
+		moltenTouchCount = moltenTouchCount + 1
+		self:Bar(args.spellId, self:Mythic() and (moltenTouchCount % 2 == 1 and 103.3 or 88.8) or 96.5)
 		if self:Me(args.destGUID) then
 			self:SmartColorSet(244072, 1, 0.5, 0)
 			self:ScheduleTimer("SmartColorUnset", 13, 244072)
@@ -184,7 +195,8 @@ end
 
 function mod:EnflameCorruption(args)
 	self:Message(args.spellId, "Attention", "Alert")
-	self:Bar(args.spellId, self:Easy() and 104 or 95.5)
+	enflameCorruptionCount = enflameCorruptionCount + 1
+	self:Bar(args.spellId, self:Mythic() and (enflameCorruptionCount % 2 == 1 and 88.8 or 104.6) or self:Easy() and 104 or 95.5)
 	if not self:GetOption(corruption_filter) or color ~= FIRE then
 		self:ImpactBar(args.spellId, self:Mythic() and 15 or 9)
 	end
@@ -208,7 +220,7 @@ do
 		if self:Me(args.destGUID) then
 			self:TargetMessage(args.spellId, args.destName, "Personal", "Warning")
 			--self:Say(args.spellId)
-			self:SayCountdown(args.spellId, 4)
+			self:SayCountdown(args.spellId, self:Mythic() and 3 or 4, nil, self:Mythic() and 2)
 			self:ShowAura(args.spellId, 4, "Move")
 
 			if self:Hud(args.spellId) then
@@ -234,7 +246,7 @@ end
 
 function mod:CorruptingMaw(args)
 	self:Message(args.spellId, "Important", "Alarm")
-	self:CDBar(args.spellId, 11)
+	self:CDBar(args.spellId, self:Mythic() and 10.9 or 11)
 end
 
 function mod:ConsumedApplied(args)
@@ -273,7 +285,8 @@ end
 
 function mod:SiphonCorruption(args)
 	self:Message(args.spellId, "Attention", "Alert")
-	self:Bar(args.spellId, self:Easy() and 85 or 78.5)
+	siphonCorruptionCount = siphonCorruptionCount + 1
+	self:Bar(args.spellId, self:Mythic() and (siphonCorruptionCount % 2 == 1 and 86.3 or 73) or self:Easy() and 85 or 78.5)
 	if not self:GetOption(corruption_filter) or color ~= FEL then
 		self:ImpactBar(args.spellId, self:Mythic() and 15 or 9)
 	end
@@ -282,7 +295,7 @@ end
 function mod:Siphoned(args)
 	if self:Me(args.destGUID) then
 		self:TargetMessage(args.spellId, args.destName, "Personal", "Warning")
-		self:SayCountdown(args.spellId, 4)
+		self:SayCountdown(args.spellId, self:Mythic() and 3 or 4, nil, self:Mythic() and 2)
 		self:ShowAura(args.spellId, 4, "Pack")
 	end
 end
@@ -312,8 +325,14 @@ do
 	end
 end
 
--- XXX Only on pull?
-function mod:FocusingPower(args)
-	self:TargetMessage(args.spellId, args.destName, "Neutral", "Info")
-	self:TargetBar(args.spellId, 15, args.destName)
+do
+	local prev = 0
+	function mod:FocusingPower(args)
+		local t = GetTime()
+		if t-prev > 1.5 then
+			prev = t
+			self:Message(args.spellId, "Neutral", "Info")
+			self:Bar(args.spellId, 15)
+		end
+	end
 end

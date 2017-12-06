@@ -27,10 +27,15 @@ local canisterTimer
 local canisterInFlight
 local canisterOnMe
 
-local timers = {
+local timersHeroic = {
 	--[[ Empowered Shrapnel Blast ]]--
 	[248070] = {15.3, 22, 19.5, 18, 16, 16, 13.5, 10}, -- XXX Need more data to confirm
 }
+local timersMythic = {
+	--[[ Empowered Shrapnel Blast ]]--
+	[248070] = {15.7, 15.7, 15.7, 14.5, 14.5, 12.2, 12.2, 9.7, 9.7}, -- XXX Need more data to confirm
+}
+local timers = mod:Mythic() and timersMythic or timersHeroic
 
 --------------------------------------------------------------------------------
 -- Initialization
@@ -40,6 +45,7 @@ local canisterMarker = mod:AddMarkerOption(true, "player", 3, 254244, 3, 4)
 function mod:GetOptions()
 	return {
 		"stages",
+		"berserk",
 
 		--[[ Stage One: Attack Force ]]--
 		{247367, "TANK"}, -- Shock Lance
@@ -105,15 +111,20 @@ function mod:OnBossEnable()
 end
 
 function mod:OnEngage()
+	timers = self:Mythic() and timersMythic or timersHeroic
 	stage = 1
 	inIntermission = false
 	wipe(canisterProxList)
 
-	self:CDBar(247367, 4.5) -- Shock Lance
-	self:CDBar(254244, 7.3) -- Sleep Canister
-	self:CDBar(247376, 12.2) -- Pulse Grenade
-
-	nextIntermissionWarning = 69
+	self:CDBar(247367, self:Mythic() and 4.8 or 4.5) -- Shock Lance
+	self:CDBar(254244, self:Mythic() and 7.2 or 7.3) -- Sleep Canister
+	if self:Mythic() then
+		self:CDBar(248068, 13.4) -- Empowered Pulse Grenade
+		self:Berserk(480)
+	else
+		self:CDBar(247376, 12.2) -- Pulse Grenade
+	end
+	nextIntermissionWarning = self:Mythic() and 83 or 69
 	self:RegisterUnitEvent("UNIT_HEALTH_FREQUENT", nil, "boss1")
 
 	self:InitSleepCanisterHUD()
@@ -217,8 +228,8 @@ function mod:UNIT_HEALTH_FREQUENT(unit)
 	local hp = UnitHealth(unit) / UnitHealthMax(unit) * 100
 	if hp < nextIntermissionWarning then
 		self:Message("stages", "Positive", nil, CL.soon:format(CL.intermission), false)
-		nextIntermissionWarning = nextIntermissionWarning - 33
-		if nextIntermissionWarning < 30 then
+		nextIntermissionWarning = nextIntermissionWarning - (self:Mythic() and 20 or 33)
+		if nextIntermissionWarning < 20 then
 			self:UnregisterUnitEvent("UNIT_HEALTH_FREQUENT", unit)
 		end
 	end
@@ -226,7 +237,7 @@ end
 
 do
 	local playerList, isOnMe, scheduled = mod:NewTargetList(), nil, nil
-	local canisterMarks = { false, false }
+	local canisterMarks = {false, false}
 
 	local rangeCheck
 	local lastStatus = -1
@@ -319,7 +330,7 @@ do
 		isOnMe = nil
 		wipe(playerList)
 		canisterMarks = {false, false}
-		self:Bar(args.spellId, 10.9)
+		self:Bar(args.spellId, self:Mythic() and 12.1 or 10.9)
 		canisterOnMe = false
 		canisterInFlight = true
 		self:UpdateSleepCanisterHUD()
@@ -376,7 +387,10 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(_, _, _, _, spellId)
 		-- Stage 2 timers
 		self:StopBar(247687) -- Sever
 		self:StopBar(248254) -- Charged Blast
-		self:StopBar(247923) -- Shrapnel
+		self:StopBar(247923) -- Shrapnel Blast
+		-- Mythic timers
+		self:StopBar(248068) -- Empowered Pulse Grenade
+		self:StopBar(248070) -- Empowered Shrapnel Blast
 
 		inIntermission = true
 		self:UpdateSleepCanisterHUD()
@@ -392,7 +406,24 @@ function mod:IntermissionOver()
 		self:CDBar(248254, 10.6) -- Charged Blast
 		self:CDBar(247923, 12.8) -- Shrapnel Blast
 	elseif stage == 3 then
+		if self:Mythic() then
+			self:CDBar(254244, 7.3) -- Sleep Canister
+			self:CDBar(248068, 6.8) -- Empowered Pulse Grenade
+			self:CDBar(247923, 12.8) -- Shrapnel Blast
+		else
+			empoweredSchrapnelBlastCount = 1
+			self:CDBar(250255, 4.3) -- Empowered Shock Lance
+			self:CDBar(248068, 6.8) -- Empowered Pulse Grenade
+			self:CDBar(248070, timers[248070][empoweredSchrapnelBlastCount]) -- Empowered Shrapnel Blast
+		end
+	elseif stage == 4 then -- Mythic only
 		empoweredSchrapnelBlastCount = 1
+		self:CDBar(254244, 7.3) -- Sleep Canister
+		self:CDBar(248070, 15) -- Empowered Shrapnel Blast
+		self:CDBar(248254, 10.6) -- Charged Blast
+	elseif stage == 5 then -- Mythic only
+		empoweredSchrapnelBlastCount = 1
+		self:CDBar(254244, 7.3) -- Sleep Canister
 		self:CDBar(250255, 4.3) -- Empowered Shock Lance
 		self:CDBar(248068, 6.8) -- Empowered Pulse Grenade
 		self:CDBar(248070, timers[248070][empoweredSchrapnelBlastCount]) -- Empowered Shrapnel Blast
@@ -428,13 +459,13 @@ end
 
 function mod:ChargedBlasts(args)
 	self:Message(args.spellId, "Urgent", "Warning", CL.incoming:format(args.spellName))
-	self:CastBar(args.spellId, 5.5)
-	self:Bar(args.spellId, 18.2)
+	self:CastBar(args.spellId, 8.6)
+	self:Bar(args.spellId, self:Mythic() and (stage == 2 and 14.5 or 18.2) or 18.2)
 end
 
 function mod:ShrapnelBlast(args)
 	self:Message(args.spellId, "Attention", "Alert")
-	self:Bar(args.spellId, 13.4)
+	self:Bar(args.spellId, self:Mythic() and (stage == 2 and 17 or 14.6) or 13.4)
 end
 
 --[[ Stage Three: The Perfect Weapon ]]--
@@ -444,13 +475,12 @@ function mod:EmpoweredShockLance(args)
 end
 
 function mod:EmpoweredShockLanceSuccess(args)
-	self:Bar(args.spellId, 9.7)
+	self:Bar(args.spellId, self:Mythic() and 6 or 9.7)
 end
 
 function mod:EmpoweredPulseGrenade(args)
 	self:Message(args.spellId, "Attention", "Alert")
-	self:Bar(args.spellId, 26.7)
-end
+	self:Bar(args.spellId, stage == 5 and 13.3 or 26.7) -- Stage 5 mythic only
 
 function mod:EmpoweredPulseGrenadeApplied(args)
 	if self:Me(args.destGUID) then
@@ -470,5 +500,5 @@ end
 function mod:EmpoweredShrapnelBlast(args)
 	self:Message(args.spellId, "Urgent", "Warning")
 	empoweredSchrapnelBlastCount = empoweredSchrapnelBlastCount + 1
-	self:CDBar(args.spellId, timers[args.spellId][empoweredSchrapnelBlastCount])
+	self:CDBar(args.spellId, stage == 4 and 26.8 or timers[args.spellId][empoweredSchrapnelBlastCount])
 end

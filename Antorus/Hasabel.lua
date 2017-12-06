@@ -10,15 +10,13 @@ local mod, CL = BigWigs:NewBoss("Portal Keeper Hasabel", nil, 1985, 1712)
 if not mod then return end
 mod:RegisterEnableMob(122104)
 mod.engageId = 2064
---mod.respawnTime = 30
+mod.respawnTime = 33
 
 --------------------------------------------------------------------------------
 -- Locals
 --
 
-local realityTearCount = 1
-local collapsingWorldCount = 1
-local felstormBarrageCount = 1
+local addsAlive = 0
 local playerPlatform = 1 -- 1: Nexus, 2: Xoroth, 3: Rancora, 4: Nathreza
 local nextPortalSoonWarning = 0
 
@@ -28,8 +26,12 @@ local nextPortalSoonWarning = 0
 
 local L = mod:GetLocale()
 if L then
+	L.custom_on_stop_timers = "Always show ability bars"
+	L.custom_on_stop_timers_desc = "Hasabel randomizes which off-cooldown ability she uses next. When this option is enabled, the bars for those abilities will stay on your screen."
+
 	L.custom_on_filter_platforms = "Filter Side Platform Warnings and Bars"
 	L.custom_on_filter_platforms_desc = "Removes unnecessary messages and bars if you are not on a side platform. It will always show bars and warnings from the main Platform: Nexus."
+
 	L.platform_active = "%s Active!" -- Platform: Xoroth Active!
 	L.add_killed = "%s killed!"
 end
@@ -42,6 +44,7 @@ function mod:GetOptions()
 	return {
 		--[[ General ]]--
 		"stages",
+		"custom_on_stop_timers",
 		"custom_on_filter_platforms",
 		"berserk",
 
@@ -88,7 +91,7 @@ function mod:OnBossEnable()
 	self:Log("SPELL_AURA_APPLIED_DOSE", "RealityTear", 244016)
 	self:Log("SPELL_CAST_SUCCESS", "RealityTearSuccess", 244016)
 	self:Log("SPELL_CAST_SUCCESS", "CollapsingWorld", 243983)
-	self:Log("SPELL_CAST_START", "FelstormBarrage", 244000)
+	self:Log("SPELL_CAST_SUCCESS", "FelstormBarrage", 244000)
 	self:Log("SPELL_CAST_SUCCESS", "TransportPortal", 244689)
 	self:Log("SPELL_CAST_START", "HowlingShadows", 245504)
 	self:Log("SPELL_CAST_START", "CatastrophicImplosion", 246075)
@@ -116,18 +119,18 @@ function mod:OnBossEnable()
 	self:Log("SPELL_AURA_APPLIED", "CloyingShadows", 245118)
 	self:Log("SPELL_AURA_APPLIED", "CloyingShadowsRemoved", 245118)
 	self:Death("LordEilgarDeath", 122213)
+
+	self:RegisterMessage("BigWigs_BarCreated", "BarCreated")
 end
 
 function mod:OnEngage()
-	realityTearCount = 1
-	collapsingWorldCount = 1
-	felstormBarrageCount = 1
+	addsAlive = 0
 	playerPlatform = 1
 
 	self:Bar(244016, 7) -- Reality Tear
 	self:Bar(243983, 12.7) -- Collapsing World
-	self:Bar(244689, 21.9) -- Transport Portal
-	self:Bar(244000, 29.0) -- Felstorm Barrage
+	self:Bar(244689, 26.7) -- Transport Portal
+	self:Bar(244000, 35.7) -- Felstorm Barrage
 	self:Berserk(720)
 
 	nextPortalSoonWarning = 92 -- happens at 90%
@@ -137,6 +140,43 @@ end
 --------------------------------------------------------------------------------
 -- Event Handlers
 --
+
+local triggerCdForOtherSpells
+do
+	local abilitysToPause = {
+		[243983] = true, -- Collapsing World
+		[244689] = true, -- Transport Portal
+		[244000] = true, -- Felstorm Barrage
+	}
+
+	local castPattern = CL.cast:gsub("%%s", ".+")
+
+	function triggerCdForOtherSpells(self, spellId)
+		for id,_ in pairs(abilitysToPause) do
+			if id ~= spellId then
+				local cd = id == 244689 and 8.5 or 9 -- Transport Portal cast is 0.5s shorter
+				if self:BarTimeLeft(id) < cd then
+					self:Bar(id, cd)
+				end
+			end
+		end
+	end
+
+	local function stopAtZeroSec(bar)
+		if bar.remaining < 0.15 then -- Pause at 0.0
+			bar:SetDuration(0.01) -- Make the bar look full
+			bar:Start()
+			bar:Pause()
+			bar:SetTimeVisibility(false)
+		end
+	end
+
+	function mod:BarCreated(_, _, bar, _, key, text)
+		if self:GetOption("custom_on_stop_timers") and abilitysToPause[key] and not text:match(castPattern) then
+			bar:AddUpdateFunction(stopAtZeroSec)
+		end
+	end
+end
 
 function mod:UNIT_HEALTH_FREQUENT(unit)
 	local hp = UnitHealth(unit) / UnitHealthMax(unit) * 100
@@ -154,10 +194,13 @@ end
 function mod:UNIT_SPELLCAST_SUCCEEDED(_, _, _, _, spellId)
 	if spellId == 257939 then -- Gateway: Xoroth
 		self:Message("stages", "Positive", "Long", L.platform_active:format(self:SpellName(257939)), "spell_mage_flameorb") -- Platform: Xoroth
+		addsAlive = addsAlive + 1
 	elseif spellId == 257941 then -- Gateway: Rancora
 		self:Message("stages", "Positive", "Long", L.platform_active:format(self:SpellName(257941)), "spell_mage_flameorb_green") -- Platform: Rancora
+		addsAlive = addsAlive + 1
 	elseif spellId == 257942 then -- Gateway: Nathreza
 		self:Message("stages", "Positive", "Long", L.platform_active:format(self:SpellName(257942)), "spell_mage_flameorb_purple") -- Platform: Nathreza
+		addsAlive = addsAlive + 1
 	end
 	self:CDBar(255805, (self:LFR() and 60) or (self:Mythic() and 30) or 45)
 end
@@ -186,26 +229,26 @@ function mod:RealityTear(args)
 end
 
 function mod:RealityTearSuccess(args)
-	realityTearCount = realityTearCount + 1
-	self:Bar(args.spellId, 12.2) -- skips some casts for unknown reason
+	self:Bar(args.spellId, addsAlive > 0 and 24.4 or 12.2) -- Cooldown increased when there are platforms active
 end
 
 function mod:CollapsingWorld(args)
 	self:Message(args.spellId, "Important", "Warning")
 	self:ImpactBar(args.spellId, 8)
-	collapsingWorldCount = collapsingWorldCount + 1
-	self:Bar(args.spellId, self:Easy() and 37 or 32.8) -- XXX See if there is a pattern for delayed casts; normal: switches from 37 to 41.5 at some unknown point
+	self:Bar(args.spellId, self:Easy() and 37.1 or 32.75)
+	triggerCdForOtherSpells(self, args.spellId)
 end
 
 function mod:FelstormBarrage(args)
 	self:Message(args.spellId, "Urgent", "Alert")
-	felstormBarrageCount = felstormBarrageCount + 1
-	self:Bar(args.spellId, self:Easy() and 41.5 or 32.8) -- XXX See if there is a pattern for delayed casts; normal: sometimes 37 for the first few
+	self:Bar(args.spellId, self:Easy() and 37.1 or 32)
+	triggerCdForOtherSpells(self, args.spellId)
 end
 
 function mod:TransportPortal(args)
 	self:Message(args.spellId, "Neutral", "Info")
-	self:Bar(args.spellId, 41.5) -- XXX See if there is a pattern for delayed casts
+	self:Bar(args.spellId, 41.7)
+	triggerCdForOtherSpells(self, args.spellId)
 end
 
 function mod:HowlingShadows(args)
@@ -264,6 +307,7 @@ function mod:VulcanarDeath(args)
 	self:StopBar(244598) -- Supernova
 	self:StopBar(244607) -- Flames of Xoroth
 	self:StopBar(255805) -- Unstable Portal
+	addsAlive = addsAlive - 1
 end
 
 function mod:FelsilkWrap(args)
@@ -299,6 +343,7 @@ function mod:LadyDacidionDeath(args)
 	self:StopBar(244926) -- Felsilk Wrap
 	self:StopBar(246316) -- Poison Essence
 	self:StopBar(255805) -- Unstable Portal
+	addsAlive = addsAlive - 1
 end
 
 function mod:Delusions(args)
@@ -337,4 +382,5 @@ function mod:LordEilgarDeath(args)
 	self:StopBar(245050) -- Delusions
 	self:StopBar(245040) -- Corrupt
 	self:StopBar(255805) -- Unstable Portal
+	addsAlive = addsAlive - 1
 end

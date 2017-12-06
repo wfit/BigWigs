@@ -16,6 +16,7 @@ local mobCollector = {}
 local chaosPulseTargets = {}
 local inPod = false
 
+local fusilladeCount = 1
 local assumeCommandCount = 1
 local nextAssumeCommand = 0
 local incomingBoss = {
@@ -67,9 +68,9 @@ function mod:GetOptions()
 		244910, -- Felshield
 		{244420, "AURA"}, -- Chaos Pulse
 
-		--[[ Mythic ]] --
-		{ 244737, "AURA" }, -- Shock Grenade
-	}, {
+		--[[ Mythic ]]--
+		{244737, "SAY", "FLASH", "PROXIMITY", "AURA"}, -- Shock Grenade
+	},{
 		[244625] = CL.other:format(mod:SpellName(-16099), mod:SpellName(-16100)), -- In Pod: Admiral Svirax
 		[245161] = CL.other:format(mod:SpellName(-16099), mod:SpellName(-16116)), -- In Pod: Chief Engineer Ishkar
 		[245546] = CL.other:format(mod:SpellName(-16099), mod:SpellName(-16118)), -- In Pod: General Erodus
@@ -120,6 +121,8 @@ function mod:OnEngage()
 	wipe(mobCollector)
 	wipe(chaosPulseTargets)
 	inPod = false
+
+	fusilladeCount = 1
 	assumeCommandCount = 1
 
 	self:RegisterTargetEvents("AddsMark")
@@ -130,6 +133,10 @@ function mod:OnEngage()
 
 	nextAssumeCommand = GetTime() + 90 -- 90s because cast time is 3s so nothing new will be cast
 	self:Bar(245227, 93, incomingBoss[assumeCommandCount]) -- Chief Engineer Ishkar (Assume Command Bar)
+
+	if self:Mythic() then
+		self:Bar(244737, 14.5) -- Shock Grenade
+	end
 
 	if self:GetOption(tanksMarker) then
 		local marked = 0
@@ -170,13 +177,13 @@ end
 --
 function mod:UNIT_SPELLCAST_SUCCEEDED(_, _, _, _, spellId)
 	if spellId == 245304 then -- Entropic Mines
-		self:Message(245161, "Neutral", "Info")
+		self:Message(245161, "Attention", "Info")
 		local cooldown = 10
 		if nextAssumeCommand > GetTime() + cooldown then
 			self:Bar(245161, cooldown)
 		end
 	elseif spellId == 245546 then -- Summon Reinforcements
-		self:Message(245546, "Attention", "Alert")
+		self:Message(245546, "Important", "Alarm")
 		local cooldown = 35
 		if nextAssumeCommand > GetTime() + cooldown then
 			self:Bar(245546, cooldown)
@@ -189,18 +196,22 @@ function mod:AssumeCommand(args)
 
 	if assumeCommandCount % 3 == 1 then -- Chief Engineer Ishkar
 		self:StopBar(245161) -- Entropic Mines
-		self:Bar(244625, 18.3) -- Fusillade
+		self:Bar(244625, 18.3, CL.count:format(self:SpellName(244625), fusilladeCount)) -- Fusillade
 		self:Bar(245546, 16.1) -- Summon Reinforcements
 	elseif assumeCommandCount % 3 == 2 then -- General Erodus
 		self:StopBar(245546) -- Summon Reinforcements
 		self:Bar(245161, 8.0) -- Entropic Mines
-		self:Bar(244625, 16.1) -- Fusillade
+		self:Bar(244625, 16.1, CL.count:format(self:SpellName(244625), fusilladeCount)) -- Fusillade
 	else -- Admiral Svirax
-		self:StopBar(244625) -- Fusillade
+		self:StopBar(CL.count:format(self:SpellName(244625), fusilladeCount)) -- Fusillade
 		self:Bar(245546, 11) -- Summon Reinforcements
 		self:Bar(245161, 18.0) -- Entropic Mines
 	end
 	self:CDBar(244892, 8.5) -- Sundering Claws
+
+	if self:Mythic() then
+		self:Bar(244737, 5) -- Shock Grenade
+	end
 
 	assumeCommandCount = assumeCommandCount + 1
 
@@ -221,22 +232,23 @@ function mod:ExploitWeaknessApplied(args)
 end
 
 function mod:Pyroblast(args)
-	self:Message(args.spellId, "Urgent", "Alarm")
+	self:Message(args.spellId, "Urgent", "Alert")
 end
 
 function mod:Fusillade(args)
-	self:Message(args.spellId, "Urgent", "Warning")
-	self:ImpactBar(args.spellId, 7)
+	self:Message(args.spellId, "Urgent", "Warning", CL.count:format(self:SpellName(244625), fusilladeCount))
+	self:ImpactBar(args.spellId, 7, CL.count:format(self:SpellName(244625), fusilladeCount))
+	fusilladeCount = fusilladeCount + 1
 	local cooldown = 30
 	if nextAssumeCommand > GetTime() + cooldown then
-		self:CDBar(args.spellId, cooldown)
+		self:CDBar(args.spellId, cooldown, CL.count:format(self:SpellName(244625), fusilladeCount))
 	end
 end
 
 
 function mod:ShockGrenadeStart(args)
-	self:Message(244737, "Attention", "Alert", CL.incoming:format(args.spellName))
-	local cooldown = 20
+	self:Message(244737, "Attention", nil, CL.incoming:format(args.spellName))
+	local cooldown = 14.5
 	if nextAssumeCommand > GetTime() + cooldown then
 		self:Bar(244737, cooldown)
 	end
@@ -245,8 +257,10 @@ end
 function mod:ShockGrenade(args)
 	if self:Me(args.destGUID) then
 		self:Say(args.spellId)
+		self:Flash(args.spellId)
+		self:OpenProximity(args.spellId, 10)
 		self:SayCountdown(args.spellId, 5)
-		self:TargetMessage(args.spellId, args.destName, "Personal", "Alarm")
+		self:TargetMessage(args.spellId, args.destName, "Personal", "Warning")
 		self:ShowAura(args.spellId, 5, "Move")
 	end
 end
@@ -254,6 +268,7 @@ end
 function mod:ShockGrenadeRemoved(args)
 	if self:Me(args.destGUID) then
 		self:CancelSayCountdown(args.spellId)
+		self:CloseProximity(args.spellId)
 		self:HideAura(args.spellId)
 	end
 end
