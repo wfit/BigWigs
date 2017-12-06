@@ -457,7 +457,7 @@ function mod:EmpoweredPulseGrenadeApplied(args)
 		self:Message(248068, "Personal", "Alarm", CL.you:format(self:SpellName(248068)))
 		self:Flash(248068)
 		self:Say(248068)
-		self:ShowAura(248068, "Spread")
+		self:ShowAura(248068, "Spread", 80, true)
 	end
 end
 
