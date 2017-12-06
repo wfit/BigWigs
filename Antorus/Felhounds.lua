@@ -154,7 +154,7 @@ do
 	function mod:MoltenTouchApplied(args)
 		playerList[#playerList+1] = args.destName
 		if #playerList == 1 then
-			self:ScheduleTimer("TargetMessage", 0.3, args.spellId, playerList, "Attention", "Beware")
+			self:ScheduleTimer("TargetMessage", 0.3, args.spellId, playerList, "Attention", "Beware", nil, nil, true)
 		end
 		moltenTouchCount = moltenTouchCount + 1
 		self:Bar(args.spellId, self:Mythic() and (moltenTouchCount % 2 == 1 and 103.3 or 88.8) or 96.5)
