@@ -311,7 +311,7 @@ do
 
 	function mod:BigWigs_BossComm(_, msg, _, name)
 		if msg == "SleepCanister" then
-			addPlayerToList(self, name)
+			--addPlayerToList(self, name)
 		end
 	end
 
