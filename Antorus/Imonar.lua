@@ -329,7 +329,7 @@ do
 		if self:Me(args.destGUID) then
 			self:HideAura(254244)
 			lastStatus = -1
-			rangeCheck = self:ScheduleRepeatingTimer("CheckSleepRange", 0.2, 254244)
+			rangeCheck = self:ScheduleRepeatingTimer("CheckSleepRange", 0.1, 254244)
 			self:CheckSleepRange(254244)
 			canisterOnMe = true
 		end
