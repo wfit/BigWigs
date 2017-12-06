@@ -73,7 +73,7 @@ function mod:GetOptions()
 		cleave_hud,
 
 		--[[ Asara, Mother of Night ]]--
-		246329, -- Shadow Blades
+		{246329, "HUD"}, -- Shadow Blades
 		252861, -- Storm of Darkness
 
 		--[[ Diima, Mother of Gloom ]]--
@@ -458,6 +458,16 @@ end
 function mod:ShadowBlades(args)
 	self:Message(args.spellId, "Attention", "Alert")
 	self:CDBar(args.spellId, 29.2)
+	if self:Hud(args.spellId) then
+		local area = Hud:DrawArea(args.sourceGUID, 60):SetColor(0.8, 0.5, 1):SetOffset(0, -150)
+		local spinner = Hud:DrawSpinner(args.sourceGUID, 70, 3):SetColor(0.8, 0.5, 1):SetOffset(0, -150)
+		local text = Hud:DrawText(args.sourceGUID, "Blades"):SetOffset(0, -150)
+		C_Timer.After(3, function()
+			area:Remove()
+			spinner:Remove()
+			text:Remove()
+		end)
+	end
 end
 
 function mod:StormofDarkness(args)
