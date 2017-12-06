@@ -481,6 +481,7 @@ end
 function mod:EmpoweredPulseGrenade(args)
 	self:Message(args.spellId, "Attention", "Alert")
 	self:Bar(args.spellId, stage == 5 and 13.3 or 26.7) -- Stage 5 mythic only
+end
 
 function mod:EmpoweredPulseGrenadeApplied(args)
 	if self:Me(args.destGUID) then
