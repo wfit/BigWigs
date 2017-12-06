@@ -149,11 +149,7 @@ do
 
 	function mod:UpdateSleepCanisterHUD()
 		if not self:Hud(254244) then return end
-
-		-- Current time
 		local now = GetTime()
-
-		-- Check whether this phase requires
 		if not inIntermission and ((self:Mythic() and stage ~= 2) or (not self:Mythic() and stage == 1)) then
 			-- Invisible if ok since more than 2 sec, green otherwise
 			status = (now - since > 2) and 0 or 1

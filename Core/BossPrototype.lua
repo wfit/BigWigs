@@ -1419,10 +1419,14 @@ do
 		end
 
 		local fullKey = self.db.profile[key]
-		if band(fullKey, C.TANK) == C.TANK and not self:Tank() then return end
-		if band(fullKey, C.HEALER) == C.HEALER and not self:Healer() then return end
-		if band(fullKey, C.TANK_HEALER) == C.TANK_HEALER and not self:Tank() and not self:Healer() then return end
-		return band(fullKey, flag) == flag
+		if type(fullKey) == "number" then
+			if band(fullKey, C.TANK) == C.TANK and not self:Tank() then return end
+			if band(fullKey, C.HEALER) == C.HEALER and not self:Healer() then return end
+			if band(fullKey, C.TANK_HEALER) == C.TANK_HEALER and not self:Tank() and not self:Healer() then return end
+			return band(fullKey, flag) == flag
+		else
+			return true
+		end
 	end
 	--- Check if an option has a flag set.
 	-- @param key the option key
