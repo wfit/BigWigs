@@ -81,7 +81,7 @@ function mod:GetOptions()
 		253650, -- Orb of Frost
 
 		--[[ Thu'raya, Mother of the Cosmos (Mythic) ]]--
-		250648, -- Touch of the Cosmos
+		{250648, "IMPACT"}, -- Touch of the Cosmos
 		{250757, "SAY", "FLASH", "AURA"}, -- Cosmic Glare
 		cosmicGlareMarker,
 	},{
@@ -569,6 +569,7 @@ end
 function mod:TouchoftheCosmos(args)
 	if self:Interrupter() then
 		self:Message(args.spellId, "Urgent", "Alarm")
+		self:ImpactBar(args.spellId, 2.5)
 	end
 end
 
