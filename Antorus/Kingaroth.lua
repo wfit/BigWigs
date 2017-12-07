@@ -58,7 +58,7 @@ function mod:GetOptions()
 		--[[ Adds ]]--
 		246664, -- Annihilation
 		{246686, "AURA"}, -- Decimation
-		{246698, "SAY"}, -- Demolish
+		{246698, "SAY", "AURA"}, -- Demolish
 
 		--[[ Mythic ]]--
 		{249680, "SAY", "AURA"}, -- Reverberating Decimation
@@ -93,6 +93,7 @@ function mod:OnBossEnable()
 	self:Log("SPELL_CAST_SUCCESS", "Initializing", 246504)
 	self:Log("SPELL_AURA_APPLIED", "Decimation", 246687)
 	self:Log("SPELL_AURA_APPLIED", "Demolish", 246698)
+
 	self:Log("SPELL_CAST_SUCCESS", "DemolishSuccess", 246692)
 	self:Death("AddDeaths", 123906, 123929, 123921) -- Garothi Annihilator, Garothi Demolisher, Garothi Decimator
 
@@ -272,6 +273,7 @@ do
 		if self:Me(args.destGUID) then
 			self:Say(args.spellId)
 			self:SayCountdown(args.spellId, 6)
+			self:ShowAura(args.spellId, 6, "Move", true)
 		end
 		playerList[#playerList+1] = args.destName
 		if #playerList == 1 then
