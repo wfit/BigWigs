@@ -48,6 +48,7 @@ function mod:GetOptions()
 		necroticEmbraceAI,
 		{243980, "AURA"}, -- Torment of Fel
 		-16350, -- Shadow of Varimathras
+		{248732, "AURA"}, -- Echoes of Doom
 	}
 end
 
@@ -242,8 +243,9 @@ do
 			print("[VARIMATHRAS] SOAKING BY: " .. data.name)
 			if self:Me(data.soaker) then
 				self:Say(244094, "Soaking")
-				self:ShowAura(244094, 6, "SOAK")
+				self:ShowAura(244094, 6, "SOAK", true)
 			end
+			SetRaidTarget(data.name, 1)
 		end
 	end
 
