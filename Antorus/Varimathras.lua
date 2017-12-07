@@ -218,19 +218,21 @@ do
 	local playerList = mod:NewTargetList()
 
 	function mod:SelectNecroticSoaker(spellName)
-		local soakers = {}
+		local soaker
 		for unit in self:IterateGroup() do
 			if not UnitDebuff(unit, spellName) then
 				local _, _, classId = UnitClass(unit)
 				if classId == 3 and Cooldowns:IsCooldownReady(unit, 186265) then -- Hunter
-					table.insert(soakers, 1, unit)
+					soaker = unit
+					break
 				elseif classId == 4 and Cooldowns:IsCooldownReady(unit, 31224) then -- Rogue
-					table.insert(soakers, unit)
+					soaker = unit
+					break
 				end
 			end
 		end
-		if soakers[1] then
-			self:Send("NecroticEmbraceSoaker", { soaker = UnitGUID(soakers[1]), name = UnitName(soakers[1]) })
+		if soaker then
+			self:Send("NecroticEmbraceSoaker", { soaker = UnitGUID(soaker), name = UnitName(soaker) })
 		else
 			self:Send("NecroticEmbraceSoaker", {})
 		end
