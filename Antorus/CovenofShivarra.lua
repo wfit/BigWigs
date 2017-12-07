@@ -127,6 +127,7 @@ function mod:OnBossEnable()
 
 	--[[ Thu'raya, Mother of the Cosmos (Mythic) ]]--
 	self:Log("SPELL_CAST_START", "TouchoftheCosmos", 250648)
+	self:Log("SPELL_INTERRUPT", "TouchoftheCosmosInterupted", "*")
 	self:Log("SPELL_AURA_APPLIED", "CosmicGlare", 250757)
 	self:Log("SPELL_AURA_REMOVED", "CosmicGlareRemoved", 250757)
 
@@ -570,6 +571,12 @@ function mod:TouchoftheCosmos(args)
 	if self:Interrupter() then
 		self:Message(args.spellId, "Urgent", "Alarm")
 		self:ImpactBar(args.spellId, 2.5)
+	end
+end
+
+function mod:TouchoftheCosmosInterupted(args)
+	if args.extraSpellId == 250648 then
+		self:StopImpactBar(args.extraSpellName)
 	end
 end
 
