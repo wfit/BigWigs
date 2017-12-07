@@ -34,7 +34,7 @@ end
 --
 
 local necroticEmbraceMarker = mod:AddMarkerOption(true, "player", 4, 244094, 4, 6)
-local necroticEmbraceAI = mod:AddTokenOption { "necrotic", "Automatically select Necrotic Embrace soaker.", promote = false }
+local necroticEmbraceAI = mod:AddTokenOption { "necrotic", "Automatically select Necrotic Embrace soaker", promote = true }
 function mod:GetOptions()
 	return {
 		"stages", -- Torment of Flames, Frost, Fel, Shadows
@@ -217,15 +217,20 @@ do
 
 	local playerList = mod:NewTargetList()
 
+	local function cooldownWillBeReady(unit, spell)
+		local cd = Cooldowns:GetCooldown(unit, spell)
+		return cd and cd:Cooldown() < 6
+	end
+
 	function mod:SelectNecroticSoaker(spellName)
 		local soaker
 		for unit in self:IterateGroup() do
 			if not UnitDebuff(unit, spellName) then
 				local _, _, classId = UnitClass(unit)
-				if classId == 3 and Cooldowns:IsCooldownReady(unit, 186265) then -- Hunter
+				if classId == 3 and cooldownWillBeReady(unit, 186265) then -- Hunter
 					soaker = unit
 					break
-				elseif classId == 4 and Cooldowns:IsCooldownReady(unit, 31224) then -- Rogue
+				elseif classId == 4 and cooldownWillBeReady(unit, 31224) then -- Rogue
 					soaker = unit
 					break
 				end
@@ -233,6 +238,7 @@ do
 		end
 		if soaker then
 			self:Send("NecroticEmbraceSoaker", { soaker = UnitGUID(soaker), name = UnitName(soaker) })
+			SetRaidTarget(soaker, 1)
 		else
 			self:Send("NecroticEmbraceSoaker", {})
 		end
@@ -247,7 +253,6 @@ do
 				self:Say(244094, "Soaking")
 				self:ShowAura(244094, 6, "SOAK", true)
 			end
-			SetRaidTarget(data.name, 1)
 		end
 	end
 
