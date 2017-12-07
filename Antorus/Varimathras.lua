@@ -7,12 +7,14 @@ if not mod then return end
 mod:RegisterEnableMob(122366)
 mod.engageId = 2069
 mod.respawnTime = 30
+mod.instanceId = 1712
 
 --------------------------------------------------------------------------------
 -- Locals
 --
 
 local Hud = Oken.Hud
+local Cooldowns = Oken.Cooldowns
 
 local tormentActive = 0 -- 1: Flames, 2: Frost, 3: Fel, 4: Shadows
 local mobCollector = {}
@@ -32,6 +34,7 @@ end
 --
 
 local necroticEmbraceMarker = mod:AddMarkerOption(true, "player", 4, 244094, 4, 6)
+local necroticEmbraceAI = mod:AddTokenOption { "necrotic", "Automatically select Necrotic Embrace soaker.", promote = false }
 function mod:GetOptions()
 	return {
 		"stages", -- Torment of Flames, Frost, Fel, Shadows
@@ -42,6 +45,7 @@ function mod:GetOptions()
 		{244042, "SAY", "FLASH", "ICON", "AURA"}, -- Marked Prey
 		{244094, "SAY", "FLASH", "AURA", "HUD", "SMARTCOLOR"}, -- Necrotic Embrace
 		necroticEmbraceMarker,
+		necroticEmbraceAI,
 		{243980, "AURA"}, -- Torment of Fel
 		-16350, -- Shadow of Varimathras
 	}
@@ -71,6 +75,8 @@ function mod:OnBossEnable()
 	self:Log("SPELL_CAST_SUCCESS", "EchoesofDoom", 248732)
 	self:Log("SPELL_AURA_APPLIED", "EchoesofDoomApplied", 248732)
 	self:Log("SPELL_AURA_REMOVED", "EchoesofDoomRemoved", 248732)
+
+	self:RegisterNetMessage("NecroticEmbraceSoaker")
 end
 
 function mod:OnEngage()
@@ -210,6 +216,37 @@ do
 
 	local playerList = mod:NewTargetList()
 
+	function mod:SelectNecroticSoaker(spellName)
+		local soakers = {}
+		for unit in self:IterateGroup() do
+			if not UnitDebuff(unit, spellName) then
+				local _, _, classId = UnitClass(unit)
+				if classId == 3 and Cooldowns:IsCooldownReady(unit, 186265) then -- Hunter
+					table.insert(soakers, 1, unit)
+				elseif classId == 4 and Cooldowns:IsCooldownReady(unit, 31224) then -- Rogue
+					table.insert(soakers, unit)
+				end
+			end
+		end
+		if soakers[1] then
+			self:Send("NecroticEmbraceSoaker", { soaker = UnitGUID(soakers[1]), name = UnitName(soakers[1]) })
+		else
+			self:Send("NecroticEmbraceSoaker", {})
+		end
+	end
+
+	function mod:NecroticEmbraceSoaker(data)
+		if not data.soaker then
+			print("[VARIMATHRAS] NO SOAK FOUND, GOOD LUCK!")
+		else
+			print("[VARIMATHRAS] SOAKING BY: " .. data.name)
+			if self:Me(data.soaker) then
+				self:Say(244094, "Soaking")
+				self:ShowAura(244094, 6, "SOAK")
+			end
+		end
+	end
+
 	function mod:NecroticEmbrace(args)
 		if #playerList >= 2 then return end -- Avoid spam if something goes wrong
 		local marker = (#playerList == 0 and 4 or 6)
@@ -228,6 +265,9 @@ do
 		playerList[#playerList+1] = args.destName
 		if #playerList == 1 then
 			self:ScheduleTimer("TargetMessage", 0.3, args.spellId, playerList, "Urgent", "Warning")
+			if self:GetOption(necroticEmbraceAI) then
+				self:ScheduleTimer("SelectNecroticSoaker", 0.3, args.spellName)
+			end
 		end
 		if self:GetOption(necroticEmbraceMarker) then
 			SetRaidTarget(args.destName, marker)
