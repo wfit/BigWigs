@@ -15,7 +15,6 @@ mod.respawnTime = 30
 local Hud = Oken.Hud
 
 local tormentActive = 0 -- 1: Flames, 2: Frost, 3: Fel, 4: Shadows
-local _, shadowDesc = EJ_GetSectionInfo(16350)
 local mobCollector = {}
 local felTick = 0
 
@@ -25,16 +24,14 @@ local felTick = 0
 
 local L = mod:GetLocale()
 if L then
-	L.shadowOfVarmathras = "{-16350}"
-	L.shadowOfVarmathras_desc = shadowDesc
-	L.shadowOfVarmathras_icon = "spell_warlock_demonsoul"
+	L.shadowOfVarimathras_icon = "spell_warlock_demonsoul"
 end
 
 --------------------------------------------------------------------------------
 -- Initialization
 --
 
-local necroMarker = mod:AddMarkerOption(true, "player", 4, 244094, 4, 6)
+local necroticEmbraceMarker = mod:AddMarkerOption(true, "player", 4, 244094, 4, 6)
 function mod:GetOptions()
 	return {
 		"stages", -- Torment of Flames, Frost, Fel, Shadows
@@ -44,10 +41,9 @@ function mod:GetOptions()
 		243999, -- Dark Fissure
 		{244042, "SAY", "FLASH", "ICON", "AURA"}, -- Marked Prey
 		{244094, "SAY", "FLASH", "AURA", "HUD", "SMARTCOLOR"}, -- Necrotic Embrace
-		necroMarker,
+		necroticEmbraceMarker,
 		{243980, "AURA"}, -- Torment of Fel
-		"shadowOfVarmathras",
-		{248732, "SAY", "AURA", "HUD"}, -- Echoes of Doom
+		-16350, -- Shadow of Varimathras
 	}
 end
 
@@ -117,7 +113,7 @@ function mod:TormentofFlames(args)
 		if self:Easy() then
 			self:CDBar("stages", 355, self:SpellName(243973), 243973) -- Torment of Shadows
 		else
-			self:CDBar("stages", 120, self:SpellName(243977), 243977) -- Torment of Frost
+			self:CDBar("stages", self:Mythic() and 100 or 120, self:SpellName(243977), 243977) -- Torment of Frost
 		end
 	end
 end
@@ -126,7 +122,7 @@ function mod:TormentofFrost(args)
 	if tormentActive ~= 2 then
 		tormentActive = 2
 		self:Message("stages", "Positive", "Long", args.spellName, args.spellId)
-		self:CDBar("stages", 114, self:SpellName(243980), 243980) -- Torment of Fel
+		self:CDBar("stages", self:Mythic() and 100 or 114, self:SpellName(243980), 243980) -- Torment of Fel
 	end
 end
 
@@ -135,7 +131,7 @@ function mod:TormentofFel(args)
 		tormentActive = 3
 		felTick = 0
 		self:Message("stages", "Positive", "Long", args.spellName, args.spellId)
-		self:CDBar("stages", 121, self:SpellName(243973), 243973) -- Torment of Shadows
+		self:CDBar("stages", self:Mythic() and 90 or 121, self:SpellName(243973), 243973) -- Torment of Shadows
 
 		self:ShowAura(243980, { pulse = false, pin = -1 })
 		self:Log("SPELL_PERIODIC_DAMAGE", "TormentofFelTick", 243980)
@@ -158,7 +154,7 @@ end
 function mod:TormentofShadows(args)
 	if tormentActive ~= 4 then
 		tormentActive = 4
-		self:Message(args.spellId, "Positive", "Long", args.spellName, args.spellId)
+		self:Message("stages", "Positive", "Long", args.spellName, args.spellId)
 
 		self:RemoveLog("SPELL_PERIODIC_DAMAGE", "TormentofFelTick", 243980)
 		self:RemoveLog("SPELL_PERIODIC_MISSED", "TormentofFelTick", 243980)
@@ -213,7 +209,9 @@ do
 	local rangeObject
 
 	local playerList = mod:NewTargetList()
+
 	function mod:NecroticEmbrace(args)
+		if #playerList >= 2 then return end -- Avoid spam if something goes wrong
 		local marker = (#playerList == 0 and 4 or 6)
 		if self:Me(args.destGUID) then
 			self:Say(args.spellId)
@@ -231,7 +229,7 @@ do
 		if #playerList == 1 then
 			self:ScheduleTimer("TargetMessage", 0.3, args.spellId, playerList, "Urgent", "Warning")
 		end
-		if self:GetOption(necroMarker) then
+		if self:GetOption(necroticEmbraceMarker) then
 			SetRaidTarget(args.destName, marker)
 		end
 	end
@@ -247,8 +245,8 @@ do
 				rangeObject = nil
 			end
 		end
-		if self:GetOption(necroMarker) then
-			SetRaidTarget(args.destName, marker)
+		if self:GetOption(necroticEmbraceMarker) then
+			SetRaidTarget(args.destName, 0)
 		end
 	end
 end
@@ -273,10 +271,9 @@ do
 			local t = GetTime()
 			if t-prev > 1.5 then -- Also don't spam too much if it's a wipe and several are spawning at the same time
 				prev = t
-				self:Message("shadowOfVarmathras", "Urgent", "Alarm", L.shadowOfVarmathras, L.shadowOfVarmathras_icon)
+				self:Message(-16350, "Urgent", "Alarm", nil, L.shadowOfVarimathras_icon)
 			end
 		end
-
 	end
 end
 

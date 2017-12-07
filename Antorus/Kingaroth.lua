@@ -197,11 +197,7 @@ function mod:DiabolicBomb(args)
 	self:Message(args.spellId, "Important", "Alarm")
 	local cooldown = 20.5
 	if nextApocalypseProtocol > GetTime() + cooldown then
-		if empBomb then -- Empowered
-			self:CDBar(args.spellId, cooldown, L.empowered:format(args.spellName))
-		else
-			self:CDBar(args.spellId, cooldown)
-		end
+		self:CDBar(args.spellId, cooldown, empBomb and L.empowered:format(args.spellName))
 	end
 end
 
@@ -221,11 +217,7 @@ function mod:Ruiner(args)
 	self:ImpactBar(args.spellId, 9)
 	local cooldown = 30
 	if nextApocalypseProtocol > GetTime() + cooldown then
-		if empRuiner then -- Empowered
-			self:CDBar(args.spellId, cooldown, L.empowered:format(args.spellName))
-		else
-			self:CDBar(args.spellId, cooldown)
-		end
+		self:CDBar(args.spellId, cooldown, empRuiner and L.empowered:format(args.spellName))
 	end
 end
 
