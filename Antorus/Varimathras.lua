@@ -34,6 +34,7 @@ end
 -- Initialization
 --
 
+local necroMarker = mod:AddMarkerOption(true, "player", 4, 244094, 4, 6)
 function mod:GetOptions()
 	return {
 		"stages", -- Torment of Flames, Frost, Fel, Shadows
@@ -42,7 +43,8 @@ function mod:GetOptions()
 		{243960, "TANK"}, -- Shadow Strike
 		243999, -- Dark Fissure
 		{244042, "SAY", "FLASH", "ICON", "AURA"}, -- Marked Prey
-		{244094, "SAY", "FLASH", "ICON", "AURA", "HUD"}, -- Necrotic Embrace
+		{244094, "SAY", "FLASH", "AURA", "HUD"}, -- Necrotic Embrace
+		necroMarker,
 		{243980, "AURA"}, -- Torment of Fel
 		"shadowOfVarmathras",
 		{248732, "SAY", "AURA", "HUD"}, -- Echoes of Doom
@@ -135,7 +137,7 @@ function mod:TormentofFel(args)
 		self:Message("stages", "Positive", "Long", args.spellName, args.spellId)
 		self:CDBar("stages", 121, self:SpellName(243973), 243973) -- Torment of Shadows
 
-		self:ShowAura(243980, 5, { pulse = false, pin = -1 })
+		self:ShowAura(243980, { pulse = false, pin = -1 })
 		self:Log("SPELL_PERIODIC_DAMAGE", "TormentofFelTick", 243980)
 		self:Log("SPELL_PERIODIC_MISSED", "TormentofFelTick", 243980)
 	end
@@ -212,12 +214,12 @@ do
 
 	local playerList = mod:NewTargetList()
 	function mod:NecroticEmbrace(args)
+		local marker = (#playerList == 0 and 4 or 6)
 		if self:Me(args.destGUID) then
 			self:Say(args.spellId)
 			self:Flash(args.spellId)
 			self:SayCountdown(args.spellId, 6)
-
-			self:ShowAura(args.spellId, 6, "Necro") -- { icon = 450908 }
+			self:ShowAura(args.spellId, 6, "Necro", { icon = marker, borderless = false }) -- { icon = 450908 }
 			if self:Hud(args.spellId) then
 				rangeObject = Hud:DrawSpinner("player", 50)
 				rangeCheck = self:ScheduleRepeatingTimer("CheckRange", 0.1, rangeObject)
@@ -226,14 +228,14 @@ do
 		end
 		playerList[#playerList+1] = args.destName
 		if #playerList == 1 then
-			-- Only 1 initial application, can avoid spreading. XXX See if this remains viable, or we need to mark everyone.
-			self:SecondaryIcon(args.spellId, args.destName)
 			self:ScheduleTimer("TargetMessage", 0.3, args.spellId, playerList, "Urgent", "Warning")
+		end
+		if self:GetOption(necroMarker) then
+			SetRaidTarget(args.destName, marker)
 		end
 	end
 
 	function mod:NecroticEmbraceRemoved(args)
-		self:SecondaryIcon(args.spellId)
 		if self:Me(args.destGUID) then
 			self:CancelSayCountdown(args.spellId)
 			self:HideAura(args.spellId)
@@ -242,6 +244,9 @@ do
 				rangeObject:Remove()
 				rangeObject = nil
 			end
+		end
+		if self:GetOption(necroMarker) then
+			SetRaidTarget(args.destName, marker)
 		end
 	end
 end
