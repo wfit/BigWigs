@@ -48,7 +48,7 @@ function mod:GetOptions()
 		necroticEmbraceAI,
 		{243980, "AURA"}, -- Torment of Fel
 		-16350, -- Shadow of Varimathras
-		{248732, "AURA"}, -- Echoes of Doom
+		--{248732, "AURA"}, -- Echoes of Doom
 	}
 end
 
@@ -73,9 +73,9 @@ function mod:OnBossEnable()
 	self:Log("SPELL_PERIODIC_MISSED", "GroundEffectDamage", 244005) -- Dark Fissure
 
 	--[[ Mythic ]]--
-	self:Log("SPELL_CAST_SUCCESS", "EchoesofDoom", 248732)
-	self:Log("SPELL_AURA_APPLIED", "EchoesofDoomApplied", 248732)
-	self:Log("SPELL_AURA_REMOVED", "EchoesofDoomRemoved", 248732)
+	--self:Log("SPELL_CAST_SUCCESS", "EchoesofDoom", 248732)
+	--self:Log("SPELL_AURA_APPLIED", "EchoesofDoomApplied", 248732)
+	--self:Log("SPELL_AURA_REMOVED", "EchoesofDoomRemoved", 248732)
 
 	self:RegisterNetMessage("NecroticEmbraceSoaker")
 end
