@@ -43,7 +43,7 @@ function mod:GetOptions()
 		{243960, "TANK"}, -- Shadow Strike
 		243999, -- Dark Fissure
 		{244042, "SAY", "FLASH", "ICON", "AURA"}, -- Marked Prey
-		{244094, "SAY", "FLASH", "AURA", "HUD"}, -- Necrotic Embrace
+		{244094, "SAY", "FLASH", "AURA", "HUD", "SMARTCOLOR"}, -- Necrotic Embrace
 		necroMarker,
 		{243980, "AURA"}, -- Torment of Fel
 		"shadowOfVarmathras",
@@ -220,6 +220,7 @@ do
 			self:Flash(args.spellId)
 			self:SayCountdown(args.spellId, 6)
 			self:ShowAura(args.spellId, 6, "Necro", { icon = marker, borderless = false }) -- { icon = 450908 }
+			self:SmartColorSet(args.spellId, 1, 0, 0)
 			if self:Hud(args.spellId) then
 				rangeObject = Hud:DrawSpinner("player", 50)
 				rangeCheck = self:ScheduleRepeatingTimer("CheckRange", 0.1, rangeObject)
@@ -239,6 +240,7 @@ do
 		if self:Me(args.destGUID) then
 			self:CancelSayCountdown(args.spellId)
 			self:HideAura(args.spellId)
+			self:SmartColorUnset(args.spellId)
 			if rangeObject then
 				self:CancelTimer(rangeCheck)
 				rangeObject:Remove()
