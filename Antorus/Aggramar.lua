@@ -326,7 +326,7 @@ end
 
 function mod:BlazingEruption(args)
 	if self:Me(args.destGUID) then
-		self:ShowAura(args.spellId, 15, { stacks = args.amount or 1, countdown = false })
+		self:ShowAura(args.spellId, 15, { stacks = args.amount or 1, countdown = false, pulse = false })
 	end
 end
 
