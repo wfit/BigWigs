@@ -261,23 +261,35 @@ function mod:CorruptAegis()
 end
 
 function mod:EmberDiscovered(data)
-	self:EmberCollector(nil, nil, data.guid)
+	self:EmberCollector(nil, mod:GetUnitIdByGUID(data.guid), data.guid, true, data.highEnergy)
 end
 
-function mod:EmberCollector(_, _, guid)
+function mod:EmberCollector(_, unit, guid, isSync, highEnergy)
 	if not mobCollector[guid] then
 		if self:MobId(guid) == 122532 then
 			mobCollector[guid] = Hud:DrawText(guid, "?"):SetOffset(0, 80):Register("Ember")
+			if highEnergy == nil and unit then
+				highEnergy = UnitPower(unit) > 25
+			end
 			local area = Hud:DrawArea(guid, 30):SetOffset(0, 80):Register("Ember")
-			function area:OnUpdate()
-				if UnitGUID("mouseover") == guid then
-					area:SetColor(0.2, 1, 0.2)
-				else
-					area:SetColor(0.8, 0.8, 0.8)
+			if highEnergy then
+				area:SetColor(1, 0.5, 0.2, 1)
+			end
+			local energy = Hud:DrawSpinner(guid, 30):SetOffset(0, 80):Register("Ember")
+			local progress = 0
+			function energy:Progress()
+				local unit = mod:GetUnitIdByGUID(guid)
+				if unit then
+					local power = UnitPower(unit)
+					local max = UnitPowerMax(unit)
+					progress = 1 - (power / max)
 				end
+				return progress
 			end
 			self:UpdateEmberCounter()
-			self:Send("EmberDiscovered", { guid = guid })
+			if not isSync then
+				self:Send("EmberDiscovered", { guid = guid, highEnergy = highEnergy })
+			end
 		end
 	end
 end
