@@ -325,11 +325,15 @@ function mod:CorruptAegisRemoved()
 end
 
 function mod:BlazingEruption(args)
-	self:ShowAura(args.spellId, 15, { stacks = args.amount or 1 })
+	if self:Me(args.destGUID) then
+		self:ShowAura(args.spellId, 15, { stacks = args.amount or 1, countdown = false })
+	end
 end
 
 function mod:BlazingEruptionRemoved(args)
-	self:HideAura(args.spellId)
+	if self:Me(args.destGUID) then
+		self:HideAura(args.spellId)
+	end
 end
 
 --[[ Mythic ]]--
