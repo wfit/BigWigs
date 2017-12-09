@@ -247,7 +247,9 @@ do
 
 				for i = 1, math.min((8-bloodOffset)/2, 3) do
 					if playerTable[i] then
-						self:SetInfo("infobox", bloodOffset+1+i*2, self:ColorName(playerTable[i].name))
+						local player = playerTable[i].name
+						local icon = GetRaidTargetIndex(player)
+						self:SetInfo("infobox", bloodOffset+1+i*2, (icon and ("|T13700%d:0|t"):format(icon) or "") .. self:ColorName(player))
 						self:SetInfo("infobox", bloodOffset+2+i*2, self:AbbreviateNumber(playerTable[i].value))
 						self:SetInfoBar("infobox", bloodOffset+1+i*2, playerTable[i].value / chilledBloodMaxAbsorb)
 					else

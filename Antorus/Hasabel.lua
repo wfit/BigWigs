@@ -90,8 +90,11 @@ function mod:OnBossEnable()
 	self:Log("SPELL_AURA_APPLIED", "RealityTear", 244016)
 	self:Log("SPELL_AURA_APPLIED_DOSE", "RealityTear", 244016)
 	self:Log("SPELL_CAST_SUCCESS", "RealityTearSuccess", 244016)
+	self:Log("SPELL_CAST_START", "CollapsingWorldStart", 243983)
 	self:Log("SPELL_CAST_SUCCESS", "CollapsingWorld", 243983)
+	self:Log("SPELL_CAST_START", "FelstormBarrageStart", 244000)
 	self:Log("SPELL_CAST_SUCCESS", "FelstormBarrage", 244000)
+	self:Log("SPELL_CAST_START", "TransportPortalStart", 244689)
 	self:Log("SPELL_CAST_SUCCESS", "TransportPortal", 244689)
 	self:Log("SPELL_CAST_START", "HowlingShadows", 245504)
 	self:Log("SPELL_CAST_START", "CatastrophicImplosion", 246075)
@@ -151,10 +154,10 @@ do
 
 	local castPattern = CL.cast:gsub("%%s", ".+")
 
-	function triggerCdForOtherSpells(self, spellId)
+	function triggerCdForOtherSpells(self, spellId, castTime)
 		for id,_ in pairs(abilitysToPause) do
 			if id ~= spellId then
-				local cd = id == 244689 and 8.5 or 9 -- Transport Portal cast is 0.5s shorter
+				local cd = (id == 244689 and 8.5 or 9) + (castTime or 0) -- Transport Portal cast is 0.5s shorter
 				if self:BarTimeLeft(id) < cd then
 					self:Bar(id, cd)
 				end
@@ -234,6 +237,12 @@ function mod:RealityTearSuccess(args)
 	self:Bar(args.spellId, addsAlive > 0 and 24.4 or 12.2) -- Cooldown increased when there are platforms active
 end
 
+function mod:CollapsingWorldStart(args)
+	self:StopBar(args.spellId)
+	self:CastBar(args.spellId, 2)
+	triggerCdForOtherSpells(self, args.spellId, 2)
+end
+
 function mod:CollapsingWorld(args)
 	self:Message(args.spellId, "Important", "Warning")
 	self:ImpactBar(args.spellId, 8)
@@ -241,10 +250,22 @@ function mod:CollapsingWorld(args)
 	triggerCdForOtherSpells(self, args.spellId)
 end
 
+function mod:FelstormBarrageStart(args)
+	self:StopBar(args.spellId)
+	self:CastBar(args.spellId, 2)
+	triggerCdForOtherSpells(self, args.spellId, 2)
+end
+
 function mod:FelstormBarrage(args)
 	self:Message(args.spellId, "Urgent", "Alert")
 	self:Bar(args.spellId, (self:Easy() and 37.1) or (self:Mythic() and 27.5) or 32.75)
 	triggerCdForOtherSpells(self, args.spellId)
+end
+
+function mod:TransportPortalStart(args)
+	self:StopBar(args.spellId)
+	self:CastBar(args.spellId, 1.5)
+	triggerCdForOtherSpells(self, args.spellId, 1.5)
 end
 
 function mod:TransportPortal(args)
