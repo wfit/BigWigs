@@ -12,6 +12,8 @@ mod.respawnTime = 25
 -- Locals
 --
 
+local Hud = Oken.Hud
+
 local stage = 1
 local wakeOfFlameCount = 1
 local techniqueStarted = 0
@@ -21,10 +23,13 @@ local flameRendCount = 1
 local searingTempestCount = 1
 local nextIntermissionSoonWarning = 0
 
+local mobCollector = {}
+
 --------------------------------------------------------------------------------
 -- Initialization
 --
 
+local ember_hud = mod:AddCustomOption { "ember_hud", "Show HUD on Ember of Taeshalach.", default = true }
 function mod:GetOptions()
 	return {
 		"stages",
@@ -38,6 +43,7 @@ function mod:GetOptions()
 		245458, -- Foe Breaker
 		245463, -- Flame Rend
 		{245301, "IMPACT"}, -- Searing Tempest
+		ember_hud,
 
 		--[[ Stage Two: Champion of Sargeras ]]--
 		245983, -- Flare
@@ -244,6 +250,40 @@ function mod:CorruptAegis()
 	self:StopBar(245301) -- Searing Tempest
 	self:StopBar(245983) -- Flare
 	self:CDBar(245911, self:Mythic() and 165 or 180) -- Wrought in Flame XXX have to see when adds spawn exactly
+
+	if self:GetOption(ember_hud) then
+		wipe(mobCollector)
+		Hud:RemoveObject("Ember")
+		self:RegisterTargetEvents("EmberCollector")
+	end
+end
+
+function mod:EmberCollector(_, _, guid)
+	if not mobCollector[guid] then
+		if self:MobId(guid) == 122532 then
+			mobCollector[guid] = Hud:DrawText(guid, "?"):SetOffset(0, 80):Register("Ember")
+			local area = Hud:DrawArea(guid, 30):SetOffset(0, 80):Register("Ember")
+			function area:OnUpdate()
+				if UnitGUID("mouseover") == guid then
+					area:SetColor(0.2, 1, 0.2)
+				else
+					area:SetColor(0.8, 0.8, 0.8)
+				end
+			end
+			self:UpdateEmberCounter()
+		end
+	end
+end
+
+function mod:UpdateEmberCounter()
+	local list = {}
+	for guid in pairs(mobCollector) do
+		list[#list + 1] = guid
+	end
+	table.sort(list)
+	for i, guid in ipairs(list) do
+		mobCollector[guid]:SetText(i)
+	end
 end
 
 function mod:CorruptAegisRemoved()
