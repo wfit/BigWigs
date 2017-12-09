@@ -82,6 +82,8 @@ function mod:OnBossEnable()
 
 	--[[ Mythic ]]--
 	self:Log("SPELL_AURA_APPLIED", "RavenousBlaze", 254452)
+
+	self:RegisterNetMessage("EmberDiscovered")
 end
 
 function mod:OnEngage()
@@ -258,6 +260,10 @@ function mod:CorruptAegis()
 	end
 end
 
+function mod:EmberDiscovered(data)
+	self:EmberCollector(nil, nil, data.guid)
+end
+
 function mod:EmberCollector(_, _, guid)
 	if not mobCollector[guid] then
 		if self:MobId(guid) == 122532 then
@@ -271,6 +277,7 @@ function mod:EmberCollector(_, _, guid)
 				end
 			end
 			self:UpdateEmberCounter()
+			self:Send("EmberDiscovered", { guid = guid })
 		end
 	end
 end
