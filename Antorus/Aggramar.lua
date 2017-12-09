@@ -35,6 +35,7 @@ function mod:GetOptions()
 	return {
 		"stages",
 		245911, -- Wrought in Flame
+		{244912, "TANK", "AURA"}, -- Blazing Eruption
 
 		--[[ Stage One: Wrath of Aggramar ]]--
 		{245990, "TANK"}, -- Taeshalach's Reach
@@ -80,6 +81,9 @@ function mod:OnBossEnable()
 	--[[ Intermission: Fires of Taeshalach ]]--
 	self:Log("SPELL_AURA_APPLIED", "CorruptAegis", 244894)
 	self:Log("SPELL_AURA_REMOVED", "CorruptAegisRemoved", 244894)
+	self:Log("SPELL_AURA_APPLIED", "BlazingEruption", 244912)
+	self:Log("SPELL_AURA_APPLIED_DOSE", "BlazingEruption", 244912)
+	self:Log("SPELL_AURA_REMOVED", "BlazingEruptionRemoved", 244912)
 
 	--[[ Mythic ]]--
 	self:Log("SPELL_AURA_APPLIED", "RavenousBlaze", 254452)
@@ -318,6 +322,14 @@ function mod:CorruptAegisRemoved()
 	elseif stage == 3 then
 		self:Bar(246037, 10) -- Empowered Flare
 	end
+end
+
+function mod:BlazingEruption(args)
+	self:ShowAura(args.spellId, 15, { stacks = args.amount or 1 })
+end
+
+function mod:BlazingEruptionRemoved(args)
+	self:HideAura(args.spellId)
 end
 
 --[[ Mythic ]]--
