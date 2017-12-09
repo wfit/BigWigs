@@ -24,6 +24,7 @@ local searingTempestCount = 1
 local nextIntermissionSoonWarning = 0
 
 local mobCollector = {}
+local energyChecked = {}
 
 --------------------------------------------------------------------------------
 -- Initialization
@@ -255,32 +256,33 @@ function mod:CorruptAegis()
 
 	if self:GetOption(ember_hud) then
 		wipe(mobCollector)
+		wipe(energyChecked)
 		Hud:RemoveObject("Ember")
 		self:RegisterTargetEvents("EmberCollector")
 	end
 end
 
 function mod:EmberDiscovered(data)
-	self:EmberCollector(nil, mod:GetUnitIdByGUID(data.guid), data.guid, true, data.highEnergy)
+	self:EmberCollector(nil, mod:GetUnitIdByGUID(data.guid), data.guid, true)
 end
 
-function mod:EmberCollector(_, unit, guid, isSync, highEnergy)
+function mod:EmberCollector(_, unit, guid, isSync)
 	if not mobCollector[guid] then
 		if self:MobId(guid) == 122532 then
 			mobCollector[guid] = Hud:DrawText(guid, "?"):SetOffset(0, 80):Register("Ember")
-			if highEnergy == nil and unit then
-				highEnergy = UnitPower(unit) > 25
-			end
 			local area = Hud:DrawArea(guid, 30):SetOffset(0, 80):Register("Ember")
-			if highEnergy then
-				area:SetColor(1, 0.5, 0.2, 1)
-			end
 			local energy = Hud:DrawSpinner(guid, 30):SetOffset(0, 80):Register("Ember")
 			local progress = 0
 			function energy:Progress()
 				local unit = mod:GetUnitIdByGUID(guid)
 				if unit then
 					local power = UnitPower(unit)
+					if not energyChecked[unit] then
+						energyChecked[unit] = true
+						if power >= 50 then
+							area:SetColor(1, 0.2, 0.2, 1)
+						end
+					end
 					local max = UnitPowerMax(unit)
 					progress = 1 - (power / max)
 				end
@@ -288,7 +290,7 @@ function mod:EmberCollector(_, unit, guid, isSync, highEnergy)
 			end
 			self:UpdateEmberCounter()
 			if not isSync then
-				self:Send("EmberDiscovered", { guid = guid, highEnergy = highEnergy })
+				self:Send("EmberDiscovered", { guid = guid })
 			end
 		end
 	end
