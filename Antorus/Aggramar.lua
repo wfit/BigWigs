@@ -147,7 +147,7 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(_, _, _, _, spellId)
 		if techniqueStarted == 1 then -- Check if he actually ends the combo, instead of being in intermission
 			techniqueStarted = 0
 			self:HideAura(244688)
-			self:Bar(245994, 4) -- Scorching Blaze
+			self:Bar(self:Mythic() and 254452 or 245994, 4) -- Scorching Blaze / Ravenous Blaze
 			if stage == 1 then
 				self:Bar(244693, 5) -- Wake of Flame
 			elseif stage == 2 then
