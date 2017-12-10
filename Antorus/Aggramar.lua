@@ -290,14 +290,16 @@ function mod:EmberCollector(_, _, guid, isSync)
 				local unit = mod:GetUnitIdByGUID(guid)
 				if unit then
 					local power = UnitPower(unit)
-					if not energyChecked[guid] then
-						energyChecked[guid] = true
-						if power >= 50 then
-							area:SetColor(1, 0.2, 0.2, 1)
-						end
-					end
 					local max = UnitPowerMax(unit)
-					progress = 1 - (power / max)
+					if max == 100 then
+						if not energyChecked[guid] then
+							energyChecked[guid] = true
+							if power >= 50 then
+								area:SetColor(1, 0.2, 0.2, 1)
+							end
+						end
+						progress = 1 - (power / max)
+					end
 				end
 				return progress
 			end
