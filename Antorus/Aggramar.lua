@@ -304,7 +304,7 @@ function mod:EmberCollector(_, _, guid, isSync)
 				if unit then
 					local power = UnitPower(unit)
 					local max = UnitPowerMax(unit)
-					if max == 100 then
+					if power > 0 and max == 100 then
 						if power > emberMaxEnergy then
 							emberMaxEnergy = power
 						end
