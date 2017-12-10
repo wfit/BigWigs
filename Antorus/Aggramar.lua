@@ -57,6 +57,7 @@ local ember_hud_side = mod:AddCustomOption { "ember_hud_side", "Display Ember HU
 function mod:GetOptions()
 	return {
 		"stages",
+		"berserk",
 		245911, -- Wrought in Flame
 		{244912, "TANK", "AURA"}, -- Blazing Eruption
 
@@ -127,11 +128,12 @@ function mod:OnEngage()
 
 	if self:Mythic() then
 		self:Bar(254452, 4.8) -- Ravenous Blaze
+		self:Berserk(540)
 	else
 		self:Bar(245994, 8) -- Scorching Blaze
 	end
-	self:Bar(244693, 5.5) -- Wake of Flame
-	self:Bar(244688, 35) -- Taeshalach Technique
+	self:Bar(244693, self:Mythic() and 10.5 or 5.5) -- Wake of Flame
+	self:Bar(244688, self:Mythic() and 14.5 or 35) -- Taeshalach Technique
 
 	nextIntermissionSoonWarning = 82 -- happens at 80%
 	self:RegisterUnitEvent("UNIT_HEALTH_FREQUENT", nil, "boss1")
@@ -205,25 +207,29 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(_, _, _, _, spellId)
 			techniqueStarted = 0
 			techniqueCount = techniqueCount + 1
 			self:HideAura(244688)
-			self:Bar(self:Mythic() and 254452 or 245994, 4) -- Scorching Blaze / Ravenous Blaze
+			if self:Mythic() then
+				self:Bar(254452, stage == 1 and 4 or 21.3) -- Ravenous Blaze
+			else
+				self:CDBar(245994, 4) -- Scorching Blaze
+			end
 			if stage == 1 then
 				self:Bar(244693, 5) -- Wake of Flame
 			elseif stage == 2 then
-				self:Bar(245983, 9) -- Flare
+				self:Bar(245983, self:Mythic() and 6.6 or 9)
 			elseif stage == 3 then
-				self:Bar(246037, 9) -- Empowered Flare
+				self:Bar(246037, self:Mythic() and 7.7 or 9)
 			end
 			self:UpdateInfoBox()
 		end
 	elseif spellId == 245983 then -- Flare
 		self:Message(spellId, "Important", "Warning")
-		if comboTime > GetTime() + 15.8 then
-			self:Bar(spellId, self:Mythic() and 61 or 15.8)
+		if comboTime > GetTime() + 15.8 and not self:Mythic() then
+			self:Bar(spellId, 15.8)
 		end
 	elseif spellId == 246037 then -- Empowered Flare
 		self:Message(spellId, "Important", "Warning")
-		if comboTime > GetTime() + 16.2 then
-			self:Bar(spellId, 16.2)
+		if comboTime > GetTime() + 16.2 and not self:Mythic() then
+			self:Bar(spellId, 16.2) -- Assume mythic CD
 		end
 	end
 end
@@ -232,7 +238,7 @@ end
 function mod:TaeshalachsReach(args)
 	local amount = args.amount or 1
 	if amount % 3 == 0 or amount > 7 then
-		self:StackMessage(args.spellId, args.destName, amount, "Neutral", amount > 7 and "Info") -- Swap on 8+
+		self:StackMessage(args.spellId, args.destName, amount, "Important", amount > 7 and "Alarm") -- Swap on 8+
 	end
 end
 
@@ -274,8 +280,9 @@ do
 	function mod:WakeofFlame(args)
 		self:GetBossTarget(printTarget, 0.7, args.sourceGUID)
 		wakeOfFlameCount = wakeOfFlameCount + 1
-		if comboTime > GetTime() + 24 then
-			self:Bar(args.spellId, 24)
+		local cooldown = self:Mythic() and 12.1 or 24
+		if comboTime > GetTime() + cooldown then
+			self:Bar(args.spellId, cooldown)
 		end
 	end
 end
@@ -413,9 +420,9 @@ function mod:CorruptAegisRemoved()
 	end
 	self:Bar(244688, 37.5) -- Taeshalach Technique
 	if stage == 2 then
-		self:Bar(245983, 10.5) -- Flare
+		self:Bar(245983, self:Mythic() and 8.4 or 10.5) -- Flare
 	elseif stage == 3 then
-		self:Bar(246037, 10) -- Empowered Flare
+		self:Bar(246037, self:Mythic() and 8.4 or 10) -- Empowered Flare
 	end
 end
 
@@ -444,8 +451,9 @@ do
 		end
 		playerList[#playerList+1] = args.destName
 		if #playerList == 1 then
-			if comboTime > GetTime() + 38 then
-				self:CDBar(args.spellId, 38)
+			local cooldown = stage == 1 and 23.1 or 60.1 -- this cooldown should only trigger in stage 1+
+			if comboTime > GetTime() + cooldown then
+				self:CDBar(args.spellId, cooldown)
 			end
 			self:ScheduleTimer("TargetMessage", 0.3, args.spellId, playerList, "Important", "Warning")
 		end
