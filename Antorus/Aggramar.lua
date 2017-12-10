@@ -321,6 +321,8 @@ end
 --[[ Intermission: Fires of Taeshalach ]]--
 function mod:CorruptAegis()
 	techniqueStarted = 0 -- End current technique
+	techniqueCount = 1
+	self:CloseInfo(244688)
 	self:HideAura(244688) -- Taeshalach Technique
 	self:Message("stages", "Neutral", "Long", CL.intermission, false)
 	self:StopBar(245994) -- Scorching Blaze
@@ -424,6 +426,9 @@ function mod:CorruptAegisRemoved()
 	elseif stage == 3 then
 		self:Bar(246037, self:Mythic() and 8.4 or 10) -- Empowered Flare
 	end
+
+	self:OpenInfo(244688)
+	self:UpdateInfoBox()
 end
 
 function mod:BlazingEruption(args)
