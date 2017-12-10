@@ -378,7 +378,7 @@ function mod:EmberCollector(_, _, guid, isSync)
 					local max = UnitPowerMax(unit)
 					if max == 100 then
 						local power = UnitPower(unit)
-						if not energyChecked[guid] or power >= 80 then
+						if not energyChecked[guid] then
 							energyChecked[guid] = true
 							if stage == 3 then
 								area:SetColor(0.2, 0.2, 1, 1)
