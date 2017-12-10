@@ -322,6 +322,7 @@ end
 
 function mod:CorruptAegisRemoved()
 	stage = stage + 1
+	comboTime = GetTime() + 37.5
 	self:Message("stages", "Neutral", "Long", CL.stage:format(stage), false)
 
 	if self:Mythic() then
