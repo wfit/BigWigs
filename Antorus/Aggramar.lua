@@ -323,7 +323,11 @@ function mod:CorruptAegisRemoved()
 	stage = stage + 1
 	self:Message("stages", "Neutral", "Long", CL.stage:format(stage), false)
 
-	self:CDBar(245994, 6) -- Scorching Blaze
+	if self:Mythic() then
+		self:Bar(254452, 23) -- Ravenous Blaze
+	else
+		self:CDBar(245994, 6) -- Scorching Blaze
+	end
 	self:Bar(244688, 37.5) -- Taeshalach Technique
 	if stage == 2 then
 		self:Bar(245983, 10.5) -- Flare
