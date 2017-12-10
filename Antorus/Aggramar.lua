@@ -299,16 +299,17 @@ function mod:EmberCollector(_, _, guid, isSync)
 				energy = energy
 			}
 			local progress = 0
+			energy.OnDone = nil
 			function energy:Progress()
 				local unit = mod:GetUnitIdByGUID(guid)
 				if unit then
 					local power = UnitPower(unit)
 					local max = UnitPowerMax(unit)
-					if power > 0 and max == 100 then
-						if power > emberMaxEnergy - 10 then
+					if max == 100 then
+						if power > emberMaxEnergy then
 							emberMaxEnergy = power
 						end
-						if power >= emberMaxEnergyLast then
+						if power >= emberMaxEnergyLast - 10 then
 							area:SetColor(1, 0.2, 0.2, 1)
 						else
 							area:SetColor(0.2, 0.5, 0.2, 1)
