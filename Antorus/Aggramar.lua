@@ -25,6 +25,8 @@ local nextIntermissionSoonWarning = 0
 
 local mobCollector = {}
 local energyChecked = {}
+local emberMaxEnergyLast
+local emberMaxEnergy
 
 --------------------------------------------------------------------------------
 -- Initialization
@@ -259,13 +261,19 @@ function mod:CorruptAegis()
 	self:StopBar(245463, CL.count:format(self:SpellName(245463), flameRendCount)) -- Flame Rend
 	self:StopBar(245301) -- Searing Tempest
 	self:StopBar(245983) -- Flare
-	self:CDBar(245911, self:Mythic() and 165 or 180) -- Wrought in Flame XXX have to see when adds spawn exactly
-
+	if not self:Mythic() then
+		self:CDBar(245911, 180) -- Wrought in Flame XXX have to see when adds spawn exactly
+	end
 	if self:GetOption(ember_hud) then
 		wipe(mobCollector)
 		wipe(energyChecked)
 		Hud:RemoveObject("Ember")
-		self:RegisterTargetEvents("EmberCollector")
+		if stage == 1 then
+			emberMaxEnergyLast = 0
+			emberMaxEnergy = 0
+			self:RegisterTargetEvents("EmberCollector")
+			self:ScheduleRepeatingTimer("ResetEmberEnergy", 1)
+		end
 	end
 end
 
@@ -282,9 +290,14 @@ function mod:EmberCollector(_, _, guid, isSync)
 			else
 				x, y = 0, 80
 			end
-			mobCollector[guid] = Hud:DrawText(guid, "?"):SetOffset(x, y):Register("Ember")
+			local text = Hud:DrawText(guid, "?"):SetOffset(x, y):Register("Ember")
 			local area = Hud:DrawArea(guid, 30):SetOffset(x, y):Register("Ember")
 			local energy = Hud:DrawSpinner(guid, 30):SetOffset(x, y):Register("Ember")
+			mobCollector[guid] = {
+				text = text,
+				area = area,
+				energy = energy
+			}
 			local progress = 0
 			function energy:Progress()
 				local unit = mod:GetUnitIdByGUID(guid)
@@ -292,23 +305,32 @@ function mod:EmberCollector(_, _, guid, isSync)
 					local power = UnitPower(unit)
 					local max = UnitPowerMax(unit)
 					if max == 100 then
-						if not energyChecked[guid] then
-							energyChecked[guid] = true
-							if power >= 50 then
-								area:SetColor(1, 0.2, 0.2, 1)
-							end
+						if power > emberMaxEnergy then
+							emberMaxEnergy = power
+						end
+						if power >= emberMaxEnergyLast then
+							area:SetColor(1, 0.2, 0.2, 1)
+						else
+							area:SetColor(0.2, 0.5, 0.2, 1)
 						end
 						progress = 1 - (power / max)
 					end
 				end
 				return progress
 			end
-			self:UpdateEmberCounter()
 			if not isSync then
 				self:Send("EmberDiscovered", { guid = guid })
 			end
+			self:UpdateEmberCounter()
 		end
 	end
+end
+
+function mod:ResetEmberEnergy()
+	if emberMaxEnergy >= -1 then
+		emberMaxEnergyLast = emberMaxEnergy
+	end
+	emberMaxEnergy = -1
 end
 
 function mod:UpdateEmberCounter()
@@ -318,7 +340,7 @@ function mod:UpdateEmberCounter()
 	end
 	table.sort(list)
 	for i, guid in ipairs(list) do
-		mobCollector[guid]:SetText(i)
+		mobCollector[guid].text:SetText(i)
 	end
 end
 
