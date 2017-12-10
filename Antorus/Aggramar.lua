@@ -30,7 +30,8 @@ local energyChecked = {}
 -- Initialization
 --
 
-local ember_hud = mod:AddCustomOption { "ember_hud", "Show HUD on Ember of Taeshalach.", default = true }
+local ember_hud = mod:AddCustomOption { "ember_hud", "Show HUD on Ember of Taeshalach", default = true }
+local ember_hud_side = mod:AddCustomOption { "ember_hud_side", "Display Ember HUD on the side of the nameplate", default = true }
 function mod:GetOptions()
 	return {
 		"stages",
@@ -46,6 +47,7 @@ function mod:GetOptions()
 		245463, -- Flame Rend
 		{245301, "IMPACT"}, -- Searing Tempest
 		ember_hud,
+		ember_hud_side,
 
 		--[[ Stage Two: Champion of Sargeras ]]--
 		245983, -- Flare
@@ -270,12 +272,18 @@ function mod:EmberDiscovered(data)
 	self:EmberCollector(nil, mod:GetUnitIdByGUID(data.guid), data.guid, true)
 end
 
-function mod:EmberCollector(_, unit, guid, isSync)
+function mod:EmberCollector(_, _, guid, isSync)
 	if not mobCollector[guid] then
 		if self:MobId(guid) == 122532 then
-			mobCollector[guid] = Hud:DrawText(guid, "?"):SetOffset(0, 80):Register("Ember")
-			local area = Hud:DrawArea(guid, 30):SetOffset(0, 80):Register("Ember")
-			local energy = Hud:DrawSpinner(guid, 30):SetOffset(0, 80):Register("Ember")
+			local x, y
+			if self:GetOption(ember_hud_side) then
+				x, y = -100, 15
+			else
+				x, y = 0, 80
+			end
+			mobCollector[guid] = Hud:DrawText(guid, "?"):SetOffset(x, y):Register("Ember")
+			local area = Hud:DrawArea(guid, 30):SetOffset(x, y):Register("Ember")
+			local energy = Hud:DrawSpinner(guid, 30):SetOffset(x, y):Register("Ember")
 			local progress = 0
 			function energy:Progress()
 				local unit = mod:GetUnitIdByGUID(guid)
@@ -326,7 +334,8 @@ end
 
 function mod:BlazingEruption(args)
 	if self:Me(args.destGUID) then
-		self:ShowAura(args.spellId, 15, { stacks = args.amount or 1, countdown = false, pulse = false })
+		local amount = args.amount or 1
+		self:ShowAura(args.spellId, 15, { stacks = amount, countdown = false, pulse = amount > 1 })
 	end
 end
 
