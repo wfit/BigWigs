@@ -25,8 +25,6 @@ local nextIntermissionSoonWarning = 0
 
 local mobCollector = {}
 local energyChecked = {}
-local emberMaxEnergyLast
-local emberMaxEnergy
 
 --------------------------------------------------------------------------------
 -- Initialization
@@ -269,10 +267,7 @@ function mod:CorruptAegis()
 		wipe(energyChecked)
 		Hud:RemoveObject("Ember")
 		if stage == 1 then
-			emberMaxEnergyLast = 0
-			emberMaxEnergy = 0
 			self:RegisterTargetEvents("EmberCollector")
-			self:ScheduleRepeatingTimer("ResetEmberEnergy", 1)
 		end
 	end
 end
@@ -303,16 +298,16 @@ function mod:EmberCollector(_, _, guid, isSync)
 			function energy:Progress()
 				local unit = mod:GetUnitIdByGUID(guid)
 				if unit then
-					local power = UnitPower(unit)
 					local max = UnitPowerMax(unit)
 					if max == 100 then
-						if power > emberMaxEnergy then
-							emberMaxEnergy = power
-						end
-						if power >= emberMaxEnergyLast - 10 then
-							area:SetColor(1, 0.2, 0.2, 1)
-						else
-							area:SetColor(0.2, 0.5, 0.2, 1)
+						local power = UnitPower(unit)
+						if not energyChecked[guid] or power >= 80 then
+							energyChecked[guid] = true
+							if power >= 50 then
+								area:SetColor(1, 0.2, 0.2, 1)
+							else
+								area:SetColor(0.2, 0.5, 0.2, 1)
+							end
 						end
 						progress = 1 - (power / max)
 					end
@@ -325,13 +320,6 @@ function mod:EmberCollector(_, _, guid, isSync)
 			self:UpdateEmberCounter()
 		end
 	end
-end
-
-function mod:ResetEmberEnergy()
-	if emberMaxEnergy >= -1 then
-		emberMaxEnergyLast = emberMaxEnergy
-	end
-	emberMaxEnergy = -1
 end
 
 function mod:UpdateEmberCounter()
