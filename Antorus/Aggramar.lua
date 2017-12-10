@@ -57,8 +57,9 @@ function mod:GetOptions()
 
 		--[[ Mythic ]]--
 		{254452, "AURA"}, -- Ravenous Blaze
+		255059, -- Empowered Foe Breaker
 		255058, -- Empowered Flame Rend
-		255061 -- Empowered Searing Tempest
+		{255061, "IMPACT"} -- Empowered Searing Tempest
 	},{
 		["stages"] = "general",
 		[245990] = -15794, -- Stage One: wrath of Aggramar
@@ -76,7 +77,7 @@ function mod:OnBossEnable()
 	self:Log("SPELL_AURA_APPLIED_DOSE", "TaeshalachsReach", 245990)
 	self:Log("SPELL_AURA_APPLIED", "ScorchingBlaze", 245994)
 	self:Log("SPELL_CAST_START", "WakeofFlame", 244693)
-	self:Log("SPELL_CAST_START", "FoeBreaker", 245458)
+	self:Log("SPELL_CAST_START", "FoeBreaker", 245458, 255059) -- Normal, Empowered
 	self:Log("SPELL_CAST_START", "FlameRend", 245463, 255058) -- Normal, Empowered
 	self:Log("SPELL_CAST_START", "SearingTempest", 245301, 255061) -- Normal, Empowered
 
@@ -339,6 +340,7 @@ end
 function mod:BlazingEruption(args)
 	if self:Me(args.destGUID) then
 		local amount = args.amount or 1
+		self:StackMessage(args.spellId, args.destName, amount, "Attention", "Alert")
 		self:ShowAura(args.spellId, 15, { stacks = amount, countdown = false, pulse = amount > 1 })
 	end
 end
