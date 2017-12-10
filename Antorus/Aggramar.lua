@@ -25,6 +25,7 @@ local nextIntermissionSoonWarning = 0
 
 local mobCollector = {}
 local energyChecked = {}
+local wroughtInFlameStarted = false
 
 --------------------------------------------------------------------------------
 -- Initialization
@@ -259,9 +260,7 @@ function mod:CorruptAegis()
 	self:StopBar(245463, CL.count:format(self:SpellName(245463), flameRendCount)) -- Flame Rend
 	self:StopBar(245301) -- Searing Tempest
 	self:StopBar(245983) -- Flare
-	if not self:Mythic() then
-		self:CDBar(245911, 180) -- Wrought in Flame XXX have to see when adds spawn exactly
-	end
+	wroughtInFlameStarted = false
 	if self:GetOption(ember_hud) then
 		wipe(mobCollector)
 		wipe(energyChecked)
@@ -279,6 +278,10 @@ end
 function mod:EmberCollector(_, _, guid, isSync)
 	if not mobCollector[guid] then
 		if self:MobId(guid) == 122532 then
+			if not wroughtInFlameStarted then
+				wroughtInFlameStarted = true
+				self:CDBar(245911, self:Mythic() and 165 or 180)
+			end
 			local x, y
 			if self:GetOption(ember_hud_side) then
 				x, y = -100, 15
