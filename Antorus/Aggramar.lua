@@ -380,7 +380,9 @@ function mod:EmberCollector(_, _, guid, isSync)
 						local power = UnitPower(unit)
 						if not energyChecked[guid] or power >= 80 then
 							energyChecked[guid] = true
-							if power >= 50 then
+							if stage == 3 then
+								area:SetColor(0.2, 0.2, 1, 1)
+							elseif power >= 50 then
 								area:SetColor(1, 0.2, 0.2, 1)
 							else
 								area:SetColor(0.2, 0.5, 0.2, 1)
