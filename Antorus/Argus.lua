@@ -242,7 +242,7 @@ end
 
 function mod:CHAT_MSG_RAID_BOSS_EMOTE(_, msg)
 	if msg:find("258068", nil, true) then -- Sargeras' Gaze
-		self:Message(258068, "Urgent", "Warning")
+		self:Message(258068, "Urgent", "Beware")
 		self:Bar(258068, stage == 2 and 60.5 or 35.1)
 	end
 end
