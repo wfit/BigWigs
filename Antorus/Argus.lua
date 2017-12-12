@@ -139,7 +139,7 @@ function mod:GetOptions()
 		257214, -- Titanforging
 
 		--[[ Mythic ]]--
-		{258068, "SAY", "FLASH"}, -- Sargeras' Gaze
+		{258068, "SAY", "FLASH", "AURA"}, -- Sargeras' Gaze
 		257911, -- Unleased Rage
 	},{
 		["stages"] = "general",
@@ -205,6 +205,7 @@ function mod:OnBossEnable()
 
 	--[[ Mythic ]]--
 	self:Log("SPELL_AURA_APPLIED", "SargerasGaze", 257931, 257869) -- Fear, Rage
+	self:Log("SPELL_AURA_REMOVED", "SargerasGazeRemoved", 257931, 257869) -- Fear, Rage
 
 	-- Ground Effects
 	self:Log("SPELL_AURA_APPLIED", "GroundEffects", 248167, 257911) -- Death Fog, Unleashed Rage
@@ -732,6 +733,13 @@ function mod:SargerasGaze(args)
 		self:TargetMessage(258068, args.destName, "Personal", "Warning")
 		self:Say(258068, args.spellName)
 		self:Flash(258068)
+		self:ShowAura(258068, args.spellId == 257931 and "Pack" or "Move", { icon = self:SpellIcon(args.spellId) })
+	end
+end
+
+function mod:SargerasGazeRemoved(args)
+	if self:Me(args.destGUID) then
+		self:HideAura(258068)
 	end
 end
 
