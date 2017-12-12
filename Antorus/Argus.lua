@@ -733,7 +733,7 @@ function mod:SargerasGaze(args)
 		self:TargetMessage(258068, args.destName, "Personal")
 		self:Say(258068, args.spellName)
 		self:Flash(258068)
-		self:ShowAura(258068, args.spellId == 257931 and "Pack" or "Move", { icon = self:SpellIcon(args.spellId) })
+		self:ShowAura(258068, args.spellId == 257931 and "Pack" or "Move", { icon = self:SpellIcon(args.spellId), pulse = false })
 	end
 end
 
