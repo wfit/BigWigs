@@ -353,7 +353,7 @@ do
 	function mod:GiftoftheSea(args)
 		if self:Me(args.destGUID) then
 			--self:Say(255594, args.spellName)
-			self:ShowAura(255594, 5, "Sea", true)
+			self:ShowAura(255594, 5, "Haste/Versa", true)
 		end
 		if self:GetOption(skyAndSeaMarker) then
 			SetRaidTarget(args.destName, 1)
@@ -366,7 +366,7 @@ do
 	function mod:GiftoftheSky(args)
 		if self:Me(args.destGUID) then
 			--self:Say(255594, args.spellName)
-			self:ShowAura(255594, 5, "Sky", true)
+			self:ShowAura(255594, 5, "Crit/Mastery", true)
 		end
 		if self:GetOption(skyAndSeaMarker) then
 			SetRaidTarget(args.destName, 3)
