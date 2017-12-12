@@ -242,7 +242,7 @@ end
 
 function mod:CHAT_MSG_RAID_BOSS_EMOTE(_, msg)
 	if msg:find("258068", nil, true) then -- Sargeras' Gaze
-		self:Message(258068, "Urgent", nil)
+		self:Message(258068, "Urgent", "Warning")
 		self:Bar(258068, stage == 2 and 60.5 or 35.1)
 	end
 end
@@ -730,7 +730,7 @@ end
 
 function mod:SargerasGaze(args)
 	if self:Me(args.destGUID) then
-		self:TargetMessage(258068, args.destName, "Personal", "Warning")
+		self:TargetMessage(258068, args.destName, "Personal")
 		self:Say(258068, args.spellName)
 		self:Flash(258068)
 		self:ShowAura(258068, args.spellId == 257931 and "Pack" or "Move", { icon = self:SpellIcon(args.spellId) })
