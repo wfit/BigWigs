@@ -56,10 +56,6 @@ function mod:GetOptions()
 		--[[ General ]]--
 		{244050, "AURA"}, -- Destroyer's Boon
 		251356, -- Focusing Power
-
-		--[[ Mythic ]]--
-		{244054, "AURA"}, -- Flametouched
-		{244055, "AURA"}, -- Shadowtouched
 	},{
 		[251445] = -15842, -- F'harg
 		[245098] = -15836, -- Shatug
@@ -98,9 +94,6 @@ function mod:OnBossEnable()
 	self:Log("SPELL_AURA_APPLIED", "SargerasBlessing", 246057) -- Destroyer's Boon buff
 	self:Log("SPELL_AURA_REMOVED", "SargerasBlessingRemoved", 246057) -- Destroyer's Boon buff
 	self:Log("SPELL_AURA_APPLIED", "FocusingPower", 251356)
-
-	--[[ Mythic ]]--
-	self:Log("SPELL_AURA_APPLIED", "Touched", 244054, 244055)
 end
 
 function mod:OnEngage()
@@ -342,12 +335,5 @@ do
 			self:Message(args.spellId, "Neutral", "Info")
 			self:Bar(args.spellId, 15)
 		end
-	end
-end
-
---[[ Mythic ]]--
-function mod:Touched(args)
-	if self:Me(args.destGUID) then
-		self:Message(args.spellId, args.spellId == 244054 and "Important" or "Personal", "Warning", CL.you:format(args.spellName)) -- Important for Flame, Personal for Shadow
 	end
 end
