@@ -58,8 +58,8 @@ function mod:GetOptions()
 		251356, -- Focusing Power
 
 		--[[ Mythic ]]--
-		244054, -- Flametouched
-		244055, -- Shadowtouched
+		{244054, "AURA"}, -- Flametouched
+		{244055, "AURA"}, -- Shadowtouched
 	},{
 		[251445] = -15842, -- F'harg
 		[245098] = -15836, -- Shatug
