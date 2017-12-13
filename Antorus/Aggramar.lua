@@ -17,36 +17,34 @@ local Hud = Oken.Hud
 local stage = 1
 local wakeOfFlameCount = 1
 local techniqueStarted = 0
-local techniqueCount = 1
 local comboTime = nil
 local foeBreakerCount = 1
 local flameRendCount = 1
 local searingTempestCount = 1
 local nextIntermissionSoonWarning = 0
+local techniqueCount = 0
+local lastAbilityUsed = nil
 
 local mobCollector = {}
 local energyChecked = {}
 local wroughtInFlameStarted = false
-local combo = {}
 
-local comboRota = {
-	[1] = {
-		"Rogues CoS",
-		"Backup",
-	},
-	[2] = {
-		"Rogues CoS",
-		"Immunes",
-		"Rogues Cos",
-		"Raid",
-	},
-	[3] = {
-		"Rogues CoS",
-		"Rogues Cheat Death",
-		"Rogues Cos",
-		"Suicide",
-	},
-}
+--------------------------------------------------------------------------------
+-- Localization
+--
+
+local L = mod:GetLocale()
+if L then
+	L.cast_text = "|cff00ff00%.1fs"
+	L.wave_cleared = "Wave %d Cleared!"
+
+	L.track_ember = "Ember of Taeshalach Tracker"
+	L.track_ember_desc = "Display messages for each Ember of Taeshalach death."
+	L.track_ember_icon = 245911 -- Wrought in Flame icon
+
+	L.custom_off_ember_marker = CL.marker:format(mod:SpellName(-15903))
+	L.custom_off_ember_marker_desc = "Mark Ember of Taeshalach with {rt1}{rt2}{rt3}{rt4}{rt5}, requires promoted or leader.\n|cff33ff99This will only mark adds in the current wave and above 45 energy.|r"
+end
 
 --------------------------------------------------------------------------------
 -- Initialization
@@ -85,7 +83,7 @@ function mod:GetOptions()
 		{255061, "IMPACT"} -- Empowered Searing Tempest
 	},{
 		["stages"] = "general",
-		[245990] = -15794, -- Stage One: wrath of Aggramar
+		[245990] = -15794, -- Stage One: Wrath of Aggramar
 		[245983] = -15858, -- Stage Two: Champion of Sargeras
 		[246037] = -15860, -- Stage Three: The Avenger
 		[254452] = "mythic",
@@ -100,15 +98,18 @@ function mod:OnBossEnable()
 	self:Log("SPELL_AURA_APPLIED_DOSE", "TaeshalachsReach", 245990)
 	self:Log("SPELL_AURA_APPLIED", "ScorchingBlaze", 245994)
 	self:Log("SPELL_CAST_START", "WakeofFlame", 244693)
-	self:Log("SPELL_CAST_START", "FoeBreaker", 245458, 255059) -- Normal, Empowered
+	self:Log("SPELL_CAST_START", "FoeBreaker", 245458, 255059)
+	self:Log("SPELL_CAST_SUCCESS", "FoeBreakerSuccess", 245458, 255059)
 	self:Log("SPELL_CAST_START", "FlameRend", 245463, 255058) -- Normal, Empowered
+	self:Log("SPELL_CAST_SUCCESS", "FlameRendSuccess", 245463, 255058)
 	self:Log("SPELL_CAST_START", "SearingTempest", 245301, 255061) -- Normal, Empowered
+	self:Log("SPELL_CAST_SUCCESS", "SearingTempestSuccess", 245301, 255061)
 
 	--[[ Intermission: Fires of Taeshalach ]]--
 	self:Log("SPELL_AURA_APPLIED", "CorruptAegis", 244894)
 	self:Log("SPELL_AURA_REMOVED", "CorruptAegisRemoved", 244894)
-	self:Log("SPELL_AURA_APPLIED", "BlazingEruption", 244912)
-	self:Log("SPELL_AURA_APPLIED_DOSE", "BlazingEruption", 244912)
+	self:Log("SPELL_AURA_APPLIED", "BlazingEruptionApplied", 244912)
+	self:Log("SPELL_AURA_APPLIED_DOSE", "BlazingEruptionApplied", 244912)
 	self:Log("SPELL_AURA_REMOVED", "BlazingEruptionRemoved", 244912)
 
 	--[[ Mythic ]]--
@@ -121,10 +122,12 @@ function mod:OnEngage()
 	stage = 1
 	wakeOfFlameCount = 1
 	techniqueStarted = 0
-	techniqueCount = 1
 	comboTime = GetTime() + 35
 	foeBreakerCount = 1
 	flameRendCount = 1
+
+	techniqueCount = 0
+	lastAbilityUsed = nil
 
 	if self:Mythic() then
 		self:Bar(254452, 4.8) -- Ravenous Blaze
@@ -137,37 +140,6 @@ function mod:OnEngage()
 
 	nextIntermissionSoonWarning = 82 -- happens at 80%
 	self:RegisterUnitEvent("UNIT_HEALTH_FREQUENT", nil, "boss1")
-
-	if self:Mythic() then
-		self:OpenInfo(244688)
-		self:UpdateInfoBox()
-	end
-end
-
-local function numerate(i, text)
-	return i .. ". " .. text
-end
-
-function mod:UpdateInfoBox()
-	if techniqueStarted == 1 then
-		self:SetInfoTitle(244688, comboRota[stage][techniqueCount] or "?")
-		for i = 1, 5 do
-			self:SetInfo(244688, i * 2 - 1, combo[i] and numerate(i, combo[i][1]) or "")
-			self:SetInfo(244688, i * 2, combo[i] and combo[i][2] or "")
-			self:SetInfoBar(244688, i * 2 - 1, 0)
-		end
-		if #combo > 0 then
-			self:SetInfoBar(244688, #combo * 2, 1)
-		end
-	else
-		self:SetInfoTitle(244688, self:SpellName(244688))
-		for i = 1, 5 do
-			self:SetInfo(244688, i * 2 - 1, comboRota[stage][i] and numerate(i, comboRota[stage][i]) or "")
-			self:SetInfo(244688, i * 2, "")
-			self:SetInfoBar(244688, i * 2 - 1, 0)
-		end
-		self:SetInfoBar(244688, techniqueCount * 2, 1)
-	end
 end
 
 --------------------------------------------------------------------------------
@@ -185,27 +157,51 @@ function mod:UNIT_HEALTH_FREQUENT(unit)
 	end
 end
 
+function mod:BlazingEruptionApplied(args)
+	if self:Me(args.destGUID) then
+		local amount = args.amount or 1
+		self:StackMessage(args.spellId, args.destName, amount, "Attention", "Alert")
+		self:ShowAura(args.spellId, 15, { stacks = amount, countdown = false, pulse = amount > 1 })
+	end
+end
+
+function mod:BlazingEruptionRemoved(args)
+	if self:Me(args.destGUID) then
+		self:HideAura(args.spellId)
+	end
+end
+
 function mod:UNIT_SPELLCAST_SUCCEEDED(_, _, _, _, spellId)
 	if spellId == 244688 then -- Taeshalach Technique
 		techniqueStarted = 1
+		techniqueCount = 0
 		foeBreakerCount = 1
 		flameRendCount = 1
 		searingTempestCount = 1
+		lastAbilityUsed = nil
 		comboTime = GetTime() + 60.8
-		wipe(combo)
 
 		self:Bar(spellId, 60.8)
 		self:ShowAura(244688, { pin = -1, pulse = false })
-		self:Emit("ARGUS_TAESHALACH_STARTS")
-		self:UpdateInfoBox()
 		if not self:Mythic() then -- Random Combo in Mythic
 			self:Bar(245463, 4, CL.count:format(self:SpellName(244033), flameRendCount)) -- Flame Rend
 			self:Bar(245301, 15.7) -- Searing Tempest
+
+			-- Combo List in infobox
+			self:OpenInfo(244688, self:SpellName(244688)) -- Taeshalach Technique
+			self:SetInfo(244688, 1, "|cff00ff00>>")
+			self:SetInfo(244688, 2, "|cff00fff9"..self:SpellName(245458)) -- Foe Breaker
+			self:SetInfo(244688, 4, "|cffffff00"..self:SpellName(245463)) -- Flame Rend
+			self:SetInfo(244688, 6, "|cff00fff9"..self:SpellName(245458)) -- Foe Breaker
+			self:SetInfo(244688, 8, "|cffffff00"..self:SpellName(245463)) -- Flame Rend
+			self:SetInfo(244688, 10, "|cffffff00"..self:SpellName(245301)) -- Searing Tempest
+
+		else -- Use infobox to display the technique in mythic
+			self:OpenInfo(244688, self:SpellName(244688)) -- Taeshalach Technique
 		end
 	elseif spellId == 244792 then -- Burning Will of Taeshalach, end of Taeshalach Technique but also casted in intermission
 		if techniqueStarted == 1 then -- Check if he actually ends the combo, instead of being in intermission
 			techniqueStarted = 0
-			techniqueCount = techniqueCount + 1
 			self:HideAura(244688)
 			if self:Mythic() then
 				self:Bar(254452, stage == 1 and 4 or 21.3) -- Ravenous Blaze
@@ -219,7 +215,7 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(_, _, _, _, spellId)
 			elseif stage == 3 then
 				self:Bar(246037, self:Mythic() and 7.7 or 9)
 			end
-			self:UpdateInfoBox()
+			self:CloseInfo(244688)
 		end
 	elseif spellId == 245983 then -- Flare
 		self:Message(spellId, "Important", "Warning")
@@ -227,7 +223,6 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(_, _, _, _, spellId)
 			self:Bar(spellId, 15.8)
 		end
 	elseif spellId == 246037 then -- Empowered Flare
-		self:Message(spellId, "Important", "Warning")
 		if comboTime > GetTime() + 16.2 and not self:Mythic() then
 			self:Bar(spellId, 16.2) -- Assume mythic CD
 		end
@@ -287,41 +282,142 @@ do
 	end
 end
 
-function mod:FoeBreaker(args)
-	self:Message(args.spellId, "Neutral", "Info", CL.count:format(args.spellName, foeBreakerCount))
-	self:ShowAura(244688, "Tank", { icon = args.spellIcon, stacks = "#" .. foeBreakerCount })
-	combo[#combo + 1] = { ("|T%d:0|t Foe Breaker"):format(args.spellIcon), "Tank" }
-	foeBreakerCount = foeBreakerCount + 1
-	if foeBreakerCount == 2 and not self:Mythic() then -- Random Combo in Mythic
-		self:Bar(args.spellId, 7.5, CL.count:format(args.spellName, foeBreakerCount))
-	end
-	self:UpdateInfoBox()
-end
+do
+	local timer, castOver = nil, 0
 
-function mod:FlameRend(args)
-	self:Message(args.spellId, "Important", "Alarm", CL.count:format(args.spellName, flameRendCount))
-	self:ShowAura(244688, "Raid", { icon = args.spellIcon, stacks = "#" .. flameRendCount })
-	combo[#combo + 1] = { ("|T%d:0|t Flame Rend"):format(args.spellIcon), "Raid" }
-	flameRendCount = flameRendCount + 1
-	if flameRendCount == 2 and not self:Mythic() then -- Random Combo in Mythic
-		self:Bar(args.spellId, 7.5, CL.count:format(args.spellName, flameRendCount))
+	local function updateInfoBox(self)
+		local castTimeLeft = castOver - GetTime()
+		if castTimeLeft > 0 then
+			self:SetInfo(244688, techniqueCount == 1 and 1 or (techniqueCount*2)-1, L.cast_text:format(castTimeLeft))
+		end
 	end
-	self:UpdateInfoBox()
-end
 
-function mod:SearingTempest(args)
-	self:ShowAura(244688, "AoE", { icon = args.spellIcon, stacks = "#" .. searingTempestCount })
-	self:Message(args.spellId, "Urgent", "Warning")
-	self:ImpactBar(args.spellId, 6)
-	combo[#combo + 1] = { ("|T%d:0|t S. Tempest"):format(args.spellIcon), "AoE" }
-	searingTempestCount = searingTempestCount + 1
-	self:UpdateInfoBox()
+	function mod:FoeBreaker(args)
+		self:Message(245458, "Attention", "Alert", CL.count:format(args.spellName, foeBreakerCount))
+		self:ShowAura(244688, "Tank", { icon = args.spellIcon, stacks = "#" .. foeBreakerCount })
+		foeBreakerCount = foeBreakerCount + 1
+		techniqueCount = techniqueCount + 1
+		castOver = GetTime() + 2.75
+		timer = self:ScheduleRepeatingTimer(updateInfoBox, 0.1, self)
+		if foeBreakerCount == 2 and not self:Mythic() then -- Random Combo in Mythic
+			self:Bar(args.spellId, 7.5, CL.count:format(args.spellName, foeBreakerCount))
+		else -- Mythic
+			if techniqueCount == 2 then -- Build remaining list
+				self:SetInfo(244688, 1, "")
+				self:SetInfo(244688, 2, "|cffff0000" .. self:SpellName(245463)) -- Flame Rend
+				self:SetInfo(244688, 3, "|cff00ff00>>")
+				self:SetInfo(244688, 4, "|cff00fff9" .. self:SpellName(245458)) -- Foe Breaker
+				self:SetInfo(244688, 6, "|cff00fff9" .. self:SpellName(245458)) -- Foe Breaker
+				self:SetInfo(244688, 8, "|cffffff00" .. self:SpellName(245301)) -- Searing Tempest
+				self:SetInfo(244688, 10, "|cffffff00" .. self:SpellName(245463)) -- Flame Rend
+			end
+		end
+
+		if lastAbilityUsed then
+			self:SetInfo(244688, (techniqueCount * 2) - 3, "")
+			self:SetInfo(244688, (techniqueCount * 2) - 2, "|cffff0000" .. lastAbilityUsed)
+		end
+		self:SetInfo(244688, techniqueCount * 2, "|cff00ff00" .. self:SpellName(245458) .. "") -- Foe Breaker
+		lastAbilityUsed = self:SpellName(245458)
+	end
+
+	function mod:FoeBreakerSuccess()
+		self:SetInfo(244688, (techniqueCount*2)-1, "")
+		self:SetInfo(244688, (techniqueCount*2), "|cffff0000"..self:SpellName(245458))
+		self:SetInfo(244688, (techniqueCount*2)+1, "|cff00ff00>>")
+		self:CancelTimer(timer)
+		timer = nil
+	end
+
+	function mod:FlameRend(args)
+		self:Message(args.spellId, "Important", "Alarm", CL.count:format(args.spellName, flameRendCount))
+		self:ShowAura(244688, "Raid", { icon = args.spellIcon, stacks = "#" .. flameRendCount })
+		flameRendCount = flameRendCount + 1
+		techniqueCount = techniqueCount + 1
+		castOver = GetTime() + 2.75
+		timer = self:ScheduleRepeatingTimer(updateInfoBox, 0.1, self)
+		if flameRendCount == 2 and not self:Mythic() then -- Random Combo in Mythic
+			self:Bar(args.spellId, 7.5, CL.count:format(args.spellName, flameRendCount))
+		else -- Mythic
+			if techniqueCount == 2 then -- Build remaining list
+				self:SetInfo(244688, 1, "")
+				self:SetInfo(244688, 2, "|cffff0000"..self:SpellName(245458)) -- Foe Breaker
+				self:SetInfo(244688, 3, "|cff00ff00>>")
+				self:SetInfo(244688, 4, "|cff00ff00"..self:SpellName(245463)) -- Flame Rend
+				self:SetInfo(244688, 6, "|cffffff00"..self:SpellName(245301)) -- Searing Tempest
+				self:SetInfo(244688, 8, "|cff00fff9"..self:SpellName(245458)) -- Foe Breaker
+				self:SetInfo(244688, 10, "|cffffff00"..self:SpellName(245463)) -- Flame Rend
+			end
+		end
+		if lastAbilityUsed then
+			self:SetInfo(244688, (techniqueCount*2)-3, "")
+			self:SetInfo(244688, (techniqueCount*2)-2, "|cffff0000"..lastAbilityUsed)
+		end
+		self:SetInfo(244688, (techniqueCount*2)-1, "|cff00ff00>>")
+		self:SetInfo(244688, techniqueCount*2, "|cff00ff00"..self:SpellName(245463)) -- Flame Rend
+		lastAbilityUsed = self:SpellName(245463)
+	end
+
+	function mod:FlameRendSuccess()
+		self:SetInfo(244688, (techniqueCount*2)-1, "")
+		self:SetInfo(244688, (techniqueCount*2), "|cffff0000"..self:SpellName(245463))
+		if techniqueCount < 5 then -- otherwise there is no more
+			self:SetInfo(244688, (techniqueCount*2)+1, "|cff00ff00>>")
+		end
+		self:CancelTimer(timer)
+		timer = nil
+	end
+
+	function mod:SearingTempest(args)
+		self:Message(args.spellId, "Urgent", "Warning")
+		self:ImpactBar(args.spellId, 6)
+		self:ShowAura(244688, "AoE", { icon = args.spellIcon, stacks = "#" .. searingTempestCount })
+		techniqueCount = techniqueCount + 1
+		castOver = GetTime() + 6
+		timer = self:ScheduleRepeatingTimer(updateInfoBox, 0.1, self)
+
+		if self:Mythic() then
+			if techniqueCount == 2 and flameRendCount == 2 then -- Build remaining list
+				self:SetInfo(244688, 1, "")
+				self:SetInfo(244688, 2, "|cffff0000"..self:SpellName(245463)) -- Flame Rend
+				self:SetInfo(244688, 3, "|cff00ff00>>")
+				self:SetInfo(244688, 4, "|cff00ff00"..self:SpellName(245301)) -- Searing Tempest
+				self:SetInfo(244688, 6, "|cff00fff9"..self:SpellName(245458)) -- Foe Breaker
+				self:SetInfo(244688, 8, "|cff00fff9"..self:SpellName(245458)) -- Foe Breaker
+				self:SetInfo(244688, 10, "|cffffff00"..self:SpellName(245463)) -- Flame Rend
+			elseif techniqueCount == 2 and foeBreakerCount == 2 then
+				self:SetInfo(244688, 1, "")
+				self:SetInfo(244688, 2, "|cffff0000"..self:SpellName(245458)) -- Foe Breaker
+				self:SetInfo(244688, 3, "|cff00ff00>>")
+				self:SetInfo(244688, 4, "|cff00ff00"..self:SpellName(245301)) -- Searing Tempest
+				self:SetInfo(244688, 6, "|cffffff00"..self:SpellName(245463)) -- Flame Rend
+				self:SetInfo(244688, 8, "|cff00fff9"..self:SpellName(245458)) -- Foe Breaker
+				self:SetInfo(244688, 10, "|cffffff00"..self:SpellName(245463)) -- Flame Rend
+			end
+		end
+		if lastAbilityUsed then
+			self:SetInfo(244688, (techniqueCount*2)-3, "")
+			self:SetInfo(244688, (techniqueCount*2)-2, "|cffff0000"..lastAbilityUsed)
+		end
+		self:SetInfo(244688, (techniqueCount*2)-1, "|cff00ff00>>")
+		self:SetInfo(244688, techniqueCount*2, "|cff00ff00"..self:SpellName(245301)) -- Searing Tempest
+		lastAbilityUsed = self:SpellName(245301)
+	end
+
+	function mod:SearingTempestSuccess(args)
+		self:SetInfo(244688, (techniqueCount*2)-1, "")
+		self:SetInfo(244688, (techniqueCount*2), "|cffff0000"..args.spellName)
+		if techniqueCount < 5 then -- otherwise there is no more
+			self:SetInfo(244688, (techniqueCount*2)+1, "|cff00ff00>>")
+		end
+		self:CancelTimer(timer)
+		timer = nil
+	end
 end
 
 --[[ Intermission: Fires of Taeshalach ]]--
 function mod:CorruptAegis()
 	techniqueStarted = 0 -- End current technique
-	techniqueCount = 1
 	self:CloseInfo(244688)
 	self:HideAura(244688) -- Taeshalach Technique
 	self:Message("stages", "Neutral", "Long", CL.intermission, false)
@@ -332,6 +428,7 @@ function mod:CorruptAegis()
 	self:StopBar(245463, CL.count:format(self:SpellName(245463), flameRendCount)) -- Flame Rend
 	self:StopBar(245301) -- Searing Tempest
 	self:StopBar(245983) -- Flare
+
 	if self:GetOption(ember_hud) then
 		wroughtInFlameStarted = false
 		wipe(mobCollector)
@@ -427,23 +524,6 @@ function mod:CorruptAegisRemoved()
 		self:Bar(245983, self:Mythic() and 8.4 or 10.5) -- Flare
 	elseif stage == 3 then
 		self:Bar(246037, self:Mythic() and 8.4 or 10) -- Empowered Flare
-	end
-
-	self:OpenInfo(244688)
-	self:UpdateInfoBox()
-end
-
-function mod:BlazingEruption(args)
-	if self:Me(args.destGUID) then
-		local amount = args.amount or 1
-		self:StackMessage(args.spellId, args.destName, amount, "Attention", "Alert")
-		self:ShowAura(args.spellId, 15, { stacks = amount, countdown = false, pulse = amount > 1 })
-	end
-end
-
-function mod:BlazingEruptionRemoved(args)
-	if self:Me(args.destGUID) then
-		self:HideAura(args.spellId)
 	end
 end
 

@@ -43,12 +43,15 @@ function mod:GetOptions()
 		{243960, "TANK"}, -- Shadow Strike
 		243999, -- Dark Fissure
 		{244042, "SAY", "FLASH", "ICON", "AURA"}, -- Marked Prey
-		{244094, "SAY", "FLASH", "AURA", "HUD", "SMARTCOLOR"}, -- Necrotic Embrace
+		{244094, "SAY", "FLASH", "AURA", "HUD", "SMARTCOLOR", "PROXIMITY"}, -- Necrotic Embrace
 		necroticEmbraceMarker,
 		necroticEmbraceAI,
 		{243980, "AURA"}, -- Torment of Fel
 		-16350, -- Shadow of Varimathras
-		--{248732, "AURA"}, -- Echoes of Doom
+		{248732, "AURA"}, -- Echoes of Doom
+	},{
+		["stages"] = "general",
+		[-16350] = "mythic",
 	}
 end
 
@@ -62,6 +65,7 @@ function mod:OnBossEnable()
 	--[[ General ]]--
 	self:Log("SPELL_AURA_APPLIED", "Misery", 243961)
 	self:Log("SPELL_CAST_SUCCESS", "ShadowStrike", 243960, 257644) -- Heroic, Normal
+	self:Log("SPELL_CAST_START", "DarkFissureStart", 243999)
 	self:Log("SPELL_CAST_SUCCESS", "DarkFissure", 243999)
 	self:Log("SPELL_AURA_APPLIED", "MarkedPrey", 244042)
 	self:Log("SPELL_AURA_REMOVED", "MarkedPreyRemoved", 244042)
@@ -73,9 +77,9 @@ function mod:OnBossEnable()
 	self:Log("SPELL_PERIODIC_MISSED", "GroundEffectDamage", 244005) -- Dark Fissure
 
 	--[[ Mythic ]]--
-	--self:Log("SPELL_CAST_SUCCESS", "EchoesofDoom", 248732)
-	--self:Log("SPELL_AURA_APPLIED", "EchoesofDoomApplied", 248732)
-	--self:Log("SPELL_AURA_REMOVED", "EchoesofDoomRemoved", 248732)
+	self:Log("SPELL_CAST_SUCCESS", "EchoesofDoom", 248732)
+	self:Log("SPELL_AURA_APPLIED", "EchoesofDoomApplied", 248732)
+	self:Log("SPELL_AURA_REMOVED", "EchoesofDoomRemoved", 248732)
 
 	self:RegisterNetMessage("NecroticEmbraceSoaker")
 end
@@ -175,9 +179,13 @@ function mod:Misery(args)
 	end
 end
 
-function mod:ShadowStrike(args)
+function mod:ShadowStrike()
 	self:Message(243960, "Urgent", "Warning")
 	self:CDBar(243960, 9.8)
+end
+
+function mod:DarkFissureStart(args)
+	self:CDBar(243960, 5.3) -- Shadow Strike
 end
 
 function mod:DarkFissure(args)
@@ -207,15 +215,23 @@ function mod:MarkedPreyRemoved(args)
 	end
 end
 
-function mod:NecroticEmbraceSuccess()
-	self:CDBar(244094, 30.5)
-end
-
 do
-	local rangeCheck
-	local rangeObject
+	local rangeCheck, rangeObject
+	local playerList, scheduled, isOnMe, proxList = mod:NewTargetList(), nil, nil, {}
 
-	local playerList = mod:NewTargetList()
+	function mod:NecroticEmbraceSuccess()
+		self:CDBar(244094, 30.5)
+		wipe(proxList)
+	end
+
+	local function warn(self, spellId)
+		if not isOnMe then
+			self:TargetMessage(spellId, playerList, "Urgent")
+		else
+			wipe(playerList)
+		end
+		scheduled = nil
+	end
 
 	local function cooldownWillBeReady(unit, spell)
 		local cd = Cooldowns:GetCooldown(unit, spell)
@@ -259,10 +275,13 @@ do
 	function mod:NecroticEmbrace(args)
 		if #playerList >= 2 then return end -- Avoid spam if something goes wrong
 		local marker = (#playerList == 0 and 4 or 6)
+		playerList[#playerList+1] = args.destName
 		if self:Me(args.destGUID) then
-			self:Say(args.spellId)
-			self:Flash(args.spellId)
-			self:SayCountdown(args.spellId, 6)
+			self:TargetMessage(args.spellId, args.destName, "Urgent", "Warning", CL.count_icon:format(args.spellName, #playerList, marker))
+			self:Say(args.spellId, CL.count_rticon:format(args.spellName, #playerList, marker))
+			self:Flash(args.spellId, marker)
+			self:SayCountdown(args.spellId, 6, marker)
+			self:OpenProximity(args.spellId, 10)
 			self:ShowAura(args.spellId, 6, "Necro", { icon = marker, borderless = false }) -- { icon = 450908 }
 			self:SmartColorSet(args.spellId, 1, 0, 0)
 			if self:Hud(args.spellId) then
@@ -270,14 +289,21 @@ do
 				rangeCheck = self:ScheduleRepeatingTimer("CheckRange", 0.1, rangeObject)
 				self:CheckRange(rangeObject)
 			end
+			isOnMe = true
 		end
-		playerList[#playerList+1] = args.destName
-		if #playerList == 1 then
-			self:ScheduleTimer("TargetMessage", 0.3, args.spellId, playerList, "Urgent", "Warning")
+
+		proxList[#proxList+1] = args.destName
+		if not isOnMe then
+			self:OpenProximity(args.spellId, 10, proxList)
+		end
+
+		if not scheduled then
+			scheduled = self:ScheduleTimer(warn, 0.3, self, args.spellId)
 			if self:GetOption(necroticEmbraceAI) then
 				self:ScheduleTimer("SelectNecroticSoaker", 0.3, args.spellName)
 			end
 		end
+
 		if self:GetOption(necroticEmbraceMarker) then
 			SetRaidTarget(args.destName, marker)
 		end
@@ -285,7 +311,9 @@ do
 
 	function mod:NecroticEmbraceRemoved(args)
 		if self:Me(args.destGUID) then
+			isOnMe = nil
 			self:CancelSayCountdown(args.spellId)
+			self:CloseProximity(args.spellId)
 			self:HideAura(args.spellId)
 			self:SmartColorUnset(args.spellId)
 			if rangeObject then
@@ -294,8 +322,19 @@ do
 				rangeObject = nil
 			end
 		end
+
 		if self:GetOption(necroticEmbraceMarker) then
 			SetRaidTarget(args.destName, 0)
+		end
+
+		tDeleteItem(proxList, args.destName)
+
+		if not isOnMe then -- Don't change proximity if it's on you and expired on someone else
+			if #proxList == 0 then
+				self:CloseProximity(args.spellId)
+			else -- Update proximity
+				self:OpenProximity(args.spellId, 10, proxList)
+			end
 		end
 	end
 end
