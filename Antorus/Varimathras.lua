@@ -14,11 +14,11 @@ mod.instanceId = 1712
 --
 
 local Hud = Oken.Hud
-local Cooldowns = Oken.Cooldowns
 
 local tormentActive = 0 -- 1: Flames, 2: Frost, 3: Fel, 4: Shadows
 local mobCollector = {}
 local felTick = 0
+local necroticEmbraceCount = 0
 
 --------------------------------------------------------------------------------
 -- Localization
@@ -33,8 +33,7 @@ end
 -- Initialization
 --
 
-local necroticEmbraceMarker = mod:AddMarkerOption(true, "player", 4, 244094, 4, 6)
-local necroticEmbraceAI = mod:AddTokenOption { "necrotic", "Automatically select Necrotic Embrace soaker", promote = true }
+local necroticEmbraceMarker = mod:AddMarkerOption(true, "player", 7, 244094, 7, 3, 4, 6)
 function mod:GetOptions()
 	return {
 		"stages", -- Torment of Flames, Frost, Fel, Shadows
@@ -45,7 +44,6 @@ function mod:GetOptions()
 		{244042, "SAY", "FLASH", "ICON", "AURA"}, -- Marked Prey
 		{244094, "SAY", "FLASH", "AURA", "HUD", "SMARTCOLOR", "PROXIMITY"}, -- Necrotic Embrace
 		necroticEmbraceMarker,
-		necroticEmbraceAI,
 		{243980, "AURA"}, -- Torment of Fel
 		-16350, -- Shadow of Varimathras
 		{248732, "AURA"}, -- Echoes of Doom
@@ -80,12 +78,11 @@ function mod:OnBossEnable()
 	self:Log("SPELL_CAST_SUCCESS", "EchoesofDoom", 248732)
 	self:Log("SPELL_AURA_APPLIED", "EchoesofDoomApplied", 248732)
 	self:Log("SPELL_AURA_REMOVED", "EchoesofDoomRemoved", 248732)
-
-	self:RegisterNetMessage("NecroticEmbraceSoaker")
 end
 
 function mod:OnEngage()
 	tormentActive = 0
+	necroticEmbraceCount = 0
 	wipe(mobCollector)
 
 	self:CDBar("stages", 5, self:SpellName(243968), 243968) -- Torment of Flames
@@ -221,6 +218,7 @@ do
 
 	function mod:NecroticEmbraceSuccess()
 		self:CDBar(244094, 30.5)
+		necroticEmbraceCount = necroticEmbraceCount + 1
 		wipe(proxList)
 	end
 
@@ -233,48 +231,9 @@ do
 		scheduled = nil
 	end
 
-	local function cooldownWillBeReady(unit, spell)
-		local cd = Cooldowns:GetCooldown(unit, spell)
-		return cd and cd:Cooldown() < 6
-	end
-
-	function mod:SelectNecroticSoaker(spellName)
-		local soaker
-		for unit in self:IterateGroup() do
-			if not UnitDebuff(unit, spellName) then
-				local _, _, classId = UnitClass(unit)
-				if classId == 3 and cooldownWillBeReady(unit, 186265) then -- Hunter
-					soaker = unit
-					break
-				elseif classId == 4 and cooldownWillBeReady(unit, 31224) then -- Rogue
-					soaker = unit
-					break
-				end
-			end
-		end
-		if soaker then
-			self:Send("NecroticEmbraceSoaker", { soaker = UnitGUID(soaker), name = UnitName(soaker) })
-			SetRaidTarget(soaker, 1)
-		else
-			self:Send("NecroticEmbraceSoaker", {})
-		end
-	end
-
-	function mod:NecroticEmbraceSoaker(data)
-		if not data.soaker then
-			print("[VARIMATHRAS] NO SOAK FOUND, GOOD LUCK!")
-		else
-			print("[VARIMATHRAS] SOAKING BY: " .. data.name)
-			if self:Me(data.soaker) then
-				self:Say(244094, "Soaking")
-				self:ShowAura(244094, 6, "SOAK", true)
-			end
-		end
-	end
-
 	function mod:NecroticEmbrace(args)
 		if #playerList >= 2 then return end -- Avoid spam if something goes wrong
-		local marker = (#playerList == 0 and 4 or 6)
+		local marker = (necroticEmbraceCount % 2 == 1) and (#playerList == 0 and 7 or 3) or (#playerList == 0 and 4 or 6)
 		playerList[#playerList+1] = args.destName
 		if self:Me(args.destGUID) then
 			self:TargetMessage(args.spellId, args.destName, "Urgent", "Warning", CL.count_icon:format(args.spellName, #playerList, marker))
@@ -299,9 +258,6 @@ do
 
 		if not scheduled then
 			scheduled = self:ScheduleTimer(warn, 0.3, self, args.spellId)
-			if self:GetOption(necroticEmbraceAI) then
-				self:ScheduleTimer("SelectNecroticSoaker", 0.3, args.spellName)
-			end
 		end
 
 		if self:GetOption(necroticEmbraceMarker) then
