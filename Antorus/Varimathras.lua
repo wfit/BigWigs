@@ -227,6 +227,7 @@ do
 
 	function mod:NecroticEmbrace(args)
 		if #playerList >= 2 then return end -- Avoid spam if something goes wrong
+		if tContains(proxList, args.destName) then return end -- Don't annouce someone twice
 		local marker = (necroticEmbraceCount % 2 == 1) and (#playerList == 0 and 7 or 3) or (#playerList == 0 and 4 or 6)
 		playerList[#playerList+1] = args.destName
 		if self:Me(args.destGUID) then
