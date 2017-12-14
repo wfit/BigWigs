@@ -137,6 +137,9 @@ do
 	function mod:Decimation(args)
 		self:Bar(244410, (self:Mythic() or stage == 1) and 31.6 or 15.8) -- Decimation
 		self:ImpactBar(244410, args.spellId == 246919 and 7 or 10) -- 246919 = haywire (mythic)
+		if stage == 1 or self:Mythic() then
+			self:Bar(244761, 15.8) -- Annihilation
+		end
 		decimationCasted = GetTime()
 		isOnMe = nil
 		if not scheduled then
