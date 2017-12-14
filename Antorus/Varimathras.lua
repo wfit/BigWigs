@@ -46,7 +46,6 @@ function mod:GetOptions()
 		necroticEmbraceMarker,
 		{243980, "AURA"}, -- Torment of Fel
 		-16350, -- Shadow of Varimathras
-		{248732, "AURA"}, -- Echoes of Doom
 	},{
 		["stages"] = "general",
 		[-16350] = "mythic",
@@ -73,11 +72,6 @@ function mod:OnBossEnable()
 	self:Log("SPELL_AURA_APPLIED", "GroundEffectDamage", 244005) -- Dark Fissure
 	self:Log("SPELL_PERIODIC_DAMAGE", "GroundEffectDamage", 244005) -- Dark Fissure
 	self:Log("SPELL_PERIODIC_MISSED", "GroundEffectDamage", 244005) -- Dark Fissure
-
-	--[[ Mythic ]]--
-	self:Log("SPELL_CAST_SUCCESS", "EchoesofDoom", 248732)
-	self:Log("SPELL_AURA_APPLIED", "EchoesofDoomApplied", 248732)
-	self:Log("SPELL_AURA_REMOVED", "EchoesofDoomRemoved", 248732)
 end
 
 function mod:OnEngage()
@@ -302,53 +296,6 @@ do
 		if self:Me(args.destGUID) and t-prev > 1.5 then
 			prev = t
 			self:Message(243999, "Personal", "Alert", CL.underyou:format(args.spellName)) -- Dark Fissure
-		end
-	end
-end
-
---[[ Mythic ]]--
-do
-	local prev = 0
-	function mod:EchoesofDoom(args)
-		if not mobCollector[args.sourceGUID] then
-			mobCollector[args.sourceGUID] = true -- Only warn once per Shadow
-			local t = GetTime()
-			if t-prev > 1.5 then -- Also don't spam too much if it's a wipe and several are spawning at the same time
-				prev = t
-				self:Message(-16350, "Urgent", "Alarm", nil, L.shadowOfVarimathras_icon)
-			end
-		end
-	end
-end
-
-do
-	local rangeCheck
-	local rangeObject
-
-	function mod:EchoesofDoomApplied(args)
-		if self:Me(args.destGUID) then
-			self:Say(args.spellId)
-			self:Flash(args.spellId)
-			self:SayCountdown(args.spellId, 5)
-
-			self:ShowAura(args.spellId, 6, "Doom") -- { icon = 450906 }
-			if self:Hud(args.spellId) then
-				rangeObject = Hud:DrawSpinner("player", 50)
-				rangeCheck = self:ScheduleRepeatingTimer("CheckRange", 0.1, rangeObject)
-				self:CheckRange(rangeObject)
-			end
-		end
-	end
-
-	function mod:EchoesofDoomRemoved(args)
-		if self:Me(args.destGUID) then
-			self:CancelSayCountdown(args.spellId)
-			self:HideAura(args.spellId)
-			if rangeObject then
-				self:CancelTimer(rangeCheck)
-				rangeObject:Remove()
-				rangeObject = nil
-			end
 		end
 	end
 end
