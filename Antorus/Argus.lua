@@ -160,7 +160,7 @@ function mod:GetOptions()
 		--[[ Mythic ]]--
 		{258068, "SAY", "FLASH", "AURA"}, -- Sargeras' Gaze
 		257911, -- Unleased Rage
-		{257966, "FLASH"}, -- Sentence of Sargeras
+		{257966, "FLASH", "AURA"}, -- Sentence of Sargeras
 		258838, -- Soulrending Scythe
 	},{
 		["stages"] = "general",
@@ -229,6 +229,7 @@ function mod:OnBossEnable()
 	self:Log("SPELL_AURA_APPLIED", "SargerasGaze", 257931, 257869) -- Fear, Rage
 	self:Log("SPELL_AURA_REMOVED", "SargerasGazeRemoved", 257931, 257869) -- Fear, Rage
 	self:Log("SPELL_AURA_APPLIED", "SentenceofSargeras", 257966)
+	self:Log("SPELL_AURA_REMOVED", "SentenceofSargerasRemoved", 257966)
 	self:Log("SPELL_CAST_START", "SoulrendingScythe", 258838)
 	self:Log("SPELL_AURA_APPLIED", "SoulrendingScytheStack", 258838)
 	self:Log("SPELL_AURA_APPLIED_DOSE", "SoulrendingScytheStack", 258838)
@@ -797,10 +798,17 @@ do
 	function mod:SentenceofSargeras(args)
 		if self:Me(args.destGUID) then
 			self:Flash(args.spellId)
+			self:ShowAura(args.spellId, "Chain", { stack = "#" .. (#playerList + 1) })
 		end
 		playerList[#playerList+1] = args.destName
 		if #playerList == 1 then
 			self:ScheduleTimer("TargetMessage", 0.3, args.spellId, playerList, "Urgent", "Warning")
+		end
+	end
+
+	function mod:SentenceofSargerasRemoved(args)
+		if self:Me(args.destGUID) then
+			self:HideAura(args.spellId)
 		end
 	end
 end
