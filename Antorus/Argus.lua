@@ -208,7 +208,6 @@ function mod:OnBossEnable()
 	self:Log("SPELL_CAST_SUCCESS", "SkyandSea", 255594)
 	self:Log("SPELL_AURA_APPLIED", "GiftoftheSea", 258647)
 	self:Log("SPELL_AURA_APPLIED", "GiftoftheSky", 258646)
-	self:Log("SPELL_AURA_REMOVED", "GiftRemoved", 258647, 258646) -- Sea, Sky
 	self:Log("SPELL_AURA_APPLIED", "StrengthoftheSkyandSea", 253901, 253903) -- Strength of the Sea, Strength of the Sky
 	self:Log("SPELL_AURA_APPLIED_DOSE", "StrengthoftheSkyandSea", 253901, 253903) -- Strength of the Sea, Strength of the Sky
 
