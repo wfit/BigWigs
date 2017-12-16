@@ -68,9 +68,9 @@ local timersMythic = {
 		[248317] = {35.1, 24.4, 25.6, 26.4, 24, 24.4},
 		-- Cone of Death
 		[248165] = {},
-		-- Tortured Rage (Heroic)
+		-- Tortured Rage
 		[257296] = {},
-		-- Sweeping Scythe (Heroic)
+		-- Sweeping Scythe
 		[248499] = {},
 	},
 	[4] = {
@@ -437,7 +437,7 @@ end
 
 function mod:StrengthoftheSkyandSea(args)
 	if self:Me(args.destGUID) then
-		self:StopImpactBar(L.orbsDespawn)
+		--self:StopImpactBar(L.orbsDespawn)
 		local amount = args.amount or 1
 		self:Message(255594, "Positive", "Info", CL.stackyou:format(amount, args.spellName))
 	end
