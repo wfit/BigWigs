@@ -66,6 +66,12 @@ local timersMythic = {
 	[1] = {
 		-- Soul Blight Orb
 		[248317] = {35.1, 24.4, 25.6, 26.4, 24, 24.4},
+		-- Cone of Death
+		[248165] = {},
+		-- Tortured Rage (Heroic)
+		[257296] = {},
+		-- Sweeping Scythe (Heroic)
+		[248499] = {},
 	},
 	[4] = {
 		-- Tortured Rage
@@ -142,7 +148,7 @@ function mod:GetOptions()
 		"stages",
 		"berserk",
 		--[[ Stage 1 ]]--
-		248165, -- Cone of Death
+		{248165, "IMPACT"}, -- Cone of Death
 		248317, -- Soulblight Orb
 		{248396, "ME_ONLY", "SAY", "FLASH", "AURA"}, -- Soul Blight
 		248167, -- Death Fog
@@ -327,6 +333,7 @@ end
 --[[ Stage 1 ]]--
 function mod:ConeofDeath(args)
 	self:Message(args.spellId, "Urgent", "Warning", CL.casting:format(CL.count:format(args.spellName, coneOfDeathCounter)))
+	self:ImpactBar(args.spellId, 2.5)
 	coneOfDeathCounter = coneOfDeathCounter + 1
 	self:CDBar(args.spellId, self:Mythic() and 20.5 or self:Easy() and 24 or timers[stage][248165][coneOfDeathCounter], CL.count:format(args.spellName, coneOfDeathCounter)) -- normal: 24-26
 end
@@ -812,7 +819,7 @@ end
 function mod:SargerasFear(args)
 	if self:Me(args.destGUID) then
 		self:TargetMessage(258068, args.destName, "Personal", "Warning", args.spellName, args.spellId)
-		self:ShowAura(258068, "Fear", { icon = args.spellIcon, pulse = false })
+		self:ShowAura(258068, "Pack", { icon = args.spellIcon, pulse = false })
 	end
 end
 
