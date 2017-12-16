@@ -16,6 +16,8 @@ mod.respawnTime = 30
 -- Locals
 --
 
+local Hud = Oken.Hud
+
 local stage = 1
 local coneOfDeathCounter = 1
 local soulBlightOrbCounter = 1
@@ -183,9 +185,9 @@ function mod:GetOptions()
 		257214, -- Titanforging
 
 		--[[ Mythic ]]--
-		{258068, "SAY", "FLASH", "AURA"}, -- Sargeras' Gaze
+		{258068, "SAY", "FLASH", "AURA", "HUD"}, -- Sargeras' Gaze
 		257911, -- Unleased Rage
-		{257966, "FLASH", "AURA"}, -- Sentence of Sargeras
+		{257966, "FLASH", "AURA", "HUD"}, -- Sentence of Sargeras
 		258838, -- Soulrending Scythe
 		258834, -- Edge of Annihilation
 	},{
@@ -296,11 +298,40 @@ end
 -- Event Handlers
 --
 
-function mod:CHAT_MSG_RAID_BOSS_EMOTE(_, msg)
-	if msg:find("258068", nil, true) then -- Sargeras' Gaze
-		self:Message(258068, "Urgent", "Beware")
-		sargerasGazeCount = sargerasGazeCount + 1
-		self:Bar(258068, stage == 4 and timers[stage][258068][sargerasGazeCount] or stage == 2 and 60.5 or 35.1, CL.count:format(self:SpellName(258068), sargerasGazeCount))
+function mod:CheckRange(object, range)
+	local inRange = 0
+	for unit in mod:IterateGroup() do
+		if not UnitIsUnit(unit, "player") and not UnitIsDead(unit) and self:Range(unit) <= range then
+			object:SetColor(1, 0.2, 0.2)
+			return
+		end
+	end
+	object:SetColor(0.2, 1, 0.2)
+end
+
+do
+	local rangeCheck, rangeObject
+
+	function mod:ClearSargerasHud()
+		if rangeObject then
+			self:CancelTimer(rangeCheck)
+			rangeObject:Remove()
+			rangeObject = nil
+		end
+	end
+
+	function mod:CHAT_MSG_RAID_BOSS_EMOTE(_, msg)
+		if msg:find("258068", nil, true) then -- Sargeras' Gaze
+			self:Message(258068, "Urgent", "Beware")
+			if self:Hud(258068) and (self:Melee() or sargerasGazeCount > 1) then
+				rangeObject = Hud:DrawSpinner("player", 50)
+				rangeCheck = self:ScheduleRepeatingTimer("CheckRange", 0.1, rangeObject, 5)
+				self:CheckRange(rangeObject, 10)
+				self:ScheduleTimer("ClearSargerasHud", 3)
+			end
+			sargerasGazeCount = sargerasGazeCount + 1
+			self:Bar(258068, stage == 4 and timers[stage][258068][sargerasGazeCount] or stage == 2 and 60.5 or 35.1, CL.count:format(self:SpellName(258068), sargerasGazeCount))
+		end
 	end
 end
 
