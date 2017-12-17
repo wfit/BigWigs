@@ -576,7 +576,7 @@ function mod:GolgannethsWrath()
 end
 
 do
-	local rangeCheck, rangeObject, lastText
+	local rangeCheck, rangeObject, rangeLabel, lastText
 	local burstList, bombName, isOnMe, scheduled = {}, nil, nil, nil
 
 	local function getPlayerIcon(unit)
@@ -643,6 +643,7 @@ do
 		if rangeObject then
 			self:CancelTimer(rangeCheck)
 			rangeObject:Remove()
+			rangeLabel:Remove()
 			rangeObject = nil
 			lastText = nil
 		end
@@ -651,8 +652,8 @@ do
 	function mod:ShowBombHud(text, safeRange)
 		if self:Hud(250669) then
 			rangeObject = Hud:DrawTimer("player", 50, self:Mythic() and 12 or 15)
-			local label = Hud:DrawText("player", text)
-			rangeCheck = self:ScheduleRepeatingTimer("CheckBombRange", 0.1, rangeObject, label, text, safeRange)
+			rangeLabel = Hud:DrawText("player", text)
+			rangeCheck = self:ScheduleRepeatingTimer("CheckBombRange", 0.1, rangeObject, rangeLabel, text, safeRange)
 		end
 	end
 
