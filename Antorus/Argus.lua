@@ -447,7 +447,12 @@ function mod:SoulBlight(args)
 		self:Flash(args.spellId)
 		self:TargetBar(args.spellId, 8, args.destName)
 		self:SayCountdown(args.spellId, 8)
-		self:ShowAura(args.spellId, 8, "CASSE-TOI", true, { glow = true, pin = -1 })
+		local nextCone, text = self:BarTimeLeft(CL.count:format(self:SpellName(248165), coneOfDeathCounter)), "CASSE-TOI"
+		if nextCone then
+			local delta = nextCone - 8
+			text = delta > 0 and ("Après |cff00ff00+" .. delta) or ("Avant |cffff0000" .. delta)
+		end
+		self:ShowAura(args.spellId, 8, text, true, { glow = true, pin = -1 })
 		checkForFearHelp(self)
 	end
 end
