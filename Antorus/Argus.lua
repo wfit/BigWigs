@@ -662,12 +662,13 @@ do
 			local icon = #burstList == 1 and 3 or 7
 			self:SayCountdown(args.spellId, self:Mythic() and 12 or 15, icon)
 			isOnMe = "burst"
+			local iconString = "{rt" .. icon .. "}"
 			if #burstList == 1 then
-				self:ShowAura(args.spellId, self:Mythic() and 12 or 15, "Gauche", { icon = 450906 }, true)
-				self:ShowBombHud("Gauche", 25)
+				self:ShowAura(args.spellId, self:Mythic() and 12 or 15, "Gauche " .. iconString, { icon = 450906 }, true)
+				self:ShowBombHud("Gauche", 30)
 			else
-				self:ShowAura(args.spellId, self:Mythic() and 12 or 15, "Droite", { icon = 450908 }, true)
-				self:ShowBombHud("Droite", 25)
+				self:ShowAura(args.spellId, self:Mythic() and 12 or 15, "Droite " .. iconString, { icon = 450908 }, true)
+				self:ShowBombHud("Droite", 30)
 			end
 			if not checkForFearHelp(self, #burstList == 1 and 3 or 7) then
 				self:Say(args.spellId, CL.count_rticon:format(args.spellName, #burstList, icon))
@@ -700,7 +701,7 @@ do
 	function mod:Soulbomb(args)
 		if self:Me(args.destGUID) then
 			self:SayCountdown(args.spellId, self:Mythic() and 12 or 15, 6)
-			self:ShowAura(args.spellId, self:Mythic() and 12 or 15, "Derrière", { icon = 450905 }, true)
+			self:ShowAura(args.spellId, self:Mythic() and 12 or 15, "Derrière {rt6}", { icon = 450905 }, true)
 			self:ShowBombHud("Derrière", 45)
 			isOnMe = "bomb"
 			if not checkForFearHelp(self, 6) then
