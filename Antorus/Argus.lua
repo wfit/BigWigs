@@ -172,7 +172,7 @@ function mod:GetOptions()
 		skyAndSeaMarker,
 
 		--[[ Stage 2 ]]--
-		{250669, "SAY", "AURA", "IMPACT"}, -- Soulburst
+		{250669, "SAY", "AURA", "IMPACT", "HUD"}, -- Soulburst
 		burstMarker,
 		{251570, "SAY", "AURA"}, -- Soulbomb
 		bombMarker,
@@ -337,7 +337,6 @@ do
 end
 
 function mod:CheckRange(object, range)
-	local inRange = 0
 	for unit in mod:IterateGroup() do
 		if not UnitIsUnit(unit, "player") and not UnitIsDead(unit) and self:Range(unit) <= range then
 			object:SetColor(1, 0.2, 0.2)
@@ -366,7 +365,7 @@ do
 			nextGaze = GetTime() + timer
 			self:Message(258068, "Urgent", shouldAlert and "Beware")
 			if self:Hud(258068) and shouldAlert then
-				rangeObject = Hud:DrawSpinner("player", 50)
+				rangeObject = Hud:DrawSpinner("player", 60)
 				rangeCheck = self:ScheduleRepeatingTimer("CheckRange", 0.1, rangeObject, 5)
 				self:CheckRange(rangeObject, 5)
 				self:ScheduleTimer("ClearSargerasHud", 3)
@@ -450,7 +449,11 @@ function mod:SoulBlight(args)
 		local nextCone, text = self:BarTimeLeft(CL.count:format(self:SpellName(248165), coneOfDeathCounter)), "CASSE-TOI"
 		if nextCone then
 			local delta = nextCone - 8
-			text = delta > 0 and ("Après |cff00ff00+" .. delta) or ("Avant |cffff0000" .. delta)
+			if 0 <= delta and delta <= 2.5 then
+				text = "Pendant"
+			else
+				text = delta > 0 and ("Après |cff00ff00+" .. math.floor(delta)) or ("Avant |cffff0000" .. math.ceil(delta))
+			end
 		end
 		self:ShowAura(args.spellId, 8, text, true, { glow = true, pin = -1 })
 		checkForFearHelp(self)
@@ -573,6 +576,7 @@ function mod:GolgannethsWrath()
 end
 
 do
+	local rangeCheck, rangeObject, lastText
 	local burstList, bombName, isOnMe, scheduled = {}, nil, nil, nil
 
 	local function getPlayerIcon(unit)
@@ -612,6 +616,46 @@ do
 		isOnMe = nil
 	end
 
+	function mod:CheckBombRange(object, label, text, safeRange)
+		local closest, distance = nil, 1000
+		for unit in mod:IterateGroup() do
+			if not UnitIsUnit(unit, "player") and not UnitIsDead(unit) and not self:Tank(unit) then
+				local range = self:Range(unit)
+				if range < distance then
+					closest = UnitName(unit)
+					distance = range
+				end
+			end
+		end
+		local string = closest and (text .. "\n" .. closest .. "\n" .. distance .. "yd") or text
+		if string ~= lastText then
+			lastText = string
+			label:SetText(string)
+		end
+		if distance > safeRange then
+			object:SetColor(0.2, 1, 0.2)
+		else
+			object:SetColor(1, 0.2, 0.2)
+		end
+	end
+
+	function mod:ClearBombHud()
+		if rangeObject then
+			self:CancelTimer(rangeCheck)
+			rangeObject:Remove()
+			rangeObject = nil
+			lastText = nil
+		end
+	end
+
+	function mod:ShowBombHud(text, safeRange)
+		if self:Hud(250669) then
+			rangeObject = Hud:DrawTimer("player", 50, self:Mythic() and 12 or 15)
+			local label = Hud:DrawText("player", text)
+			rangeCheck = self:ScheduleRepeatingTimer("CheckBombRange", 0.1, rangeObject, label, text, safeRange)
+		end
+	end
+
 	function mod:Soulburst(args)
 		burstList[#burstList+1] = args.destName
 		if self:Me(args.destGUID) then
@@ -620,8 +664,10 @@ do
 			isOnMe = "burst"
 			if #burstList == 1 then
 				self:ShowAura(args.spellId, self:Mythic() and 12 or 15, "Gauche", { icon = 450906 }, true)
+				self:ShowBombHud("Gauche", 25)
 			else
 				self:ShowAura(args.spellId, self:Mythic() and 12 or 15, "Droite", { icon = 450908 }, true)
+				self:ShowBombHud("Droite", 25)
 			end
 			if not checkForFearHelp(self, #burstList == 1 and 3 or 7) then
 				self:Say(args.spellId, CL.count_rticon:format(args.spellName, #burstList, icon))
@@ -644,6 +690,7 @@ do
 	function mod:SoulburstRemoved(args)
 		if self:Me(args.destGUID) then
 			self:CancelSayCountdown(args.spellId)
+			self:ClearBombHud()
 		end
 		if self:GetOption(burstMarker) then
 			SetRaidTarget(args.destName, 0)
@@ -654,6 +701,7 @@ do
 		if self:Me(args.destGUID) then
 			self:SayCountdown(args.spellId, self:Mythic() and 12 or 15, 6)
 			self:ShowAura(args.spellId, self:Mythic() and 12 or 15, "Derrière", { icon = 450905 }, true)
+			self:ShowBombHud("Derrière", 45)
 			isOnMe = "bomb"
 			if not checkForFearHelp(self, 6) then
 				self:Say(args.spellId, CL.count_rticon:format(args.spellName, 1, 6))
@@ -682,6 +730,7 @@ function mod:SoulbombRemoved(args)
 	self:StopBar(args.spellId, args.destName)
 	if self:Me(args.destGUID) then
 		self:CancelSayCountdown(args.spellId)
+		self:ClearBombHud()
 	end
 	if self:GetOption(burstMarker) then
 		SetRaidTarget(args.destName, 0)
