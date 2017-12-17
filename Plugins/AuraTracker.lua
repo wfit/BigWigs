@@ -299,19 +299,19 @@ local function allocIcon(borderless)
 		icon.cdText = cd:GetRegions()
 
 		-- A layer that is higher than the cooldown frame
-		local overlay = CreateFrame("Frame", nil, widgets)
-		overlay:SetAllPoints(icon)
-		icon.overlay = overlay
+		local content = CreateFrame("Frame", nil, widgets)
+		content:SetAllPoints(icon)
+		icon.content = content
 
 		-- Main label under the icon
-		local text = overlay:CreateFontString(nil, "OVERLAY", "GameFontHighlightLarge")
+		local text = content:CreateFontString(nil, "OVERLAY", "GameFontHighlightLarge")
 		text:SetPoint("BOTTOM", 0, -25)
 		text:SetJustifyH("CENTER")
 		text:SetJustifyV("BOTTOM")
 		icon.text = text
 
 		-- Stack counter
-		local stacks = overlay:CreateFontString(nil, "OVERLAY", "GameFontHighlightLarge")
+		local stacks = content:CreateFontString(nil, "OVERLAY", "GameFontHighlightLarge")
 		stacks:SetPoint("BOTTOMRIGHT", -13, 8)
 		icon.stacks = stacks
 	end
@@ -404,7 +404,7 @@ local function setLevels(aura, idx)
 	idx = idx * 10
 	aura:SetFrameLevel(idx)
 	aura.cd:SetFrameLevel(idx + 3)
-	aura.overlay:SetFrameLevel(idx + 5)
+	aura.content:SetFrameLevel(idx + 5)
 end
 
 local function updateRack()
@@ -485,6 +485,7 @@ local function freeAura(aura)
 			break
 		end
 	end
+	ActionButton_HideOverlayGlow(aura.icon)
 	freeIcon(aura.icon)
 end
 
@@ -556,6 +557,12 @@ function plugin:BigWigs_ShowAura(_, module, key, options)
 		icon.pulseIn:Stop()
 		icon.fadeIn:Play()
 		icon.pulseIn:Play()
+	end
+
+	if options.glow then
+		ActionButton_ShowOverlayGlow(aura.icon)
+	elseif aura.pin == nil then
+		ActionButton_HideOverlayGlow(aura.icon)
 	end
 
 	if options.pin then

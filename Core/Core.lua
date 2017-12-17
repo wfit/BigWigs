@@ -365,15 +365,20 @@ do
 		addon:SendMessage("BigWigs_StartImpactBar", addon, spell, spell, time, icon)
 
 		-- Aura Tracker
-		addon:SendMessage("BigWigs_ShowAura", addon, nil, {
-			icon = icon,
-			duration = time / 2,
-			text = spell,
-			pulse = math.random() < 0.8,
-			countdown = math.random() < 0.7,
-			stacks = math.random() < 0.4 and math.ceil(math.random() * 9) or nil,
-			pin = math.random() < 0.2 and -1 or nil,
-		})
+		do
+			local stacks = math.random() < 0.4 and math.ceil(math.random() * 9) or nil
+			local countdown = not stacks and math.random() < 0.7
+			addon:SendMessage("BigWigs_ShowAura", addon, nil, {
+				icon = icon,
+				duration = time / 2,
+				text = spell,
+				pulse = math.random() < 0.8,
+				countdown = countdown,
+				stacks = stacks,
+				glow = math.random() < 0.2,
+				pin = math.random() < 0.2 and -1 or nil,
+			})
+		end
 	end
 end
 

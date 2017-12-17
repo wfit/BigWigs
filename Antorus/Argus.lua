@@ -443,7 +443,7 @@ function mod:SoulBlight(args)
 		self:TargetBar(args.spellId, 8, args.destName)
 		self:SayCountdown(args.spellId, 8)
 		checkForFearHelp(self)
-		self:ShowAura(args.spellId, 8, "Move", true)
+		self:ShowAura(args.spellId, 8, "CASSE-TOI", true, { glow = true, pin = -1 })
 	end
 end
 
