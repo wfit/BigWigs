@@ -437,13 +437,14 @@ function mod:SoulBlightOrb(args)
 end
 
 function mod:SoulBlight(args)
-	self:TargetMessage(args.spellId, args.destName, "Neutral", "Warning")
+	self:TargetMessage(args.spellId, args.destName, "Neutral")
 	if self:Me(args.destGUID) then
+		PlaySoundFile("Sound\\Spells\\PVPFlagTaken.ogg", "MASTER")
 		self:Flash(args.spellId)
 		self:TargetBar(args.spellId, 8, args.destName)
 		self:SayCountdown(args.spellId, 8)
-		checkForFearHelp(self)
 		self:ShowAura(args.spellId, 8, "CASSE-TOI", true, { glow = true, pin = -1 })
+		checkForFearHelp(self)
 	end
 end
 
