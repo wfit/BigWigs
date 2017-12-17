@@ -448,7 +448,7 @@ function mod:SoulBlight(args)
 		self:SayCountdown(args.spellId, 8)
 		local nextCone, text = self:BarTimeLeft(CL.count:format(self:SpellName(248165), coneOfDeathCounter)), "CASSE-TOI"
 		if nextCone then
-			local delta = nextCone - 8
+			local delta = 8 - nextCone
 			if 0 <= delta and delta <= 2.5 then
 				text = "Pendant"
 			else
