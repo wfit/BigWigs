@@ -311,6 +311,7 @@ end
 
 do
 	local rangeCheck, rangeObject
+	local nextGaze = 0
 
 	function mod:ClearSargerasHud()
 		if rangeObject then
@@ -322,15 +323,40 @@ do
 
 	function mod:CHAT_MSG_RAID_BOSS_EMOTE(_, msg)
 		if msg:find("258068", nil, true) then -- Sargeras' Gaze
-			self:Message(258068, "Urgent", "Beware")
-			if self:Hud(258068) and (self:Melee() or sargerasGazeCount > 1) then
+			local shouldAlert = self:Melee() or sargerasGazeCount > 2
+			local timer = stage == 4 and timers[stage][258068][sargerasGazeCount] or stage == 2 and 60.5 or 35.1
+			nextGaze = GetTime() + timer
+			self:Message(258068, "Urgent", shouldAlert and "Beware")
+			if self:Hud(258068) and shouldAlert then
 				rangeObject = Hud:DrawSpinner("player", 50)
 				rangeCheck = self:ScheduleRepeatingTimer("CheckRange", 0.1, rangeObject, 5)
-				self:CheckRange(rangeObject, 10)
+				self:CheckRange(rangeObject, 5)
 				self:ScheduleTimer("ClearSargerasHud", 3)
 			end
 			sargerasGazeCount = sargerasGazeCount + 1
-			self:Bar(258068, stage == 4 and timers[stage][258068][sargerasGazeCount] or stage == 2 and 60.5 or 35.1, CL.count:format(self:SpellName(258068), sargerasGazeCount))
+			self:Bar(258068, timer, CL.count:format(self:SpellName(258068), sargerasGazeCount))
+		end
+	end
+
+	function mod:SargerasRage(args)
+		if self:Me(args.destGUID) then
+			self:TargetMessage(258068, args.destName, "Personal", "Warning", args.spellName, args.spellId)
+			self:Flash(258068)
+			self:Say(258068, self:SpellName(6621)) -- Rage
+			self:ShowAura(258068, "Rage", nextGaze - GetTime(), { icon = args.spellIcon, pulse = false })
+		end
+	end
+
+	function mod:SargerasFear(args)
+		if self:Me(args.destGUID) then
+			self:TargetMessage(258068, args.destName, "Personal", "Warning", args.spellName, args.spellId)
+			self:ShowAura(258068, "Pack", nextGaze - GetTime(), { icon = args.spellIcon, pulse = false })
+		end
+	end
+
+	function mod:SargerasGazeRemoved(args)
+		if self:Me(args.destGUID) then
+			self:HideAura(258068)
 		end
 	end
 end
@@ -837,28 +863,6 @@ function mod:Titanforging(args)
 end
 
 --[[ Mythic ]]--
-
-function mod:SargerasRage(args)
-	if self:Me(args.destGUID) then
-		self:TargetMessage(258068, args.destName, "Personal", "Warning", args.spellName, args.spellId)
-		self:Flash(258068)
-		self:Say(258068, self:SpellName(6621)) -- Rage
-		self:ShowAura(258068, "Rage", { icon = args.spellIcon, pulse = false })
-	end
-end
-
-function mod:SargerasFear(args)
-	if self:Me(args.destGUID) then
-		self:TargetMessage(258068, args.destName, "Personal", "Warning", args.spellName, args.spellId)
-		self:ShowAura(258068, "Pack", { icon = args.spellIcon, pulse = false })
-	end
-end
-
-function mod:SargerasGazeRemoved(args)
-	if self:Me(args.destGUID) then
-		self:HideAura(258068)
-	end
-end
 
 function mod:sentenceCheck()
 	if not sentenceCast then
