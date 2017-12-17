@@ -7,10 +7,18 @@ if L then
 	L.custom_off_always_show_combined = "总是显示合并灵魂爆发和灵魂炸弹信息"
 	L.custom_off_always_show_combined_desc = "当你受到|cff71d5ff灵魂炸弹|r或|cff71d5ff灵魂爆发|r时合并信息不会被显示。启用此选项将总是显示合并信息，即使你受到影响。|cff33ff99对团队领袖有用处。|r"
 
+	L.fear_help = "萨格拉斯的恐惧"
+	L.fear_help_desc = "当你受到|cff71d5ff萨格拉斯的恐惧|r和|cff71d5ff灵魂凋零|r/|cff71d5ff灵魂爆发|r/|cff71d5ff灵魂炸弹|r/|cff71d5ff萨格拉斯的判决|r影响时发出特殊喊话。"
+
+	L[257931] = "恐惧" -- short for Sargeras' Fear
+	L[248396] = "凋零" -- short for Soulblight
+	L[251570] = "炸弹" -- short for Soulbomb
+	L[250669] = "爆发" -- short for Soulburst
+	L[257966] = "裁决" -- short for Sentence of Sargeras
+
 	L.stage2_early = "让大海的怒涛洗刷这腐蚀吧！"
 	L.stage3_early = "没有希望。只有痛苦。痛苦！"
 
-	L.explosion = "%s爆炸"
 	L.gifts = "恩赐：%s（天空），%s（海洋）"
 	L.burst = "|T1778229:15:15:0:0:64:64:4:60:4:60|t爆发：%s" -- short for Soulburst
 	L.bomb = "|T1778228:15:15:0:0:64:64:4:60:4:60|t炸弹：%s" -- short for Soulbomb
@@ -19,7 +27,17 @@ if L then
 	L.sea_say = "{rt6} 急速/全能" -- short for Haste/Versatility (stats)
 
 	L.bomb_explosions = "炸弹爆炸"
-	L.bomb_explosions_desc = "显示灵魂炸弹爆炸计时条。"
+	L.bomb_explosions_desc = "显示灵魂爆发和灵魂炸弹爆炸计时条。"
+end
+
+L = BigWigs:NewBossLocale("Aggramar", "zhCN")
+if L then
+	L.wave_cleared = "已清理%d波！" -- Wave 1 Cleared!
+
+	L.track_ember = "泰沙拉克的余烬追踪器"
+	L.track_ember_desc = "显示每个泰沙拉克的余烬死亡信息。"
+
+	L.custom_off_ember_marker_desc = "使用 {rt1}{rt2}{rt3}{rt4}{rt5} 标记泰沙拉克的余烬，需要权限。\n|cff33ff99史诗：将只会标记当前一波能量大于45的增援。|r"
 end
 
 L = BigWigs:NewBossLocale("The Coven of Shivarra", "zhCN")

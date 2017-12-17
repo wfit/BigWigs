@@ -7,7 +7,7 @@ local bwFrame = CreateFrame("Frame")
 -- Generate our version variables
 --
 
-local BIGWIGS_VERSION = 84
+local BIGWIGS_VERSION = 85
 local BIGWIGS_RELEASE_STRING = ""
 local versionQueryString, versionResponseString = "Q^%d^%s", "V^%d^%s"
 
@@ -1386,3 +1386,11 @@ SlashCmdList.BigWigsVersion = function()
 end
 
 BigWigsLoader = public -- Set global
+
+-- XXX temp
+if not EJ_GetSectionInfo then
+	function EJ_GetSectionInfo(id)
+		local tbl = C_EncounterJournal.GetSectionInfo(id)
+		return tbl.title, tbl.description, tbl.headerType, tbl.abilityIcon, tbl.creatureDisplayID, tbl.siblingSectionID, tbl.filteredByDifficulty, tbl.link, tbl.startsOpen, tbl.uiModelSceneID
+	end
+end

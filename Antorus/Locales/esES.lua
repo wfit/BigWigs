@@ -7,10 +7,18 @@ if L then
 	--L.custom_off_always_show_combined = "Always show the combined Soulburst and Soulbomb message"
 	--L.custom_off_always_show_combined_desc = "The combined message won't be displayed if you get the |cff71d5ffSoulbomb|r or the |cff71d5ffSoulburst|r. Enable this option to always show the combined message, even when you're affected. |cff33ff99Useful for raid leaders.|r"
 
+	--L.fear_help = "Sargeras' Fear Combination"
+	--L.fear_help_desc = "Say a special message if you're afflicted by |cff71d5ffSargeras' Fear|r and |cff71d5ffSoulblight|r/|cff71d5ffSoulburst|r/|cff71d5ffSoulbomb|r/|cff71d5ffSentence of Sargeras|r."
+
+	--L[257931] = "Fear" -- short for Sargeras' Fear
+	--L[248396] = "Blight" -- short for Soulblight
+	--L[251570] = "Bomb" -- short for Soulbomb
+	--L[250669] = "Burst" -- short for Soulburst
+	--L[257966] = "Sentence" -- short for Sentence of Sargeras
+
 	--L.stage2_early = "Let the fury of the sea wash away this corruption!"
 	--L.stage3_early = "No hope. Just pain. Only pain!"
 
-	--L.explosion = "%s Explosion"
 	--L.gifts = "Gifts: %s (Sky), %s (Sea)"
 	--L.burst = "|T1778229:15:15:0:0:64:64:4:60:4:60|tBurst:%s" -- short for Soulburst
 	--L.bomb = "|T1778228:15:15:0:0:64:64:4:60:4:60|tBomb:%s" -- short for Soulbomb
@@ -20,6 +28,16 @@ if L then
 
 	--L.bomb_explosions = "Bomb Explosions"
 	--L.bomb_explosions_desc = "Show a timer for Soulburst and Soulbomb exploding."
+end
+
+L = BigWigs:NewBossLocale("Aggramar", "esES") or BigWigs:NewBossLocale("Aggramar", "esMX")
+if L then
+	--L.wave_cleared = "Wave %d Cleared!" -- Wave 1 Cleared!
+
+	--L.track_ember = "Ember of Taeshalach Tracker"
+	--L.track_ember_desc = "Display messages for each Ember of Taeshalach death."
+
+	--L.custom_off_ember_marker_desc = "Mark Ember of Taeshalach with {rt1}{rt2}{rt3}{rt4}{rt5}, requires promoted or leader.\n|cff33ff99Mythic: This will only mark adds in the current wave and above 45 energy.|r"
 end
 
 L = BigWigs:NewBossLocale("The Coven of Shivarra", "esES") or BigWigs:NewBossLocale("The Coven of Shivarra", "esMX")
