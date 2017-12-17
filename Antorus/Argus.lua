@@ -89,6 +89,8 @@ local timersMythic = {
 }
 local timers = mod:Mythic() and timersMythic or mod:Easy() and timersNormal or timersHeroic
 
+local burstsBombCombo = true
+
 --------------------------------------------------------------------------------
 -- Localization
 --
@@ -143,6 +145,7 @@ if L then
 	--L.fear_say = "Stack"
 
 	L.bomb_explosions = "Bomb Explosions"
+	L.burst_explosions = "Bursts Explosions"
 	L.bomb_explosions_desc = "Show a timer for Soulburst and Soulbomb exploding."
 	L.bomb_explosions_icon = 251570
 end
@@ -289,6 +292,7 @@ function mod:OnEngage()
 	soulBombCounter = 1
 	sargerasGazeCount = 1
 	sentenceofSargerasCount = 1
+	burstsBombCombo = true
 
 	self:Bar(255594, 16) -- Sky and Sea
 	self:Bar(257296, self:Heroic() and timers[stage][257296][torturedRageCounter] or 13.5, CL.count:format(self:SpellName(257296), torturedRageCounter)) -- Tortured Rage
@@ -622,7 +626,8 @@ do
 			if not scheduled then
 				scheduled = self:ScheduleTimer(announce, 0.1, self)
 			end
-			self:ImpactBar(args.spellId, self:Mythic() and 12 or 15, L.bomb_explosions, L.bomb_explosions_icon) -- Bomb Explosions
+			self:ImpactBar(args.spellId, self:Mythic() and 12 or 15, burstsBombCombo and L.bomb_explosions or L.burst_explosions, burstsBombCombo and 251570 or 250669) -- Bomb Explosions
+			burstsBombCombo = not burstsBombCombo
 			if self:GetOption(burstMarker) then
 				SetRaidTarget(args.destName, 3)
 			end
@@ -840,6 +845,7 @@ function mod:EndofAllThings(args)
 		sargerasGazeCount = 1
 		sentenceofSargerasCount = 1
 		sentenceCast = nil
+		burstsBombCombo = true
 		self:Bar(258068, timers[stage][258068][sargerasGazeCount], CL.count:format(self:SpellName(258068), sargerasGazeCount)) -- Sargeras' Gaze
 		self:Bar(257966, timers[stage][257966][sentenceofSargerasCount], CL.count:format(self:SpellName(257966), sentenceofSargerasCount)) -- Sentence of Sargeras
 		self:ScheduleTimer("SentenceCheck", timers[stage][257966][sentenceofSargerasCount]+1)
