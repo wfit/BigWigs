@@ -153,7 +153,7 @@ end
 
 local skyAndSeaMarker = mod:AddMarkerOption(true, "player", 1, 255594, 1, 3) -- Sky and Sea
 local burstMarker = mod:AddMarkerOption(true, "player", 3, 250669, 3, 7) -- Soul Burst
-local bombMarker = mod:AddMarkerOption(true, "player", 1, 251570, 1) -- Soul Bomb
+local bombMarker = mod:AddMarkerOption(true, "player", 6, 251570, 6) -- Soul Bomb
 function mod:GetOptions()
 	return {
 		"stages",
@@ -486,7 +486,7 @@ end
 
 function mod:SkyandSea(args)
 	self:CDBar(args.spellId, self:Easy() and 30.3 or 27)
-	self:ScheduleTimer("ImpactBar", 5, args.spellId, 10, L.orbsDespawn)
+	self:ScheduleTimer("ImpactBar", 5, args.spellId, 12, L.orbsDespawn)
 end
 
 do
