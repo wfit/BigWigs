@@ -427,7 +427,7 @@ end
 
 --[[ Stage 1 ]]--
 function mod:ConeofDeath(args)
-	self:Message(args.spellId, "Urgent", "Warning", CL.casting:format(CL.count:format(args.spellName, coneOfDeathCounter)))
+	self:Message(args.spellId, "Urgent", "Long", CL.casting:format(CL.count:format(args.spellName, coneOfDeathCounter)))
 	self:ImpactBar(args.spellId, 2.5)
 	coneOfDeathCounter = coneOfDeathCounter + 1
 	self:CDBar(args.spellId, self:Mythic() and 20.5 or self:Easy() and 24 or timers[stage][248165][coneOfDeathCounter], CL.count:format(args.spellName, coneOfDeathCounter)) -- normal: 24-26
@@ -508,7 +508,7 @@ do
 	local function announce(self)
 		if skyName and seaName then
 			local text = L.gifts:format(self:ColorName(skyName), self:ColorName(seaName))
-			self:Message(255594, "Positive", "Long", text, 255594)
+			self:Message(255594, "Positive", nil, text, 255594)
 			skyName = nil
 			seaName = nil
 		end
@@ -633,9 +633,9 @@ do
 			label:SetText(string)
 		end
 		if distance > safeRange then
-			object:SetColor(0.2, 1, 0.2)
+			object:SetColor(0.2, 1, 0.2, 1)
 		else
-			object:SetColor(1, 0.2, 0.2)
+			object:SetColor(1, 0.2, 0.2, 1)
 		end
 	end
 
