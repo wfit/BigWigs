@@ -573,9 +573,9 @@ do
 			self:SayCountdown(args.spellId, self:Mythic() and 12 or 15)
 			isOnMe = "burst"
 			if #burstList == 1 then
-				self:ShowAura(args.spellId, self:Mythic() and 12 or 15, "Move", { icon = 450906 }, true)
+				self:ShowAura(args.spellId, self:Mythic() and 12 or 15, "Gauche", { icon = 450906 }, true)
 			else
-				self:ShowAura(args.spellId, self:Mythic() and 12 or 15, "Move", { icon = 450908 }, true)
+				self:ShowAura(args.spellId, self:Mythic() and 12 or 15, "Droite", { icon = 450908 }, true)
 			end
 		end
 		if #burstList == 1 then
@@ -607,7 +607,7 @@ do
 		if self:Me(args.destGUID) then
 			self:Say(args.spellId)
 			self:SayCountdown(args.spellId, self:Mythic() and 12 or 15)
-			self:ShowAura(args.spellId, self:Mythic() and 12 or 15, "Move", { icon = 450905 }, true)
+			self:ShowAura(args.spellId, self:Mythic() and 12 or 15, "Derrière", { icon = 450905 }, true)
 			isOnMe = "bomb"
 		end
 
