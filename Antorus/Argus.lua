@@ -452,7 +452,7 @@ function mod:SoulBlight(args)
 			if 0 <= delta and delta <= 2.5 then
 				text = "Pendant"
 			else
-				text = delta > 0 and ("Après |cff00ff00+" .. math.floor(delta)) or ("Avant |cffff0000" .. math.ceil(delta))
+				text = delta > 0 and ("Après |cff00ff00+" .. Oken:Round(delta, 1)) or ("Avant |cffff0000" .. Oken:Round(delta, 1))
 			end
 		end
 		self:ShowAura(args.spellId, 8, text, true, { glow = true, pin = -1 })
