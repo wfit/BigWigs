@@ -332,6 +332,7 @@ local function freeIcon(icon)
 	icon.fadeIn:Stop()
 	icon.pulseIn:Stop()
 	icon:Hide()
+	ActionButton_HideOverlayGlow(icon)
 	tinsert(icon.borderless and borderlessPool or pool, icon)
 end
 
@@ -485,7 +486,6 @@ local function freeAura(aura)
 			break
 		end
 	end
-	ActionButton_HideOverlayGlow(aura.icon)
 	freeIcon(aura.icon)
 end
 

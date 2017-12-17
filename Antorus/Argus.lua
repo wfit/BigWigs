@@ -983,12 +983,80 @@ function mod:SentenceCheck()
 end
 
 do
+	local targets = {}
+	local nextBreak = 0
+	local warned = false
+	local sentenceObject, sentenceLabel, sentenceSpinner
+	local sentenceUpdater
+
+	local function targetsSort(unitA, unitB)
+		-- Returns true when unitA should come before unitB
+		local aIsWarlock = select(3, UnitClass(unitA)) == 9
+		local bIsWarlock = select(3, UnitClass(unitB)) == 9
+		if aIsWarlock ~= bIsWarlock then
+			return bIsWarlock
+		else
+			local aIndex = tonumber(unitA:sub(5))
+			local bIndex = tonumber(unitB:sub(5))
+			return (aIndex and bIndex) and (aIndex < bIndex) or (unitA < unitB)
+		end
+	end
+
+	function mod:UpdateSentenceHud(spellName, clear)
+		if not UnitDebuff("player", spellName) or not targets[1] then
+			self:ClearSentenceHud()
+			return
+		end
+		if not sentenceObject then
+			sentenceObject = Hud:DrawArea("player", 50)
+			sentenceLabel = Hud:DrawText("player", "Wait...")
+		end
+		if UnitIsUnit("player", targets[1]) then
+			local now = GetTime()
+			if not warned then
+				self:Flash(257966)
+				checkForFearHelp(self)
+				sentenceSpinner = Hud:DrawSpinner("player", 50, nextBreak - now):SetColor(1.0, 1.0, 0.2, 1)
+				warned = true
+			end
+			if now < nextBreak then
+				sentenceObject:SetColor(1.0, 1.0, 0.2, 1)
+				sentenceLabel:SetText("Prochain!")
+			else
+				sentenceObject:SetColor(0.2, 1.0, 0.2, 1)
+				sentenceLabel:SetText("Go!")
+			end
+		else
+			sentenceObject:SetColor(1.0, 0.2, 0.2, 1)
+		end
+	end
+
+	function mod:ClearSentenceHud()
+		if sentenceUpdater then
+			self:CancelTimer(sentenceUpdater)
+		end
+		if sentenceObject then
+			sentenceObject:Remove()
+			sentenceLabel:Remove()
+		end
+		if sentenceSpinner then
+			sentenceSpinner:Remove()
+		end
+		sentenceUpdater, sentenceObject, sentenceLabel, sentenceSpinner = nil, nil, nil, nil
+	end
+
 	local playerList = mod:NewTargetList()
 	function mod:SentenceofSargeras(args)
+		if #playerList == 0 then
+			warned = false
+			wipe(targets)
+		end
 		if self:Me(args.destGUID) then
-			self:Flash(args.spellId)
-			self:ShowAura(args.spellId, "Chain", { stack = "#" .. (#playerList + 1) })
-			checkForFearHelp(self)
+			--self:Flash(args.spellId)
+			--checkForFearHelp(self)
+			self:ShowAura(args.spellId, "Chain")
+			sentenceUpdater = self:ScheduleRepeatingTimer("UpdateSentenceHud", 0.1, args.spellName)
+			self:ScheduleTimer("ClearSentenceHud", 35)
 		end
 		playerList[#playerList+1] = args.destName
 		if #playerList == 1 then
@@ -997,12 +1065,18 @@ do
 			sentenceCast = true
 			self:Bar(args.spellId, timers[stage][args.spellId][sentenceofSargerasCount], CL.count:format(args.spellName, sentenceofSargerasCount))
 		end
+		table.insert(targets, args.destUnit)
+		table.sort(targets, targetsSort)
 	end
 
 	function mod:SentenceofSargerasRemoved(args)
 		if self:Me(args.destGUID) then
 			self:HideAura(args.spellId)
+			self:ClearSentenceHud()
 		end
+		self:Message(args.spellId, "Positive", "Info", CL.removed_from:format(args.spellName, args.destName))
+		tDeleteItem(targets, args.destUnit)
+		nextBreak = GetTime() + 11
 	end
 end
 
