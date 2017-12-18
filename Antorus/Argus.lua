@@ -360,7 +360,7 @@ do
 
 	function mod:CHAT_MSG_RAID_BOSS_EMOTE(_, msg)
 		if msg:find("258068", nil, true) then -- Sargeras' Gaze
-			local shouldAlert = self:Melee() or sargerasGazeCount > 2
+			local shouldAlert = stage == 4 or (self:Melee() or sargerasGazeCount > 2)
 			local timer = stage == 4 and timers[stage][258068][sargerasGazeCount] or stage == 2 and 60.5 or 35.1
 			nextGaze = GetTime() + timer
 			self:Message(258068, "Urgent", shouldAlert and "Beware")
