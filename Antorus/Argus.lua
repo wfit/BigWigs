@@ -21,6 +21,7 @@ local Hud = Oken.Hud
 local stage = 1
 local coneOfDeathCounter = 1
 local soulBlightOrbCounter = 1
+local soulBlightCounter = 1
 local torturedRageCounter = 1
 local sweepingScytheCounter = 1
 local avatarCounter = 1
@@ -360,11 +361,10 @@ do
 
 	function mod:CHAT_MSG_RAID_BOSS_EMOTE(_, msg)
 		if msg:find("258068", nil, true) then -- Sargeras' Gaze
-			local shouldAlert = stage == 4 or (self:Melee() or sargerasGazeCount > 2)
 			local timer = stage == 4 and timers[stage][258068][sargerasGazeCount] or stage == 2 and 60.5 or 35.1
 			nextGaze = GetTime() + timer
-			self:Message(258068, "Urgent", shouldAlert and "Beware")
-			if self:Hud(258068) and shouldAlert then
+			self:Message(258068, "Urgent", "Beware")
+			if self:Hud(258068) then
 				rangeObject = Hud:DrawSpinner("player", 60)
 				rangeCheck = self:ScheduleRepeatingTimer("CheckRange", 0.1, rangeObject, 5)
 				self:CheckRange(rangeObject, 5)
@@ -435,12 +435,14 @@ end
 
 function mod:SoulBlightOrb(args)
 	self:Message(args.spellId, "Neutral", "Alert", CL.casting:format(args.spellName))
+	soulBlightCounter = 0
 	soulBlightOrbCounter = soulBlightOrbCounter + 1
 	self:CDBar(args.spellId, timers[stage][args.spellId][soulBlightOrbCounter])
 end
 
 function mod:SoulBlight(args)
 	self:TargetMessage(args.spellId, args.destName, "Neutral")
+	soulBlightCounter = soulBlightCounter + 1
 	if self:Me(args.destGUID) then
 		PlaySoundFile("Sound\\Spells\\PVPFlagTaken.ogg", "MASTER")
 		self:Flash(args.spellId)
@@ -455,6 +457,7 @@ function mod:SoulBlight(args)
 				text = delta > 0 and ("Après |cff00ff00+" .. Oken:Round(delta, 1)) or ("Avant |cffff0000" .. Oken:Round(delta, 1))
 			end
 		end
+		text = "#" .. soulBlightCounter .. " - " .. text
 		self:ShowAura(args.spellId, 8, text, true, { glow = true, pin = -1 })
 		checkForFearHelp(self)
 	end
