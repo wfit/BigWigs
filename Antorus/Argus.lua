@@ -674,7 +674,10 @@ do
 			self:SmartColorSet(args.spellId, 1, 1, 0)
 			isOnMe = "burst"
 			local iconString = "{rt" .. icon .. "}"
-			if #burstList == 1 then
+			if burstsBombCombo then
+				self:ShowAura(args.spellId, self:Mythic() and 12 or 15, "Derrière {rt6}", { icon = 450905 }, true)
+				self:ShowBombHud("Derrière", 0)
+			elseif #burstList == 1 then
 				self:ShowAura(args.spellId, self:Mythic() and 12 or 15, "Gauche " .. iconString, { icon = 450906 }, true)
 				self:ShowBombHud("Gauche", 30)
 			else
