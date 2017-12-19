@@ -173,9 +173,9 @@ function mod:GetOptions()
 		skyAndSeaMarker,
 
 		--[[ Stage 2 ]]--
-		{250669, "SAY", "AURA", "IMPACT", "HUD"}, -- Soulburst
+		{250669, "SAY", "AURA", "IMPACT", "HUD", "SMARTCOLOR"}, -- Soulburst
 		burstMarker,
-		{251570, "SAY", "AURA"}, -- Soulbomb
+		{251570, "SAY", "AURA", "SMARTCOLOR"}, -- Soulbomb
 		bombMarker,
 		"combinedBurstAndBomb",
 		"custom_off_always_show_combined",
@@ -671,6 +671,7 @@ do
 		if self:Me(args.destGUID) then
 			local icon = #burstList == 1 and 3 or 7
 			self:SayCountdown(args.spellId, self:Mythic() and 12 or 15, icon)
+			self:SmartColorSet(args.spellId, 1, 1, 0)
 			isOnMe = "burst"
 			local iconString = "{rt" .. icon .. "}"
 			if #burstList == 1 then
@@ -702,6 +703,7 @@ do
 		if self:Me(args.destGUID) then
 			self:CancelSayCountdown(args.spellId)
 			self:ClearBombHud()
+			self:SmartColorUnset(args.spellId)
 		end
 		if self:GetOption(burstMarker) then
 			SetRaidTarget(args.destName, 0)
@@ -713,6 +715,7 @@ do
 			self:SayCountdown(args.spellId, self:Mythic() and 12 or 15, 6)
 			self:ShowAura(args.spellId, self:Mythic() and 12 or 15, "Derrière {rt6}", { icon = 450905 }, true)
 			self:ShowBombHud("Derrière", 45)
+			self:SmartColorSet(args.spellId, 1, 0, 0)
 			isOnMe = "bomb"
 			if not checkForFearHelp(self, 6) then
 				self:Say(args.spellId, CL.count_rticon:format(args.spellName, 1, 6))
@@ -742,6 +745,7 @@ function mod:SoulbombRemoved(args)
 	if self:Me(args.destGUID) then
 		self:CancelSayCountdown(args.spellId)
 		self:ClearBombHud()
+		self:SmartColorUnset(args.spellId)
 	end
 	if self:GetOption(burstMarker) then
 		SetRaidTarget(args.destName, 0)
