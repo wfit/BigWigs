@@ -398,7 +398,7 @@ do
 	function mod:SargerasGazeRemoved(args)
 		if self:Me(args.destGUID) then
 			self:HideAura(258068)
-			self:HideAura(258068)
+			self:SmartColorUnset(258068)
 		end
 	end
 end
