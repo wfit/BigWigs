@@ -165,7 +165,7 @@ function mod:GetOptions()
 		--[[ Stage 1 ]]--
 		{248165, "IMPACT"}, -- Cone of Death
 		248317, -- Soulblight Orb
-		{248396, "ME_ONLY", "SAY", "FLASH", "AURA"}, -- Soul Blight
+		{248396, "ME_ONLY", "SAY", "FLASH", "AURA", "SMARTCOLOR"}, -- Soul Blight
 		248167, -- Death Fog
 		257296, -- Tortured Rage
 		248499, -- Sweeping Scythe
@@ -198,7 +198,7 @@ function mod:GetOptions()
 		257214, -- Titanforging
 
 		--[[ Mythic ]]--
-		{258068, "SAY", "FLASH", "AURA", "HUD"}, -- Sargeras' Gaze
+		{258068, "SAY", "FLASH", "AURA", "HUD", "SMARTCOLOR"}, -- Sargeras' Gaze
 		{"fear_help", "SAY"},
 		257911, -- Unleased Rage
 		{257966, "FLASH", "AURA", "HUD"}, -- Sentence of Sargeras
@@ -381,6 +381,9 @@ do
 			self:Flash(258068)
 			self:Say(258068, self:SpellName(6621)) -- Rage
 			self:ShowAura(258068, "Rage", nextGaze - GetTime(), { icon = args.spellIcon, pulse = false })
+			if stage == 4 then
+				self:SmartColorSet(258068, 1, 0, 0)
+			end
 		end
 	end
 
@@ -394,6 +397,7 @@ do
 
 	function mod:SargerasGazeRemoved(args)
 		if self:Me(args.destGUID) then
+			self:HideAura(258068)
 			self:HideAura(258068)
 		end
 	end
@@ -448,6 +452,7 @@ function mod:SoulBlight(args)
 		self:Flash(args.spellId)
 		self:TargetBar(args.spellId, 8, args.destName)
 		self:SayCountdown(args.spellId, 8)
+		self:SmartColorSet(args.spellId, 1, 0, 0)
 		local nextCone, text = self:BarTimeLeft(CL.count:format(self:SpellName(248165), coneOfDeathCounter)), "CASSE-TOI"
 		if nextCone then
 			local delta = 8 - nextCone
@@ -467,6 +472,7 @@ function mod:SoulBlightRemoved(args)
 	if self:Me(args.destGUID) then
 		self:CancelSayCountdown(args.spellId)
 		self:HideAura(args.spellId)
+		self:SmartColorUnset(args.spellId)
 	end
 	self:StopBar(args.spellId, args.destName)
 end
