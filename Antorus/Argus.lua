@@ -693,7 +693,9 @@ do
 				scheduled = self:ScheduleTimer(announce, 0.1, self)
 			end
 			self:ImpactBar(args.spellId, self:Mythic() and 12 or 15, burstsBombCombo and L.bomb_explosions or L.burst_explosions, burstsBombCombo and 251570 or 250669) -- Bomb Explosions
-			burstsBombCombo = not burstsBombCombo
+			C_Timer.After(5, function()
+				burstsBombCombo = not burstsBombCombo
+			end)
 			if self:GetOption(burstMarker) then
 				SetRaidTarget(args.destName, 3)
 			end
@@ -717,7 +719,7 @@ do
 		if self:Me(args.destGUID) then
 			self:SayCountdown(args.spellId, self:Mythic() and 12 or 15, 6)
 			self:ShowAura(args.spellId, self:Mythic() and 12 or 15, "Derrière {rt6}", { icon = 450905 }, true)
-			self:ShowBombHud("Derrière", 45)
+			self:ShowBombHud("Derrière", 0)
 			self:SmartColorSet(args.spellId, 1, 0, 0)
 			isOnMe = "bomb"
 			if not checkForFearHelp(self, 6) then
