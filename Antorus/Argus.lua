@@ -379,7 +379,7 @@ do
 		if self:Me(args.destGUID) then
 			self:TargetMessage(258068, args.destName, "Personal", "Warning", args.spellName, args.spellId)
 			self:Flash(258068)
-			self:Say(258068, self:SpellName(6621)) -- Rage
+			self:Say(258068, "Rage") -- Rage
 			self:ShowAura(258068, "Rage", nextGaze - GetTime(), { icon = args.spellIcon, pulse = false })
 			if stage == 4 then
 				self:SmartColorSet(258068, 1, 0, 0)
