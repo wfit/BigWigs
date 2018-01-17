@@ -21,7 +21,7 @@ local L = BigWigsAPI:GetLocale("BigWigs: Common")
 local UnitAffectingCombat, UnitIsPlayer, UnitGUID, UnitPosition, UnitIsConnected = UnitAffectingCombat, UnitIsPlayer, UnitGUID, UnitPosition, UnitIsConnected
 local UnitExists, UnitIsUnit, UnitName = UnitExists, UnitIsUnit, UnitName
 local SetRaidTarget = SetRaidTarget
-local EJ_GetSectionInfo, GetSpellInfo, GetSpellTexture, GetTime, IsSpellKnown = EJ_GetSectionInfo, GetSpellInfo, GetSpellTexture, GetTime, IsSpellKnown
+local C_EncounterJournal_GetSectionInfo, GetSpellInfo, GetSpellTexture, GetTime, IsSpellKnown = C_EncounterJournal.GetSectionInfo, GetSpellInfo, GetSpellTexture, GetTime, IsSpellKnown
 local UnitGroupRolesAssigned = UnitGroupRolesAssigned
 local SendChatMessage, GetInstanceInfo = BigWigsLoader.SendChatMessage, BigWigsLoader.GetInstanceInfo
 local format, find, gsub, band = string.format, string.find, string.gsub, bit.band
@@ -105,8 +105,12 @@ local icons = setmetatable({}, {__index =
 				-- Texture id list for raid icons 1-8 is 137001-137008. Base texture path is Interface\\TARGETINGFRAME\\UI-RaidTargetingIcon_%d
 				value = key + 137000
 			else
-				local _, _, _, abilityIcon = EJ_GetSectionInfo(-key)
-				value = abilityIcon or false
+				local tbl = C_EncounterJournal_GetSectionInfo(-key)
+				if not tbl then
+					core:Print(format("An invalid journal id (%d) is being used in a boss module.", key))
+				else
+					value = tbl.abilityIcon or false
+				end
 			end
 		elseif not key:find("\\") then
 			value = "Interface\\Icons\\" .. key
@@ -125,8 +129,16 @@ local spells = setmetatable({}, {__index =
 		local value
 		if key > 0 then
 			value = GetSpellInfo(key)
+			if not value then
+				core:Print(format("An invalid spell id (%d) is being used in a boss module.", key))
+			end
 		else
-			value = EJ_GetSectionInfo(-key)
+			local tbl = C_EncounterJournal_GetSectionInfo(-key)
+			if not tbl then
+				core:Print(format("An invalid journal id (%d) is being used in a boss module.", key))
+			else
+				value = tbl.title
+			end
 		end
 		if not value then
 			core:Print(format("An invalid spell id (%d) is being used in a boss module.", key))
@@ -1014,7 +1026,7 @@ end
 function argsVirtuals.sourceMob(args) return boss:MobId(args.sourceGUID) end
 function argsVirtuals.destMob(args) return boss:MobId(args.destGUID) end
 
---- Get a localized name from an id. Positive ids for spells (GetSpellInfo) and negative ids for journal entries (EJ_GetSectionInfo).
+--- Get a localized name from an id. Positive ids for spells (GetSpellInfo) and negative ids for journal entries (C_EncounterJournal.GetSectionInfo).
 -- @return spell name
 function boss:SpellName(spellId)
 	return spells[spellId]
@@ -1858,7 +1870,7 @@ end
 --
 
 do
-	local msg = "Attempted to start bar %q without a valid time."
+	local msg = "Attempted to start bar '%q' without a valid time."
 
 	--- Display a bar.
 	-- @param key the option key
