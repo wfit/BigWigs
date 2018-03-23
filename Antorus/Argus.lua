@@ -526,7 +526,7 @@ do
 	function mod:GiftoftheSea(args)
 		if self:Me(args.destGUID) then
 			self:Say(255594, L.sea_say, true)
-			self:ShowAura(255594, 5, L.sea_say, true)
+			self:ShowAura(255594, 5, L.sea_say, true, { icon = self:SpellIcon(100082) })
 		end
 		if self:GetOption(skyAndSeaMarker) then
 			SetRaidTarget(args.destName, 1)
@@ -539,7 +539,7 @@ do
 	function mod:GiftoftheSky(args)
 		if self:Me(args.destGUID) then
 			self:Say(255594, L.sky_say, true)
-			self:ShowAura(255594, 5, L.sky_say, true)
+			self:ShowAura(255594, 5, L.sky_say, true, { icon = self:SpellIcon(181437) })
 		end
 		if self:GetOption(skyAndSeaMarker) then
 			SetRaidTarget(args.destName, 3)
