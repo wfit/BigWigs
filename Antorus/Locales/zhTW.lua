@@ -21,7 +21,7 @@ if L then
 
 	L.gifts = "天之賜：%s，海之賜：%s"
 	L.burst = "|T1778229:15:15:0:0:64:64:4:60:4:60|t驟發：%s" -- short for Soulburst
-	L.bomb = "|T1778228:15:15:0:0:64:64:4:60:4:60|t炸彈：%s" -- short for Soulbomb
+	L.bomb = "|T1778228:15:15:0:0:64:64:4:60:4:60|t炸彈（%d）：|T137002:0|t%s - " -- short for Soulbomb
 
 	L.sky_say = "{rt5}爆擊精通" -- short for Critical Strike/Mastery (stats)
 	L.sea_say = "{rt6}加速臨機" -- short for Haste/Versatility (stats)
@@ -76,6 +76,7 @@ if L then
 	L.worldExplosion_desc = "替崩裂世界的爆炸顯示計時器。"
 	L.platform_active = "%s啟動！" -- Platform: Xoroth Active!
 	L.add_killed = "%s擊殺！"
+	--L.achiev = "'Portal Combat' achievement debuffs" -- Achievement 11928
 end
 
 L = BigWigs:NewBossLocale("Kin'garoth", "zhTW")
@@ -99,4 +100,28 @@ if L then
 
 	L.decimationImpact = "殲滅生效"
 	L.decimationImpact_desc = "顯示殲滅飛彈著陸計時器。"
+end
+
+L = BigWigs:NewBossLocale("Antorus Trash", "zhTW")
+if L then
+	-- [[ Before Garothi Worldbreaker ]] --
+	L.felguard = "安托洛斯惡魔守衛"
+
+	-- [[ After Garothi Worldbreaker ]] --
+	L.flameweaver = "織焰者"
+
+	-- [[ Before Antoran High Command ]] --
+	L.ravager = "劍誓劫毀者"
+	L.deconix = "統御者德康尼克斯"
+	L.clobex = "克羅貝克斯"
+
+	-- [[ Before Portal Keeper Hasabel ]] --
+	L.stalker = "飢餓的潛獵者"
+
+	-- [[ Before Varimathras / Coven of Shivarra ]] --
+	L.tarneth = "塔涅斯"
+	L.priestess = "狂亂女祭司"
+
+	-- [[ Before Aggramar ]] --
+	L.aedis = "黑暗守衛者艾迪斯"
 end

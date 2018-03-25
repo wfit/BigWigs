@@ -2,7 +2,7 @@
 -- Module Declaration
 --
 
-local mod, CL = BigWigs:NewBoss("Aggramar", nil, 1984, 1712)
+local mod, CL = BigWigs:NewBoss("Aggramar", 1712, 1984)
 if not mod then return end
 mod:RegisterEnableMob(121975)
 mod.engageId = 2063
@@ -187,7 +187,9 @@ do
 		local comboCount = #comboSpells
 
 		if not currentCombo then
-			if not self:Mythic() then -- Always the same combo
+			if self:LFR() then -- Always the same combo
+				currentCombo = {245463, 245463, 245463, 245463, 245301} -- Flame Rend, Flame Rend, Flame Rend, Flame Rend, Searing Tempest
+			elseif not self:Mythic() then -- Always the same combo
 				currentCombo = {245458, 245463, 245458, 245463, 245301} -- Foe Breaker, Flame Rend, Foe Breaker, Flame Rend, Searing Tempest
 			elseif comboCount >= 2 then -- We know the combo after the first 2 casts
 				currentCombo = mythicCombos[comboSpells[1]][comboSpells[2]]
@@ -270,8 +272,10 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(_, _, _, _, spellId)
 		self:OpenInfo(244688, self:SpellName(244688)) -- Taeshalach Technique
 		self:ShowAura(244688, { pin = -1, pulse = false })
 		if not self:Mythic() then -- Random Combo in Mythic
-			self:Bar(245463, 4, CL.count:format(self:SpellName(244033), flameRendCount)) -- Flame Rend
-			self:Bar(245301, 15.7) -- Searing Tempest
+			if not self:LFR() then
+				self:Bar(245463, self:Normal() and 5 or 4, CL.count:format(self:SpellName(244033), flameRendCount)) -- Flame Rend
+			end
+			self:Bar(245301, self:Easy() and 19.9 or 15.7) -- Searing Tempest
 		end
 	elseif spellId == 244792 then -- Burning Will of Taeshalach, end of Taeshalach Technique but also casted in intermission
 		if techniqueStarted then -- Check if he actually ends the combo, instead of being in intermission
@@ -369,9 +373,9 @@ function mod:FoeBreaker(args)
 	self:ShowAura(244688, "Tank", { icon = args.spellIcon, stacks = "#" .. foeBreakerCount })
 	foeBreakerCount = foeBreakerCount + 1
 	comboSpells[#comboSpells+1] = 245458
-	comboCastEnd = GetTime() + 2.75
+	comboCastEnd = GetTime() + (self:Easy() and 3.5 or 2.75)
 	if foeBreakerCount == 2 and not self:Mythic() then -- Random Combo in Mythic
-		self:Bar(args.spellId, 7.5, CL.count:format(args.spellName, foeBreakerCount))
+		self:Bar(args.spellId, self:Easy() and 10.1 or 7.5, CL.count:format(args.spellName, foeBreakerCount))
 	end
 	updateInfoBox(self, true)
 end
@@ -386,9 +390,11 @@ function mod:FlameRend(args)
 	self:ShowAura(244688, "Raid", { icon = args.spellIcon, stacks = "#" .. flameRendCount })
 	flameRendCount = flameRendCount + 1
 	comboSpells[#comboSpells+1] = 245463
-	comboCastEnd = GetTime() + 2.75
-	if flameRendCount == 2 and not self:Mythic() then -- Random Combo in Mythic
-		self:Bar(args.spellId, 7.5, CL.count:format(args.spellName, flameRendCount))
+	comboCastEnd = GetTime() + (self:Easy() and 3.5 or 2.75)
+	if self:LFR() and flameRendCount < 5 then
+		self:Bar(args.spellId, 5, CL.count:format(args.spellName, flameRendCount))
+	elseif flameRendCount == 2 and not self:Mythic() then -- Random Combo in Mythic
+		self:Bar(args.spellId, self:Normal() and 10.2 or 7.5, CL.count:format(args.spellName, flameRendCount))
 	end
 	updateInfoBox(self, true)
 end

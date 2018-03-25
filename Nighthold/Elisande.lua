@@ -1,91 +1,194 @@
 
 --------------------------------------------------------------------------------
--- TODO List:
--- - Respawn timer
--- - Mod is untested and PTR logs were old, probably needs a lot of updates
+-- Notes:
+-- - Localization:
+--   - Sadly we need to rely on yells if we don't want to schedule more timers
+--   - I've coded a fallback mechanism (search for l11n), to automatically get
+--     the localizations. The yells should be .2s after the casts, so it should
+--     work reliably, but getting the translations would be safer.
+
 
 --------------------------------------------------------------------------------
 -- Module Declaration
 --
 
-local mod, CL = BigWigs:NewBoss("Grand Magistrix Elisande", 1088, 1743)
+local mod, CL = BigWigs:NewBoss("Grand Magistrix Elisande", 1530, 1743)
 if not mod then return end
-mod:RegisterEnableMob(106643)
+mod:RegisterEnableMob(106643, 111151) -- Elisande, Midnight Siphoner
 mod.engageId = 1872
-mod.instanceId = 1530
 mod.respawnTime = 30
 
 --------------------------------------------------------------------------------
 -- Locals
 --
 
-local phase = 1
+local phase = 0
+local isPhaseTransition = nil
+local elementalCollector = {}
 
-local timersHeroic = {
-	-- Spanning Singularity, UNIT_SPELLCAST_SUCCEEDED
-	[209168] = { 25.0, 36.0, 57.0, 65.0 },
-	-- Arcanetic Ring, RAID_BOSS_EMOTE
-	[208807] = { 34.0, 41.0, 10.0, 62.0, 10.0, 45.0, 10.0 },
-	-- Epocheric Orb, RAID_BOSS_EMOTE
-	[210022] = { 27.0, 76.0, 37.0, 70.0 },
-	-- Delphuric Beam, SPELL_CAST_START
-	[209244] = { 72.0, 57.0, 60.0 },
-	-- Conflexive Burst,
-	[209597] = { 58, 52.0, 56.0, 65.0 },
-	-- Permeliative Tormert
-	[211261] = { 23, 61.0, 37.0, 60.0 },
-	-- Summon Time Elemental - Slow, UNIT_SPELLCAST_SUCCEEDED
-	[209005] = { 5.0, 49.0, 52.0, 60.0 },
-	-- Summon Time Elemental - Fast, UNIT_SPELLCAST_SUCCEEDED
-	[211616] = { 8.0, 88.0, 95.0, 20.0 },
+local lfrTimers = {
+	-- Timers are after Leave the Nightwell success (208863)
+
+	-- Summon Time Elemental - Slow
+	[211614] = {5, 62, 40, 55},
+
+	-- Summon Time Elemental - Fast
+	[211616] = {65},
+
+	--[[ Phase 1 ]]--
+	-- Arcanetic Ring
+	[228877] = {21, 30, 37, 35, 35},
+
+	-- Spanning Singularity
+	[209170] = {17, 57, 30},
+
+	--[[ Phase 2 ]]--
+	-- Epocheric Orb
+	[210022] = {40, 37},
+
+	-- Delphuric Beam
+	[209244] = {35, 77, 25}, -- in Phase 3 for LFR
+
+	-- Ablating Explosion
+	[209973] = {}, -- first 12.1, then between 20.7 and 21.8 (no pattern)
+
+	--[[ Phase 3 ]]--
+	-- Permeliative Torment
+	[211261] = {}, -- Not in LFR
+
+	-- Conflexive Burst
+	[209597] = {}, -- Not in LFR
 }
-local timersMythic = {
-	-- Spanning Singularity, UNIT_SPELLCAST_SUCCEEDED
-	[209168] = { 54, 50, 45, -1 },
-	-- Arcanetic Ring, RAID_BOSS_EMOTE
-	[208807] = { 32, 40, 15, 30, 20, 10, 25, 10, 10, 13 },
-	-- Epocheric Orb, RAID_BOSS_EMOTE
-	[210022] = { 14.5, 85, 60, 20, 10, -1 },
-	-- Delphuric Beam, SPELL_CAST_START
-	[209244] = { 58, 50, 65, -1 },
-	-- Conflexive Burst,
-	[209597] = { 39, 90, 45, 30, -1 },
-	-- Permeliative Tormert
-	[211261] = { 64, 75, 25, 20, -1 },
-	-- Summon Time Elemental - Slow, UNIT_SPELLCAST_SUCCEEDED
-	[209005] = {
-		[1] = { 5, 39, 75, -1 },
-		[2] = { 5, 39, 45, 30, 30, -1 },
-		[3] = { 5, 54, 55, 30, -1 },
+
+local normalTimers = {
+	-- Timers are after Leave the Nightwell success (208863)
+
+	-- Summon Time Elemental - Slow
+	[211614] = {5, 49, 41, 60},
+
+	-- Summon Time Elemental - Fast
+	[211616] = {8, 71, 101},
+
+	--[[ Phase 1 ]]--
+	-- Arcanetic Ring
+	[228877] = {34, 31, 76, 50, 40, 15, 30},
+
+	-- Spanning Singularity
+	[209170] = {23, 36, 46, 65},
+
+	--[[ Phase 2 ]]--
+	-- Epocheric Orb
+	[210022] = {18, 56, 31, 85}, -- then constant 15s after the sequence
+
+	-- Delphuric Beam
+	[209244] = {59, 26, 40, 110},
+
+	-- Ablating Explosion
+	[209973] = {}, -- first 12.1, then between 20.7 and 21.8 (no pattern)
+
+	--[[ Phase 3 ]]--
+	-- Permeliative Torment
+	[211261] = {23, 41, 106},
+
+	-- Conflexive Burst
+	[209597] = {48, 67, 50, 45}, -- then constant 10s after the sequence
+}
+
+local heroicTimers = {
+	-- Timers are after Leave the Nightwell success (208863)
+
+	-- Summon Time Elemental - Slow
+	[211614] = {5, 49, 52, 60},
+
+	-- Summon Time Elemental - Fast
+	[211616] = {8, 88, 95, 20},
+
+	--[[ Phase 1 ]]--
+	-- Arcanetic Ring
+	[228877] = {35, 40, 10, 63, 10},
+
+	-- Spanning Singularity
+	[209170] = {25, 36, 57, 65},
+
+	--[[ Phase 2 ]]--
+	-- Epocheric Orb
+	[210022] = {18, 76, 37, 70, 15, 15, 30, 15},
+
+	-- Delphuric Beam
+	[209244] = {59, 57, 60, 70},
+
+	-- Ablating Explosion
+	[209973] = {12, 20.7, 20.6, 22, 20.7, 25.5, 20.6, 20.6, 20.6, 20.6},
+
+	--[[ Phase 3 ]]--
+	-- Permeliative Torment
+	[211261] = {23, 61, 37, 60},
+
+	-- Conflexive Burst
+	[209597] = {48, 52.0, 56.0, 65.0, 10.0},
+}
+
+local mythicTimers = {
+	-- Timers are after Leave the Nightwell success (208863)
+
+	-- Summon Time Elemental - Slow
+	[211614] = { -- timers are complete
+		[1] = {5, 39, 75},
+		[2] = {5, 39, 45, 30, 30},
+		[3] = {5, 54, 55, 30},
 	},
-	-- Summon Time Elemental - Fast, UNIT_SPELLCAST_SUCCEEDED
-	[211616] =  {
-		[1] = { 8, 81, -1 },
-		[2] = { 8, 51, -1 },
-		[3] = { 8, 36, 45, -1 },
-	}
+
+	-- Summon Time Elemental - Fast
+	[211616] = { -- timers are complete
+		[1] = {8, 81},
+		[2] = {8, 51},
+		[3] = {8, 36, 45},
+	},
+
+	--[[ Phase 1 ]]--
+	-- Arcanetic Ring
+	[228877] = {30, 39, 15, 31, 19, 10, 26, 9, 10},
+
+	-- Spanning Singularity
+	[209170] = {56, 50, 45}, -- timers are complete
+
+	--[[ Phase 2 ]]--
+	-- Epocheric Orb
+	[210022] = {14, 85, 60, 20, 10}, -- timers are complete
+
+	-- Delphuric Beam
+	[209244] = {57.8, 50, 65}, -- timers are complete
+
+	-- Ablating Explosion
+	[209973] = {12.2, 20.6, 20.6, 20.6, 20.6, 20.7, 21.8, 20.6, 20.6, 20.7}, -- timers are complete
+
+	--[[ Phase 3 ]]--
+	-- Permeliative Torment
+	[211261] = {63.7, 75, 25, 20}, -- timers are complete
+
+	-- Conflexive Burst
+	[209597] = {38.7, 90, 45, 30}, -- timers are complete
 }
-local timers = mod:Mythic() and timersMythic or timersHeroic
 
-local singularityCount = 1
-local singularityMax = 0
+local timers = mod:Mythic() and mythicTimers or mod:Heroic() and heroicTimers or mod:Normal() and normalTimers or lfrTimers
+
+local slowElementalCount = 1
+local slowZoneCount = 1
+local fastElementalCount = 1
+local fastZoneCount = 1
 local ringCount = 1
-local ringMax = 0
-local orbsCount = 1
-local orbsMax = 0
-local beamsCount = 1
-local beamsMax = 0
-local burstsCount = 1
+local singularityCount = 1
+local orbCount = 1
+local beamCount = 1
+local ablatingCount = 1
 local tormentCount = 1
+local conflexiveBurstCount = 1
 
-local slowAddCount = 1
-local fastAddCount = 1
-
-local elementalsAlive = {}
-local slowZoneCount = 0
-local fastZoneCount = 0
-
-local timeStopped = false
+-- These are for abilites which will echo on mythic
+local savedRingCount = nil
+local savedSingularityCount = nil
+local savedOrbCount = nil
+local savedBeamCount = nil
 
 --------------------------------------------------------------------------------
 -- Localization
@@ -93,80 +196,80 @@ local timeStopped = false
 
 local L = mod:GetLocale()
 if L then
-	L.echo = "Echo: %s"
-	L.echoOption = "%s (Bar Only)"
-	L.fastAdd = "Add Fast"
-	L.slowAdd = "Add Slow"
-	L.slowZoneDespawn = "Slow Zone Despawn"
-	L.fastZoneDespawn = "Fast Zone Despawn"
+	L.elisande = "Elisande"
+
+	L.ring_yell = "Let the waves of time crash over you!"
+	--L.singularity_msg = "I control the battlefield, not you!" -- unused
+	L.orb_yell = "You'll find time can be quite volatile."
+	--L.beam_msg = "The threads of time answer to me!" -- unused
+
+	L.recursive_elemental = -13226
+	L.recursive_elemental_icon = 209165 -- Slow Time
+	L.slowTimeZone = "Slow Time Zone"
+
+	L.expedient_elemental = -13229
+	L.expedient_elemental_icon = 209166 -- Fast Time
+	L.fastTimeZone = "Fast Time Zone"
+
+	L.boss_active = "Elisande Active"
+	L.boss_active_desc = "Time until Elisande is active after clearing the trash event."
+	L.boss_active_icon = "achievement_thenighthold_grandmagistrixelisande"
+	L.elisande_trigger = "I foresaw your coming, of course. The threads of fate that led you to this place. Your desperate attempt to stop the Legion."
 end
 
-local echo = setmetatable({}, {
-	__index = function(self, key)
-		local name = L.echo:format(mod:SpellName(key))
-		self[key] = name
-		return name
-	end
-})
+-- Localization fallback (l11n)
+local english_ring_msg = "Let the waves of time crash over you!"
+local english_orb_msg = "You'll find time can be quite volatile."
+local need_ring_msg = GetLocale() ~= "enUS" and english_ring_msg == L.ring_yell
+local need_orb_msg = GetLocale() ~= "enUS" and english_orb_msg == L.orb_yell
+local ring_msg_is_next = nil
+local orb_msg_is_next = nil
+local localized_ring_msg = nil
+local localized_orb_msg = nil
+-- Localization fallback END (l11n)
 
 --------------------------------------------------------------------------------
 -- Initialization
 --
 
-local slow_zone_despawn = mod:AddCustomOption { "szd", L.slowZoneDespawn, icon = 207013, configurable = true }
-local fast_zone_despawn = mod:AddCustomOption { "fzd", L.fastZoneDespawn, icon = 207011, configurable = true }
-
-local function echoCustomOption(key, spellId)
-	return mod:AddCustomOption { key, L.echoOption:format(echo[spellId]), icon = spellId, configurable = true }
-end
-
-local spanning_echo = echoCustomOption("spanning_echo", 209168)
-local ring_echo = echoCustomOption("ring_echo", 208807)
-local orbs_echo = echoCustomOption("orbs_echo", 210022)
-local beams_echo = echoCustomOption("beams_echo", 209244)
-
 function mod:GetOptions()
 	return {
 		--[[ General ]]--
+		"boss_active",
 		"stages",
-		"berserk",
-		208887, -- Summon Time Elementals
+		229889, -- Terminate (Berserk)
 
 		--[[ Recursive Elemental ]]--
-		221863, -- Shield
+		"recursive_elemental",
+		209620, -- Recursion
 		221864, -- Blast
 		209165, -- Slow Time
-		slow_zone_despawn,
 
 		--[[ Expedient Elemental ]]--
-		--209568, -- Exothermic Release
+		"expedient_elemental",
+		209617, -- Expedite
 		209166, -- Fast Time
-		fast_zone_despawn,
 
 		--[[ Time Layer 1 ]]--
-		208807, -- Arcanetic Ring
-		ring_echo,
-		209168, -- Spanning Singularity
-		spanning_echo,
+		228877, -- Arcanetic Ring
+		209170, -- Spanning Singularity
 		{209615, "TANK"}, -- Ablation
 
 		--[[ Time Layer 2 ]]--
 		{209244, "SAY", "FLASH"}, -- Delphuric Beam
-		beams_echo,
 		210022, -- Epocheric Orb
-		orbs_echo,
-		{209973, "SAY"}, -- Ablating Explosion
+		{209973, "FLASH", "SAY", "TANK"}, -- Ablating Explosion
 
 		--[[ Time Layer 3 ]]--
-		{211261, "FLASH"}, -- Permeliative Torment
+		211261, -- Permeliative Torment
 		{209597, "SAY", "FLASH"}, -- Conflexive Burst
 		209971, -- Ablative Pulse
 		{211887, "TANK"}, -- Ablated
 	},{
-		["stages"] = "general",
-		[221863] = -13226, -- Recursive Elemental
-		[209166] = -13229, -- Expedient Elemental
-		[208807] = -13222, -- Time Layer 1
+		["boss_active"] = "general",
+		["recursive_elemental"] = -13226, -- Recursive Elemental
+		["expedient_elemental"] = -13229, -- Expedient Elemental
+		[228877] = -13222, -- Time Layer 1
 		[209244] = -13235, -- Time Layer 2
 		[211261] = -13232, -- Time Layer 3
 	}
@@ -175,32 +278,35 @@ end
 function mod:OnBossEnable()
 	--[[ General ]]--
 	self:RegisterUnitEvent("UNIT_SPELLCAST_SUCCEEDED", nil, "boss1")
-	self:Log("SPELL_CAST_SUCCESS", "Nightwell", 208863)
-	self:RegisterEvent("RAID_BOSS_EMOTE")
+	self:Log("SPELL_CAST_START", "TimeStop", 208944) -- Phase triggering
+	self:Log("SPELL_CAST_SUCCESS", "LeavetheNightwell", 208863) -- New phase starting
+	self:RegisterEvent("CHAT_MSG_MONSTER_YELL")
+	self:RegisterEvent("CHAT_MSG_MONSTER_SAY", "Warmup")
 
 	--[[ Recursive Elemental ]]--
-	self:Log("SPELL_AURA_APPLIED", "ShieldApplied", 221863)
-	self:Log("SPELL_AURA_REMOVED", "ShieldRemoved", 221863)
+	self:Log("SPELL_CAST_START", "Recursion", 209620)
 	self:Log("SPELL_CAST_START", "Blast", 221864)
 	self:Log("SPELL_AURA_APPLIED", "SlowTime", 209165)
+	self:Log("SPELL_AURA_REMOVED", "TimeAuraRemoved", 209165)
 
 	--[[ Expedient Elemental ]]--
-	--self:Log("SPELL_CAST_START", "ExothermicRelease", 209568)
+	self:Log("SPELL_CAST_START", "Expedite", 209617)
 	self:Log("SPELL_AURA_APPLIED", "FastTime", 209166)
+	self:Log("SPELL_AURA_REMOVED", "TimeAuraRemoved", 209166)
 
 	--[[ Time Layer 1 ]]--
-	--self:Log("SPELL_CAST_START", "ArcaneticRing", 208807)
-	--self:Log("SPELL_CAST_SUCCESS", "SpanningSingularity", 209170, 233011, 233012)
-	--self:Log("SPELL_AURA_APPLIED", "SingularityDamage", 209433)
-	--self:Log("SPELL_PERIODIC_DAMAGE", "SingularityDamage", 209433)
-	--self:Log("SPELL_PERIODIC_MISSED", "SingularityDamage", 209433)
+	self:Log("SPELL_CAST_START", "ArcaneticRing", 228877) -- l11n
+	self:Log("SPELL_AURA_APPLIED", "SingularityDamage", 209433)
+	self:Log("SPELL_PERIODIC_DAMAGE", "SingularityDamage", 209433)
+	self:Log("SPELL_PERIODIC_MISSED", "SingularityDamage", 209433)
 	self:Log("SPELL_AURA_APPLIED", "Ablation", 209615)
 	self:Log("SPELL_AURA_APPLIED_DOSE", "Ablation", 209615)
 
 	--[[ Time Layer 2 ]]--
-	self:Log("SPELL_CAST_SUCCESS", "DelphuricBeam", 214278, 214295) -- Boss: 214278, Echo: 214295
-	self:Log("SPELL_AURA_APPLIED", "DelphuricBeamApplied", 209244)
-	--self:Log("SPELL_CAST_SUCCESS", "EpochericOrb", 210022)
+	self:Log("SPELL_CAST_START", "DelphuricBeamCast", 214278) -- P2
+	self:Log("SPELL_CAST_SUCCESS", "DelphuricBeamCast", 214295) -- P3 is only success
+	self:Log("SPELL_AURA_APPLIED", "DelphuricBeam", 209244)
+	self:Log("SPELL_CAST_START", "EpochericOrb", 210022) -- l11n
 	self:Log("SPELL_AURA_APPLIED", "AblatingExplosion", 209973)
 
 	--[[ Time Layer 3 ]]--
@@ -213,181 +319,289 @@ function mod:OnBossEnable()
 end
 
 function mod:OnEngage()
-	phase = 1
-	timers = self:Mythic() and timersMythic or timersHeroic
+	phase = 0 -- Phase 1 starts upon first Leave the Nightwell cast
+	isPhaseTransition = nil
+
+	slowElementalCount = 1
+	slowZoneCount = 1
+	fastElementalCount = 1
+	fastZoneCount = 1
+	ringCount = 1
+	singularityCount = 1
+	orbCount = 1
+	beamCount = 1
+	ablatingCount = 1
+	tormentCount = 1
+	conflexiveBurstCount = 1
+
+	savedRingCount = nil
+	savedSingularityCount = nil
+	savedOrbCount = nil
+	savedBeamCount = nil
+
+	-- l11n START
+	need_ring_msg = GetLocale() ~= "enUS" and english_ring_msg == L.ring_yell
+	need_orb_msg = GetLocale() ~= "enUS" and english_orb_msg == L.orb_yell
+	-- l11n END
+
+	timers = self:Mythic() and mythicTimers or mod:Heroic() and heroicTimers or mod:Normal() and normalTimers or lfrTimers
 	self:RegisterEvent("INSTANCE_ENCOUNTER_ENGAGE_UNIT")
-end
-
-function mod:ElementalBar(spellId, name, count)
-	local time
-	if self:Mythic() and timers[spellId][phase] then
-		time = timers[spellId][phase][count]
-	elseif not self:Mythic() then
-		time = timers[spellId][count]
-	end
-	if time then
-		self:Bar(208887, time, CL.count:format(name, count))
-	end
-end
-
-function mod:EchoBar(basePhase, spellId, echoKey, count)
-	if timers[spellId][count] then
-		local key = phase == basePhase and spellId or echoKey
-		local time = timers[spellId][count]
-		local text = CL.count:format(phase == basePhase and self:SpellName(spellId) or echo[spellId], count)
-		self:Bar(key, time, text, spellId)
-	end
-end
-
-function mod:StopEchoBar(spellId, count)
-	self:StopBar(CL.count:format(self:SpellName(spellId), count))
-	self:StopBar(CL.count:format(echo[spellId], count))
 end
 
 --------------------------------------------------------------------------------
 -- Event Handlers
 --
 
+function mod:Warmup(event, msg)
+	if msg == L.elisande_trigger then
+		self:UnregisterEvent(event)
+		self:Bar("boss_active", 68, L.boss_active, L.boss_active_icon)
+	end
+end
+
 --[[ General ]]--
 do
-	local prevSingularity = 0
-	function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
-		if spellId == 211616 then -- Summon Time Elemental - Fast
-			self:StopBar(CL.count:format(L.fastAdd, fastAddCount))
-			self:Message(208887, "Neutral", "Info", CL.count:format(L.fastAdd, fastAddCount))
-			fastAddCount = fastAddCount + 1
-			self:ElementalBar(211616, L.fastAdd, fastAddCount)
-		elseif spellId == 209005 then -- Summon Time Elemental - Slow
-			self:StopBar(CL.count:format(L.slowAdd, slowAddCount))
-			self:Message(208887, "Neutral", "Info", CL.count:format(L.slowAdd, slowAddCount))
-			slowAddCount = slowAddCount + 1
-			self:ElementalBar(209005, L.slowAdd, slowAddCount)
-		elseif spellId == 211647 then  -- Time Stop
-			self:TimeStop()
-		elseif (spellId == 209168 or spellId == 233012 or spellId == 233011) and GetTime() - prevSingularity > 2 then -- Spanning Singularity
-			prevSingularity = GetTime()
-			self:SpanningSingularity()
+	local prev = 0
+	function mod:UNIT_SPELLCAST_SUCCEEDED(_, spellName, _, _, spellId)
+		if spellId == 211614 then -- Slow
+			self:Message("recursive_elemental", "Neutral", "Info", L.recursive_elemental, L.recursive_elemental_icon)
+			slowElementalCount = slowElementalCount + 1
+			local timer = nil
+			if self:Mythic() then
+				timer = timers[spellId][phase][slowElementalCount]
+			else
+				timer = timers[spellId][slowElementalCount]
+			end
+			if timer then
+				self:Bar("recursive_elemental", timer, L.recursive_elemental, L.recursive_elemental_icon)
+			end
+		elseif spellId == 211616 then -- Fast
+			self:Message("expedient_elemental", "Neutral", "Info", L.expedient_elemental, L.expedient_elemental_icon)
+			fastElementalCount = fastElementalCount + 1
+			local timer = nil
+			if self:Mythic() then
+				timer = timers[spellId][phase][fastElementalCount]
+			else
+				timer = timers[spellId][fastElementalCount]
+			end
+			if timer then
+				self:Bar("expedient_elemental", timer, L.expedient_elemental, L.expedient_elemental_icon)
+			end
+		elseif spellId == 209170 or spellId == 209171 then -- Spanning Singularity heroic / mythic
+			self:Message(209170, "Attention", "Info")
+			singularityCount = singularityCount + 1
+			local timer = timers[209170][singularityCount]
+			if timer then
+				self:Bar(209170, timer, CL.count:format(spellName, singularityCount))
+			end
+		elseif self:Easy() and (spellId == 209168 or spellId == 233010) then -- Spanning Singularity normal mode / LFR
+			local t = GetTime()
+			if t-prev > 1.5 then -- event can fire twice
+				prev = t
+				self:Message(209170, "Attention", "Info")
+				singularityCount = singularityCount + 1
+				local timer = timers[209170][singularityCount]
+				if self:LFR() then -- XXX Unsure if timers are complete
+					self:Bar(209170, timer, CL.count:format(spellName, singularityCount))
+				elseif timer then
+					self:Bar(209170, timer, CL.count:format(spellName, singularityCount))
+				end
+			end
 		end
 	end
 end
 
-function mod:Nightwell(args)
-	singularityCount = phase == 1 and 1 or 0
-	ringCount = 1
-	orbsCount = 1
-	beamsCount = 1
-	burstsCount = 1
-	tormentCount = 1
-	slowAddCount = 1
-	fastAddCount = 1
-	timeStopped = false
+function mod:INSTANCE_ENCOUNTER_ENGAGE_UNIT()
+	if isPhaseTransition then -- Otherwise it triggers in intermission
+		return
+	end
 
-	wipe(elementalsAlive)
-	slowZoneCount = 0
-	fastZoneCount = 0
+	local addsFound = {}
 
-	if singularityCount > 0 then
-		self:EchoBar(1, 209168, spanning_echo, singularityCount)
+	for i = 1, 5 do
+		local guid = UnitGUID(("boss%d"):format(i))
+		if guid then
+			local mobId = self:MobId(guid)
+			if mobId == 105301 or mobId == 105299 then -- Fast Elemental, Slow Elemental
+				if not elementalCollector[guid] then
+					elementalCollector[guid] = true
+				end
+				addsFound[guid] = true
+			end
+		end
 	end
-	self:EchoBar(1, 208807, ring_echo, ringCount)
-	self:ElementalBar(209005, L.slowAdd, slowAddCount)
-	self:ElementalBar(211616, L.fastAdd, fastAddCount)
-	if phase >= 2 then
-		self:EchoBar(2, 210022, orbs_echo, orbsCount)
-	end
-	if phase == 2 or (phase == 3 and self:Mythic()) then
-		self:EchoBar(2, 209244, beams_echo, beamsCount)
-	end
-	if phase == 3 then
-		self:Bar(209597, timers[209597][burstsCount], CL.count:format(self:SpellName(209597), burstsCount))
-		self:Bar(211261, timers[211261][tormentCount], CL.count:format(self:SpellName(211261), tormentCount))
-	end
-	if self:Mythic() then
-		self:Bar("berserk", phase == 3 and 194 or 199, 26662)
+
+	for guid,_ in pairs(elementalCollector) do
+		if not addsFound[guid] then -- add died
+			elementalCollector[guid] = nil
+			local mobId = self:MobId(guid)
+			if mobId == 105301 then -- Fast Elemental
+				self:Bar(209166, 35, CL.count:format(L.fastTimeZone, fastZoneCount))
+				fastZoneCount = fastZoneCount + 1
+			elseif mobId == 105299 then -- Slow Elemental
+				self:Bar(209165, 70, CL.count:format(L.slowTimeZone, slowZoneCount))
+				slowZoneCount = slowZoneCount + 1
+			end
+		end
 	end
 end
 
-function mod:TimeStop()
-	timeStopped = true
-	self:StopEchoBar(209168, singularityCount)
-	self:StopEchoBar(208807, ringCount)
-	self:StopEchoBar(210022, orbsCount)
-	self:StopEchoBar(209244, beamsCount)
-	self:StopBar(CL.count:format(L.fastAdd, fastAddCount))
-	self:StopBar(CL.count:format(L.slowAdd, slowAddCount))
-	self:StopBar(CL.count:format(L.slowZoneDespawn, slowZoneCount))
-	self:StopBar(CL.count:format(L.slowZoneDespawn, slowZoneCount - 1))
-	self:StopBar(CL.count:format(L.fastZoneDespawn, fastZoneCount))
-	self:StopBar(209973) -- Ablating Explosion
-	if self:Mythic() then
-		self:StopBar(26662) -- Berserk
+function mod:CHAT_MSG_MONSTER_YELL(event, msg)
+	-- l11n START
+	-- XXX maybe add a print to tell the user to tell us?
+	if orb_msg_is_next then
+		localized_orb_msg = msg
+		need_orb_msg = nil
+		orb_msg_is_next = nil
 	end
-	if phase == 1 then
-		singularityMax = singularityCount
-		ringMax = ringCount
-	elseif phase == 2 then
-		orbsMax = orbsCount
-		beamsMax = beamsCount
+	if ring_msg_is_next then
+		localized_ring_msg = msg
+		need_ring_msg = nil
+		ring_msg_is_next = nil
 	end
+	-- l11n END
+
+	if msg == L.ring_yell or (localized_ring_msg and msg:find(localized_ring_msg)) then -- Arcanetic Ring, l11n
+		self:Message(228877, "Attention", "Alarm", CL.count:format(self:SpellName(228877), ringCount))
+		ringCount = ringCount + 1
+		local timer = timers[228877][ringCount]
+		if self:LFR() then -- XXX Unsure if timers are complete
+			self:Bar(228877, timer, CL.count:format(self:SpellName(228877), ringCount))
+		elseif timer and (not savedRingCount or ringCount < savedRingCount) then
+			self:Bar(228877, timer, CL.count:format(self:SpellName(228877), ringCount))
+		end
+
+	elseif msg == L.orb_yell or (localized_orb_msg and msg:find(localized_orb_msg)) then -- Epocheric Orb, l11n
+		self:Message(210022, "Urgent", "Alert", CL.count:format(self:SpellName(210022), orbCount))
+		orbCount = orbCount + 1
+		local timer = timers[210022][orbCount] or self:Easy() and 15
+		if self:LFR() then -- XXX Unsure if timers are complete
+			self:Bar(210022, timer, CL.count:format(self:SpellName(210022), orbCount))
+		elseif timer and (not savedOrbCount or orbCount < savedOrbCount) then
+			self:Bar(210022, timer, CL.count:format(self:SpellName(210022), orbCount))
+		end
+
+	-- Should be in DelphuricBeamCast XXX remove if confirmed
+	--elseif msg:find(L.beam_msg) then
+	--	self:Message(209244, "Urgent", "Alert")
+	--	beamCount = beamCount + 1
+	--	if not savedBeamCount or beamCount < savedBeamCount then
+	--		local t = timers[209244][beamCount]
+	--		if t then
+	--			self:Bar(209244, t, CL.count:format(self:SpellName(209244), beamCount))
+	--		end
+	--	end
+
+	-- Should be in StartSingularityTimer XXX remove if confirmed
+	--elseif msg:find(L.singularity_msg) and phase == 2 or phase == 3 then -- Mythic only, zones apears 2s after the message.
+	--	self:ScheduleTimer("Message", 2, 209170, "Attention", "Info", self:SpellName(209170))
+	end
+end
+
+-- No event, so we are using this scheduling (mythic p2+p3 only)
+function mod:StartSingularityTimer()
+	singularityCount = singularityCount + 1
+	local t = timers[209170][singularityCount]
+	if not t then
+		return
+	end
+
+	if not savedSingularityCount or singularityCount < savedSingularityCount then
+		self:CDBar(209170, t, CL.count:format(self:SpellName(209170), singularityCount))
+		self:DelayedMessage(209170, t, "Attention", nil, nil, "Info") -- Zones appear 2s after yell
+		self:ScheduleTimer("StartSingularityTimer", t)
+	end
+end
+
+function mod:TimeStop(args)
+	isPhaseTransition = true
+	self:Message("stages", "Neutral", "Info", args.spellName, args.spellId)
+	self:Bar("stages", 9.7, CL.stage:format(phase+1), args.spellId)
+	self:Bar("stages", 13.2, L.elisande, "Achievement_thenighthold_grandmagistrixelisande")
+	-- Stop old bars
+	self:StopBar(L.recursive_elemental)
+	self:StopBar(L.expedient_elemental)
+	self:StopBar(CL.count:format(L.fastTimeZone, fastZoneCount-1))
+	self:StopBar(CL.count:format(L.slowTimeZone, slowZoneCount-1))
+	self:StopBar(CL.count:format(self:SpellName(228877), ringCount)) -- Arcanetic Ring
+	self:StopBar(CL.count:format(self:SpellName(210022), orbCount)) -- Epocheric Orb
+	self:StopBar(CL.count:format(self:SpellName(209244), beamCount)) -- Delphuric Beam
+	self:StopBar(CL.count:format(self:SpellName(209170), singularityCount)) -- Singularity
+	self:StopBar(CL.count:format(self:SpellName(209973), ablatingCount)) -- Ablating
+	self:StopBar(229889) -- Terminate (Berserk)
+	wipe(elementalCollector) -- This prevents starting wrong time zone bars at the start of the next phase
+	-- New bars will be started in LeavetheNightwell
+end
+
+function mod:LeavetheNightwell()
 	phase = phase + 1
-	self:Message("stages", "Neutral", "Info", CL.phase:format(phase), false)
-	self:Bar("stages", 10, CL.stage:format(phase), 211647)
-end
+	isPhaseTransition = nil
 
-do
-	local SLOW_ELEMENTAL = 105299
-	local FAST_ELEMENTAL = 105301
-	local elementalsSeen = {}
+	if self:Mythic() then
+		self:Berserk(phase == 3 and 194 or 199, true, nil, 229889, 229889)
+	end
 
-	function mod:INSTANCE_ENCOUNTER_ENGAGE_UNIT()
-		if timeStopped then
-			wipe(elementalsAlive)
-			return
+	if phase == 2 then
+		self:Message("stages", "Neutral", "Long", CL.stage:format(phase), false)
+
+		savedRingCount = ringCount
+		savedSingularityCount = singularityCount
+
+		beamCount = 1
+		orbCount = 1
+		ablatingCount = 1
+
+		if not self:LFR() then -- Beams not in LFR
+			self:Bar(209244, timers[209244][beamCount]) -- Delphuric Beam
 		end
+		self:Bar(210022, timers[210022][orbCount]) -- Epocheric Orb
+		self:Bar(209973, self:Easy() and 12.1 or timers[209973][ablatingCount]) -- Ablating Explosion
+	elseif phase == 3 then
+		self:Message("stages", "Neutral", "Long", CL.stage:format(phase), false)
 
-		wipe(elementalsSeen)
-		for i = 1, 5 do
-			local unit = ("boss%d"):format(i)
-			if UnitExists(unit) then
-				local guid = UnitGUID(unit)
-				local mob = self:MobId(guid)
-				if mob == SLOW_ELEMENTAL or mob == FAST_ELEMENTAL then
-					elementalsSeen[guid] = true
-					elementalsAlive[guid] = mob
-				end
-			end
+		savedOrbCount = orbCount
+		savedBeamCount = beamCount
+
+		beamCount = 1
+		orbCount = 1
+		tormentCount = 1
+		conflexiveBurstCount = 1
+
+		if not self:LFR() then -- These abilities don't apear in LFR in P3
+			self:Bar(211261, timers[211261][tormentCount], CL.count:format(self:SpellName(211261), tormentCount)) -- Permeliative Torment
+			self:Bar(209597, timers[209597][conflexiveBurstCount], CL.count:format(self:SpellName(209597), conflexiveBurstCount)) -- Conflexive Burst
 		end
-
-		for guid, mob in pairs(elementalsAlive) do
-			if not elementalsSeen[guid] then
-				elementalsAlive[guid] = nil
-				if mob == SLOW_ELEMENTAL then
-					slowZoneCount = slowZoneCount + 1
-					self:Bar(slow_zone_despawn, 70, CL.count:format(L.slowZoneDespawn, slowZoneCount), 207013)
-				elseif mob == FAST_ELEMENTAL then
-					fastZoneCount = fastZoneCount + 1
-					self:Bar(fast_zone_despawn, 35, CL.count:format(L.fastZoneDespawn, fastZoneCount), 207011)
-				end
-			end
+		if not self:Easy() then -- Not in Normal or LFR
+			self:Bar(210022, timers[210022][orbCount]) -- Epocheric Orb
+		end
+		if self:Mythic() or self:LFR() then -- Beams are in P3 in LFR.
+			self:Bar(209244, timers[209244][beamCount]) -- Delphuric Beam
 		end
 	end
-end
 
-function mod:RAID_BOSS_EMOTE(event, msg, npcname)
-	if msg:find("spell:228877") then -- Arcanetic Ring
-		self:ArcaneticRing()
-	elseif msg:find("spell:210022") then -- Epocheric Orbs
-		self:EpochericOrb()
+	slowElementalCount = 1
+	slowZoneCount = 1
+	fastElementalCount = 1
+	fastZoneCount = 1
+	ringCount = 1
+	singularityCount = 1
+
+	self:Bar("recursive_elemental", self:Mythic() and timers[211614][phase][slowElementalCount] or timers[211614][slowElementalCount], L.recursive_elemental, L.recursive_elemental_icon)
+	self:Bar("expedient_elemental", self:Mythic() and timers[211616][phase][fastElementalCount] or timers[211616][fastElementalCount], L.expedient_elemental, L.expedient_elemental_icon)
+	if not (self:Easy() and phase > 1) then
+		self:Bar(228877, timers[228877][ringCount] + (phase > 1 and 2 or 0), CL.count:format(self:SpellName(228877), ringCount)) -- Arcanetic Ring
+	end
+	if phase == 1 or self:Normal() then
+		self:Bar(209170, timers[209170][singularityCount], CL.count:format(self:SpellName(209170), singularityCount)) -- Spanning Singularity
+	elseif phase == 2 or phase == 3 then -- No events in p2/3 for heroic / mythic, so scheduling it is!
+		singularityCount = 0 -- will get incremented in the function
+		self:StartSingularityTimer()
 	end
 end
 
 --[[ Recursive Elemental ]]--
-function mod:ShieldApplied(args)
-	self:Message(args.spellId, "Attention", "Info", CL.on:format(args.spellName, args.destName))
-end
-
-function mod:ShieldRemoved(args)
-	self:Message(args.spellId, "Positive", "Info", CL.removed:format(args.spellName))
+function mod:Recursion(args)
+	self:Message(args.spellId, "Important", self:Interrupter(args.sourceGUID) and "Alert")
 end
 
 function mod:Blast(args)
@@ -398,7 +612,7 @@ end
 
 function mod:SlowTime(args)
 	if self:Me(args.destGUID)then
-		self:TargetMessage(args.spellId, args.destName, "Personal", "Info")
+		self:TargetMessage(args.spellId, args.destName, "Personal", "Long")
 		local _, _, _, _, _, _, expires = UnitDebuff("player", args.spellName)
 		local t = expires - GetTime()
 		self:TargetBar(args.spellId, t, args.destName)
@@ -406,33 +620,42 @@ function mod:SlowTime(args)
 end
 
 --[[ Expedient Elemental ]]--
-function mod:ExothermicRelease(args)
-	self:Message(args.spellId, "Attention", "Alarm")
+function mod:Expedite(args)
+	self:Message(args.spellId, "Attention", self:Interrupter(args.sourceGUID) and "Info")
 end
 
 function mod:FastTime(args)
 	if self:Me(args.destGUID)then
-		self:Message(args.spellId, "Positive", "Info", CL.you:format(args.spellName))
+		self:Message(args.spellId, "Positive", "Long", CL.you:format(args.spellName))
 		local _, _, _, _, _, _, expires = UnitDebuff("player", args.spellName)
 		local t = expires - GetTime()
 		self:TargetBar(args.spellId, t, args.destName)
 	end
 end
 
---[[ Time Layer 1 ]]--
-function mod:ArcaneticRing()
-	self:Message(208807, "Urgent", "Alert")
-	ringCount = ringCount + 1
-	if phase == 1 or ringCount < ringMax then
-		self:EchoBar(1, 208807, ring_echo, ringCount)
+function mod:TimeAuraRemoved(args)
+	if self:Me(args.destGUID) then
+		self:StopBar(args.spellId, args.destName)
 	end
 end
 
-function mod:SpanningSingularity(args)
-	self:Message(209168, "Important", "Info")
-	singularityCount = singularityCount + 1
-	if phase == 1 or singularityCount < singularityMax then
-		self:EchoBar(1, 209168, spanning_echo, singularityCount)
+--[[ Time Layer 1 ]]--
+function mod:ArcaneticRing() -- l11n
+	if self:LFR() and ringCount == 1 then -- For some reason Elisande forgets to yell on the first rings in LFR
+		self:CHAT_MSG_MONSTER_YELL("", L.ring_yell, "")
+	elseif need_ring_msg then
+		ring_msg_is_next = true
+	end
+end
+
+do
+	local prev = 0
+	function mod:SingularityDamage(args)
+		local t = GetTime()
+		if self:Me(args.destGUID) and t-prev > 1.5 then
+			prev = t
+			self:Message(209170, "Personal", "Alert", CL.underyou:format(args.spellName))
+		end
 	end
 end
 
@@ -443,65 +666,47 @@ function mod:Ablation(args)
 	end
 end
 
---[[
-do
-	local prev = 0
-	function mod:SingularityDamage(args)
-		local t = GetTime()
-		if self:Me(args.destGUID) and t-prev > 1.5 then
-			prev = t
-			self:Message(209168, "Personal", "Alert", CL.underyou:format(args.spellName))
-		end
-	end
-end
-]]
-
 --[[ Time Layer 2 ]]--
+function mod:DelphuricBeamCast()
+	self:Message(209244, "Urgent", "Alert")
+	beamCount = beamCount + 1
+	local timer = timers[209244][beamCount]
+	if self:LFR() then
+		self:Bar(209244, timers[209244][beamCount], CL.count:format(self:SpellName(209244), beamCount))
+	elseif (not savedBeamCount or beamCount < savedBeamCount) and timer then
+		self:Bar(209244, timer, CL.count:format(self:SpellName(209244), beamCount))
+	end
+end
+
 function mod:DelphuricBeam(args)
-	self:Message(209244, "Urgent", "Alert", CL.incoming:format(self:SpellName(209244)))
-	self:Bar(209244, 8, CL.cast:format(self:SpellName(209244)))
-	beamsCount = beamsCount + 1
-	if phase == 2 or (self:Mythic() and beamsCount < beamsMax) then
-		self:EchoBar(2, 209244, beams_echo, beamsCount)
+	if self:Me(args.destGUID) then
+		self:Flash(args.spellId)
+		self:Say(args.spellId)
+		local _, _, _, _, _, _, expires = UnitDebuff("player", args.spellName)
+		local t = expires - GetTime()
+		self:TargetBar(args.spellId, t, args.destName)
+		self:TargetMessage(args.spellId, args.destName, "Important", "Alarm")
 	end
 end
 
-do
-	local playerList = mod:NewTargetList()
-	function mod:DelphuricBeamApplied(args)
-		if self:Me(args.destGUID) then
-			self:Flash(args.spellId)
-			self:Say(args.spellId)
-			local _, _, _, _, _, _, expires = UnitDebuff("player", args.spellName)
-			local t = expires - GetTime()
-			self:TargetBar(args.spellId, t, args.destName)
-		end
-
-		--[[playerList[#playerList+1] = args.destName
-
-		if #playerList == 1 then
-			self:ScheduleTimer("TargetMessage", 0.3, args.spellId, playerList, "Important", "Alarm")
-		end
-		]]--
-	end
-end
-
-function mod:EpochericOrb()
-	self:Message(210022, "Urgent", "Alert", CL.incoming:format(self:SpellName(210022)))
-	self:Bar(210022, 8, CL.cast:format(self:SpellName(210022)))
-	orbsCount = orbsCount + 1
-	if phase == 2 or orbsCount < orbsMax then
-		self:EchoBar(2, 210022, orbs_echo, orbsCount)
+function mod:EpochericOrb() -- l11n
+	if need_orb_msg then
+		orb_msg_is_next = true
 	end
 end
 
 function mod:AblatingExplosion(args)
-	self:Bar(args.spellId, 20.7)
 	self:TargetMessage(args.spellId, args.destName, "Attention", "Long")
+	ablatingCount = ablatingCount + 1
+
 	if self:Me(args.destGUID) then
+		self:Flash(args.spellId)
 		self:Say(args.spellId)
 	end
-	--self:TargetBar(args.spellId, 8, args.destName)
+	local timer = self:Easy() and 20.7 or timers[args.spellId][ablatingCount]
+	if timer then
+		self:Bar(args.spellId, timer, CL.count:format(args.spellName, ablatingCount))
+	end
 end
 
 --[[ Time Layer 3 ]]--
@@ -509,7 +714,6 @@ do
 	local playerList = mod:NewTargetList()
 	function mod:PermeliativeTorment(args)
 		if self:Me(args.destGUID) then
-			self:Flash(args.spellId)
 			local _, _, _, _, _, _, expires = UnitDebuff("player", args.spellName)
 			local t = expires - GetTime()
 			self:TargetBar(args.spellId, t, args.destName)
@@ -520,22 +724,25 @@ do
 		if #playerList == 1 then
 			self:ScheduleTimer("TargetMessage", 0.3, args.spellId, playerList, "Important", "Alarm")
 			tormentCount = tormentCount + 1
-			self:Bar(args.spellId, timers[211261][tormentCount], CL.count:format(args.spellName, tormentCount))
+			local timer = timers[args.spellId][tormentCount]
+			if timer then
+				self:Bar(args.spellId, timer, CL.count:format(args.spellName, tormentCount))
+			end
 		end
 	end
 end
 
-
 function mod:ConflexiveBurst(args)
-	burstsCount = burstsCount + 1
-	self:Bar(209597, timers[209597][burstsCount], CL.count:format(self:SpellName(209597), burstsCount))
+	conflexiveBurstCount = conflexiveBurstCount + 1
+	local timer = timers[209597][conflexiveBurstCount] or self:Normal() and 10
+	if timer then
+		self:Bar(209597, timer, CL.count:format(args.spellName, conflexiveBurstCount))
+	end
 end
 
 do
 	local playerList = mod:NewTargetList()
 	function mod:ConflexiveBurstApplied(args)
-		playerList[#playerList + 1] = args.destName
-
 		if self:Me(args.destGUID) then
 			self:Flash(209597)
 			self:Say(209597)
@@ -544,6 +751,8 @@ do
 			--local t = expires - GetTime()
 			--self:TargetBar(209597, t, args.destName)
 		end
+
+		playerList[#playerList+1] = args.destName
 
 		if #playerList == 1 then
 			self:ScheduleTimer("TargetMessage", 0.3, 209597, playerList, "Important", "Alarm")

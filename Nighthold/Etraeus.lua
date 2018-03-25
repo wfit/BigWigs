@@ -3,75 +3,48 @@
 -- Module Declaration
 --
 
-local mod, CL = BigWigs:NewBoss("Star Augur Etraeus", 1088, 1732)
+local mod, CL = BigWigs:NewBoss("Star Augur Etraeus", 1530, 1732)
 if not mod then return end
 mod:RegisterEnableMob(103758)
 mod.engageId = 1863
 mod.respawnTime = 50
-mod.instanceId = 1530
 
 --------------------------------------------------------------------------------
 -- Locals
 --
 
-local Hud = Oken.Hud
-
 local phase = 1
 local mobCollector = {}
-local gravPullSayTimers = {}
 local ejectionCount = 1
-local grandConjunctionCount = 1
-local felNovaCount = 1
-local devourCount = 1
-local witnessCount = 1
-local gravPullCount = 1
+local novaCount = 1
 local timers = {
-	-- Icy Ejection, SPELL_CAST_SUCCESS, timers vary a lot (+-2s)
-	[206936] = { 25, 35, 6, 6, 48, 2, 2 },
+	-- Icy Ejection, SPELL_CAST_SUCCESS, timers vary sometimes (+-2s)
+	[206936] = {25, 35.2, 6.6, 4.8, 51.2, 2.1, 3.0, 24.2, 2.1, 2.2},
 
-	-- Fel Ejection, SPELL_CAST_SUCCESS
-	[205649] = { 17, 4, 4, 2, 10, 3.5, 3.5, 32, 4, 3.5, 3.5, 3.5, 22, 7.5, 17.5, 1, 2, 1.5 },
+	-- Fel Ejection, SPELL_CAST_SUCCESS, timers vary sometimes (+-2s)
+	[205649] = {17, 3.9, 2.9, 2.6, 9.7, 2.1, 1.5, 32.7, 1.8, 2.0, 13.7, 3.2, 1.9, 21.8, 7.3, 11.1, 2.9, 2.1, 23.3, 2.0, 2.0}
 
-	-- Grand Conjunction, SPELL_CAST_START
-	[205408] = {
-		[1] = { 15.0, 14.0, 14.0, 14.0, 14.0 },
-		[2] = { 27.0, 44.8, 57.7 },
-		[3] = { 60.0, 44.0, 40.0 },
-		[4] = { 47.0, 62.0, 51.0 },
-	},
-
-	-- Fel Nova, SPELL_CAST_START
-	[206517] = { 51.4, 48, 51 },
-
-	-- World-Devouring Force,SPELL_CAST_START
-	[216909] = { 21.4, 42.1, 57.9, 52.2 },
 }
 
-local defaultIcons = {
-	[205429] = 205429,
-	[205445] = 205445,
-	[216345] = 216345,
-	[216344] = 216344,
-}
-local icons = defaultIcons
-
-local replacementIcons = {
-	[205429] = 227498, -- Yellow/Orange
-	[205445] = 227491, -- Red
-	[216345] = 227500, -- Green
-	[216344] = 227499, -- Blue
+local grandCast = nil
+local grandCounter = 1
+local grandTimers = {
+	{15, 13.4, 14}, -- P1
+	{26, 44.9, 57.7}, -- P2
+	{60, 43.7, 41.4}, -- P3
+	{47.9, 61.3, 51.3}, -- P4
 }
 
-local redIcon = 189030
-local greenIcon = 189032
+local worldDevouringForceCounter = 1
+local worldDevouringForceTimers = {22.7, 41.7, 57.6, 52.2}
 
-local starSignsColor = {
-	[205429] = {255, 255, 50 }, -- Crab / Yellow
-	[205445] = {255, 50, 50}, -- Wolf / Red
-	[216345] = {50, 255, 50}, -- Hunter / Green
-	[216344] = {128, 128, 255}, -- Dragon / Blue
-	["same"] = {50, 255, 50},
-	["other"] = {255, 50, 50}
+local voidCount = 1
+
+local starSignTables = {
+	[205429] = {},
+	[205445] = {},
+	[216345] = {},
+	[216344] = {},
 }
 
 --------------------------------------------------------------------------------
@@ -92,59 +65,17 @@ if L then
 	L[205445] = "|T1391537:15:15:0:0:64:64:4:60:4:60|t|cFFFF0000Wolf|r"
 	L[216345] = "|T1391536:15:15:0:0:64:64:4:60:4:60|t|cFF00FF00Hunter|r"
 	L[216344] = "|T1391535:15:15:0:0:64:64:4:60:4:60|t|cFF00DDFFDragon|r"
-
-	-- XXX replace with core option
-	L.nameplate_requirement = "This feature is currently only supported by KuiNameplates. Mythic only."
-
-	L.custom_off_icy_ejection_nameplates = "Show {206936} on friendly nameplates" -- Icy Ejection
-	L.custom_off_icy_ejection_nameplates_desc = L.nameplate_requirement
-
-	L.custom_on_fel_ejection_nameplates = "Show {205649} on friendly nameplates" -- Fel Ejection
-	L.custom_on_fel_ejection_nameplates_desc = L.nameplate_requirement
-
-	L.custom_on_gravitational_pull_nameplates = "Show {214335} on friendly nameplates" -- Gravitational Pull
-	L.custom_on_gravitational_pull_nameplates_desc = L.nameplate_requirement
-
-	L.custom_on_grand_conjunction_nameplates = "Show {205408} on friendly nameplates" -- Grand Conjunction
-	L.custom_on_grand_conjunction_nameplates_desc = L.nameplate_requirement
-
-	-- Do no replace this options below
-	L.custom_off_gc_replacement_icons = "Use brighter icons for {205408}"
-	L.custom_off_gc_replacement_icons_desc = "Replace the nameplate icons used by Grand Conjunction for better visibility:"
-
-	L.custom_off_gc_redgreen_icons = "Only use red and green icons for {205408}"
-	L.custom_off_gc_redgreen_icons_desc = "Change the nameplate icons for matching star signs to |T876914:15:15:0:0:64:64:4:60:4:60|t and non matching star signs to |T876915:15:15:0:0:64:64:4:60:4:60|t."
-end
-
-do -- Create the description string for the replacement icons
-	local s = ""
-	local tex = "|T%s:15:15:0:0:64:64:4:60:4:60|t"
-	for k, v in pairs(replacementIcons) do
-		local _, _, kicon = GetSpellInfo(k)
-		local _, _, vicon = GetSpellInfo(v)
-		s = s .. "\n" .. tex:format(kicon) .. " => " .. tex:format(vicon)
-	end
-	L.custom_off_gc_replacement_icons_desc = L.custom_off_gc_replacement_icons_desc .. s
 end
 
 --------------------------------------------------------------------------------
 -- Initialization
 --
 
-local marks = mod:AddTokenOption { "marks", "Automatically set raid target icons", promote = true }
-local BEWARE = mod:AddCustomOption { "beware", "BEWARE World-Devouring Force", default = true }
-local tex_starsigns = mod:AddCustomOption { "tex_starsigns", "Display Star Signs spell texture on HUD" }
-local diff_starsigns = mod:AddCustomOption { "diff_starsigns", "Display Star Signs HUD as Green / Red based on your own sign" }
-
 function mod:GetOptions()
 	return {
 		--[[ General ]]--
 		"stages",
 		221875, -- Nether Traversal
-		{205408, "FLASH", "PULSE", "HUD"}, -- Grand Conjunction
-		tex_starsigns,
-		diff_starsigns,
-		marks,
 
 		--[[ Stage One ]]--
 		206464, -- Coronal Ejection
@@ -159,28 +90,20 @@ function mod:GetOptions()
 		{214167, "SAY"}, -- Gravitational Pull
 		{206388, "TANK"}, -- Felburst
 		206517, -- Fel Nova
-		{205649, "SAY", "FLASH"}, -- Fel Ejection
+		{205649, "SAY"}, -- Fel Ejection
 		206398, -- Felflame
 
 		--[[ Stage Four ]]--
 		{214335, "SAY"}, -- Gravitational Pull
 		207439, -- Void Nova
-		{206965, "FLASH"}, -- Void Burst
 		222761, -- Big Bang
+		216909, -- World-Devouring Force
 
 		--[[ Thing That Should Not Be ]]--
 		207720, -- Witness the Void
-		216909, -- World Devouring Force
-		BEWARE,
-		--{217046, "SAY", "FLASH"} -- Devouring Remnant
 
-		--[[ Mythic Upstream ]] --
-		--[["custom_off_icy_ejection_nameplates",
-		"custom_on_fel_ejection_nameplates",
-		"custom_on_gravitational_pull_nameplates",
-		"custom_on_grand_conjunction_nameplates",
-		"custom_off_gc_replacement_icons",
-		"custom_off_gc_redgreen_icons",]]
+		--[[ Mythic ]]--
+		{205408, "INFOBOX", "PROXIMITY"}, -- Grand Conjunction
 	}, {
 		["stages"] = "general",
 		[206464] = -13033, -- Stage One
@@ -198,17 +121,10 @@ function mod:OnBossEnable()
 	self:Log("SPELL_AURA_APPLIED", "GroundEffectDamage", 206398) -- Felflame
 	self:Log("SPELL_AURA_APPLIED_DOSE", "GroundEffectDamage", 206398) -- Felflame
 
-	--[[ Grand Conjunction ]] --
-	self:Log("SPELL_CAST_START", "GrandConjunction", 205408)
-	self:Log("SPELL_AURA_APPLIED", "StarSignApplied", 205429, 205445, 216345, 216344) -- Crab, Wolf, Hunter, Dragon)
-	self:Log("SPELL_AURA_REMOVED", "StarSignRemoved", 205429, 205445, 216345, 216344) -- Crab, Wolf, Hunter, Dragon)
-
 	--[[ Stage One ]]--
 	self:Log("SPELL_CAST_SUCCESS", "CoronalEjection", 206464)
 
 	--[[ Stage Two ]]--
-	self:Log("SPELL_DAMAGE", "IceburstDamage", 206921)
-	self:Log("SPELL_MISSED", "IceburstDamage", 206921)
 	self:Log("SPELL_AURA_APPLIED", "GravitationalPull", 205984, 214167, 214335) -- Stage 2, Stage 3, Stage 4
 	self:Log("SPELL_AURA_REMOVED", "GravitationalPullRemoved", 205984, 214167, 214335) -- Stage 2, Stage 3, Stage 4
 	self:Log("SPELL_CAST_SUCCESS", "GravitationalPullSuccess", 205984, 214167, 214335) -- Stage 2, Stage 3, Stage 4
@@ -228,42 +144,33 @@ function mod:OnBossEnable()
 
 	--[[ Stage Four ]]--
 	self:Log("SPELL_CAST_START", "VoidNova", 207439)
-	self:Log("SPELL_AURA_APPLIED", "VoidburstApplied", 206965)
-	self:Log("SPELL_AURA_APPLIED_DOSE", "VoidburstApplied", 206965)
-	self:Log("SPELL_AURA_REMOVED", "VoidburstRemoved", 206965)
+	self:Log("SPELL_CAST_START", "WorldDevouringForce", 216909)
 
 	--[[ Thing That Should Not Be ]]--
 	self:Log("SPELL_CAST_START", "WitnessTheVoid", 207720)
-	self:Log("SPELL_CAST_SUCCESS", "WitnessTheVoidSuccess", 207720)
 	self:Death("ThingDeath", 104880) -- Thing That Should Not Be
 
-	--[ Mythic ]]--
-	self:Log("SPELL_CAST_START", "WorldDevouringForce", 216909)
-	--self:Log("SPELL_AURA_APPLIED", "DevouringRemnant", 217046)
-
-	if self:Mythic() then
-		if self:GetOption("custom_off_icy_ejection_nameplates") or -- XXX maybe add these to ShowFriendlyNameplates?
-				self:GetOption("custom_on_fel_ejection_nameplates") or
-				self:GetOption("custom_on_gravitational_pull_nameplates") or
-				self:GetOption("custom_on_grand_conjunction_nameplates") then
-
-			-- Experimenting with using callbacks for nameplate addons
-			self:ShowFriendlyNameplates()
-			self:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED") -- see comment above the function for explanation
-		end
-	end
+	--[[ Mythic ]]--
+	self:Log("SPELL_CAST_START", "GrandConjunction", 205408)
+	self:Log("SPELL_CAST_SUCCESS", "GrandConjunctionSuccess", 205408)
+	self:Log("SPELL_AURA_APPLIED", "StarSigns", 205429, 205445, 216345, 216344) -- Star Sign: Crab, Wolf, Hunter, Dragon
+	self:Log("SPELL_AURA_REMOVED", "StarSignsRemoved", 205429, 205445, 216345, 216344)
 end
 
 function mod:OnEngage()
 	phase = 1
 	ejectionCount = 1
-	grandConjunctionCount = 1
+	grandCounter = 1
+	novaCount = 1
+	worldDevouringForceCounter = 1
+	voidCount = 1
+	grandCast = nil
 	wipe(mobCollector)
-	wipe(gravPullSayTimers)
 	self:Bar(206464, 12.5) -- Coronal Ejection
-	self:Bar(221875, self:Mythic() and 60 or 20) -- Nether Traversal
 	if self:Mythic() then
-		self:Bar(205408, timers[205408][phase][grandConjunctionCount]) -- Grand Conjunction
+		self:CDBar(205408, 15) -- Grand Conjunction
+	else
+		self:Bar(221875, 20) -- Nether Traversal
 	end
 	starSignTables = {
 		[205429] = {},
@@ -281,116 +188,69 @@ end
 -- Event Handlers
 --
 
-function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
+function mod:UNIT_SPELLCAST_SUCCEEDED(_, _, _, _, spellId)
 	if spellId == 222130 then -- Phase 2 Conversation
 		phase = 2
 		self:Message("stages", "Neutral", "Long", "90% - ".. CL.stage:format(2), false)
-		self:StopBar(205408) -- Grand Conjunction
 		ejectionCount = 1
-		grandConjunctionCount = 1
+		novaCount = 1
 		self:CDBar(206936, timers[206936][ejectionCount], CL.count:format(self:SpellName(206936), ejectionCount))
 		self:Bar(205984, 30) -- Gravitational Pull
-		self:Bar(206949, 53) -- Frigid Nova
-		self:Bar(221875, 188.5) -- Nether Traversal
-		if self:Mythic() then
-			self:CDBar(205408, timers[205408][phase][grandConjunctionCount]) -- Grand Conjunction
+		if not self:Easy() then
+			self:Bar(206949, self:Mythic() and 49 or 53, CL.count:format(self:SpellName(206949), novaCount)) -- Frigid Nova
 		end
-
+		if self:Mythic() then
+			self:StopBar(CL.count:format(self:SpellName(205408), grandCounter)) -- Grand Conjunction
+			grandCounter = 1
+			self:CDBar(205408, 26, CL.count:format(self:SpellName(205408), grandCounter)) -- Grand Conjunction
+		end
 	elseif spellId == 222133 then -- Phase 3 Conversation
 		phase = 3
 		self:Message("stages", "Neutral", "Long", "60% - ".. CL.stage:format(3), false)
-		self:StopBar(CL.count:format(self:SpellName(206936, ejectionCount)))
-		self:StopBar(206949) -- Frigid Nova
-		self:StopBar(205408) -- Grand Conjunction
+		self:StopBar(CL.count:format(self:SpellName(206936), ejectionCount)) -- Icy Ejection
+		self:StopBar(CL.count:format(self:SpellName(206949), novaCount)) -- Frigid Nova
 		ejectionCount = 1
-		grandConjunctionCount = 1
-		felNovaCount = 1
+		novaCount = 1
 		self:CDBar(205649, timers[205649][ejectionCount], CL.count:format(self:SpellName(205649), ejectionCount))
 		self:CDBar(214167, 28) -- Gravitational Pull
-		self:CDBar(206517, self:Mythic() and timers[206517][felNovaCount] or 62) -- Fel Nova
-		self:Bar(221875, 188.5) -- Nether Traversal
-		if self:Mythic() then
-			self:CDBar(205408, timers[205408][phase][grandConjunctionCount]) -- Grand Conjunction
+		if not self:Easy() then
+			self:CDBar(206517, self:Mythic() and 52 or 58.6, CL.count:format(self:SpellName(206517), novaCount)) -- Fel Nova
 		end
-
+		if self:Mythic() then
+			self:StopBar(CL.count:format(self:SpellName(205408), grandCounter)) -- Grand Conjunction
+			grandCounter = 1
+			self:CDBar(205408, 60, CL.count:format(self:SpellName(205408), grandCounter)) -- Grand Conjunction
+		end
 	elseif spellId == 222134 then -- Phase 4 Conversation
 		phase = 4
 		self:Message("stages", "Neutral", "Long", "30% - ".. CL.stage:format(4), false)
 		self:RegisterEvent("INSTANCE_ENCOUNTER_ENGAGE_UNIT")
-		self:StopBar(CL.count:format(self:SpellName(205649, ejectionCount)))
-		self:StopBar(206517) -- Fel Nova
-		self:StopBar(205408) -- Grand Conjunction
+		self:StopBar(CL.count:format(self:SpellName(205649), ejectionCount)) -- Fel Ejection
+		self:StopBar(CL.count:format(self:SpellName(206517), novaCount)) -- Fel Nova
 		ejectionCount = 1
-		grandConjunctionCount = 1
-		devourCount = 1
-		gravPullCount = 1
+		novaCount = 1
 		self:CDBar(214335, 20) -- Gravitational Pull
-		self:CDBar(207439, 42) -- Fel Nova
-		if self:Mythic() then
-			self:CDBar(216909, timers[216909][devourCount]) -- World-Devouring Force
-			self:CDBar(205408, timers[205408][phase][grandConjunctionCount]) -- Grand Conjunction
+		if not self:Easy() then
+			self:CDBar(207439, 42, CL.count:format(self:SpellName(207439), novaCount)) -- Void Nova
 		end
-		self:Berserk(201.5, true, nil, 222761, 222761) -- Big Bang (end of cast)
+		self:Berserk(self:Mythic() and 201.5 or 231.5, true, nil, 222761, 222761) -- Big Bang (end of cast)
+		if self:Mythic() then
+			self:StopBar(CL.count:format(self:SpellName(205408), grandCounter)) -- Grand Conjunction
+			grandCounter = 1
+			worldDevouringForceCounter = 1
+			self:CDBar(205408, 47, CL.count:format(self:SpellName(205408), grandCounter)) -- Grand Conjunction
+			self:Bar(216909, worldDevouringForceTimers[worldDevouringForceCounter], CL.count:format(self:SpellName(216909), worldDevouringForceCounter)) -- World-Devouring Force
+		end
 	end
 end
 
 function mod:NetherTraversal(args)
-	self:Bar(args.spellId, 8.5, CL.cast:format(args.spellName))
-end
-
---[[ Grand Conjunction ]] --
-do
-	local mySign
-
-	function mod:GrandConjunction(args)
-		self:Message(args.spellId, "Attention", "Long", CL.casting:format(args.spellName))
-		mySign = nil
-		grandConjunctionCount = grandConjunctionCount + 1
-		self:Bar(args.spellId, timers[args.spellId][phase][grandConjunctionCount])
+	if grandCast == true then
+		grandCast = nil
+		self:StopBar(CL.cast:format(205408))
+		self:CloseProximity(205408)
 	end
-
-	function mod:StarSignApplied(args)
-		if self:Hud(205408) then
-			local me = self:Me(args.destGUID)
-			local sign = args.spellId
-			if me then mySign = sign end
-
-			-- Create object
-			local obj = me and Hud:DrawTimer(args.destGUID, 50, 15) or Hud:DrawArea(args.destGUID, 50)
-
-			-- Color management
-			if self:GetOption(diff_starsigns) then
-				local function set_color()
-					local color = starSignsColor[mySign == sign and "same" or "other"]
-					obj:SetColor(unpack(color))
-				end
-				if mySign then
-					set_color()
-				else
-					function obj:OnUpdate()
-						if mySign ~= nil then
-							set_color()
-							obj.OnUpdate = nil
-						end
-					end
-				end
-			else
-				obj:SetColor(unpack(starSignsColor[args.spellId]))
-			end
-
-			-- Register
-			obj:Register(args.destKey, true)
-
-			-- Texture
-			if self:GetOption(tex_starsigns) then
-				Hud:DrawTexture(args.destGUID, 50, args.spellIcon):Register(args.destKey)
-			end
-		end
-	end
-
-	function mod:StarSignRemoved(args)
-		Hud:RemoveObject(args.destKey)
-	end
+	self:CastBar(args.spellId, 8.5)
 end
 
 do
@@ -406,21 +266,15 @@ end
 
 --[[ Stage One ]]--
 function mod:CoronalEjection(args)
-	self:Message(args.spellId, "Attention", "Info")
+	self:Message(args.spellId, "Attention")
 end
 
 --[[ Stage Two ]]--
-function mod:IceburstDamage(args)
-	if self:Tank(args.destGUID) then
-		self:SetIcon(marks, args.destUnit, 8)
-	end
-end
-
 do
 	local timers = {
 		[205984] = 30,
 		[214167] = 28,
-		[214335] = 63,
+		[214335] = 62,
 	}
 	function mod:GravitationalPullSuccess(args)
 		-- Only show this once by using the success event
@@ -438,24 +292,15 @@ function mod:GravitationalPull(args)
 	self:TargetBar(args.spellId, remaining, args.destName)
 
 	if self:Me(args.destGUID) then
-		gravPullSayTimers[1] = self:ScheduleTimer("Say", remaining-3, args.spellId, 3, true)
-		gravPullSayTimers[2] = self:ScheduleTimer("Say", remaining-2, args.spellId, 2, true)
-		gravPullSayTimers[3] = self:ScheduleTimer("Say", remaining-1, args.spellId, 1, true)
-	end
-
-	if phase == 3 then
-		self:SetIcon(marks, args.destUnit, 8)
+		self:SayCountdown(args.spellId, remaining)
 	end
 end
 
 function mod:GravitationalPullRemoved(args)
-	self:SetIcon(marks, args.destUnit, 0)
 	if self:Me(args.destGUID) then
-		for i = #gravPullSayTimers, 1, -1 do
-			self:CancelTimer(gravPullSayTimers[i])
-			gravPullSayTimers[i] = nil
-		end
+		self:CancelSayCountdown(args.spellId)
 	end
+	self:StopBar(args.spellId, args.destName)
 end
 
 function mod:IcyEjection(args)
@@ -466,30 +311,14 @@ function mod:IcyEjection(args)
 	end
 end
 
-do
-	local list = mod:NewTargetList()
-	function mod:IcyEjectionApplied(args)
-		list[#list+1] = args.destName
-		if #list == 1 then
-			self:ScheduleTimer("TargetMessage", 0.1, args.spellId, list, "Attention", "Warning")
-		end
-
-		if self:Me(args.destGUID) then
-			if not self:Mythic() then
-				self:Say(args.spellId)
-			end
-			self:Flash(args.spellId)
-			self:OpenProximity(args.spellId, 8)
-			self:TargetBar(args.spellId, 10, args.destName)
-			self:ScheduleTimer("WarnIcyEjection", 7, args.spellName, args.spellId, 3)
-			self:ScheduleTimer("WarnIcyEjection", 8, args.spellName, args.spellId, 2)
-			self:ScheduleTimer("WarnIcyEjection", 9, args.spellName, args.spellId, 1)
-		end
-	end
-
-	function mod:WarnIcyEjection(spellName, spellId, count)
-		if UnitDebuff("player", spellName) then
-			self:Say(spellId, count, true)
+function mod:IcyEjectionApplied(args)
+	if self:Me(args.destGUID) then
+		self:TargetMessage(args.spellId, args.destName, "Attention", "Warning")
+		self:Say(args.spellId)
+		self:OpenProximity(args.spellId, 8)
+		self:TargetBar(args.spellId, 10, args.destName)
+		if not self:LFR() then
+			self:SayCountdown(args.spellId, 10)
 		end
 	end
 end
@@ -497,13 +326,16 @@ end
 function mod:IcyEjectionRemoved(args)
 	if self:Me(args.destGUID) then
 		self:CloseProximity(args.spellId)
+		self:CancelSayCountdown(args.spellId)
+		self:StopBar(args.spellId, args.destName)
 	end
 end
 
 function mod:FrigidNova(args)
 	self:Message(args.spellId, "Important", "Alarm")
-	self:Bar(args.spellId, 4, CL.cast:format(args.spellName))
-	self:CDBar(args.spellId, 60)
+	self:CastBar(args.spellId, 4)
+	novaCount = novaCount + 1
+	self:CDBar(args.spellId, 61, CL.count:format(args.spellName, novaCount))
 end
 
 function mod:Chilled(args)
@@ -523,9 +355,9 @@ end
 
 function mod:FelNova(args)
 	self:Message(args.spellId, "Important", "Alarm")
-	self:Bar(args.spellId, 4, CL.cast:format(args.spellName))
-	felNovaCount = felNovaCount + 1
-	self:CDBar(args.spellId, self:Mythic() and timers[args.spellId][felNovaCount] or 45)
+	self:CastBar(args.spellId, 4)
+	novaCount = novaCount + 1
+	self:Bar(args.spellId, (self:Mythic() and (novaCount == 2 and 48.5 or 51)) or 45, CL.count:format(args.spellName, novaCount))
 end
 
 function mod:FelEjection(args)
@@ -536,50 +368,33 @@ function mod:FelEjection(args)
 	end
 end
 
-do
-	local list = mod:NewTargetList()
-	function mod:FelEjectionApplied(args)
-		list[#list+1] = args.destName
-		if #list == 1 then
-			self:ScheduleTimer("TargetMessage", 0.1, args.spellId, list, "Attention", "Warning")
-		end
+function mod:FelEjectionApplied(args)
+	if self:Me(args.destGUID) then
+		self:TargetMessage(args.spellId, args.destName, "Personal", "Warning")
+		self:Say(args.spellId)
+		self:TargetBar(args.spellId, 8, args.destName)
+	end
+end
 
-		if self:Me(args.destGUID) then
-			if self:Mythic() then
-				self:Say(args.spellId, "{rt8}", true)
-			else
-				self:Say(args.spellId)
-			end
-			self:Flash(args.spellId)
-			self:TargetBar(args.spellId, 8, args.destName)
-			self:ScheduleTimer("Message", 8, args.spellId, "Positive", "Info", CL.removed:format(args.spellName))
-		end
+function mod:FelEjectionRemoved(args)
+	if self:Me(args.destGUID) then
+		self:Message(args.spellId, "Personal", nil, CL.removed:format(args.spellName))
 	end
 end
 
 --[[ Stage Four ]]--
 function mod:VoidNova(args)
 	self:Message(args.spellId, "Important", "Alarm")
-	self:Bar(args.spellId, 4, CL.cast:format(args.spellName))
+	self:CastBar(args.spellId, 4)
 	self:CDBar(args.spellId, 75)
 end
 
-do
-	local onMe = false
-
-	function mod:VoidburstApplied(args)
-		local amount = args.amount or 1
-		if self:Me(args.destGUID) and not onMe and amount >= 15 then
-			self:StackMessage(args.spellId, args.destName, amount, "Important", "Warning")
-			self:Flash(args.spellId)
-			onMe = true
-		end
-	end
-
-	function mod:VoidburstRemoved(args)
-		if self:Me(args.destGUID) then
-			onMe = false
-		end
+function mod:WorldDevouringForce(args)
+	self:Message(args.spellId, "Important", "Alarm")
+	worldDevouringForceCounter = worldDevouringForceCounter + 1
+	local t = worldDevouringForceTimers[worldDevouringForceCounter]
+	if t then
+		self:Bar(args.spellId, t, CL.count:format(args.spellName, worldDevouringForceCounter))
 	end
 end
 
@@ -591,53 +406,146 @@ function mod:INSTANCE_ENCOUNTER_ENGAGE_UNIT()
 			mobCollector[guid] = true
 			local mobId = self:MobId(guid)
 			if mobId == 104880 then -- Thing That Should Not Be
-				witnessCount = 1
-				self:Bar(207720, self:Mythic() and 11.8 or 16, CL.count:format(self:SpellName(207720), witnessCount)) -- Witness the Void
+				voidCount = 1
+				self:CDBar(207720, self:Mythic() and 13.7 or 14.5, CL.count:format(self:SpellName(207720), voidCount)) -- Witness the Void
 			end
 		end
 	end
 end
 
 function mod:WitnessTheVoid(args)
-	self:Message(args.spellId, "Attention", "Warning", CL.casting:format(CL.count:format(args.spellName, witnessCount)))
-	--self:Bar(args.spellId, 4, CL.cast:format(args.spellName))
-	--self:Bar(args.spellId, self:Mythic() and 13.4 or 15)
+	self:StopBar(CL.count:format(args.spellName, voidCount)) -- will be replaced by a CL.cast bar
+	self:Message(args.spellId, "Attention", "Warning", CL.casting:format(CL.count:format(args.spellName, voidCount)))
+	self:CastBar(args.spellId, self:Mythic() and 2.8 or 4, CL.count:format(args.spellName, voidCount))
+	voidCount = voidCount + 1
+	self:Bar(args.spellId, self:Mythic() and 16.2 or 18.6, CL.count:format(args.spellName, voidCount)) -- m: 13.4 cd + 2.8, hc = 14.6 cd + 4
 end
 
-function mod:WitnessTheVoidSuccess(args)
-	--self:Message(args.spellId, "Attention", "Warning", CL.casting:format(args.spellName))
-	--self:Bar(args.spellId, 4, CL.cast:format(args.spellName))
-	witnessCount = witnessCount + 1
-	self:Bar(args.spellId, self:Mythic() and 13.4 or 15, CL.count:format(args.spellName, witnessCount))
+function mod:ThingDeath()
+	self:StopBar(CL.cast:format(CL.count:format(self:SpellName(207720), voidCount-1))) -- Witness the Void Cast
+	self:StopBar(CL.count:format(self:SpellName(207720), voidCount)) -- Witness the Void
 end
 
-function mod:ThingDeath(args)
-	self:StopBar(CL.count:format(self:SpellName(207720), witnessCount))
-	--self:StopBar(207720) -- Witness the Void
-end
-
+--[[ Mythic ]]--
 do
-	local function warnOeil(self, spellId)
-		self:Message(spellId, "Attention", nil, "GROS OEIL SOOOOON !")
-		PlaySoundFile("Sound\\Creature\\AlgalonTheObserver\\UR_Algalon_BHole01.ogg","Master")
+	local mySign, scheduled, tryCount = nil, nil, 0
+	local playerList = mod:NewTargetList()
+
+	function mod:GrandConjunction(args)
+		starSignTables = {
+			[205429] = {},
+			[205445] = {},
+			[216345] = {},
+			[216344] = {},
+		}
+		tryCount = 0
+		mySign = nil
+		scheduled = nil
+		grandCast = true
+
+		self:Message(args.spellId, "Attention", "Info", CL.count:format(args.spellName, grandCounter))
+		grandCounter = grandCounter + 1
+		self:CastBar(args.spellId, 4)
+		self:OpenProximity(args.spellId, 5) -- no idea if this range is reasonable
+
+		local timer = 47 -- assumed p4 cd as default
+		if grandTimers[phase][grandCounter] then -- Everything else is assumed
+			timer = grandTimers[phase][grandCounter]
+		elseif phase == 1 then
+			timer = 14
+		elseif phase == 2 then
+			timer = 57
+		elseif phase == 3 then
+			timer = 42
+		end
+		self:CDBar(args.spellId, timer, CL.count:format(args.spellName, grandCounter))
 	end
 
-	function mod:WorldDevouringForce(args)
-		self:Message(args.spellId, "Attention", "Warning", CL.casting:format(args.spellName))
-		--self:Bar(args.spellId, 4, CL.cast:format(args.spellName))
-		devourCount = devourCount + 1
-		self:CDBar(args.spellId, timers[216909][devourCount])
-		if timers[216909][devourCount] and self:GetOption(BEWARE) then
-			self:ScheduleTimer(warnOeil, timers[216909][devourCount] - 4, self, args.spellId)
+	function mod:GrandConjunctionSuccess(args)
+		grandCast = nil
+		self:CloseProximity(args.spellId)
+	end
+
+	local function warn(self)
+		scheduled = nil
+		tryCount = tryCount + 1
+		if not mySign then
+			if tryCount < 5  then
+				-- without counting, it could run endless if the same sign as ours gets
+				-- removed from another player first and then from us
+				scheduled = self:ScheduleTimer(warn, 0.1, self)
+			end
+		else
+			for i = 1, #starSignTables[mySign] do
+				playerList[#playerList+1] = starSignTables[mySign][i]
+			end
+			self:TargetMessage(205408, playerList, mySign == 205429 and "Attention" or mySign == 205445 and "Important" or mySign == 216345 and "Positive" or "Personal", "Warning", mySign, mySign)
 		end
 	end
-end
 
-function mod:DevouringRemnant(args)
-	self:TargetMessage(args.spellId, args.destName, "Urgent", "Warning")
-	if self:Me(args.destGUID) then
-		self:TargetBar(args.spellId, 6, args.destName)
-		self:Flash(args.spellId)
-		self:Say(args.spellId)
+	local function updateInfoBox(self)
+		if mySign then
+			-- -------------------------
+			-- | 1 Your Sign  *Crab* 2 |
+			-- | 3 with      PlayerA 4 |
+			-- | 5           PlayerB 6 |
+			-- | 7           PlayerC 8 |
+			-- | 9                  10 |
+			-- -------------------------
+
+			self:SetInfo(205408, 1, L.yourSign)
+			self:SetInfo(205408, 2, L[mySign])
+			self:SetInfo(205408, 3, L.with)
+			self:SetInfo(205408, 4, "")
+			self:SetInfo(205408, 6, "")
+			self:SetInfo(205408, 8, "")
+			self:SetInfo(205408, 10, "")
+
+			for i = 1, #starSignTables[mySign] do
+				local name = starSignTables[mySign][i]
+				if name ~= self:UnitName("player") then
+					local c = i - 1
+					self:SetInfo(205408, 4+2*c, self:ColorName(name))
+				end
+			end
+
+			self:OpenInfo(205408, self:SpellName(mySign))
+		else
+			self:CloseInfo(205408)
+		end
+	end
+
+	function mod:StarSigns(args)
+		if self:Me(args.destGUID) then
+			mySign = args.spellId
+
+			if #starSignTables[mySign] == 4 then
+				warn(self)
+			elseif not scheduled then
+				scheduled = self:ScheduleTimer(warn, 0.1, self)
+			end
+		end
+
+		starSignTables[args.spellId][#starSignTables[args.spellId]+1] = args.destName
+
+		if mySign and mySign == args.spellId then
+			updateInfoBox(self)
+		end
+	end
+
+	function mod:StarSignsRemoved(args)
+		tDeleteItem(starSignTables[args.spellId], args.destName)
+
+		if self:Me(args.destGUID) then
+			self:Message(205408, "Personal", "Info", CL.removed:format(args.spellName), args.spellId)
+			mySign = nil
+			updateInfoBox(self)
+		end
+		if mySign and mySign == args.spellId then -- Fewer players with our sign
+			updateInfoBox(self)
+			if not scheduled then
+				scheduled = self:ScheduleTimer(warn, 0.1, self)
+			end
+		end
 	end
 end

@@ -11,7 +11,7 @@
 -- Module Declaration
 --
 
-local mod, CL = BigWigs:NewBoss("Fallen Avatar", 1147, 1873)
+local mod, CL = BigWigs:NewBoss("Fallen Avatar", 1676, 1873)
 if not mod then return end
 mod:RegisterEnableMob(116939, 117264) -- Fallen Avatar, Maiden of Valor
 mod.engageId = 2038
@@ -200,8 +200,9 @@ end
 -- Event Handlers
 --
 
-function mod:CHAT_MSG_MONSTER_YELL(_, msg)
+function mod:CHAT_MSG_MONSTER_YELL(event, msg)
 	if msg:find(L.warmup_trigger, nil, true) then
+		self:UnregisterEvent(event)
 		self:Bar("warmup", 42, CL.active, "achievement_boss_titanconstructshell")
 	end
 end

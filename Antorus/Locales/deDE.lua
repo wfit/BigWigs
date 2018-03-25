@@ -21,7 +21,7 @@ if L then
 
 	L.gifts = "Geschenke: %s (Himmel), %s (Meer)"
 	L.burst = "|T1778229:15:15:0:0:64:64:4:60:4:60|tExplosion:%s" -- short for Soulburst
-	L.bomb = "|T1778228:15:15:0:0:64:64:4:60:4:60|tBombe:%s" -- short for Soulbomb
+	L.bomb = "|T1778228:15:15:0:0:64:64:4:60:4:60|tBombe (%d):|T137002:0|t%s - " -- short for Soulbomb
 
 	L.sky_say = "{rt5} Krit/Meist" -- short for Critical Strike/Mastery (stats)
 	L.sea_say = "{rt6} Tempo/Viels" -- short for Haste/Versatility (stats)
@@ -76,6 +76,7 @@ if L then
 	L.worldExplosion_desc = "Zeigt einen Timer für die Explosion der kollabierenden Welt."
 	L.platform_active = "%s Aktiv!" -- Platform: Xoroth Active!
 	L.add_killed = "%s getötet!"
+	L.achiev = "'Voll Portal' achievement debuffs" -- Achievement 11928
 end
 
 L = BigWigs:NewBossLocale("Kin'garoth", "deDE")
@@ -99,4 +100,28 @@ if L then
 
 	L.decimationImpact = "Dezimierung-Einschlag"
 	L.decimationImpact_desc = "Zeigt einen Timer für einschlagende Dezimierungsgeschosse."
+end
+
+L = BigWigs:NewBossLocale("Antorus Trash", "deDE")
+if L then
+	-- [[ Before Garothi Worldbreaker ]] --
+	L.felguard = "Antorische Teufelswache"
+
+	-- [[ After Garothi Worldbreaker ]] --
+	L.flameweaver = "Flammenwirker"
+
+	-- [[ Before Antoran High Command ]] --
+	L.ravager = "Klingenverschriebener Verheerer"
+	L.deconix = "Imperator Deconix"
+	L.clobex = "Clobex"
+
+	-- [[ Before Portal Keeper Hasabel ]] --
+	L.stalker = "Hungernder Pirscher"
+
+	-- [[ Before Varimathras / Coven of Shivarra ]] --
+	L.tarneth = "Tarneth"
+	L.priestess = "Priesterin des Deliriums"
+
+	-- [[ Before Aggramar ]] --
+	L.aedis = "Dunkler Hüter Aedis"
 end

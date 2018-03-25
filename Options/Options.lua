@@ -638,15 +638,10 @@ local function populateToggleOptions(widget, module)
 	scrollFrame:ReleaseChildren()
 	scrollFrame:PauseLayout()
 
-	local id = 0 -- XXX temp
-	if module.instanceId then
-		id = module.instanceId
-	elseif module.zoneId and module.zoneId > 0 then
-		id = GetAreaMapInfo(module.zoneId)
-	end
+	local id = module.instanceId
 
 	local sDB = BigWigsStatsDB
-	if module.journalId and id > 0 and BigWigs:GetPlugin("Statistics").db.profile.enabled and sDB and sDB[id] and sDB[id][module.journalId] then
+	if module.journalId and id and id > 0 and BigWigs:GetPlugin("Statistics").db.profile.enabled and sDB and sDB[id] and sDB[id][module.journalId] then
 		sDB = sDB[id][module.journalId]
 
 		if next(sDB) then -- Create statistics table
@@ -866,6 +861,7 @@ do
 		"MistsOfPandaria",
 		"WarlordsOfDraenor",
 		"Legion",
+		"BattleForAzeroth"
 	}
 
 	local statusTable = {}
@@ -881,11 +877,16 @@ do
 		end
 	end
 
-	local function onControlEnter(widget, event)
+	local GameTooltip = CreateFrame("GameTooltip", "BigWigsOptionsTooltip", UIParent, "GameTooltipTemplate")
+	local function onControlEnter(widget)
 		GameTooltip:SetOwner(widget.frame, "ANCHOR_TOPRIGHT")
 		GameTooltip:SetText(widget.text:GetText(), 1, 0.82, 0, true)
 		GameTooltip:AddLine(widget:GetUserData("desc"), 1, 1, 1, true)
 		GameTooltip:Show()
+	end
+
+	local function onControlLeave()
+		GameTooltip:Hide()
 	end
 
 	local function onTreeGroupSelected(widget, event, value)
@@ -941,9 +942,9 @@ do
 					addonNameToHeader[value] = i
 				end
 			elseif value == "littlewigs" then
-				defaultHeader = "LittleWigs_Legion"
+				defaultHeader =  C_ChatInfo and "LittleWigs_BattleForAzeroth" or "LittleWigs_Legion" -- XXX Temp
 				local enabled = GetAddOnEnableState(playerName, "LittleWigs") > 0
-				for i = 1, 7 do
+				for i = 1,  C_ChatInfo and 8 or 7 do -- XXX Temp
 					local value = "LittleWigs_" .. expansionHeader[i]
 					treeTbl[i] = {
 						text = EJ_GetTierInfo(i),
@@ -1049,7 +1050,7 @@ do
 		anchors:SetRelativeWidth(0.5)
 		anchors:SetCallback("OnClick", toggleAnchors)
 		anchors:SetCallback("OnEnter", onControlEnter)
-		anchors:SetCallback("OnLeave", GameTooltip_Hide)
+		anchors:SetCallback("OnLeave", onControlLeave)
 
 		local testing = AceGUI:Create("Button")
 		testing:SetText(L.testBarsBtn)
@@ -1057,7 +1058,7 @@ do
 		testing:SetRelativeWidth(0.5)
 		testing:SetCallback("OnClick", BigWigs.Test)
 		testing:SetCallback("OnEnter", onControlEnter)
-		testing:SetCallback("OnLeave", GameTooltip_Hide)
+		testing:SetCallback("OnLeave", onControlLeave)
 
 		bw:AddChildren(anchors, testing)
 

@@ -21,7 +21,7 @@ if L then
 
 	--L.gifts = "Gifts: %s (Sky), %s (Sea)"
 	--L.burst = "|T1778229:15:15:0:0:64:64:4:60:4:60|tBurst:%s" -- short for Soulburst
-	--L.bomb = "|T1778228:15:15:0:0:64:64:4:60:4:60|tBomb:%s" -- short for Soulbomb
+	--L.bomb = "|T1778228:15:15:0:0:64:64:4:60:4:60|tBomb (%d):|T137002:0|t%s - " -- short for Soulbomb
 
 	--L.sky_say = "{rt5} Crit/Mast" -- short for Critical Strike/Mastery (stats)
 	--L.sea_say = "{rt6} Haste/Versa" -- short for Haste/Versatility (stats)
@@ -76,6 +76,7 @@ if L then
 	--L.worldExplosion_desc = "Show a timer for the Collapsing World explosion."
 	--L.platform_active = "%s Active!" -- Platform: Xoroth Active!
 	--L.add_killed = "%s killed!"
+	L.achiev = "'포탈 컴뱃' achievement debuffs" -- Achievement 11928
 end
 
 L = BigWigs:NewBossLocale("Kin'garoth", "koKR")
@@ -99,4 +100,28 @@ if L then
 
 	--L.decimationImpact = "Decimation Impact"
 	--L.decimationImpact_desc = "Show a timer for the Decimation missiles landing."
+end
+
+L = BigWigs:NewBossLocale("Antorus Trash", "koKR")
+if L then
+	-- [[ Before Garothi Worldbreaker ]] --
+	L.felguard = "안토란 지옥수호병"
+
+	-- [[ After Garothi Worldbreaker ]] --
+	L.flameweaver = "화염술사"
+
+	-- [[ Before Antoran High Command ]] --
+	L.ravager = "칼날서약병 약탈자"
+	L.deconix = "전제군주 데코닉스"
+	L.clobex = "클로벡스"
+
+	-- [[ Before Portal Keeper Hasabel ]] --
+	L.stalker = "굶주린 추적자"
+
+	-- [[ Before Varimathras / Coven of Shivarra ]] --
+	L.tarneth = "타네스"
+	L.priestess = "착란의 여사제"
+
+	-- [[ Before Aggramar ]] --
+	L.aedis = "암흑의 문지기 에이디스"
 end

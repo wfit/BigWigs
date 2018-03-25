@@ -21,7 +21,7 @@ if L then
 
 	--L.gifts = "Gifts: %s (Sky), %s (Sea)"
 	--L.burst = "|T1778229:15:15:0:0:64:64:4:60:4:60|tBurst:%s" -- short for Soulburst
-	--L.bomb = "|T1778228:15:15:0:0:64:64:4:60:4:60|tBomb:%s" -- short for Soulbomb
+	--L.bomb = "|T1778228:15:15:0:0:64:64:4:60:4:60|tBomb (%d):|T137002:0|t%s - " -- short for Soulbomb
 
 	--L.sky_say = "{rt5} Crit/Mast" -- short for Critical Strike/Mastery (stats)
 	--L.sea_say = "{rt6} Haste/Versa" -- short for Haste/Versatility (stats)
@@ -88,6 +88,7 @@ L = BigWigs:NewBossLocale("Antoran High Command", "esES") or BigWigs:NewBossLoca
 if L then
 	--L.felshieldActivated = "Felshield Activated by %s"
 	--L.felshieldUp = "Felshield Up"
+	L.achiev = "'En el portal de Hasabel' achievement debuffs" -- Achievement 11928
 end
 
 L = BigWigs:NewBossLocale("Gorothi Worldbreaker", "esES") or BigWigs:NewBossLocale("Gorothi Worldbreaker", "esMX")
@@ -99,4 +100,28 @@ if L then
 
 	--L.decimationImpact = "Decimation Impact"
 	--L.decimationImpact_desc = "Show a timer for the Decimation missiles landing."
+end
+
+L = BigWigs:NewBossLocale("Antorus Trash", "esES") or BigWigs:NewBossLocale("Antorus Trash", "esMX")
+if L then
+	-- [[ Before Garothi Worldbreaker ]] --
+	L.felguard = "Guardia vil antoran"
+
+	-- [[ After Garothi Worldbreaker ]] --
+	L.flameweaver = "Tejedor de fuego"
+
+	-- [[ Before Antoran High Command ]] --
+	L.ravager = "Devastador juraespadas"
+	L.deconix = "Imperador Deconix"
+	L.clobex = "Clobex"
+
+	-- [[ Before Portal Keeper Hasabel ]] --
+	L.stalker = "Acechador hambriento"
+
+	-- [[ Before Varimathras / Coven of Shivarra ]] --
+	L.tarneth = "Tarneth"
+	L.priestess = "Sacerdotisa del delirio"
+
+	-- [[ Before Aggramar ]] --
+	L.aedis = "Guarda oscuro Aedis"
 end

@@ -9,12 +9,11 @@
 -- Module Declaration
 --
 
-local mod, CL = BigWigs:NewBoss("Odyn-TrialOfValor", 1114, 1819)
+local mod, CL = BigWigs:NewBoss("Odyn-TrialOfValor", 1648, 1819)
 if not mod then return end
 mod:RegisterEnableMob(114263, 114361, 114360) -- Odyn, Hymdall, Hyrja
 mod.engageId = 1958
 mod.respawnTime = 30
-mod.instanceId = 1648
 
 --------------------------------------------------------------------------------
 -- Locals
@@ -30,7 +29,7 @@ local runesUp = 0
 local myAddGUID = ""
 local castingHorn = false
 local addGUIDs = {}
-local isHymdallFighting, isHyrjaFighting = nil, nil
+local isHymdallFighting, isHyrjaFighting = false, false
 local revivifyBarTexts = {}
 local addFixates = {}
 local proxLists = {
@@ -79,9 +78,6 @@ end
 -- Initialization
 --
 
-local brand_marks = mod:AddTokenOption { "brands", "Automatically set raid icons for each brand group.", promote = true }
-local left_right_brands = mod:AddCustomOption { "left_right_brands", "Use Left/Right instead of Hymdal/Hyrja for brand placement indication", default = false }
-
 function mod:GetOptions()
 	return {
 		--[[ General ]]--
@@ -113,8 +109,6 @@ function mod:GetOptions()
 		{227807, "SAY", "FLASH"}, -- Storm of Justice
 		227475, -- Cleansing Flame
 		{197961, "PROXIMITY", "SAY", "PULSE"}, -- Runic Brand
-		left_right_brands,
-		brand_marks,
 		231350, -- Radiant Smite
 	},{
 		["stages"] = "general",
@@ -136,10 +130,7 @@ function mod:OnBossEnable()
 	self:Log("SPELL_CAST_SUCCESS", "HornOfValorSuccess", 228012)
 	self:Log("SPELL_AURA_APPLIED", "StormOfJustice", 227807)
 	self:Log("SPELL_CAST_SUCCESS", "StormOfJusticeSuccess", 227807)
-	self:Log("SPELL_AURA_APPLIED", "ValarjarsBond", 228018, 229529, 228016, 229469) -- XXX
 	self:Log("SPELL_AURA_APPLIED_DOSE", "OdynsTest", 227626)
-	self:Log("SPELL_AURA_APPLIED", "OdynsTestApplied", 228911)
-	self:Log("SPELL_AURA_REMOVED", "OdynsTestRemoved", 228911)
 	self:Log("SPELL_AURA_APPLIED", "StormforgedSpear", 228918)
 	self:Log("SPELL_AURA_APPLIED", "StormforgedSpearDebuff", 228932) -- Tank got hit
 	self:Log("SPELL_CAST_SUCCESS", "ExpelLightSuccess", 228028)
@@ -181,6 +172,8 @@ function mod:OnEngage()
 		wipe(t)
 	end
 
+	self:RegisterUnitEvent("UNIT_AURA", nil, "boss1", "boss2", "boss3") -- Valarjar's Bond
+
 	self:Bar(228012, self:Easy() and 10 or 8, CL.count:format(self:SpellName(228012), hornCount)) -- Horn of Valor
 	self:Bar(228162, self:Easy() and 30 or self:Mythic() and 20 or 24, CL.count:format(self:SpellName(228162), shieldCount)) -- Shield of Light
 	self:Bar(228029, self:Easy() and 40 or self:Mythic() and 25 or 32) -- Expel Light
@@ -192,9 +185,12 @@ end
 -- Event Handlers
 --
 
-function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
+function mod:UNIT_SPELLCAST_SUCCEEDED(_, _, _, _, spellId)
 	if spellId == 229168 then -- Test for Players (Phase 1 end)
 		phase = 2
+		isHymdallFighting = false
+		isHyrjaFighting = false
+		self:UnregisterUnitEvent("UNIT_AURA", "boss1", "boss2", "boss3") -- Valarjar's Bond
 		self:Message("stages", "Neutral", "Long", CL.stage:format(2), false)
 		for _,barText in pairs(revivifyBarTexts) do
 			self:StopBar(barText)
@@ -202,11 +198,8 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(unit, spellName, _, _, spellId)
 		self:StopBar(CL.count:format(self:SpellName(228162), shieldCount)) -- Shield of Light
 		self:StopBar(228029) -- Expel Light
 		self:StopBar(CL.count:format(self:SpellName(228012), hornCount)) -- Horn of Valor
-		self:CloseProximity(228012)
 		self:StopBar(227503) -- Draw Power
 		self:CDBar("stages", 8, self:SpellName(L.odyn), L.odyn_icon)
-		isHymdallFighting = nil
-		isHyrjaFighting = nil
 	elseif spellId == 227882 then -- Leap into Battle (Phase 2 start)
 		if not self:Easy() then
 			self:RegisterEvent("INSTANCE_ENCOUNTER_ENGAGE_UNIT")
@@ -265,17 +258,17 @@ function mod:INSTANCE_ENCOUNTER_ENGAGE_UNIT()
 		end
 	end
 	if not hymdallFound and isHymdallFighting then
+		isHymdallFighting = false
 		if castingHorn then
 			castingHorn = false
 			self:CloseProximity(228012) -- Horn of Valor
 		end
 		self:Message(-14404, "Positive", "Info", L.yields:format(self:SpellName(L.hymdall)), false)
-		isHymdallFighting = nil
 		self:StopBar(CL.count:format(self:SpellName(228012), hornCount)) -- Horn of Valor
 	end
 	if not hyrjaFound and isHyrjaFighting then
+		isHyrjaFighting = false
 		self:Message(-14404, "Positive", "Info", L.yields:format(self:SpellName(L.hyrja)), false)
-		isHyrjaFighting = nil
 		self:StopBar(CL.count:format(self:SpellName(228162), shieldCount)) -- Shield of Light
 		self:StopBar(228029) -- Expel Light
 	end
@@ -300,9 +293,7 @@ do
 		local t = self:Easy() and 5 or 4
 		if self:Me(guid) then
 			self:Say(228162)
-			self:ScheduleTimer("Say", t-3, 228162, 3, true)
-			self:ScheduleTimer("Say", t-2, 228162, 2, true)
-			self:ScheduleTimer("Say", t-1, 228162, 1, true)
+			self:SayCountdown(228162, t)
 		end
 		self:PrimaryIcon(228162, player)
 		self:TargetMessage(228162, player, "Important", "Alarm", nil, nil, true)
@@ -362,8 +353,14 @@ function mod:StormOfJusticeSuccess(args)
 	stormCount = stormCount + 1
 end
 
-function mod:ValarjarsBond(args)
-	self:TargetMessage(228018, "Positive", "Long")
+do
+	local prev, UnitBuff, spellName = 0, UnitBuff, mod:SpellName(228018) -- Valarjar's Bond
+	function mod:UNIT_AURA(unit)
+		if UnitBuff(unit, spellName) and GetTime() - prev > 4 then -- We want this repeated
+			prev = GetTime()
+			self:Message(228018, "Important", "Alarm") -- Valarjar's Bond
+		end
+	end
 end
 
 function mod:OdynsTest(args)
@@ -373,32 +370,23 @@ function mod:OdynsTest(args)
 	end
 end
 
-function mod:OdynsTestApplied(args)
-	self:TargetMessage(227626, args.sourceName, "Positive", "Long")
-	local text = CL.other:format(args.sourceName, args.spellName)
-	self:Bar(227626, 30, text)
-end
-
-function mod:OdynsTestRemoved(args)
-	self:Bar(227626, 35)
-end
-
 function mod:StormforgedSpear(args)
 	self:TargetMessage(args.spellId, args.destName, "Important", "Alarm")
 	self:TargetBar(args.spellId, 6, args.destName)
 	self:Bar(args.spellId, spearCount % 3 == 0 and 13.5 or 11)
 	self:PrimaryIcon(args.spellId, args.destName)
+
 	if self:Me(args.destGUID) then
 		self:Say(args.spellId)
 	end
 	spearCount = spearCount + 1
 end
 
-function mod:StormforgedSpearDebuff(args)
+function mod:StormforgedSpearDebuff()
 	self:PrimaryIcon(228918)
 end
 
-function mod:ExpelLightSuccess(args)
+function mod:ExpelLightSuccess()
 	expelCount = expelCount + 1
 
 	local t = 0
@@ -531,88 +519,64 @@ function mod:Protected(args)
 end
 
 do
-	local directions = {
-		[231311] = "HYMDAL",
-		[231342] = "CENTER",
-		[231344] = "THRONE",
-		[231345] = "HYRJA",
-		[231346] = "ENTRANCE"
+	local isOnMe = 0
+
+	local lookupTable = {
+		[231311] = 227490, -- Boss_OdunRunes_Purple
+		[231342] = 227491, -- Boss_OdunRunes_Orange
+		[231344] = 227498, -- Boss_OdunRunes_Yellow
+		[231345] = 227499, -- Boss_OdunRunes_Blue
+		[231346] = 227500, -- Boss_OdunRunes_Green
 	}
 
-	local symbols = {
-		[231311] = 3,
-		[231342] = 2,
-		[231344] = 1,
-		[231345] = 6,
-		[231346] = 4
-	}
+	local function updateProximity(self)
+		local totalList = {} -- everyone who has another debuff
+		for spellId,table in pairs(proxLists) do
+			if isOnMe ~= spellId then
+				for _,player in pairs(table) do
+					totalList[#totalList+1] = player
+				end
+			end
+		end
+		if #totalList > 0 then
+			self:OpenProximity(197961, 15, totalList)
+		else
+			self:CloseProximity(197961)
+		end
+	end
 
-	local scheduled = false
-	local brands = {}
-	local otherBrands = {}
-	local marked = {}
-	local myBrand
+	local function wipeProxLists(self)
+		for _,t in pairs(proxLists) do
+			wipe(t)
+		end
+		updateProximity(self)
+	end
 
 	function mod:RunicBrand(args)
-		if not scheduled then
-			scheduled = true
-			wipe(brands)
-			wipe(marked)
-			self:ScheduleTimer("RunicBrandProximity", 0.1)
-		end
-
 		if self:Me(args.destGUID) then
-			myBrand = args.spellId
-			self:Pulse(false, "Interface\\TargetingFrame\\UI-RaidTargetingIcon_" .. symbols[args.spellId])
-			self:PlaySound(false, "Warning")
-			local direction = directions[args.spellId]
-			if self:GetOption(left_right_brands) then
-				if direction == "HYMDAL" then direction = "LEFT" end
-				if direction == "HYRJA" then direction = "RIGHT" end
-			end
-			self:Emphasized(false, direction)
+			local tanslatedSpellId = lookupTable[args.spellId]
+			isOnMe = args.spellId
+			self:Message(197961, "Personal", "Warning", CL.other:format(args.spellName, L[tanslatedSpellId]), args.spellId)
+			self:Flash(197961, args.spellId)
+			self:Say(197961, L.say[tanslatedSpellId]:format(args.spellName))
 			self:TargetBar(197961, 10, args.destName, nil, args.spellId)
-		else
-			brands[args.destName] = args.spellId
 		end
-
-		if self:GetOption(brand_marks) then
-			local symbol = symbols[args.spellId]
-			if not marked[symbol] then
-				local unit = args.destUnit
-				marked[symbol] = unit
-				marked[args.destGUID] = symbol
-				SetRaidTarget(unit, symbol)
-			end
-		end
+		proxLists[args.spellId][#proxLists[args.spellId]+1] = args.destName
+		updateProximity(self)
 	end
 
-	function mod:RunicBrandProximity()
-		scheduled = false
-		wipe(otherBrands)
-		for name, brand in pairs(brands) do
-			if brand ~= myBrand then
-				otherBrands[#otherBrands + 1] = name
-			end
-		end
-		self:OpenProximity(197961, 5, otherBrands)
-	end
 
 	function mod:RunicBrandRemoved(args)
 		if self:Me(args.destGUID) then
-			self:CloseProximity(197961)
+			isOnMe = 0
 		end
-		if marked[args.destGUID] then
-			local symbol = marked[args.destGUID]
-			local unit = marked[symbol]
-			SetRaidTarget(unit, 0)
-			marked[args.destGUID] = nil
-			marked[symbol] = nil
-		end
+		tDeleteItem(proxLists[args.spellId], args.destName)
+		updateProximity(self)
 	end
 
 	function mod:RadiantSmite(args)
 		self:Message(args.spellId, "Important", "Long")
+		wipeProxLists(self)
 		self:Bar(197961, 28)
 	end
 end

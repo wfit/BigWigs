@@ -3,7 +3,7 @@
 -- Module Declaration
 --
 
-local mod, CL = BigWigs:NewBoss("Tichondrius", 1088, 1762)
+local mod, CL = BigWigs:NewBoss("Tichondrius", 1530, 1762)
 if not mod then return end
 mod:RegisterEnableMob(103685)
 mod.engageId = 1862
@@ -331,16 +331,6 @@ end
 
 --[[ Felsworm Spellguard ]]--
 do
-	local sayTimers = {}
-	local function cancelSay(self)
-		if sayTimers[1] then
-			for i = #sayTimers, 1, -1 do
-				self:CancelTimer(sayTimers[i])
-				sayTimers[i] = nil
-			end
-		end
-	end
-
 	local list = mod:NewTargetList()
 	function mod:VolatileWound(args)
 		if UnitIsPlayer(args.destName) then
@@ -351,10 +341,8 @@ do
 					self:StackMessage(args.spellId, args.destName, args.amount, "Personal", "Alarm")
 				end
 				self:TargetBar(args.spellId, 8, args.destName)
-				cancelSay(self)
-				sayTimers[1] = self:ScheduleTimer("Say", 5, args.spellId, 3, true)
-				sayTimers[2] = self:ScheduleTimer("Say", 6, args.spellId, 2, true)
-				sayTimers[3] = self:ScheduleTimer("Say", 7, args.spellId, 1, true)
+				self:CancelSayCountdown(args.spellId)
+				self:SayCountdown(args.spellId, 8)
 			elseif not args.amount then -- 1 stack
 				list[#list+1] = args.destName
 				if #list == 1 then
@@ -366,7 +354,7 @@ do
 
 	function mod:VolatileWoundRemoved(args)
 		if self:Me(args.destGUID) then
-			cancelSay(self)
+			self:CancelSayCountdown(args.spellId)
 			self:StopBar(args.spellId, args.destName)
 		end
 	end

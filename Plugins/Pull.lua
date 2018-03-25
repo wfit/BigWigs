@@ -11,6 +11,7 @@ if not plugin then return end
 
 local L = BigWigsAPI:GetLocale("BigWigs: Plugins")
 local GetInstanceInfo = BigWigsLoader.GetInstanceInfo
+local SendAddonMessage = BigWigsLoader.SendAddonMessage
 local isLogging = false
 
 -------------------------------------------------------------------------------
@@ -114,7 +115,7 @@ do
 		end
 	end
 	function plugin:StartPull(seconds, nick, isDBM)
-		if not IsInGroup() or (IsInGroup(2) and UnitGroupRolesAssigned(nick) == "TANK") or UnitIsGroupLeader(nick) or UnitIsGroupAssistant(nick) then
+		if not IsInGroup() or ((IsInGroup(2) or not IsInRaid()) and UnitGroupRolesAssigned(nick) == "TANK") or UnitIsGroupLeader(nick) or UnitIsGroupAssistant(nick) then
 			local _, _, _, instanceId = UnitPosition("player")
 			local _, _, _, tarInstanceId = UnitPosition(nick)
 			if instanceId ~= tarInstanceId then -- Don't fire pull timers from people in different zones
@@ -185,7 +186,7 @@ end
 function plugin:BigWigs_OnBossWin()
 	if isLogging then
 		isLogging = false
-		self:ScheduleTimer(LoggingCombat, 1, isLogging) -- Delay to prevent any death events being cut out the log
+		self:ScheduleTimer(LoggingCombat, 2, isLogging) -- Delay to prevent any death events being cut out the log
 	end
 end
 
@@ -196,7 +197,7 @@ end
 SlashCmdList.BIGWIGSPULL = function(input)
 	if not plugin:IsEnabled() then BigWigs:Enable() end
 	if IsEncounterInProgress() then BigWigs:Print(L.encounterRestricted) return end -- Doesn't make sense to allow this in combat
-	if not IsInGroup() or UnitIsGroupLeader("player") or UnitIsGroupAssistant("player") or (IsInGroup(2) and UnitGroupRolesAssigned("player") == "TANK") then -- Solo or leader/assist or tank in LFG
+	if not IsInGroup() or UnitIsGroupLeader("player") or UnitIsGroupAssistant("player") or ((IsInGroup(2) or not IsInRaid()) and UnitGroupRolesAssigned("player") == "TANK") then -- Solo or leader/assist or tank in LFG/5m
 		local s, respawn = input:match("(%d-) (.*)")
 		if respawn and respawn:lower() == "true" then
 			local bars = BigWigs:GetPlugin("Bars")

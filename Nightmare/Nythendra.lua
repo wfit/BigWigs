@@ -10,7 +10,7 @@
 -- Module Declaration
 --
 
-local mod, CL = BigWigs:NewBoss("Nythendra", 1094, 1703)
+local mod, CL = BigWigs:NewBoss("Nythendra", 1520, 1703)
 if not mod then return end
 mod:RegisterEnableMob(102672)
 mod.engageId = 1853
@@ -110,9 +110,7 @@ do
 			self:Say(args.spellId)
 			self:TargetBar(args.spellId, 9, args.destName)
 			self:OpenProximity(args.spellId, 10)
-			self:ScheduleTimer("Say", 6, args.spellId, 3, true)
-			self:ScheduleTimer("Say", 7, args.spellId, 2, true)
-			self:ScheduleTimer("Say", 8, args.spellId, 1, true)
+			self:SayCountdown(args.spellId, 9)
 		end
 
 		proxList[#proxList+1] = args.destName
@@ -139,6 +137,7 @@ do
 			isOnMe = nil
 			self:StopBar(args.spellName, args.destName)
 			self:CloseProximity(args.spellId)
+			self:CancelSayCountdown(args.spellId)
 		end
 
 		if self:GetOption(rot_marker) then

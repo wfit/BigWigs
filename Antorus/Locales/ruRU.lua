@@ -21,7 +21,7 @@ if L then
 
 	--L.gifts = "Gifts: %s (Sky), %s (Sea)"
 	--L.burst = "|T1778229:15:15:0:0:64:64:4:60:4:60|tBurst:%s" -- short for Soulburst
-	--L.bomb = "|T1778228:15:15:0:0:64:64:4:60:4:60|tBomb:%s" -- short for Soulbomb
+	--L.bomb = "|T1778228:15:15:0:0:64:64:4:60:4:60|tBomb (%d):|T137002:0|t%s - " -- short for Soulbomb
 
 	--L.sky_say = "{rt5} Crit/Mast" -- short for Critical Strike/Mastery (stats)
 	--L.sea_say = "{rt6} Haste/Versa" -- short for Haste/Versatility (stats)
@@ -76,6 +76,7 @@ if L then
 	--L.worldExplosion_desc = "Show a timer for the Collapsing World explosion."
 	--L.platform_active = "%s Active!" -- Platform: Xoroth Active!
 	--L.add_killed = "%s killed!"
+	L.achiev = "'Война порталов' achievement debuffs" -- Achievement 11928
 end
 
 L = BigWigs:NewBossLocale("Kin'garoth", "ruRU")
@@ -99,4 +100,28 @@ if L then
 
 	--L.decimationImpact = "Decimation Impact"
 	--L.decimationImpact_desc = "Show a timer for the Decimation missiles landing."
+end
+
+L = BigWigs:NewBossLocale("Antorus Trash", "ruRU")
+if L then
+	-- [[ Before Garothi Worldbreaker ]] --
+	L.felguard = "Страж Скверны из Анторуса"
+
+	-- [[ After Garothi Worldbreaker ]] --
+	L.flameweaver = "Заклинатель пламени"
+
+	-- [[ Before Antoran High Command ]] --
+	L.ravager = "Присягнувший клинку опустошитель"
+	L.deconix = "Император Деконикс"
+	L.clobex = "Клобекc"
+
+	-- [[ Before Portal Keeper Hasabel ]] --
+	L.stalker = "Изголодавшийся ловец"
+
+	-- [[ Before Varimathras / Coven of Shivarra ]] --
+	L.tarneth = "Тарнет"
+	L.priestess = "Жрица делирия"
+
+	-- [[ Before Aggramar ]] --
+	L.aedis = "Темный хранитель Эйдис"
 end

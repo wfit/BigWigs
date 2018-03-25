@@ -6,7 +6,7 @@
 -- Module Declaration
 --
 
-local mod, CL = BigWigs:NewBoss("Argus the Unmaker", nil, 2031, 1712)
+local mod, CL = BigWigs:NewBoss("Argus the Unmaker", 1712, 2031)
 if not mod then return end
 mod:RegisterEnableMob(124828)
 mod.engageId = 2092
@@ -50,7 +50,7 @@ local timersHeroic = {
 		-- Soulblight Orb
 		[248317] = {35.5, 25.5, 26.8, 23.2, 31},
 		-- Tortured Rage
-		[257296] = {12, 13.5, 13.5, 15.9, 13.5, 13.5, 15.9, 20.9, 13.5},
+		[257296] = {12, 13.5, 13.5, 15.9, 13.5, 13.5, 15.9, 20.9, 13.5, 13.3},
 		-- Sweeping Scythe
 		[248499] = {5.8, 11.7, 6.6, 10.3, 10.0, 5.6, 10.3, 5.9, 11.5, 10.1, 5.6, 10.3, 5.6, 15.2},
 	},
@@ -491,7 +491,7 @@ function mod:SweepingScythe(args)
 
 	local timer = 6.1
 	if stage == 1 and not self:Mythic() then
-		timer = timers[stage][args.spellId][sweepingScytheCounter]
+		timer = timers[stage][args.spellId][sweepingScytheCounter] or 5.5
 	elseif stage == 4 then -- normal mode only
 		timer = sweepingScytheCounter == 2 and 8.3 or sweepingScytheCounter % 2 == 0 and 7.1 or 6.1
 	end
@@ -700,7 +700,7 @@ do
 				SetRaidTarget(args.destName, 3)
 			end
 		elseif self:GetOption(burstMarker) then
-				SetRaidTarget(args.destName, 7)
+			SetRaidTarget(args.destName, 7)
 		end
 	end
 
@@ -801,7 +801,7 @@ function mod:TemporalBlast()
 			self:StopBar(CL.count:format(self:SpellName(250669), 2)) -- Soulburst (2)
 		end
 
-		self:Bar("stages", 16.6, CL.incoming:format(self:SpellName(-17070)), "achievement_boss_algalon_01") -- The Constellar Designates Incoming!
+		self:Bar("stages", 16.6, CL.adds, "achievement_boss_algalon_01") -- The Constellar Designates
 		self:Bar(-17077, self:Easy() and 30.5 or 26.3, nil, "inv_sword_2h_pandaraid_d_01") -- The Stellar Armory
 		self:Bar(252516, 27.3) -- The Discs of Norgannon
 		self:Bar(252729, self:Easy() and 38 or 30.4) -- Cosmic Ray
@@ -920,7 +920,7 @@ end
 
 function mod:EndofAllThingsInterupted(args)
 	if args.extraSpellId == 256544 then
-		self:Message(args.extraSpellId, "Positive", "Info", CL.interrupted:format(args.extraSpellName))
+		self:Message(256544, "Positive", "Info", CL.interrupted:format(args.extraSpellName))
 		self:StopBar(CL.cast:format(args.extraSpellName))
 		initializationCount = self:Mythic() and 1 or 3
 		torturedRageCounter = 1
@@ -943,7 +943,7 @@ function mod:EndofAllThingsInterupted(args)
 			else
 				self:Bar(258039, 6) -- Deadly Scythe
 			end
-			self:Bar(251570, 20.1) -- Soulbomb
+			self:Bar(251570, 20.1, CL.count:format(self:SpellName(251570), soulBombCounter)) -- Soulbomb
 			self:Bar(250669, 20.1) -- Soulburst
 		end
 		self:Bar(257296, self:Mythic() and timers[stage][257296][torturedRageCounter] or 11) -- Tortured Rage
