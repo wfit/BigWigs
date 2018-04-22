@@ -36,7 +36,7 @@ for id,_ in pairs(comboSpellLookup) do
 end
 
 local blazeTick = 1
-local blazeOnMe = nil
+local blazeOnMe = false
 local blazeProxList = {}
 
 local mobCollector = {}
@@ -145,7 +145,8 @@ function mod:OnEngage()
 	comboSpellLookup[245463].castTime = self:Easy() and 3.5 or 2.75 -- Flame Rend
 
 	blazeTick = 1
-	blazeOnMe = nil
+	blazeOnMe = false
+	intermission = false
 	wipe(blazeProxList)
 
 	if self:Mythic() then
@@ -157,7 +158,7 @@ function mod:OnEngage()
 	self:Bar(244693, self:Mythic() and 10.5 or 5.5) -- Wake of Flame
 	self:Bar(244688, self:Mythic() and 14.5 or 35) -- Taeshalach Technique
 
-	nextIntermissionSoonWarning = 82 -- happens at 80%
+	nextIntermissionSoonWarning = self:LFR() and 62 or 82 -- happens at 60% on LFR, 80% on other difficulties
 	self:RegisterUnitEvent("UNIT_HEALTH_FREQUENT", nil, "boss1")
 end
 
@@ -183,13 +184,13 @@ do
 		},
 	}
 
-	function updateInfoBox(self, newSpell)
+	function updateInfoBox(newSpell)
 		local comboCount = #comboSpells
 
 		if not currentCombo then
-			if self:LFR() then -- Always the same combo
+			if mod:LFR() then -- Always the same combo
 				currentCombo = {245463, 245463, 245463, 245463, 245301} -- Flame Rend, Flame Rend, Flame Rend, Flame Rend, Searing Tempest
-			elseif not self:Mythic() then -- Always the same combo
+			elseif not mod:Mythic() then -- Always the same combo
 				currentCombo = {245458, 245463, 245458, 245463, 245301} -- Foe Breaker, Flame Rend, Foe Breaker, Flame Rend, Searing Tempest
 			elseif comboCount >= 2 then -- We know the combo after the first 2 casts
 				currentCombo = mythicCombos[comboSpells[1]][comboSpells[2]]
@@ -203,20 +204,20 @@ do
 				local spell = currentCombo and comboSpellLookup[currentCombo[i]] or comboSpellLookup[comboSpells[i]]
 				if currentCombo or comboSpells[i] then
 					local color = comboCount == i and t > 0 and nextSpell or comboCount >= i and spellUsed or spell.color
-					self:SetInfo(244688, i*2, texture:format(spell.icon) .. color .. spell.name)
+					mod:SetInfo(244688, i*2, texture:format(spell.icon) .. color .. spell.name)
 				else
-					self:SetInfo(244688, i*2, "")
+					mod:SetInfo(244688, i*2, "")
 				end
 			end
 		end
 
 		local castPos = max(comboCount*2-1, 1)
-		self:SetInfo(244688, castPos, t > 0 and nextSpell..castTime:format(t) or "")
-		self:SetInfoBar(244688, castPos, t > 0 and t/comboSpellLookup[comboSpells[comboCount]].castTime or 0)
+		mod:SetInfo(244688, castPos, t > 0 and nextSpell..castTime:format(t) or "")
+		mod:SetInfoBar(244688, castPos, t > 0 and t/comboSpellLookup[comboSpells[comboCount]].castTime or 0)
 		if t > 0 then
-			self:ScheduleTimer(updateInfoBox, 0.05, self)
+			mod:SimpleTimer(updateInfoBox, 0.05)
 		elseif comboCount*2+1 < 10 then -- Current spell done, set arrows for next spell
-			self:SetInfo(244688, comboCount*2+1, nextSpell..">>")
+			mod:SetInfo(244688, comboCount*2+1, nextSpell..">>")
 		end
 	end
 end
@@ -237,7 +238,7 @@ end
 function mod:UNIT_HEALTH_FREQUENT(unit)
 	local hp = UnitHealth(unit) / UnitHealthMax(unit) * 100
 	if hp < nextIntermissionSoonWarning then
-		self:Message("stages", "Positive", nil, CL.soon:format(CL.intermission), false)
+		self:Message("stages", "green", nil, CL.soon:format(CL.intermission), false)
 		nextIntermissionSoonWarning = nextIntermissionSoonWarning - 40
 		if nextIntermissionSoonWarning < 40 then
 			self:UnregisterUnitEvent("UNIT_HEALTH_FREQUENT", unit)
@@ -297,12 +298,12 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(_, _, _, _, spellId)
 			end
 		end
 	elseif spellId == 245983 then -- Flare
-		self:Message(spellId, "Important", "Warning")
+		self:Message(spellId, "red", "Warning")
 		if comboTime > GetTime() + 15.8 and not self:Mythic() then
 			self:Bar(spellId, 15.8)
 		end
 	elseif spellId == 246037 then -- Empowered Flare
-		self:Message(spellId, "Important", "Warning")
+		self:Message(spellId, "red", "Warning")
 		if comboTime > GetTime() + 16.2 and not self:Mythic() then
 			self:Bar(spellId, 16.2) -- Assume mythic CD
 		end
@@ -313,28 +314,27 @@ end
 function mod:TaeshalachsReach(args)
 	local amount = args.amount or 1
 	if amount % 3 == 0 or amount > 7 then
-		self:StackMessage(args.spellId, args.destName, amount, "Important", amount > 7 and "Alarm") -- Swap on 8+
+		self:StackMessage(args.spellId, args.destName, amount, "red", amount > 7 and "Alarm") -- Swap on 8+
 	end
 end
 
 do
-	local scheduled = nil
-
-	local function warn(self, spellId)
+	local function warn()
 		if not blazeOnMe then
-			self:Message(spellId, "Important")
+			mod:Message(245994, "red") -- Scorching Blaze
 		end
-		scheduled = nil
 	end
 
 	function mod:ScorchingBlaze(args)
+		blazeProxList[#blazeProxList+1] = args.destName
 		if self:Me(args.destGUID) then
 			blazeOnMe = true
-			self:TargetMessage(args.spellId, args.destName, "Important", "Warning")
+			self:PlaySound(args.spellId, "Warning")
+			self:TargetMessage2(args.spellId, "red", args.destName)
 			self:Say(args.spellId)
 		end
-		if not scheduled then
-			scheduled = self:ScheduleTimer(warn, 0.3, self, args.spellId)
+		if #blazeProxList == 1 then
+			self:SimpleTimer(warn, 0.3)
 			if comboTime > GetTime() + 7.3 then
 				self:CDBar(args.spellId, 7.3)
 			end
@@ -344,7 +344,7 @@ do
 
 	function mod:ScorchingBlazeRemoved(args)
 		if self:Me(args.destGUID) then
-			blazeOnMe = nil
+			blazeOnMe = false
 		end
 		tDeleteItem(blazeProxList, args.destName)
 		updateProximity(self)
@@ -353,7 +353,8 @@ end
 
 do
 	local function printTarget(self, name, guid)
-		self:TargetMessage(244693, name, "Attention", "Alert", nil, nil, true)
+		self:PlaySound(244693, "Alert", nil, name)
+		self:TargetMessage2(244693, "yellow", name)
 		if self:Me(guid) then
 			self:Say(244693)
 			self:ShowAura(244693, 2, "On YOU", { countdown = false }, true)
@@ -369,7 +370,7 @@ do
 end
 
 function mod:FoeBreaker(args)
-	self:Message(245458, "Attention", "Alert", CL.count:format(args.spellName, foeBreakerCount))
+	self:Message(245458, "yellow", "Alert", CL.count:format(args.spellName, foeBreakerCount))
 	self:ShowAura(244688, "Tank", { icon = args.spellIcon, stacks = "#" .. foeBreakerCount })
 	foeBreakerCount = foeBreakerCount + 1
 	comboSpells[#comboSpells+1] = 245458
@@ -377,16 +378,16 @@ function mod:FoeBreaker(args)
 	if foeBreakerCount == 2 and not self:Mythic() then -- Random Combo in Mythic
 		self:Bar(args.spellId, self:Easy() and 10.1 or 7.5, CL.count:format(args.spellName, foeBreakerCount))
 	end
-	updateInfoBox(self, true)
+	updateInfoBox(true)
 end
 
 function mod:FoeBreakerSuccess()
 	comboCastEnd = 0
-	updateInfoBox(self, true)
+	updateInfoBox(true)
 end
 
 function mod:FlameRend(args)
-	self:Message(args.spellId, "Important", "Alarm", CL.count:format(args.spellName, flameRendCount))
+	self:Message(args.spellId, "red", "Alarm", CL.count:format(args.spellName, flameRendCount))
 	self:ShowAura(244688, "Raid", { icon = args.spellIcon, stacks = "#" .. flameRendCount })
 	flameRendCount = flameRendCount + 1
 	comboSpells[#comboSpells+1] = 245463
@@ -396,35 +397,36 @@ function mod:FlameRend(args)
 	elseif flameRendCount == 2 and not self:Mythic() then -- Random Combo in Mythic
 		self:Bar(args.spellId, self:Normal() and 10.2 or 7.5, CL.count:format(args.spellName, flameRendCount))
 	end
-	updateInfoBox(self, true)
+	updateInfoBox(true)
 end
 
 function mod:FlameRendSuccess()
 	comboCastEnd = 0
-	updateInfoBox(self, true)
+	updateInfoBox(true)
 end
 
 function mod:SearingTempest(args)
-	self:Message(args.spellId, "Urgent", "Warning")
+	self:Message(args.spellId, "orange", "Warning")
 	self:ImpactBar(args.spellId, 6)
 	self:ShowAura(244688, "AoE", { icon = args.spellIcon, stacks = "#" .. searingTempestCount })
 	searingTempestCount = searingTempestCount + 1
 	comboSpells[#comboSpells+1] = 245301
 	comboCastEnd = GetTime() + 6
-	updateInfoBox(self, true)
+	updateInfoBox(true)
 end
 
 function mod:SearingTempestSuccess(args)
 	comboCastEnd = 0
-	updateInfoBox(self, true)
+	updateInfoBox(true)
 end
 
 --[[ Intermission: Fires of Taeshalach ]]--
 function mod:CorruptAegis()
+	intermission = true
 	techniqueStarted = nil -- End current technique
 	self:CloseInfo(244688)
 	self:HideAura(244688) -- Taeshalach Technique
-	self:Message("stages", "Neutral", "Long", CL.intermission, false)
+	self:Message("stages", "cyan", "Long", CL.intermission, false)
 	self:StopBar(245994) -- Scorching Blaze
 	self:StopBar(244693) -- Wake of Flame
 	self:StopBar(244688) -- Taeshalach Technique
@@ -515,8 +517,9 @@ end
 
 function mod:CorruptAegisRemoved()
 	stage = stage + 1
+	intermission = false
 	comboTime = GetTime() + 37.5
-	self:Message("stages", "Neutral", "Long", CL.stage:format(stage), false)
+	self:Message("stages", "cyan", "Long", CL.stage:format(stage), false)
 
 	if self:Mythic() then
 		self:Bar(254452, 23) -- Ravenous Blaze
@@ -549,15 +552,16 @@ do
 			self:Flash(args.spellId)
 			self:Say(args.spellId)
 			self:ShowAura(args.spellId, 8, "Move", true)
+			self:PlaySound(args.spellId, "Warning")
 		end
 		playerList[#playerList+1] = args.destName
 		blazeProxList[#blazeProxList+1] = args.destName
+		self:TargetsMessage(args.spellId, "red", playerList, 5)
 		if #playerList == 1 then
 			local cooldown = stage == 1 and 23.1 or 60.1 -- this cooldown should only trigger in stage 1+
 			if comboTime > GetTime() + cooldown then
 				self:CDBar(args.spellId, cooldown)
 			end
-			self:ScheduleTimer("TargetMessage", 0.3, args.spellId, playerList, "Important", "Warning")
 			blazeTick = 1
 			scheduled = self:ScheduleRepeatingTimer(addBlazeTick, 2, self)
 		end
@@ -566,7 +570,7 @@ do
 
 	function mod:RavenousBlazeRemoved(args)
 		if self:Me(args.destGUID) then
-			blazeOnMe = nil
+			blazeOnMe = false
 		end
 		tDeleteItem(blazeProxList, args.destName)
 		updateProximity(self)

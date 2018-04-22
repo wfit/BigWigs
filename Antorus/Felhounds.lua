@@ -71,13 +71,12 @@ function mod:OnBossEnable()
 
 	--[[ F'harg ]]--
 	self:Log("SPELL_CAST_SUCCESS", "BurningMaw", 251445)
+	self:Log("SPELL_CAST_SUCCESS", "MoltenTouch", 244072)
 	self:Log("SPELL_AURA_APPLIED", "MoltenTouchApplied", 244072)
 	self:Log("SPELL_AURA_REMOVED", "SingedRemoved", 244091)
 	self:Log("SPELL_AURA_APPLIED", "DesolateGazeApplied", 244768)
 	self:Log("SPELL_AURA_REMOVED", "DesolateGazeRemoved", 244768)
 	self:Log("SPELL_CAST_SUCCESS", "EnflameCorruption", 244057)
-	self:Log("SPELL_AURA_APPLIED", "Enflamed", 248815)
-	self:Log("SPELL_AURA_REMOVED", "EnflamedRemoved", 248815)
 
 	--[[ Shatug ]]--
 	self:Log("SPELL_CAST_SUCCESS", "CorruptingMaw", 245098)
@@ -87,10 +86,10 @@ function mod:OnBossEnable()
 	self:Log("SPELL_AURA_APPLIED", "WeightofDarknessApplied", 254429)
 	self:Log("SPELL_AURA_REMOVED", "WeightofDarknessRemoved", 254429)
 	self:Log("SPELL_CAST_SUCCESS", "SiphonCorruption", 244056)
-	self:Log("SPELL_AURA_APPLIED", "Siphoned", 248819)
-	self:Log("SPELL_AURA_REMOVED", "SiphonedRemoved", 248819)
 
 	--[[ General ]]--
+	self:Log("SPELL_AURA_APPLIED", "EnflamedOrSiphoned", 248815, 248819) -- Enflamed, Siphoned
+	self:Log("SPELL_AURA_REMOVED", "EnflamedOrSiphonedRemoved", 248815, 248819) -- Enflamed, Siphoned
 	self:Log("SPELL_AURA_APPLIED", "SargerasBlessing", 246057) -- Destroyer's Boon buff
 	self:Log("SPELL_AURA_REMOVED", "SargerasBlessingRemoved", 246057) -- Destroyer's Boon buff
 	self:Log("SPELL_AURA_APPLIED", "FocusingPower", 251356)
@@ -106,16 +105,18 @@ function mod:OnEngage()
 	weightofDarknessCount = 1
 	consumingSphereCount = 1
 
-	self:CDBar(251445, self:Mythic() and 10.9 or 10.5) -- Burning Maw
-	self:CDBar(245098, self:Mythic() and 10.9 or 10.5) -- Corrupting Maw
-	self:Bar(244056, self:Mythic() and 26.5 or self:Easy() and 29 or 28) -- Siphon Corruption
-	self:Bar(244057, self:Mythic() and 49.6 or self:Easy() and 56 or 52) -- Enflame Corruption
-	self:Bar(244131, self:Mythic() and 49 or self:Easy() and 54.5 or 52.5) -- Consuming Sphere
-	self:Bar(244768, self:Mythic() and 77.5 or self:Easy() and 89 or 84.5) -- Desolate Gaze
+	local mythic, easy = self:Mythic(), self:Easy()
 
-	if not self:Easy() then
-		self:Bar(244072, self:Mythic() and 18 or 20) -- Molten Touch
-		self:Bar(254429, self:Mythic() and 73 or 78) -- Weight of Darkness
+	self:CDBar(251445, mythic and 10.9 or 10.5) -- Burning Maw
+	self:CDBar(245098, mythic and 10.9 or 10.5) -- Corrupting Maw
+	self:Bar(244056, mythic and 26.5 or easy and 29 or 28) -- Siphon Corruption
+	self:Bar(244057, mythic and 49.6 or easy and 56 or 52) -- Enflame Corruption
+	self:Bar(244131, mythic and 49 or easy and 54.5 or 52.5) -- Consuming Sphere
+	self:Bar(244768, mythic and 77.5 or easy and 89 or 84.5) -- Desolate Gaze
+
+	if not easy then
+		self:Bar(244072, mythic and 18 or 20) -- Molten Touch
+		self:Bar(254429, mythic and 73 or 78) -- Weight of Darkness
 	end
 end
 
@@ -125,11 +126,13 @@ end
 
 function mod:UNIT_SPELLCAST_SUCCEEDED(_, _, _, _, spellId)
 	if spellId == 244159 then -- Consuming Sphere
-		self:Message(244131, "Attention", "Alert")
+		self:Message(244131, "yellow", "Alert")
 		consumingSphereCount = consumingSphereCount + 1
 		self:Bar(244131, self:Mythic() and (consumingSphereCount % 2 == 1 and 86 or 72.5) or self:Easy() and 85 or 78.5)
 	elseif spellId == 244069 then -- Weight of Darkness
 		weightofDarknessCount = weightofDarknessCount + 1
+		self:Flash(254429)
+		self:Message(254429, "orange", "Warning")
 		self:Bar(254429, self:Mythic() and (weightofDarknessCount % 2 == 1 and 72.5 or 86) or 78.5)
 	elseif spellId == 244064 then -- Desolate Gaze
 		self:Bar(244768, self:Mythic() and 103 or self:Easy() and 104 or 96.5)
@@ -146,44 +149,50 @@ function mod:FlametouchedOrShadowtouched(args)
 end
 
 function mod:BurningMaw(args)
-	self:Message(args.spellId, "Important", "Alarm")
+	self:Message(args.spellId, "red", "Alarm")
 	self:CDBar(args.spellId, self:Mythic() and 10.9 or 11)
+end
+
+function mod:MoltenTouch(args)
+	moltenTouchCount = moltenTouchCount + 1
+	if self:Mythic() then
+		self:Bar(args.spellId, moltenTouchCount % 2 == 1 and 103.3 or 88.8)
+	else
+		self:Bar(args.spellId, 96.5)
+	end
 end
 
 do
 	local playerList = mod:NewTargetList()
 	function mod:MoltenTouchApplied(args)
 		playerList[#playerList+1] = args.destName
-		if #playerList == 1 then
-			self:ScheduleTimer("TargetMessage", 0.3, args.spellId, playerList, "Attention", "Beware", nil, nil, true)
-		end
-		moltenTouchCount = moltenTouchCount + 1
-		self:Bar(args.spellId, self:Mythic() and (moltenTouchCount % 2 == 1 and 103.3 or 88.8) or 96.5)
 		if self:Me(args.destGUID) then
+			self:PlaySound(args.spellId, "Warning")
 			self:SmartColorSet(244072, 1, 0.5, 0)
 			self:ScheduleTimer("SmartColorUnset", 13, 244072)
 		end
+		self:TargetsMessage(args.spellId, "yellow", playerList, 3)
 	end
 
 	function mod:SingedRemoved(args)
 		if self:Me(args.destGUID) then
 			self:SmartColorUnset(244072)
 		end
+		self:TargetsMessage(args.spellId, "yellow", playerList, 3)
 	end
 end
 
 do
 	local playerList = mod:NewTargetList()
 	function mod:DesolateGazeApplied(args)
+		playerList[#playerList+1] = args.destName
 		if self:Me(args.destGUID) then
 			self:Say(args.spellId)
 			self:SayCountdown(args.spellId, 8)
 			self:ShowAura(args.spellId, "On YOU")
 		end
-		playerList[#playerList+1] = args.destName
-		if #playerList == 1 then
-			self:ScheduleTimer("TargetMessage", 0.3, args.spellId, playerList, "Urgent", "Warning", nil, nil, true)
-		end
+		self:PlaySound(args.spellId, "Warning", nil, playerList)
+		self:TargetsMessage(args.spellId, "orange", playerList, 5)
 	end
 
 	function mod:DesolateGazeRemoved(args)
@@ -195,7 +204,7 @@ do
 end
 
 function mod:EnflameCorruption(args)
-	self:Message(args.spellId, "Attention", "Alert")
+	self:Message(args.spellId, "yellow", "Alert")
 	enflameCorruptionCount = enflameCorruptionCount + 1
 	self:Bar(args.spellId, self:Mythic() and (enflameCorruptionCount % 2 == 1 and 88.8 or 104.6) or self:Easy() and 104 or 95.5)
 	if not self:GetOption(corruption_filter) or color ~= FIRE then
@@ -246,7 +255,7 @@ do
 end
 
 function mod:CorruptingMaw(args)
-	self:Message(args.spellId, "Important", "Alarm")
+	self:Message(args.spellId, "red", "Alarm")
 	self:CDBar(args.spellId, self:Mythic() and 10.9 or 11)
 end
 
@@ -262,18 +271,11 @@ function mod:ConsumedRemoved(args)
 	end
 end
 
-do
-	local playerList = mod:NewTargetList()
-	function mod:WeightofDarknessApplied(args)
-		if self:Me(args.destGUID) then
-			--self:Say(args.spellId)
-			self:SayCountdown(args.spellId, 5)
-			self:ShowAura(args.spellId, 5, "Fear")
-		end
-		playerList[#playerList+1] = args.destName
-		if #playerList == 1 then
-			self:ScheduleTimer("TargetMessage", 0.3, args.spellId, playerList, "Urgent", "Warning", nil, nil, true)
-		end
+function mod:WeightofDarknessApplied(args)
+	if self:Me(args.destGUID) then
+		self:Say(args.spellId)
+		self:SayCountdown(args.spellId, 5)
+		self:ShowAura(args.spellId, 5, "Fear")
 	end
 end
 
@@ -285,7 +287,7 @@ function mod:WeightofDarknessRemoved(args)
 end
 
 function mod:SiphonCorruption(args)
-	self:Message(args.spellId, "Attention", "Alert")
+	self:Message(args.spellId, "yellow", "Alert")
 	siphonCorruptionCount = siphonCorruptionCount + 1
 	self:Bar(args.spellId, self:Mythic() and (siphonCorruptionCount % 2 == 1 and 86.3 or 73) or self:Easy() and 85 or 78.5)
 	if not self:GetOption(corruption_filter) or color ~= FEL then
@@ -293,15 +295,21 @@ function mod:SiphonCorruption(args)
 	end
 end
 
-function mod:Siphoned(args)
+function mod:EnflamedOrSiphoned(args)
 	if self:Me(args.destGUID) then
-		self:TargetMessage(args.spellId, args.destName, "Personal", "Warning")
-		self:SayCountdown(args.spellId, self:Mythic() and 3 or 4, nil, self:Mythic() and 2)
+		self:PlaySound(args.spellId, "Warning")
+		self:TargetMessage2(args.spellId, "blue", args.destName)
+		self:Say(args.spellId)
+		if self:Mythic() then
+			self:SayCountdown(args.spellId, 3, nil, 2)
+		else
+			self:SayCountdown(args.spellId, 4)
+		end
 		self:ShowAura(args.spellId, 4, "Pack")
 	end
 end
 
-function mod:SiphonedRemoved(args)
+function mod:EnflamedOrSiphonedRemoved(args)
 	if self:Me(args.destGUID) then
 		self:CancelSayCountdown(args.spellId)
 		self:HideAura(args.spellId)
@@ -314,7 +322,7 @@ do
 		local t = GetTime()
 		if t-prev > 0.5 then
 			prev = t
-			self:Message(244050, "Urgent", "Warning", args.spellName, args.spellId)
+			self:Message(244050, "orange", "Warning", args.spellName, args.spellId)
 			if not self:Easy() then
 				self:ShowAura(244050, "Spread Boss")
 			end
@@ -332,7 +340,7 @@ do
 		local t = GetTime()
 		if t-prev > 1.5 then
 			prev = t
-			self:Message(args.spellId, "Neutral", "Info")
+			self:Message(args.spellId, "cyan", "Info")
 			self:Bar(args.spellId, 15)
 		end
 	end

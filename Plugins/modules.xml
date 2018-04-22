@@ -4,6 +4,7 @@
 <Include file="Locales\locales.xml"/>
 
 <Script file="AltPower.lua"/>
+<Script file="AutoReply.lua"/>
 <Script file="AuraTracker.lua"/>
 <Script file="Colors.lua"/>
 <Script file="Sound.lua"/>
@@ -16,8 +17,8 @@
 <Script file="Flash.lua"/>
 <Script file="Emphasize.lua"/>
 <Script file="Pull.lua"/>
-<Script file="Respawn.lua"/>
 <Script file="Statistics.lua"/>
 <Script file="Victory.lua"/>
+<Script file="Wipe.lua"/>
 
 </Ui>

@@ -111,7 +111,7 @@ end
 function mod:TormentofFlames(args)
 	if tormentActive ~= 1 then
 		tormentActive = 1
-		self:Message("stages", "Positive", "Long", args.spellName, args.spellId)
+		self:Message("stages", "green", "Long", args.spellName, args.spellId)
 		if self:Easy() then
 			self:CDBar("stages", 355, self:SpellName(243973), 243973) -- Torment of Shadows
 		else
@@ -123,7 +123,7 @@ end
 function mod:TormentofFrost(args)
 	if tormentActive ~= 2 then
 		tormentActive = 2
-		self:Message("stages", "Positive", "Long", args.spellName, args.spellId)
+		self:Message("stages", "green", "Long", args.spellName, args.spellId)
 		self:CDBar("stages", self:Mythic() and 100 or 114, self:SpellName(243980), 243980) -- Torment of Fel
 	end
 end
@@ -132,7 +132,7 @@ function mod:TormentofFel(args)
 	if tormentActive ~= 3 then
 		tormentActive = 3
 		felTick = 0
-		self:Message("stages", "Positive", "Long", args.spellName, args.spellId)
+		self:Message("stages", "green", "Long", args.spellName, args.spellId)
 		self:CDBar("stages", self:Mythic() and 90 or 121, self:SpellName(243973), 243973) -- Torment of Shadows
 
 		self:ShowAura(243980, { pulse = false, pin = -1 })
@@ -156,7 +156,7 @@ end
 function mod:TormentofShadows(args)
 	if tormentActive ~= 4 then
 		tormentActive = 4
-		self:Message("stages", "Positive", "Long", args.spellName, args.spellId)
+		self:Message("stages", "green", "Long", args.spellName, args.spellId)
 
 		self:RemoveLog("SPELL_PERIODIC_DAMAGE", "TormentofFelTick", 243980)
 		self:RemoveLog("SPELL_PERIODIC_MISSED", "TormentofFelTick", 243980)
@@ -166,12 +166,12 @@ end
 
 function mod:Misery(args)
 	if self:Me(args.destGUID) then
-		self:Message(args.spellId, "Personal", "Alarm", CL.you:format(args.spellName))
+		self:Message(args.spellId, "blue", "Alarm", CL.you:format(args.spellName))
 	end
 end
 
 function mod:ShadowStrike()
-	self:Message(243960, "Urgent", "Warning")
+	self:Message(243960, "orange", "Warning")
 	self:CDBar(243960, 9.8)
 end
 
@@ -180,7 +180,7 @@ function mod:DarkFissureStart(args)
 end
 
 function mod:DarkFissure(args)
-	self:Message(args.spellId, "Attention", "Alert")
+	self:Message(args.spellId, "yellow", "Alert")
 	self:CDBar(args.spellId, 32.9)
 end
 
@@ -189,10 +189,11 @@ function mod:MarkedPrey(args)
 		self:Flash(args.spellId)
 		self:Say(args.spellId)
 		self:SayCountdown(args.spellId, 5)
+		self:PlaySound(args.spellId, "Alarm")
 		self:ShowAura(args.spellId, 5, "On YOU")
 	end
 	self:PrimaryIcon(args.spellId, args.destName)
-	self:TargetMessage(args.spellId, args.destName, "Important", "Alarm")
+	self:TargetMessage2(args.spellId, "red", args.destName)
 	self:TargetBar(args.spellId, 5, args.destName)
 	self:CDBar(args.spellId, 32.8)
 end
@@ -208,62 +209,60 @@ end
 
 do
 	local rangeCheck, rangeObject
-	local playerList, scheduled, isOnMe, proxList = mod:NewTargetList(), nil, nil, {}
+	local playerList, isOnMe, proxList = mod:NewTargetList(), false, {}
 
 	function mod:NecroticEmbraceSuccess()
-		self:CDBar(244094, 30.5)
 		necroticEmbraceCount = necroticEmbraceCount + 1
 		wipe(proxList)
+		self:CDBar(244094, 30.5)
 	end
 
-	local function warn(self, spellId)
+	local function warn()
 		if not isOnMe then
-			self:TargetMessage(spellId, playerList, "Urgent")
-		else
-			wipe(playerList)
+			mod:TargetsMessage(244094, "orange", playerList, #playerList) -- Necrotic Embrace
+			mod:OpenProximity(244094, 10, proxList)
 		end
-		scheduled = nil
+		wipe(playerList)
 	end
 
 	function mod:NecroticEmbrace(args)
 		if #playerList >= 2 then return end -- Avoid spam if something goes wrong
 		if tContains(proxList, args.destName) then return end -- Don't annouce someone twice
-		local marker = (necroticEmbraceCount % 2 == 1) and (#playerList == 0 and 7 or 3) or (#playerList == 0 and 4 or 6)
 		playerList[#playerList+1] = args.destName
+		local count = #playerList
+		local icon = (necroticEmbraceCount % 2 == 1) and (count == 0 and 7 or 3) or (count == 0 and 4 or 6)
 		if self:Me(args.destGUID) then
-			self:TargetMessage(args.spellId, args.destName, "Urgent", "Warning", CL.count_icon:format(args.spellName, #playerList, marker))
-			self:Say(args.spellId, CL.count_rticon:format(args.spellName, #playerList, marker))
-			self:Flash(args.spellId, marker)
-			self:SayCountdown(args.spellId, 6, marker)
+			isOnMe = true
+			self:PlaySound(args.spellId, "Warning")
+			self:TargetMessage2(args.spellId, "orange", args.destName, false, CL.count_icon:format(args.spellName, count, icon))
+			self:Say(args.spellId, CL.count_rticon:format(args.spellName, count, icon))
+			self:Flash(args.spellId, icon)
+			self:SayCountdown(args.spellId, 6, icon)
 			self:OpenProximity(args.spellId, 10)
-			self:ShowAura(args.spellId, 6, "Necro", { icon = marker, borderless = false }) -- { icon = 450908 }
+			self:ShowAura(args.spellId, 6, "Necro", { icon = icon, borderless = false }) -- { icon = 450908 }
 			self:SmartColorSet(args.spellId, 1, 0, 0)
 			if self:Hud(args.spellId) then
 				rangeObject = Hud:DrawSpinner("player", 50)
 				rangeCheck = self:ScheduleRepeatingTimer("CheckRange", 0.1, rangeObject)
 				self:CheckRange(rangeObject)
 			end
-			isOnMe = true
 		end
 
 		proxList[#proxList+1] = args.destName
-		if not isOnMe then
-			self:OpenProximity(args.spellId, 10, proxList)
-		end
 
-		if not scheduled then
-			scheduled = self:ScheduleTimer(warn, 0.3, self, args.spellId)
+		if count == 1 then
+			self:SimpleTimer(warn, 0.3)
 		end
 
 		if self:GetOption(necroticEmbraceMarker) then
-			SetRaidTarget(args.destName, marker)
+			SetRaidTarget(args.destName, icon)
 		end
 	end
 
 	function mod:NecroticEmbraceRemoved(args)
 		if self:Me(args.destGUID) then
-			self:Message(args.spellId, "Positive", "Info", CL.removed:format(args.spellName))
-			isOnMe = nil
+			self:Message(args.spellId, "green", "Info", CL.removed:format(args.spellName))
+			isOnMe = false
 			self:CancelSayCountdown(args.spellId)
 			self:CloseProximity(args.spellId)
 			self:HideAura(args.spellId)
@@ -297,7 +296,7 @@ do
 		local t = GetTime()
 		if self:Me(args.destGUID) and t-prev > 1.5 then
 			prev = t
-			self:Message(243999, "Personal", "Alert", CL.underyou:format(args.spellName)) -- Dark Fissure
+			self:Message(243999, "blue", "Alert", CL.underyou:format(args.spellName)) -- Dark Fissure
 		end
 	end
 end
