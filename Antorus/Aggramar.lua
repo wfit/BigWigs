@@ -146,7 +146,6 @@ function mod:OnEngage()
 
 	blazeTick = 1
 	blazeOnMe = false
-	intermission = false
 	wipe(blazeProxList)
 
 	if self:Mythic() then
@@ -388,7 +387,7 @@ end
 
 function mod:FlameRend(args)
 	self:Message(args.spellId, "red", "Alarm", CL.count:format(args.spellName, flameRendCount))
-	self:ShowAura(244688, "Raid", { icon = args.spellIcon, stacks = "#" .. flameRendCount })
+	self:ShowAura(244688, self:Mythic() and (flameRendCount == 1 and "Melees" or "Ranges") or "Raid", { icon = args.spellIcon, stacks = "#" .. flameRendCount })
 	flameRendCount = flameRendCount + 1
 	comboSpells[#comboSpells+1] = 245463
 	comboCastEnd = GetTime() + (self:Easy() and 3.5 or 2.75)
@@ -422,7 +421,6 @@ end
 
 --[[ Intermission: Fires of Taeshalach ]]--
 function mod:CorruptAegis()
-	intermission = true
 	techniqueStarted = nil -- End current technique
 	self:CloseInfo(244688)
 	self:HideAura(244688) -- Taeshalach Technique
@@ -517,7 +515,6 @@ end
 
 function mod:CorruptAegisRemoved()
 	stage = stage + 1
-	intermission = false
 	comboTime = GetTime() + 37.5
 	self:Message("stages", "cyan", "Long", CL.stage:format(stage), false)
 
