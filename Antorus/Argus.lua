@@ -201,10 +201,10 @@ function mod:GetOptions()
 		257214, -- Titanforging
 
 		--[[ Mythic ]]--
-		{258068, "SAY", "FLASH", "AURA", "HUD", "SMARTCOLOR"}, -- Sargeras' Gaze
+		{258068, "SAY", "FLASH", "AURA", "HUD"}, -- Sargeras' Gaze
 		{"fear_help", "SAY"},
 		257911, -- Unleased Rage
-		{257966, "FLASH", "AURA"}, -- Sentence of Sargeras
+		{257966, "FLASH", "AURA", "SMARTCOLOR"}, -- Sentence of Sargeras
 		{258000, "AURA"}, -- Shattered Bonds
 		258838, -- Soulrending Scythe
 		258834, -- Edge of Annihilation
@@ -1056,6 +1056,7 @@ do
 			isOnMe = #playerList
 			self:ShowAura(args.spellId, "Chain")
 			self:Flash(args.spellId, isOnMe == 1 and 1 or 4)
+			self:SmartColorSet(args.spellId, 1, 0, 0)
 			checkForFearHelp(self)
 		end
 		if #playerList == 1 then
@@ -1068,6 +1069,7 @@ do
 	function mod:SentenceofSargerasRemoved(args)
 		if self:Me(args.destGUID) then
 			self:HideAura(args.spellId)
+			self:SmartColorUnset(args.spellId)
 		end
 	end
 
