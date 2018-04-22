@@ -1,14 +1,15 @@
 ------------------------------------------------------------------------
-r36 | funkydude | 2017-06-29 07:46:15 -0500 (Thu, 29 Jun 2017) | 1 line
+r39 | funkydude | 2018-04-02 18:06:56 +0000 (Mon, 02 Apr 2018) | 1 line
 Changed paths:
    M /trunk/LibDDI-1.0.toc
+   M /trunk/lib.lua
 
-bump toc
+bump version
 ------------------------------------------------------------------------
-r35 | funkydude | 2017-06-29 07:44:36 -0500 (Thu, 29 Jun 2017) | 1 line
+r38 | funkydude | 2017-08-29 22:04:39 +0000 (Tue, 29 Aug 2017) | 1 line
 Changed paths:
    M /trunk/lib.lua
 
-Update to work with patch 7.3 PlaySound changes.
+remove compat code
 ------------------------------------------------------------------------
 
