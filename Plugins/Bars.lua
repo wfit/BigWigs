@@ -456,7 +456,7 @@ end
 plugin.defaultDB = {
 	fontSize = 10,
 	fontSizeEmph = 13,
-	fontSizeImpact = 15,
+	fontSizeImpact = 18,
 	texture = "BantoBar",
 	font = nil,
 	monochrome = nil,
@@ -484,7 +484,7 @@ plugin.defaultDB = {
 	BigWigsEmphasizeAnchor_width = 320,
 	BigWigsEmphasizeAnchor_height = 22,
 	BigWigsImpactAnchor_width = 250,
-	BigWigsImpactAnchor_height = 25,
+	BigWigsImpactAnchor_height = 30,
 	spacing = 1,
 	interceptMouse = nil,
 	onlyInterceptOnKeypress = nil,
@@ -567,12 +567,17 @@ do
 			bar.candyBarLabel:SetFont(f, db.fontSizeEmph, flags)
 			bar.candyBarDuration:SetFont(f, db.fontSizeEmph, flags)
 		end
+		for bar in next, impactAnchor.bars do
+			bar.candyBarLabel:SetFont(f, db.fontSizeImpact, flags)
+			bar.candyBarDuration:SetFont(f, db.fontSizeImpact, flags)
+		end
 	end
 
 	local function sortBars(info, value)
 		db[info[#info]] = value
 		rearrangeBars(normalAnchor)
 		rearrangeBars(emphasizeAnchor)
+		rearrangeBars(impactAnchor)
 	end
 
 	local function shouldDisable() return not plugin.db.profile.interceptMouse end
@@ -588,6 +593,7 @@ do
 			if BigWigsAnchor then
 				BigWigsAnchor:RefixPosition()
 				BigWigsEmphasizeAnchor:RefixPosition()
+				BigWigsImpactAnchor:RefixPosition()
 			end
 		end,
 		args = {
@@ -653,6 +659,11 @@ do
 								bar.candyBarLabel:SetJustifyH(value)
 								currentBarStyler.ApplyStyle(bar)
 							end
+							for bar in next, impactAnchor.bars do
+								currentBarStyler.BarStopped(bar)
+								bar.candyBarLabel:SetJustifyH(value)
+								currentBarStyler.ApplyStyle(bar)
+							end
 						end,
 					},
 					alignTime = {
@@ -676,6 +687,11 @@ do
 								bar.candyBarDuration:SetJustifyH(value)
 								currentBarStyler.ApplyStyle(bar)
 							end
+							for bar in next, impactAnchor.bars do
+								currentBarStyler.BarStopped(bar)
+								bar.candyBarDuration:SetJustifyH(value)
+								currentBarStyler.ApplyStyle(bar)
+							end
 						end,
 					},
 					fill = {
@@ -689,6 +705,9 @@ do
 								bar:SetFill(value)
 							end
 							for bar in next, emphasizeAnchor.bars do
+								bar:SetFill(value)
+							end
+							for bar in next, impactAnchor.bars do
 								bar:SetFill(value)
 							end
 						end,
@@ -718,6 +737,11 @@ do
 								bar:SetTexture(media:Fetch(STATUSBAR, tex))
 								currentBarStyler.ApplyStyle(bar)
 							end
+							for bar in next, impactAnchor.bars do
+								currentBarStyler.BarStopped(bar)
+								bar:SetTexture(media:Fetch(STATUSBAR, tex))
+								currentBarStyler.ApplyStyle(bar)
+							end
 						end,
 					},
 					barStyle = {
@@ -737,6 +761,7 @@ do
 								end
 								rearrangeBars(normalAnchor)
 								rearrangeBars(emphasizeAnchor)
+								rearrangeBars(impactAnchor)
 
 								if style.barHeight then
 									db.BigWigsAnchor_height = style.barHeight
@@ -764,6 +789,11 @@ do
 									bar:SetHeight(db.BigWigsEmphasizeAnchor_height)
 									currentBarStyler.ApplyStyle(bar)
 								end
+								for bar in next, impactAnchor.bars do
+									currentBarStyler.BarStopped(bar)
+									bar:SetHeight(db.BigWigsImpactAnchor_height)
+									currentBarStyler.ApplyStyle(bar)
+								end
 
 								BigWigsAnchor:RefixPosition()
 								BigWigsEmphasizeAnchor:RefixPosition()
@@ -789,6 +819,11 @@ do
 								currentBarStyler.ApplyStyle(bar)
 							end
 							for bar in next, emphasizeAnchor.bars do
+								currentBarStyler.BarStopped(bar)
+								bar:SetTimeVisibility(value)
+								currentBarStyler.ApplyStyle(bar)
+							end
+							for bar in next, impactAnchor.bars do
 								currentBarStyler.BarStopped(bar)
 								bar:SetTimeVisibility(value)
 								currentBarStyler.ApplyStyle(bar)
@@ -837,6 +872,16 @@ do
 								end
 								currentBarStyler.ApplyStyle(bar)
 							end
+							for bar in next, impactAnchor.bars do
+								currentBarStyler.BarStopped(bar)
+								if value then
+									bar:SetIcon(bar:Get("bigwigs:iconoptionrestore") or 134337) -- Interface/Icons/INV_Misc_Orb_05
+								else
+									bar:Set("bigwigs:iconoptionrestore", bar:GetIcon())
+									bar:SetIcon(nil)
+								end
+								currentBarStyler.ApplyStyle(bar)
+							end
 						end,
 					},
 					iconPosition = {
@@ -856,6 +901,11 @@ do
 								currentBarStyler.ApplyStyle(bar)
 							end
 							for bar in next, emphasizeAnchor.bars do
+								currentBarStyler.BarStopped(bar)
+								bar:SetIconPosition(value)
+								currentBarStyler.ApplyStyle(bar)
+							end
+							for bar in next, impactAnchor.bars do
 								currentBarStyler.BarStopped(bar)
 								bar:SetIconPosition(value)
 								currentBarStyler.ApplyStyle(bar)
@@ -1153,6 +1203,7 @@ do
 						name = L.growingUpwards,
 						desc = L.growingUpwardsDesc,
 						order = 4,
+						set = sortBars,
 					},
 					fontSizeImpact = {
 						type = "range",
@@ -1164,38 +1215,6 @@ do
 						min = 1,
 						step = 1,
 						set = updateFont,
-					},
-					impactMove = {
-						type = "toggle",
-						name = L.move,
-						desc = L.moveDesc,
-						order = 6,
-						set = function(_, value)
-							db.impactMove = value
-							if not value then
-								db.BigWigsImpactAnchor_width = db.BigWigsAnchor_width * db.impactMultiplier
-								db.BigWigsImpactAnchor_height = db.BigWigsAnchor_height * db.impactMultiplier
-							else
-								db.BigWigsImpactAnchor_width = BigWigsImpactAnchor:GetWidth()
-								db.BigWigsImpactAnchor_height = BigWigsImpactAnchor:GetHeight()
-							end
-						end,
-					},
-					impactMultiplier = {
-						type = "range",
-						name = L.emphasizeMultiplier,
-						desc = L.emphasizeMultiplierDesc,
-						width = "double",
-						order = 7,
-						max = 3,
-						min = 1,
-						step = 0.01,
-						set = function(_, value)
-							db.impactMultiplier = value
-							db.BigWigsImpactAnchor_width = db.BigWigsAnchor_width * value
-							db.BigWigsImpactAnchor_height = db.BigWigsAnchor_height * value
-						end,
-						disabled = function() return db.impactMove end,
 					},
 					exactPositioning = {
 						type = "group",
@@ -1428,7 +1447,6 @@ do
 	emphasizeAnchor = createAnchor("BigWigsEmphasizeAnchor", L.emphasizedBars)
 	impactAnchor = createAnchor("BigWigsImpactAnchor", "Impact Bar")
 
-	createAnchors = nil
 	createAnchor = nil
 end
 
@@ -1599,11 +1617,19 @@ do
 					newBarStyler.ApplyStyle(bar)
 				end
 			end
+			if impactAnchor then
+				for bar in next, impactAnchor.bars do
+					currentBarStyler.BarStopped(bar)
+					bar.candyBarBackdrop:Hide()
+					newBarStyler.ApplyStyle(bar)
+				end
+			end
 		end
 		currentBarStyler = newBarStyler
 
 		rearrangeBars(normalAnchor)
 		rearrangeBars(emphasizeAnchor)
+		rearrangeBars(impactAnchor)
 
 		if db then
 			db.barStyle = style
@@ -1778,9 +1804,11 @@ do
 		if not db.onlyInterceptOnKeypress or (db.onlyInterceptOnKeypress and type(key) == "string" and db.interceptKey == keymap[key] and state == 1) then
 			refixClickOnAnchor(true, normalAnchor)
 			refixClickOnAnchor(true, emphasizeAnchor)
+			refixClickOnAnchor(true, impactAnchor)
 		else
 			refixClickOnAnchor(false, normalAnchor)
 			refixClickOnAnchor(false, emphasizeAnchor)
+			refixClickOnAnchor(false, impactAnchor)
 		end
 	end
 end
@@ -1988,6 +2016,7 @@ do
 		if dirty then
 			rearrangeBars(normalAnchor)
 			rearrangeBars(emphasizeAnchor)
+			rearrangeBars(impactAnchor)
 			dirty = nil
 		end
 	end)
