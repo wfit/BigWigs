@@ -230,7 +230,7 @@ do
 		if tContains(proxList, args.destName) then return end -- Don't annouce someone twice
 		playerList[#playerList+1] = args.destName
 		local count = #playerList
-		local icon = (necroticEmbraceCount % 2 == 1) and (count == 0 and 7 or 3) or (count == 0 and 4 or 6)
+		local icon = (necroticEmbraceCount % 2 == 1) and (count == 1 and 7 or 3) or (count == 1 and 4 or 6)
 		if self:Me(args.destGUID) then
 			isOnMe = true
 			self:PlaySound(args.spellId, "Warning")
