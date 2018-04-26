@@ -57,7 +57,7 @@ if L then
 	L.track_ember_icon = 245911 -- Wrought in Flame icon
 
 	L.custom_off_ember_marker = CL.marker:format(mod:SpellName(-15903))
-	L.custom_off_ember_marker_desc = "Mark Ember of Taeshalach with {rt1}{rt2}{rt3}{rt4}{rt5}, requires promoted or leader.\n|cff33ff99Mythic: This will only mark adds in the current wave and above 45 energy.|r"
+	L.custom_off_ember_marker_desc = "Mark Ember of Taeshalach with {rt1}{rt2}{rt3}{rt4}{rt5}, requires promoted or leader.\n|cff33ff99Mythic: This will only mark adds in the current wave.|r"
 end
 
 --------------------------------------------------------------------------------
