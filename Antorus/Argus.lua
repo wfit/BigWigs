@@ -160,6 +160,7 @@ end
 local seaMarker = mod:AddMarkerOption(true, "player", 1, 255594, 1, 3) -- Sky and Sea
 local burstMarker = mod:AddMarkerOption(true, "player", 3, 250669, 3, 7) -- Soul Burst
 local bombMarker = mod:AddMarkerOption(true, "player", 2, 251570, 2) -- Soul Bomb
+local scythe_hud = mod:AddCustomOption { "scythe_hud", "Display HUD timer for Scythe", default = true }
 function mod:GetOptions()
 	return {
 		"stages",
@@ -170,7 +171,8 @@ function mod:GetOptions()
 		{248396, "ME_ONLY", "SAY", "FLASH", "AURA", "SMARTCOLOR"}, -- Soul Blight
 		248167, -- Death Fog
 		257296, -- Tortured Rage
-		248499, -- Sweeping Scythe
+		248499, -- Sweeping Scythe,
+		scythe_hud,
 		{255594, "SAY", "AURA", "IMPACT"}, -- Sky and Sea
 		seaMarker,
 
@@ -323,6 +325,31 @@ function mod:OnEngage()
 	end
 end
 
+do
+	function mod:StartScytheHud(duration)
+		if self:GetOption(scythe_hud) then
+			for i = 1, 4 do
+				local guid = UnitGUID("boss" .. i)
+				if guid and self:MobId(guid) == 124828 then -- Argus the Unmaker
+					local timer = Hud:DrawSpinner(guid, 60, duration):SetColor(0.2, 1, 0.2, 1):SetOffset(0, -180):Register("ScytheHUD", true)
+					local done = false
+					function timer:OnDone()
+						if not done then
+							done = true
+							timer:SetColor(1, 0.2, 0.2)
+						end
+					end
+					break
+				end
+			end
+		end
+	end
+
+	function mod:HideScytheHud()
+		Hud:RemoveObject("ScytheHUD")
+	end
+end
+
 --------------------------------------------------------------------------------
 -- Event Handlers
 --
@@ -398,6 +425,7 @@ function mod:CHAT_MSG_MONSTER_YELL(_, msg)
 		self:StopBar(248499) -- Sweeping Scythe
 		self:StopBar(255594) -- Sky and Sea
 		self:StopBar(CL.count:format(self:SpellName(258068), sargerasGazeCount)) -- Sargeras' Gaze
+		self:HideScytheHud()
 		self:Bar("stages", 10.5, self:SpellName(255648), 255648) -- Golganneths Wrath
 	elseif msg:find(L.stage3_early) then -- We start bars for stage 3 later
 		stage = 3
@@ -411,6 +439,7 @@ function mod:CHAT_MSG_MONSTER_YELL(_, msg)
 		self:StopBar(250669) -- Soulburst
 		self:StopBar(CL.count:format(self:SpellName(258068), sargerasGazeCount)) -- Sargeras' Gaze
 		self:StopBar(CL.count:format(self:SpellName(250669), 2)) -- Soulburst (2)
+		self:HideScytheHud()
 	end
 end
 
@@ -481,6 +510,7 @@ function mod:SweepingScythe(args)
 	end
 
 	self:CDBar(args.spellId, timer)
+	self:StartScytheHud(timer)
 end
 
 function mod:SweepingScytheStack(args)
@@ -975,6 +1005,7 @@ function mod:DeadlyScythe(args)
 		self:Message(args.spellId, "cyan", "Alert")
 	end
 	self:Bar(args.spellId, 6.6)
+	self:StartScytheHud(6.6)
 end
 
 function mod:DeadlyScytheStack(args)
@@ -1091,6 +1122,7 @@ function mod:SoulrendingScythe(args)
 		self:Message(args.spellId, "cyan", "Alert")
 	end
 	self:CDBar(args.spellId, 8.5)
+	self:StartScytheHud(8.5)
 end
 
 function mod:SoulrendingScytheStack(args)
