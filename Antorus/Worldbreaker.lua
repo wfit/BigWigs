@@ -164,9 +164,9 @@ function mod:FelBombardment(args)
 		self:SayCountdown(args.spellId, 7)
 		self:TargetBar(args.spellId, 7, args.destName)
 		self:PlaySound(args.spellId, "Warning")
+		self:ShowAura(args.spellId, 7, "Run", true)
 	else
 		self:PlaySound(args.spellId, "Alarm", nil, args.destName) -- Different sound for when tanking/offtanking
-		self:ShowAura(args.spellId, 7, "Run", true)
 	end
 	self:TargetMessage2(args.spellId, "orange", args.destName)
 	self:Bar(args.spellId, self:Mythic() and 15.8 or 20.7)
