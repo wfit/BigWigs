@@ -281,7 +281,7 @@ end
 
 local function timeBombCountdown(self)
 	local me = self:UnitName("player")
-	local name, _, _, _, _, _, expires = UnitDebuff("player", self:SpellName(206617))
+	local name, _, _, expires = self:UnitDebuff("player", self:SpellName(206617))
 	for _,timer in pairs(bombSayTimers) do
 		self:CancelTimer(timer)
 	end
@@ -373,7 +373,7 @@ do
 		end
 
 		if self:Me(args.destGUID) then
-			local _, _, _, _, _, _, expires = UnitDebuff("player", args.spellName)
+			local _, _, _, expires = self:UnitDebuff("player", args.spellName)
 			if expires and expires > 0 then
 				local timeLeft = expires - GetTime()
 				self:TargetBar(args.spellId, timeLeft, args.destName)
@@ -396,7 +396,7 @@ do
 		scheduled = nil
 		local playerTable = {}
 		for unit in self:IterateGroup() do
-			local name, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, value = UnitDebuff(unit, debuffName)
+			local name, _, _, _, value = self:UnitDebuff(unit, debuffName)
 			if name then
 				playerTable[#playerTable+1] = {name = self:UnitName(unit), value = value}
 			end

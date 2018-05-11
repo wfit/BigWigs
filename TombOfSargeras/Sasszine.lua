@@ -396,7 +396,7 @@ do
 
 		local inkName = self:SpellName(232913)
 		for unit in self:IterateGroup() do
-			local _, _, _, _, _, _, expires = UnitDebuff(unit, inkName)
+			local _, _, _, expires = self:UnitDebuff(unit, inkName)
 			debuffs[self:UnitName(unit)] = expires
 			if expires and UnitIsUnit(unit, "player") then
 				self:ShowAura(232913, "Feed")
@@ -406,7 +406,7 @@ do
 
 	function mod:InkApplied(args)
 		if devouringMawActive then
-			local _, _, _, _, _, _, expires = UnitDebuff(args.destName, args.spellName)
+			local _, _, _, expires = self:UnitDebuff(args.destName, args.spellName)
 			debuffs[args.destName] = expires
 			if self:Me(args.destGUID) then
 				self:ShowAura(232913, "Feed")

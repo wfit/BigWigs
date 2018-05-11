@@ -31,6 +31,7 @@ local sargerasGazeCount = 0
 local beaconsBeingCast, cosmicRaysBeingCast = 0, 0
 local skyName, seaName = nil, nil
 local scanningTargets = nil
+local fearOnMe, soulblightOnMe, soulbombOnMe, soulburstOnMe, sentenceOnMe = false, false, false, false, false
 local vulnerabilityCollector = {}
 local vulnerabilityIcons = {
 	[255419] = 1, -- Holy Vulnerability (Yellow Star)
@@ -233,6 +234,7 @@ function mod:OnBossEnable()
 	self:Log("SPELL_CAST_START", "SweepingScythe", 248499)
 	self:Log("SPELL_AURA_APPLIED", "SweepingScytheStack", 248499)
 	self:Log("SPELL_AURA_APPLIED_DOSE", "SweepingScytheStack", 248499)
+	self:Log("SPELL_CAST_START", "SkyandSeaStart", 255594)
 	self:Log("SPELL_CAST_SUCCESS", "SkyandSea", 255594)
 	self:Log("SPELL_AURA_APPLIED", "GiftoftheSea", 258647)
 	self:Log("SPELL_AURA_APPLIED", "GiftoftheSky", 258646)
@@ -280,6 +282,7 @@ function mod:OnBossEnable()
 
 	--[[ Mythic ]]--
 	self:Log("SPELL_AURA_APPLIED", "SargerasFear", 257931)
+	self:Log("SPELL_AURA_REMOVED", "SargerasFearRemoved", 257931)
 	self:Log("SPELL_AURA_APPLIED", "SargerasRage", 257869)
 	self:Log("SPELL_AURA_REMOVED", "SargerasGazeRemoved", 257931, 257869) -- Fear, Rage
 	self:Log("SPELL_AURA_APPLIED", "SentenceofSargeras", 257966)
@@ -298,7 +301,6 @@ function mod:OnBossEnable()
 end
 
 function mod:OnEngage()
-	timers = self:Mythic() and timersMythic or self:Easy() and timersNormal or timersHeroic
 	stage = 1
 	coneOfDeathCounter = 1
 	soulBlightOrbCounter = 1
@@ -310,6 +312,8 @@ function mod:OnEngage()
 	beaconsBeingCast, cosmicRaysBeingCast = 0, 0
 	skyName, seaName = nil, nil
 	burstsBombCombo = true
+
+	timers = self:Mythic() and timersMythic or self:Easy() and timersNormal or timersHeroic
 
 	self:Bar(255594, 16) -- Sky and Sea
 	self:Bar(257296, self:Heroic() and timers[stage][257296][torturedRageCounter] or 13.5, CL.count:format(self:SpellName(257296), torturedRageCounter)) -- Tortured Rage
@@ -353,27 +357,16 @@ end
 --------------------------------------------------------------------------------
 -- Event Handlers
 --
-local checkForFearHelp
-do
-	local fearName = mod:SpellName(257931) -- Sargeras' Fear
-	local spells = {
-		[248396] = mod:SpellName(248396), -- Soulblight
-		[251570] = mod:SpellName(251570), -- Soulbomb
-		[250669] = mod:SpellName(250669), -- Soulburst
-		[257966] = mod:SpellName(257966), -- Sentence of Sargeras
-	}
 
-	function checkForFearHelp(self, icon)
-		if self:GetOption("fear_help") == 0 then return end
-		if UnitDebuff("player", fearName) then
-			for id, name in pairs(spells) do
-				if UnitDebuff("player", name) then
-					icon = icon or GetRaidTargetIndex("player") or 8
-					local msg = ("{rt%d} %s + %s {rt%d}"):format(icon, L[257931], L[id], icon)
-					self:Say("fear_help", msg)
-					return true
-				end
-			end
+local function checkForFearHelp(self, icon)
+	if self:GetOption("fear_help") == 0 then return end
+	if fearOnMe then
+		local id = soulblightOnMe and 248396 or soulbombOnMe and 251570 or soulburstOnMe and 250669 or sentenceOnMe and 257966
+		if id then
+			icon = icon or GetRaidTargetIndex("player") or 8
+			local msg = ("{rt%d} %s + %s {rt%d}"):format(icon, L[257931], L[id], icon)
+			self:Say("fear_help", msg)
+			return true
 		end
 	end
 end
@@ -483,6 +476,7 @@ end
 
 function mod:SoulBlightRemoved(args)
 	if self:Me(args.destGUID) then
+		soulblightOnMe = false
 		self:CancelSayCountdown(args.spellId)
 		self:HideAura(args.spellId)
 		self:SmartColorUnset(args.spellId)
@@ -520,6 +514,10 @@ function mod:SweepingScytheStack(args)
 	end
 end
 
+function mod:SkyandSeaStart()
+	skyName, seaName = nil, nil
+end
+
 function mod:SkyandSea(args)
 	self:CDBar(args.spellId, self:Easy() and 30.3 or 27)
 	self:ScheduleTimer("ImpactBar", 5, args.spellId, 12, L.orbsDespawn)
@@ -536,34 +534,30 @@ do
 	end
 
 	function mod:GiftoftheSea(args)
-		local meOnly = self:CheckOption(255594, "ME_ONLY")
+		seaName = args.destName
 		if self:Me(args.destGUID) then
 			self:Say(255594, L.sea_say, true)
 			self:ShowAura(255594, 5, L.sea_say, true, { icon = self:SpellIcon(100082) })
 			if meOnly then
 				self:Message(255594, "green", "Info", CL.you:format(args.spellName), args.spellId)
 			end
-		elseif not meOnly then
-			seaName = args.destName
-			announce(self)
 		end
+		announce(self)
 		if self:GetOption(seaMarker) then
 			SetRaidTarget(args.destName, 1)
 		end
 	end
 
 	function mod:GiftoftheSky(args)
-		local meOnly = self:CheckOption(255594, "ME_ONLY")
+		skyName = args.destName
 		if self:Me(args.destGUID) then
 			self:Say(255594, L.sky_say, true)
 			self:ShowAura(255594, 5, L.sky_say, true, { icon = self:SpellIcon(181437) })
 			if meOnly then
 				self:Message(255594, "green", "Info", CL.you:format(args.spellName), args.spellId)
 			end
-		elseif not meOnly then
-			skyName = args.destName
-			announce(self)
 		end
+		announce(self)
 		if self:GetOption(seaMarker) then
 			SetRaidTarget(args.destName, 3)
 		end
@@ -654,6 +648,7 @@ do
 	function mod:Soulburst(args)
 		burstList[#burstList+1] = args.destName
 		if self:Me(args.destGUID) then
+			soulburstOnMe = true
 			isOnMe = #burstList == 1 and 3 or 7 -- Soulburst on you (3 or 7)
 			self:SayCountdown(args.spellId, self:Mythic() and 12 or 15, isOnMe)
 			self:SmartColorSet(args.spellId, 1, 1, 0)
@@ -685,6 +680,7 @@ do
 
 	function mod:SoulburstRemoved(args)
 		if self:Me(args.destGUID) then
+			soulburstOnMe = false
 			self:CancelSayCountdown(args.spellId)
 			self:SmartColorUnset(args.spellId)
 		end
@@ -695,6 +691,7 @@ do
 
 	function mod:Soulbomb(args)
 		if self:Me(args.destGUID) then
+			soulbombOnMe = true
 			self:SayCountdown(args.spellId, self:Mythic() and 12 or 15, 2)
 			isOnMe = -1 -- Soulbomb on you (-1)
 			self:ShowAura(args.spellId, self:Mythic() and 12 or 15, "Derrière", { icon = 450905 }, true)
@@ -724,11 +721,12 @@ do
 end
 
 function mod:SoulbombRemoved(args)
-	self:StopBar(args.spellId, args.destName)
 	if self:Me(args.destGUID) then
+		soulbombOnMe = false
 		self:CancelSayCountdown(args.spellId)
 		self:SmartColorUnset(args.spellId)
 	end
+	self:StopBar(args.spellId, args.destName)
 	if self:GetOption(burstMarker) then
 		SetRaidTarget(args.destName, 0)
 	end
@@ -1011,7 +1009,7 @@ end
 function mod:DeadlyScytheStack(args)
 	if self:Me(args.destGUID) or self:Tank() then -- Always Show for Tanks and when on Self
 		local amount = args.amount or 1
-		self:StackMessage(args.spellId, args.destName, amount, "yellow", self:Tank() and (self:Me(args.destGUID) and "Alarm") or "Warning") -- Warning sound for non-tanks, only on self when a tank
+		self:StackMessage(args.spellId, args.destName, amount, "yellow", self:Tank() and (self:Me(args.destGUID) and "Alarm") or not self:Tank() and "Warning") -- Warning sound for non-tanks, only on self when a tank
 	end
 end
 
@@ -1046,6 +1044,7 @@ end
 
 function mod:SargerasFear(args)
 	if self:Me(args.destGUID) then
+		fearOnMe = true
 		self:PlaySound(258068, "Warning")
 		self:TargetMessage2(258068, "blue", args.destName, false, args.spellName, args.spellId)
 		self:ShowAura(258068, "Pack", { icon = args.spellIcon, pulse = false })
@@ -1084,6 +1083,7 @@ do
 	function mod:SentenceofSargeras(args)
 		playerList[#playerList+1] = args.destName
 		if self:Me(args.destGUID) then
+			sentenceOnMe = true
 			isOnMe = #playerList
 			self:ShowAura(args.spellId, "Chain")
 			self:Flash(args.spellId, isOnMe == 1 and 1 or 4)
