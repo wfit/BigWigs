@@ -17,16 +17,16 @@ mod.engageId = 2136
 function mod:GetOptions()
 	return {
 		--[[ General ]]--
-		265451, -- Surging Darkness
+		{265451, "IMPACT"}, -- Surging Darkness
 		265231, -- Void Lash
 		{265248, "TANK"}, -- Shatter
 
 		--[[ Stage 1 ]]--
-		264382, -- Eye Beam
+		{264382, "AURA"}, -- Eye Beam
 		264219, -- Fixate
 
 		--[[ Stage 2 ]]--
-		265360, -- Roiling Deceit
+		{265360, "AURA"}, -- Roiling Deceit
 		267180, -- Void Bolt
 
 		--[[ Stage 3 ]]--
@@ -42,7 +42,7 @@ end
 
 function mod:OnBossEnable()
 	--[[ General ]]--
-	self:Log("SPELL_CAST_SUCCESS", "SurgingDarkness", 265451)
+	self:Log("SPELL_CAST_SUCCESS", "SurgingDarkness", 265451, 265530) -- ?, NM
 	self:Log("SPELL_CAST_START", "VoidLash", 265231)
 	self:Log("SPELL_CAST_START", "Shatter", 265248)
 
@@ -68,10 +68,20 @@ end
 -- Event Handlers
 --
 
+local DARKNESS_INTERVAL = 7
+
 --[[ General ]]--
 function mod:SurgingDarkness(args)
-	self:PlaySound(args.spellId, "warning")
-	self:Message(args.spellId, "red")
+	self:PlaySound(265451, "warning")
+	self:Message(265451, "red")
+
+	self:SurgingDarknessImpact(265451)
+	self:ScheduleTimer("SurgingDarknessImpact", DARKNESS_INTERVAL, 265451)
+	self:ScheduleTimer("SurgingDarknessImpact", DARKNESS_INTERVAL * 2, 265451)
+end
+
+function mod:SurgingDarknessImpact(spellId)
+	self:ImpactBar(spellId, DARKNESS_INTERVAL)
 end
 
 function mod:VoidLash(args)
@@ -103,12 +113,13 @@ function mod:RoilingDeceit(args)
 		self:PlaySound(args.spellId, "warning")
 		self:TargetMessage2(args.spellId, "blue", args.destName)
 		self:SayCountdown(args.spellId, 12)
+		self:ShowAura(args.spellId, 12, "Run", { countdown = true })
 	end
 end
 
 function mod:RoilingDeceitRemoved(args)
 	if self:Me(args.destGUID) then
-		self:CancelSayCountdown(args.spellId)
+		self:HideAura(args.spellId)
 	end
 end
 

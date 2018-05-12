@@ -24,8 +24,9 @@ local nextLiquify = 0
 function mod:GetOptions()
 	return {
 		{265178, "TANK"}, -- Evolving Affliction
+		{265127, "AURA"}, -- Lingering Infection
 		267242, -- Contagion
-		{265212, "SAY", "ICON"}, -- Gestate
+		{265212, "SAY", "ICON", "AURA"}, -- Gestate
 		265217, -- Liquefy
 		266459, -- Pathogen Bomb
 	}
@@ -35,6 +36,8 @@ function mod:OnBossEnable()
 	self:Log("SPELL_CAST_SUCCESS", "EvolvingAffliction", 265178)
 	self:Log("SPELL_AURA_APPLIED", "EvolvingAfflictionApplied", 265178)
 	self:Log("SPELL_AURA_APPLIED_DOSE", "EvolvingAfflictionApplied", 265178)
+	self:Log("SPELL_AURA_APPLIED", "LingeringInfectionApplied", 265127)
+	self:Log("SPELL_AURA_APPLIED_DOSE", "LingeringInfectionApplied", 265127)
 	self:Log("SPELL_CAST_START", "Contagion", 267242)
 	self:Log("SPELL_CAST_START", "Gestate", 265209)
 	self:Log("SPELL_AURA_APPLIED", "GestateApplied", 265212)
@@ -65,6 +68,12 @@ end
 function mod:EvolvingAfflictionApplied(args)
 	self:StackMessage(args.spellId, args.destName, args.amount, "red")
 	self:PlaySound(args.spellId, "alert", args.destName)
+end
+
+function mod:LingeringInfectionApplied(args)
+	if self:Me(args.destGUID) then
+		self:ShowAura(args.spellId, { stacks = args.amount or 1, pin = -1, pulse = false })
+	end
 end
 
 function mod:Contagion(args)
@@ -103,6 +112,7 @@ do
 				self:PlaySound(args.spellId, "alert")
 				self:Say(args.spellId)
 				self:SayCountdown(args.spellId, 5)
+				self:ShowAura(args.spellId, 5, "Gestate")
 			end
 			self:TargetMessage2(args.spellId, "orange", args.destName)
 			self:PrimaryIcon(265212, args.destName)
@@ -114,6 +124,7 @@ do
 	function mod:GestateRemoved(args)
 		if self:Me(args.destGUID) then
 			self:CancelSayCountdown(args.spellId)
+			self:HideAura(args.spellId)
 		end
 		self:PrimaryIcon(args.spellId)
 	end

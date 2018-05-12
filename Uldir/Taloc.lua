@@ -14,6 +14,8 @@ mod.engageId = 2144
 -- Locals
 --
 
+local Hud = Oken.Hud
+
 local plasmaCount = 1
 
 --------------------------------------------------------------------------------
@@ -22,27 +24,28 @@ local plasmaCount = 1
 
 function mod:GetOptions()
 	return {
-		{271224, "SAY"}, -- Plasma Discharge
+		{271224, "SAY", "AURA"}, -- Plasma Discharge
 		270290, -- Blood Storm
-		271296, -- Cudgel of Gore
+		{271296, "IMPACT"}, -- Cudgel of Gore
 		271728, -- Retrieve Cudgel
 		271895, -- Sanguine Static
 		271965, -- Powered Down
-		{275270, "SAY"}, -- Fixate
+		{275270, "SAY", "HUD"}, -- Fixate
 		275432, -- Uldir Defensive Beam
 	}
 end
 
 function mod:OnBossEnable()
 	self:Log("SPELL_CAST_SUCCESS", "PlasmaDischarge", 271224)
-	self:Log("SPELL_CAST_SUCCESS", "PlasmaDischargeApplied", 271224)
-	self:Log("SPELL_CAST_SUCCESS", "PlasmaDischargeRemoved", 271224)
+	self:Log("SPELL_AURA_APPLIED", "PlasmaDischargeApplied", 271224)
+	self:Log("SPELL_AURA_REMOVED", "PlasmaDischargeRemoved", 271224)
 	self:Log("SPELL_CAST_START", "CudgelofGore", 271296)
 	self:Log("SPELL_CAST_START", "RetrieveCudgel", 271728)
 	self:Log("SPELL_CAST_SUCCESS", "SanguineStatic", 271895)
 	self:Log("SPELL_AURA_APPLIED", "PoweredDown", 271965)
 	self:Log("SPELL_AURA_REMOVED", "PoweredDownRemoved", 271965)
 	self:Log("SPELL_AURA_APPLIED", "Fixate", 275270)
+	self:Log("SPELL_AURA_REMOVED", "FixateRemoved", 275270)
 
 	self:Log("SPELL_AURA_APPLIED", "GroundDamage", 270290, 275432) -- Blood Storm, Uldir Defensive Beam
 	self:Log("SPELL_PERIODIC_DAMAGE", "GroundDamage", 270290, 275432)
@@ -75,12 +78,14 @@ do
 		if self:Me(args.destGUID) then
 			self:Say(args.spellId)
 			self:SayCountdown(args.spellId, 6)
+			self:ShowAura(args.spellId, 8, "Move")
 		end
 	end
 
 	function mod:PlasmaDischargeRemoved(args)
 		if self:Me(args.destGUID) then
 			self:CancelSayCountdown(args.spellId)
+			self:HideAura(args.spellId)
 		end
 	end
 end
@@ -88,7 +93,7 @@ end
 function mod:CudgelofGore(args)
 	self:PlaySound(args.spellId, "warning")
 	self:Message(args.spellId, "red")
-	self:CastBar(args.spellId, 4.5)
+	self:ImpactBar(args.spellId, 4.5)
 	self:CDBar(args.spellId, 59)
 end
 
@@ -130,6 +135,16 @@ function mod:Fixate(args)
 		self:PlaySound(args.spellId, "warning")
 		self:TargetMessage2(args.spellId, "blue", args.destName)
 		self:Say(args.spellId)
+		if self:Hud(args.spellId) then
+			Hud:DrawArea(args.sourceGUID, 50):SetColor(0.8, 0.2, 0.2):Register(args.sourceKey, true)
+			Hud:DrawText(args.sourceGUID, "Fixate"):Register(args.sourceKey)
+		end
+	end
+end
+
+function mod:FixateRemoved(args)
+	if self:Me(args.destGUID) then
+		Hud:RemoveObject(args.sourceKey)
 	end
 end
 
