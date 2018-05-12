@@ -76,7 +76,7 @@ function mod:MalodorousMiasmaApplied(args)
 	self:TargetMessage2(args.spellId, "orange", args.destName)
 	self:PlaySound(args.spellId, "info", nil, args.destName)
 	if self:Me(args.destGUID) then
-		self:ShowAura(args.spellId, 18, "Go away")
+		self:ShowDebuffAura(args.spellId)
 	end
 end
 
@@ -91,7 +91,7 @@ function mod:PutridParoxysmApplied(args)
 	self:PlaySound(args.spellId, "warning", nil, args.destName)
 	if self:Me(args.destGUID) then
 		self:Flash(args.spellId)
-		self:ShowAura(args.spellId, 6, "Stay aways")
+		self:ShowDebuffAura(args.spellId)
 	end
 end
 

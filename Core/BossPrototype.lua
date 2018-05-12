@@ -1409,7 +1409,7 @@ function boss:Role(guid)
 					if staticDamagerRole[class] then
 						return staticDamagerRole[class]
 					elseif class == "DRUID" then
-						if select(11, UnitBuff(unit, self:SpellName(24858))) == 24858 then -- Moonkin form (filter out Affinity one)
+						if select(11, self:UnitBuff(unit, 24858)) == 24858 then -- Moonkin form (filter out Affinity one)
 							return "ranged"
 						--elseif select(11, UnitBuff(unit, self:SpellName(768))) == 768 then -- Cat form (not reliable)
 							--return "melee"
@@ -2543,15 +2543,6 @@ end
 -- @section aura_tracker
 --
 
-local function pickArgument(t, ...)
-	for i = 1, select("#", ...) do
-		local arg = select(i, ...)
-		if type(arg) == t then
-			return arg
-		end
-	end
-end
-
 function boss:ShowAura(key, ...)
 	if not checkFlag(self, key, C.AURA) then return end
 	local options = {}
@@ -2578,6 +2569,30 @@ function boss:ShowAura(key, ...)
 
 	if checkFlag(self, key, C.PULSE) then options.pulse = true end
 	self:SendMessage("BigWigs_ShowAura", self, key, options)
+end
+
+do
+	local opts = {}
+
+	function boss:ShowDebuffAura(key, ...)
+		local name, stacks, _, expirationTime = self:UnitDebuff("player", key)
+		if name then
+			opts.stacks = (stacks and stacks > 2) and stacks or nil
+			self:ShowAura(key, name, expirationTime - GetTime(), opts, ...)
+		else
+			BigWigs:Print(format("No debuff found for aura %d!", key))
+		end
+	end
+
+	function boss:ShowBuffAura(key, ...)
+		local name, stacks, _, expirationTime = self:UnitBuff("player", key)
+		if name then
+			opts.stacks = (stacks and stacks > 2) and stacks or nil
+			self:ShowAura(key, name, expirationTime - GetTime(), opts, ...)
+		else
+			BigWigs:Print(format("No debuff found for aura %d!", key))
+		end
+	end
 end
 
 function boss:HideAura(key)
@@ -2799,9 +2814,9 @@ function argsVirtuals.destKey(args)
 end
 
 function argsVirtuals.debuffDuration(args)
-	return select(6, UnitDebuff("player", args.spellName))
+	return select(6, boss:UnitDebuff("player", args.spellId))
 end
 
 function argsVirtuals.buffDuration(args)
-	return select(6, UnitBuff("player", args.spellName))
+	return select(6, boss:UnitBuff("player", args.spellId))
 end

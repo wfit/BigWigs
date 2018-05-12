@@ -78,7 +78,7 @@ do
 		if self:Me(args.destGUID) then
 			self:Say(args.spellId)
 			self:SayCountdown(args.spellId, 6)
-			self:ShowAura(args.spellId, 8, "Move")
+			self:ShowDebuffAura(args.spellId)
 		end
 	end
 

@@ -113,7 +113,7 @@ function mod:RoilingDeceit(args)
 		self:PlaySound(args.spellId, "warning")
 		self:TargetMessage2(args.spellId, "blue", args.destName)
 		self:SayCountdown(args.spellId, 12)
-		self:ShowAura(args.spellId, 12, "Run", { countdown = true })
+		self:ShowDebuffAura(args.spellId, { countdown = true })
 	end
 end
 

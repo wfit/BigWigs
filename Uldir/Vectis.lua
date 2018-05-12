@@ -72,7 +72,7 @@ end
 
 function mod:LingeringInfectionApplied(args)
 	if self:Me(args.destGUID) then
-		self:ShowAura(args.spellId, { stacks = args.amount or 1, pin = -1, pulse = false })
+		self:ShowDebuffAura(args.spellId, { pin = -1, pulse = false })
 	end
 end
 
@@ -112,7 +112,7 @@ do
 				self:PlaySound(args.spellId, "alert")
 				self:Say(args.spellId)
 				self:SayCountdown(args.spellId, 5)
-				self:ShowAura(args.spellId, 5, "Gestate")
+				self:ShowDebuffAura(args.spellId)
 			end
 			self:TargetMessage2(args.spellId, "orange", args.destName)
 			self:PrimaryIcon(265212, args.destName)
