@@ -57,8 +57,8 @@ function mod:OnBossEnable()
 end
 
 function mod:OnEngage()
-	self:Bar(267242, 11.5) -- Contagion
-	self:Bar(265212, 14.5) -- Gestate
+	self:Bar(267242, self:Easy() and 20.5 or 11.5) -- Contagion
+	self:Bar(265212, self:Easy() and 10.5 or 14.5) -- Gestate
 
 	nextLiquify = GetTime() + 90
 	self:Bar(265217, 90) -- Liquefy
@@ -383,8 +383,9 @@ end
 function mod:Contagion(args)
 	self:Message(args.spellId, "orange")
 	self:PlaySound(args.spellId, "alarm")
-	if nextLiquify > GetTime() + 13.5 then
-		self:Bar(args.spellId, 13.5)
+	local timer = self:Easy() and 23.1 or 13.5
+	if nextLiquify > GetTime() + timer then
+		self:Bar(args.spellId, timer)
 	end
 end
 
@@ -405,8 +406,9 @@ do
 	function mod:Gestate(args)
 		targetFound = false
 		self:GetBossTarget(printTarget, 0.5, args.sourceGUID)
-		if nextLiquify > GetTime() + 30 then
-			self:CDBar(265212, 30)
+		local timer = self:Easy() and 25 or 30
+		if nextLiquify > GetTime() + timer then
+			self:CDBar(265212, timer)
 		end
 	end
 

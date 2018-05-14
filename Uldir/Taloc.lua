@@ -8,7 +8,7 @@ local mod, CL = BigWigs:NewBoss("Taloc", 1861, 2168)
 if not mod then return end
 mod:RegisterEnableMob(137119)
 mod.engageId = 2144
---mod.respawnTime = 30
+mod.respawnTime = 16
 
 --------------------------------------------------------------------------------
 -- Locals
@@ -24,13 +24,14 @@ local plasmaCount = 1
 
 function mod:GetOptions()
 	return {
+		"stages",
 		{271224, "SAY", "AURA"}, -- Plasma Discharge
 		270290, -- Blood Storm
 		{271296, "IMPACT"}, -- Cudgel of Gore
 		271728, -- Retrieve Cudgel
 		271895, -- Sanguine Static
 		271965, -- Powered Down
-		{275270, "SAY", "HUD"}, -- Fixate
+		{275270, "HUD"}, -- Fixate
 		275432, -- Uldir Defensive Beam
 	}
 end
@@ -58,11 +59,21 @@ function mod:OnEngage()
 	self:Bar(271895, 20.5) -- Sanguine Static
 	self:Bar(271296, 31.5) -- Cudgel of Gore
 	self:Bar(271728, 53.5) -- Retrieve Cudgel
+
+	self:RegisterUnitEvent("UNIT_HEALTH_FREQUENT", nil, "boss1")
 end
 
 --------------------------------------------------------------------------------
 -- Event Handlers
 --
+
+function mod:UNIT_HEALTH_FREQUENT(unit)
+	local hp = UnitHealth(unit) / UnitHealthMax(unit) * 100
+	if hp < 63 then -- Intermission at 60%
+		self:Message("stages", "green", nil, CL.soon:format(CL.intermission), false)
+		self:UnregisterUnitEvent("UNIT_HEALTH_FREQUENT", unit)
+	end
+end
 
 function mod:PlasmaDischarge(args)
 	plasmaCount = plasmaCount + 1
@@ -77,7 +88,7 @@ do
 		self:TargetsMessage(args.spellId, "yellow", playerList)
 		if self:Me(args.destGUID) then
 			self:Say(args.spellId)
-			self:SayCountdown(args.spellId, 6)
+			--self:SayCountdown(args.spellId, 6) XXX Countdown until you start dropping pools instead
 			self:ShowDebuffAura(args.spellId)
 		end
 	end
@@ -134,7 +145,6 @@ function mod:Fixate(args)
 	if self:Me(args.destGUID) then
 		self:PlaySound(args.spellId, "warning")
 		self:TargetMessage2(args.spellId, "blue", args.destName)
-		self:Say(args.spellId)
 		if self:Hud(args.spellId) then
 			Hud:DrawArea(args.sourceGUID, 50):SetColor(0.8, 0.2, 0.2):Register(args.sourceKey, true)
 			Hud:DrawText(args.sourceGUID, "Fixate"):Register(args.sourceKey)
