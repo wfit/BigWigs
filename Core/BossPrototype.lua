@@ -2589,7 +2589,8 @@ do
 		local name, stacks, _, expirationTime = self:UnitDebuff("player", key)
 		if name then
 			opts.stacks = (stacks and stacks > 2) and stacks or nil
-			self:ShowAura(key, name, expirationTime - GetTime(), opts, ...)
+			opts.duration = expirationTime > 0 and (expirationTime - GetTime()) or nil
+			self:ShowAura(key, name, opts, ...)
 		else
 			BigWigs:Print(format("No debuff found for aura %d!", key))
 		end
@@ -2599,7 +2600,8 @@ do
 		local name, stacks, _, expirationTime = self:UnitBuff("player", key)
 		if name then
 			opts.stacks = (stacks and stacks > 2) and stacks or nil
-			self:ShowAura(key, name, expirationTime - GetTime(), opts, ...)
+			opts.duration = expirationTime > 0 and (expirationTime - GetTime()) or nil
+			self:ShowAura(key, name, opts, ...)
 		else
 			BigWigs:Print(format("No debuff found for aura %d!", key))
 		end
