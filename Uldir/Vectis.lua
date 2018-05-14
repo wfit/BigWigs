@@ -78,7 +78,7 @@ do
 
 	local airborne = {}
 	local roster = { tank = {}, melee = {}, ranged = {}, healer = {}, index = {}, role = {} }
-	local playerUnit
+	local playerUnit, playerIsTank
 	local vectors = {} -- [1-4] indexes points to the player having the vector, [units] indexes is a list of vectors for the unit
 	local stacks = {}
 	local soakers = {} -- [1-4] indexes points to the player soaking, [units] indexes point to the soaked vector for unit
@@ -111,6 +111,7 @@ do
 			stacks[unit] = 0
 			if UnitIsUnit("player", unit) then
 				playerUnit = unit
+				playerIsTank = role == roster.tank
 			end
 			i = i + 1
 		end
@@ -313,23 +314,25 @@ do
 		end
 
 		-- Update aura for soaker
-		if soakers[vector] == playerUnit then
-			-- I'm the soaker for this vector, just remove it
-			self:HideAura(soakerKeys[vector])
-		else
-			local soakedVector = soakers[playerUnit]
-			if vectors[soakedVector] == unit then
-				-- This is the unit having the vector I'm supposed to soak, update my aura
-				local stacksOverride
-				if vectors[unit][1] == soakedVector then stacksOverride = false end
-				-- Update icon and stacks parts
-				self:ShowAura(args.spellId, {
-					key = soakerKeys[soakedVector],
-					pulse = false,
-					icon = vectors[unit][1],
-					borderless = false,
-					stacks = stacksOverride
-				})
+		if not playerIsTank then
+			if soakers[vector] == playerUnit then
+				-- I'm the soaker for this vector, just remove it
+				self:HideAura(soakerKeys[vector])
+			else
+				local soakedVector = soakers[playerUnit]
+				if vectors[soakedVector] == unit then
+					-- This is the unit having the vector I'm supposed to soak, update my aura
+					local stacksOverride
+					if vectors[unit][1] == soakedVector then stacksOverride = false end
+					-- Update icon and stacks parts
+					self:ShowAura(args.spellId, {
+						key = soakerKeys[soakedVector],
+						pulse = false,
+						icon = vectors[unit][1],
+						borderless = false,
+						stacks = stacksOverride
+					})
+				end
 			end
 		end
 	end
