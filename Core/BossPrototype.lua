@@ -1317,7 +1317,11 @@ do
 				local unit = t[i]
 				if unit and opts.filter then
 					local filter = opts.filter
-					if type(filter) == "string" and not self[filter](self, unit) or not filter(unit) then
+					if type(filter) == "string" then
+						if not self[filter](self, unit) then
+							return iter(t)
+						end
+					elseif not filter(unit) then
 						return iter(t)
 					end
 				end
@@ -1364,7 +1368,7 @@ end
 local staticDamagerRole = {
 	["WARRIOR"] = "melee",
 	["PALADIN"] = "melee",
-	["HUNTER"] = "ranged", -- FIXME
+	--["HUNTER"] = "ranged", -- FIXME
 	["ROGUE"] = "melee",
 	["PRIEST"] = "ranged",
 	["DEATHKNIGHT"] = "melee",
@@ -1408,11 +1412,14 @@ function boss:Role(guid)
 				if class then
 					if staticDamagerRole[class] then
 						return staticDamagerRole[class]
-					elseif class == "DRUID" then
-						if select(11, self:UnitBuff(unit, 24858)) == 24858 then -- Moonkin form (filter out Affinity one)
-							return "ranged"
-						--elseif select(11, UnitBuff(unit, self:SpellName(768))) == 768 then -- Cat form (not reliable)
-							--return "melee"
+					elseif unit:sub(4) == "raid" then
+						-- DRUID / SHAMAN / HUNTER (use raid roster position)
+						local raidId = tonumber(unit:sub(5))
+						if raidId then
+							local _, _, subgroup = GetRaidRosterInfo(raidId)
+							if subgroup then
+								return subgroup < 3
+							end
 						end
 					end
 				end
@@ -1424,19 +1431,19 @@ function boss:Role(guid)
 	end
 end
 
---- Check if your talent tree role is TANK or MELEE.
--- @return boolean
 do
 	local function meleeHealer(unit)
-		unit = UnitExists(unit) and unit or (unit == myGUID and "player")
+		unit = UnitExists(unit) and unit or boss:GetPlayerUnitIdByGUID(unit)
 		if unit then
 			local _, _, classId = UnitClass(unit)
-			return classId == 2 or classId == 10
+			return classId == 2 or classId == 10 -- Paladin or Monk
 		else
 			return false
 		end
 	end
 
+	--- Check if your talent tree role is TANK or MELEE.
+	-- @return boolean
 	function boss:Melee(unit, strict)
 		local role = self:Role(unit)
 		if strict then
@@ -1445,13 +1452,17 @@ do
 			return role == "melee" or role == "tank" or (role == "healer" and meleeHealer(unit or "player"))
 		end
 	end
-end
 
---- Check if your talent tree role is HEALER or RANGED.
--- @return boolean
-function boss:Ranged(unit, strict)
-	local role = self:Role(unit)
-	return role == "ranged" or (not strict and role == "healer")
+	--- Check if your talent tree role is HEALER or RANGED.
+	-- @return boolean
+	function boss:Ranged(unit, strict)
+		local role = self:Role(unit)
+		if strict then
+			return role == "ranged"
+		else
+			return role == "ranged" or (role == "healer" and not meleeHealer(unit or "player"))
+		end
+	end
 end
 
 --- Check if your talent tree role is TANK.

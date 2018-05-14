@@ -489,6 +489,12 @@ local function freeAura(aura)
 	freeIcon(aura.icon)
 end
 
+local function formatRaidIcon(str, xoffset, yoffset)
+	return str:gsub("{rt([1-8])}", function(icon)
+		return "|T" .. (tonumber(icon) + 137000) .. ":16:16:" .. xoffset .. ":" .. yoffset .. "|t"
+	end)
+end
+
 function plugin:BigWigs_ShowAura(_, module, key, options)
 	-- Allow key to be given as option to allow options filtering to work
 	-- on a different key while allowing multiple auras for the same spell
@@ -519,6 +525,9 @@ function plugin:BigWigs_ShowAura(_, module, key, options)
 	local icon = aura.icon
 
 	if options.icon then
+		if type(options.icon) == "string" and not options.icon:find("\\") then
+			options.icon = "Interface\\Icons\\" .. options.icon
+		end
 		icon.tex:SetTexture(options.icon)
 		icon.tex:Show()
 	elseif options.icon == false then
@@ -527,19 +536,14 @@ function plugin:BigWigs_ShowAura(_, module, key, options)
 
 	if options.text then
 		aura.hasText = options.text ~= ""
-		if aura.hasText then
-			options.text = options.text:gsub("{rt([1-8])}", function(icon)
-				return "|T" .. (tonumber(icon) + 137000) .. ":16:16:0:-11|t"
-			end)
-		end
-		icon.text:SetText(options.text)
+		icon.text:SetText(formatRaidIcon(tostring(options.text), 0, -11))
 	elseif options.text == false then
 		aura.hasText = false
 		icon.text:SetText("")
 	end
 
 	if options.stacks then
-		icon.stacks:SetText(options.stacks)
+		icon.stacks:SetText(formatRaidIcon(tostring(options.stacks), 9, -3))
 	elseif options.text == false then
 		icon.stacks:SetText("")
 	end
