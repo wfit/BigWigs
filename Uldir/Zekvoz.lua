@@ -148,19 +148,15 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(_, _, spellId)
 end
 
 --[[ General ]]--
-local DARKNESS_INTERVAL = 7
 function mod:SurgingDarkness(args)
 	self:Message(args.spellId, "red")
 	self:PlaySound(args.spellId, "long")
 	self:Bar(args.spellId, 63.5)
 
 	for i = 0, 2 do
-		self:ScheduleTimer("SurgingDarknessImpact", 1 + i * DARKNESS_INTERVAL, args.spellId)
+		local interval = 7
+		self:ScheduleTimer("ImpactBar", 3.5 + i * interval, args.spellId, interval)
 	end
-end
-
-function mod:SurgingDarknessImpact(spellId)
-	self:ImpactBar(spellId, DARKNESS_INTERVAL)
 end
 
 function mod:VoidLash(args)
