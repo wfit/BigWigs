@@ -215,7 +215,7 @@ do
 				str = str .. format(" %s(%d)", UnitName(candidates[i]), stacks[candidates[i]])
 			end
 			local arrow = roster.role[unit] == roster.role[soaker] and "--->" or "-X->"
-			trace("ffffff", "|T%d:16:16:0:0|t %s %s%s [%s]", 137000 + vector, UnitName(unit), arrow, str)
+			trace("ffffff", "|T%d:16:16:0:0|t %s %s%s", 137000 + vector, UnitName(unit), arrow, str)
 
 			-- Display soaker name to player
 			if unit == playerUnit then
