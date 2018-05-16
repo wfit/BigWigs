@@ -14,9 +14,12 @@ mod.respawnTime = 30
 -- Locals
 --
 
+local Hud = Oken.Hud
+
 local pathogenBombCount = 1
 local nextLiquify = 0
 local liquified = false
+local infectionCount = 0
 
 --------------------------------------------------------------------------------
 -- Initialization
@@ -30,7 +33,7 @@ function mod:GetOptions()
 		{265129, "SAY", "AURA"}, -- Omega Vector
 		omegaVectorMarker,
 		--omegaVectorRL,
-		{265127, "AURA"}, -- Lingering Infection
+		{265127, "AURA", "HUD"}, -- Lingering Infection
 
 		267242, -- Contagion
 		{265212, "SAY", "ICON", "AURA"}, -- Gestate
@@ -64,6 +67,7 @@ function mod:OnEngage()
 	self:Bar(265217, 90) -- Liquefy
 
 	liquified = false
+	infectionCount = 0
 	self:OmegaVectorReset()
 	self:RegisterEvent("UNIT_AURA") -- XXX Blizzard does not emit SPELL_AURA_APPLIED/REMOVED for multiple stacks
 end
@@ -225,6 +229,7 @@ do
 			-- Display unit name to soaker
 			if not toTanks and soaker == playerUnit then
 				local icon = vectors[unit][1]
+				mod:PlaySound(spellId, "beware")
 				mod:ShowAura(spellId, UnitName(unit), expires - GetTime(), {
 					key = soakerKeys[vector],
 					countdown = icon == vector,
@@ -233,7 +238,10 @@ do
 					stacks = icon ~= vector and "{rt" .. vector .. "}" or nil
 				})
 				if liquified then
-					-- TODO: spam soaked name
+					local left = expires - GetTime()
+					for t = (left - 2), 0, -2 do
+						mod:Say(spellId, UnitName(unit), true, "YELL")
+					end
 				end
 			end
 		end
@@ -276,6 +284,10 @@ do
 
 			-- Show temp aura for vector
 			if unit == playerUnit then
+				self:PlaySound(args.spellId, "warning")
+				self:Say(args.spellId, format("{rt%d}", vector), true)
+				self:TargetMessage2(args.spellId, "orange", args.destName)
+				infectionCount = infectionCount + 1
 				self:ShowAura(args.spellId, 10, "...", {
 					key = vectorKeys[vector],
 					countdown = false,
@@ -309,6 +321,7 @@ do
 
 			-- Remove vector aura from player
 			if unit == playerUnit then
+				infectionCount = infectionCount - 1
 				self:HideAura(vectorKeys[vector])
 			end
 		end
@@ -377,9 +390,30 @@ function mod:EvolvingAfflictionApplied(args)
 	self:PlaySound(args.spellId, "alert", args.destName)
 end
 
-function mod:LingeringInfectionApplied(args)
-	if self:Me(args.destGUID) then
-		self:ShowAura(args.spellId, "Infection", { pin = -1, pulse = false, stacks = args.amount or 1 })
+do
+	local rangeCheck, rangeObject
+
+	function mod:CheckRange(object, range)
+		for unit in mod:IterateGroup() do
+			if not UnitIsUnit(unit, "player") and not UnitIsDead(unit) and self:Range(unit) <= range then
+				object:SetColor(1, 0.2, 0.2)
+				return
+			end
+		end
+		object:SetColor(0.2, 1, 0.2)
+	end
+
+	function mod:LingeringInfectionApplied(args)
+		if self:Me(args.destGUID) then
+			infectionCount = infectionCount + 1
+			self:ShowAura(args.spellId, "Infection", { pin = -1, pulse = false, stacks = args.amount or 1, countdown = false })
+
+			if infectionCount >= 6 and not rangeObject and self:Hud(args.spellId) then
+				rangeObject = Hud:DrawSpinner("player", 60)
+				rangeCheck = self:ScheduleRepeatingTimer("CheckRange", 0.2, rangeObject, 5)
+				self:CheckRange(rangeObject, 5)
+			end
+		end
 	end
 end
 
@@ -419,7 +453,6 @@ do
 		if not targetFound then
 			if self:Me(args.destGUID) then
 				self:PlaySound(args.spellId, "alert")
-				self:Say(args.spellId)
 				self:SayCountdown(args.spellId, 5)
 				self:ShowDebuffAura(args.spellId)
 			end

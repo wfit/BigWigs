@@ -2394,6 +2394,7 @@ do
 		["alert"] = "Alert",
 		["alarm"] = "Alarm",
 		["warning"] = "Warning",
+		["beware"] = "Beware",
 	}
 	--- Play a sound.
 	-- @param key the option key
