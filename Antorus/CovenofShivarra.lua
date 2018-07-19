@@ -560,7 +560,7 @@ do
 			end
 		end
 
-		local debuff, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, value = UnitDebuff(args.destName, args.spellName)
+		local debuff, _, _, _, value = self:UnitDebuff(args.destName, args.spellId)
 		if debuff and value and value > 0 then
 			chilledBloodList[#chilledBloodList+1] = {args.destName, value}
 			chilledBloodMaxAbsorb = math.max(chilledBloodMaxAbsorb, value)
@@ -573,7 +573,7 @@ do
 	end
 
 	function mod:CheckShieldStatus(spellId, spellName)
-		local amount = select(17, UnitDebuff("player", spellName))
+		local amount = select(5, self:UnitDebuff("player", spellId))
 		if not amount then return end
 		if lastStatus == -1 then maxAmount = amount end
 		local status = math.ceil(10 * amount / maxAmount) / 10

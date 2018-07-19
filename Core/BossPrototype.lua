@@ -2828,9 +2828,9 @@ function argsVirtuals.destKey(args)
 end
 
 function argsVirtuals.debuffDuration(args)
-	return select(6, boss:UnitDebuff("player", args.spellId))
+	return (select(3, boss:UnitDebuff("player", args.spellId)))
 end
 
 function argsVirtuals.buffDuration(args)
-	return select(6, boss:UnitBuff("player", args.spellId))
+	return (select(3, boss:UnitBuff("player", args.spellId)))
 end
