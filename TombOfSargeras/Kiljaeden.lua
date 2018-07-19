@@ -19,14 +19,6 @@ mod.respawnTime = 30
 -- Locals
 --
 
-local Hud = Oken.Hud
-
-local densitySettings = {
-	["graphicsParticleDensity"] = "1",
-	["raidGraphicsParticleDensity"] = "1",
-}
-local previousDensity
-
 local stage = 1
 local inIntermission = nil
 local singularityCount = 1
@@ -35,8 +27,6 @@ local focusedDreadflameCount = 1
 local burstingDreadflameCount = 1
 local felclawsCount = 1
 local flamingOrbCount = 1
-local obeliskCount = 1
-local darknessCount = 1
 local wailingCounter = 1
 local obeliskCount = 1
 local darknessCount = 1
@@ -163,11 +153,6 @@ end
 -- Initialization
 --
 
-local reflection_marker = mod:AddCustomOption { "reflection_marker", "Set marker on tank affected by Shadow Reflection: Wailing", default = true }
-local lower_particules = mod:AddCustomOption { "lower_particules", "Lower Particle Density", default = true,
-	icon = 64615, desc = "Lower the Particle Density setting during Lingering Eruption." }
-local meteors_impact = mod:AddCustomOption { "meteors_landing", "Armageddon Meteors Impact", default = true,
-	configurable = true, icon = 87701, desc = "Countdown until meteors impact during Armageddon" }
 local eruptingMarker = mod:AddMarkerOption(false, "player", 3, 236710, 3, 4, 5) -- Skip marks 1 + 2 for visibility
 local shadowsoulMarker = mod:AddMarkerOption(false, "npc", 1, -15397, 1, 2, 3, 4, 5) -- Shadowsoul
 function mod:GetOptions()
@@ -175,29 +160,28 @@ function mod:GetOptions()
 		"stages",
 		"berserk",
 		{239932, "TANK"}, -- Felclaws
-		{235059, "IMPACT"}, -- Rupturing Singularity
+		235059, -- Rupturing Singularity
+		"rupturingKnock",
 		240910, -- Armageddon
-		{meteors_impact, "COUNTDOWN", "HUD"},
-		{236710, "SAY", "FLASH", "AURA"}, -- Shadow Reflection: Erupting
+		"meteorImpact",
+		{236710, "SAY", "FLASH"}, -- Shadow Reflection: Erupting
 		eruptingMarker,
-		lower_particules,
-		{238430, "SAY", "FLASH", "SMARTCOLOR", "AURA"}, -- Bursting Dreadflame
-		{238505, "SAY", "ICON", "FLASH", "PROXIMITY", "AURA"}, -- Focused Dreadflame
+		{238430, "SAY", "FLASH"}, -- Bursting Dreadflame
+		{238505, "SAY", "ICON", "PROXIMITY"}, -- Focused Dreadflame
 		{236378, "SAY", "FLASH"}, -- Shadow Reflection: Wailing
-		reflection_marker,
 		241564, -- Sorrowful Wail
-		{241983, "IMPACT"}, -- Deceiver's Veil
 		241721, -- Illidan's Sightless Gaze
 		{"shadowsoul", "INFOBOX"}, -- Shadowsoul
 		shadowsoulMarker,
 		"custom_on_track_illidan",
 		"custom_on_zoom_in",
-		{238999, "HUD"}, -- Darkness of a Thousand Souls
-		{-15543, "IMPACT", "IMPACT_COUNTDOWN"}, -- Demonic Obelisk
+		238999, -- Darkness of a Thousand Souls
+		-15543, -- Demonic Obelisk
+		"obeliskExplosion",
 		243982, -- Tear Rift
 		244856, -- Flaming Orb
 		240262, -- Burning
-		{237590, "SAY", "FLASH", "AURA"}, -- Shadow Reflection: Hopeless
+		{237590, "SAY", "FLASH"}, -- Shadow Reflection: Hopeless
 	},{
 		["stages"] = "general",
 		[239932] = -14921, -- Stage One: The Betrayer
@@ -238,7 +222,6 @@ function mod:OnBossEnable()
 	-- Stage Two: Reflected Souls
 	self:Log("SPELL_AURA_APPLIED", "ShadowReflectionWailing", 236378) -- Shadow Reflection: Wailing
 	self:Log("SPELL_AURA_REMOVED", "ShadowReflectionWailingRemoved", 236378) -- Shadow Reflection: Wailing
-	self:Log("SPELL_AURA_REMOVED", "LingeringWailRemoved", 243624) -- Lingering Wail
 	self:Log("SPELL_CAST_SUCCESS", "SorrowfulWail", 241564) -- Sorrowful Wail
 	self:Death("WailingReflectionDeath", 119107) -- Wailing Add
 
@@ -293,37 +276,9 @@ function mod:OnEngage()
 	end
 end
 
-function mod:OnBossDisable()
+function mod:OnWipe()
 	if inIntermission and stage == 2 then
 		resetMinimap(self)
-	end
-	if self:GetOption(reflection_marker) and self:Mythic() then
-		for unit in self:IterateGroup() do
-			local icon = GetRaidTargetIndex(unit)
-			if icon and self:Tank(unit) and icon == 7 then
-				SetRaidTarget(unit, 0)
-			end
-		end
-	end
-	self:RestoreParticles()
-end
-
-function mod:LowerParticles()
-	if self:GetOption(lower_particules) and not previousDensity then
-		previousDensity = {}
-		for key, value in pairs(densitySettings) do
-			previousDensity[key] = GetCVar(key)
-			SetCVar(key, value)
-		end
-	end
-end
-
-function mod:RestoreParticles()
-	if self:GetOption(lower_particules) and previousDensity then
-		for key, value in pairs(previousDensity) do
-			SetCVar(key, value)
-		end
-		previousDensity = nil
 	end
 end
 
@@ -341,9 +296,7 @@ function mod:CHAT_MSG_RAID_BOSS_EMOTE(_, msg, _, _, _, target)
 		focusedTarget = guid
 		if self:Me(guid) then
 			self:Say(238505)
-			self:Flash(238505)
 			self:SayCountdown(238505, 5)
-			self:ShowAura(238505, 5, "Pas bouger!", true)
 		end
 		if not self:Easy() then
 			self:OpenProximity(238505, 5)
@@ -352,7 +305,7 @@ function mod:CHAT_MSG_RAID_BOSS_EMOTE(_, msg, _, _, _, target)
 		self:ScheduleTimer("FocusedDreadflameSuccess", 5.5)
 	elseif msg:find("235059", nil, true) then -- Rupturing Singularity
 		self:Message(235059, "Urgent", "Warning", CL.count:format(self:SpellName(235059), singularityCount))
-		self:ImpactBar(235059, 9.85, CL.count:format(L.singularityImpact, singularityCount), 235059)
+		self:Bar("rupturingKnock", 9.85, CL.count:format(L.singularityImpact, singularityCount), 235059)
 		singularityCount = singularityCount + 1
 		local timer = 0
 		if inIntermission then -- Intermission timer
@@ -381,22 +334,11 @@ do
 	end
 end
 
-local fo_soakers = {
-	[1] = "Boun",
-	[2] = "Gargan",
-	[3] = "Cris",
-	[4] = "Boun",
-	[5] = "Gargan",
-	[6] = "Belphou",
-	[7] = "Boun",
-	[8] = "Gargan",
-}
-
-function mod:UNIT_SPELLCAST_SUCCEEDED(_, spellName, _, _, spellId)
+function mod:UNIT_SPELLCAST_SUCCEEDED(_, _, _, spellId)
 	if spellId == 244856 then -- Flaming Orb
-		self:Message(spellId, "Attention", "Alert", "Orb: " .. (fo_soakers[flamingOrbCount] or flamingOrbCount))
-		flamingOrbCount = flamingOrbCount + 1
-		self:Bar(spellId, self:Mythic() and (flamingOrbCount == 2 and 15.0 or flamingOrbCount == 3 and 16.0 or 64) or flamingOrbCount == 2 and 30 or 64, "Orb: " .. (fo_soakers[flamingOrbCount] or flamingOrbCount))
+		self:Message(spellId, "Attention", "Alert", CL.count:format(self:SpellName(spellId), flamingOrbCount))
+		flamingOrbCount = (flamingOrbCount % (self:Mythic() and 3 or 2)) + 1
+		self:Bar(spellId, self:Mythic() and (flamingOrbCount == 2 and 15.0 or flamingOrbCount == 3 and 16.0 or 64) or flamingOrbCount == 2 and 30 or 64, CL.count:format(self:SpellName(spellId), flamingOrbCount))
 	end
 end
 
@@ -437,36 +379,19 @@ function mod:Armageddon(args)
 end
 
 function mod:ArmageddonSuccess(args)
-	self:Bar(meteors_impact, 8, CL.count:format(L.meteorImpact, armageddonCount-1), args.spellId) -- Meteor Impact
-	if self:Hud(meteors_impact) then
-		local debuff, _, _, _, _, _, expires = UnitDebuff("player", self:SpellName(234310))
-		local spinner = Hud:DrawSpinner("player", 50, 8)
-		if debuff and (expires - GetTime()) > 8 then
-			spinner:SetColor(1, 0.5, 0)
-		else
-			spinner:SetColor(0.5, 1, 0.5)
-		end
-		function spinner:OnDone()
-			mod:PlaySound(false, "Info")
-			spinner:Remove()
-		end
-	end
+	self:Bar("meteorImpact", 8, CL.count:format(L.meteorImpact, armageddonCount-1), args.spellId) -- Meteor Impact
 end
 
 do
 	local playerList = mod:NewTargetList()
-	local activeEruptions = 0
-
 	function mod:ShadowReflectionErupting(args)
 		playerList[#playerList+1] = args.destName
 		if self:Me(args.destGUID) then
 			self:Flash(args.spellId)
 			self:Say(args.spellId, self:Easy() and L.reflectionErupting or CL.count_rticon:format(L.reflectionErupting, #playerList, #playerList+2))
 			self:SayCountdown(args.spellId, 8)
-			self:ShowAura(args.spellId, "Add on YOU!", { icon = #playerList + 2, autoremove = 8 })
 		end
 		if #playerList == 1 then
-			activeEruptions = 0
 			self:Bar(args.spellId, 8, INLINE_DAMAGER_ICON.." "..CL.adds)
 			if stage == 2 and not self:Mythic() then
 				self:Bar(args.spellId, self:LFR() and 124.4 or 112, INLINE_DAMAGER_ICON.." "..L.reflectionErupting)
@@ -478,13 +403,6 @@ do
 
 		if self:GetOption(eruptingMarker) then
 			SetRaidTarget(args.destName, #playerList+2)  -- Skip marks 1 + 2 for visibility
-		end
-
-		if self:Mythic() then
-			activeEruptions = activeEruptions + 1
-			if activeEruptions == 1 then
-				self:LowerParticles()
-			end
 		end
 	end
 
@@ -498,12 +416,6 @@ do
 	end
 
 	function mod:LingeringEruptionRemoved(args) -- Mythic only, Remove icons after this debuff instead
-		C_Timer.After(15, function()
-			activeEruptions = activeEruptions - 1
-			if activeEruptions == 0 then
-				self:RestoreParticles()
-			end
-		end)
 		if self:GetOption(eruptingMarker) then
 			SetRaidTarget(args.destName, 0)
 		end
@@ -559,9 +471,6 @@ do
 			self:Flash(args.spellId)
 			self:Say(args.spellId)
 			self:SayCountdown(args.spellId, 5)
-			self:SmartColorSet(args.spellId, 1, 0.5, 0)
-			self:ScheduleTimer("SmartColorUnset", 5, args.spellId)
-			self:ShowAura(args.spellId, 5, "Move out", true)
 		end
 		playerList[#playerList+1] = args.destName
 		if #playerList == 1 then
@@ -607,9 +516,6 @@ do
 		local timer = 114
 		if self:Mythic() and stage == 2 then
 			timer = wailingMythicTimers[wailingCounter]
-			if self:GetOption(reflection_marker) then
-				SetRaidTarget(args.destName, 7)
-			end
 		end
 		self:Bar(args.spellId, timer, INLINE_TANK_ICON.." "..CL.count:format(L.reflectionWailing, wailingCounter)) -- Not seen 2nd add in P1
 		if self:Me(args.destGUID) then
@@ -629,12 +535,6 @@ do
 	function mod:SorrowfulWail(args)
 		self:Message(args.spellId, "Attention", "Alarm")
 		self:Bar(args.spellId, 15.8)
-	end
-
-	function mod:LingeringWailRemoved(args)
-		if self:GetOption(reflection_marker) then
-			SetRaidTarget(args.destName, 0)
-		end
 	end
 
 	function mod:WailingReflectionDeath()
@@ -758,8 +658,6 @@ do
 		self:StopBar(238505) -- Focused Dreadflame
 		self:StopBar(CL.count:format(self:SpellName(235059), singularityCount)) -- Rupturing Singularity
 		self:StopBar(INLINE_HEALER_ICON.." "..L.reflectionHopeless) -- Shadow Reflection: Hopeless
-
-		self:ImpactBar(241983, 7.5)
 
 		singularityCount = 1
 		if self:Mythic() then
@@ -894,21 +792,6 @@ function mod:DarknessofaThousandSouls(args)
 	darknessCount = darknessCount + 1
 	self:Bar(args.spellId, darknessCount == 2 and 90 or 95, CL.count:format(L.darkness, darknessCount))
 	self:StartObeliskTimer(darknessCount == 2 and 25 or 28)
-	if darknessCount > 2 and self:Hud(args.spellId) then
-		local offset = 1.5
-		local timer = Hud:DrawTimer("player", 50, 9 - offset):SetColor(1, 0.5, 0)
-		local label = Hud:DrawText("player", "Wait")
-
-		function timer:OnDone()
-			mod:PlaySound(false, "Info")
-			timer:SetColor(0, 1, 0)
-			label:SetText("GO!")
-			C_Timer.After(offset, function()
-				timer:Remove()
-				label:Remove()
-			end)
-		end
-	end
 end
 
 do
@@ -917,7 +800,7 @@ do
 		local t = GetTime()
 		if t-prev > 1.5 then
 			prev = t
-			self:ImpactBar(-15543, 5, L.obeliskExplosion, -15543)
+			self:CastBar("obeliskExplosion", 5, L.obeliskExplosion, -15543)
 		end
 	end
 end
@@ -926,7 +809,7 @@ function mod:StartObeliskTimer(t)
 	local obeliskCounter = self:Mythic() and (obeliskCount+2) or self:Heroic() and (darknessCount+1) or darknessCount -- Mythic: 3-4-5-6-7... Heroic: 3-3-4-4-5... Normal: 2-2-3-3-4...
 	self:Bar(-15543, t, L.countx:format(self:SpellName(-15543), obeliskCounter))
 	self:ScheduleTimer("Message", t, -15543, "Attention", "Info", CL.spawned:format(L.countx:format(self:SpellName(-15543), obeliskCounter)))
-	self:ScheduleTimer("ImpactBar", t, -15543, 13, L.obeliskExplosion, -15543) -- will get readjusted in :DemonicObelisk()
+	self:ScheduleTimer("CastBar", t, "obeliskExplosion", 13, L.obeliskExplosion, -15543) -- will get readjusted in :DemonicObelisk()
 	obeliskCount = obeliskCount + 1
 	if obeliskCount % 2 == 0 then
 		self:ScheduleTimer("StartObeliskTimer", t, 36)
@@ -946,7 +829,6 @@ do
 			self:Flash(args.spellId)
 			self:Say(args.spellId, L.reflectionHopeless)
 			self:SayCountdown(args.spellId, 8)
-			self:ShowAura(args.spellId, 8, "Add HEAL!")
 		end
 		playerList[#playerList+1] = args.destName
 		if #playerList == 1 then
@@ -958,7 +840,6 @@ do
 	function mod:ShadowReflectionHopelessRemoved(args)
 		if self:Me(args.destGUID) then
 			self:CancelSayCountdown(args.spellId)
-			self:HideAura(args.spellId)
 		end
 	end
 end

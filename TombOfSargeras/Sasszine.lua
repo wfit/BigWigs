@@ -129,7 +129,7 @@ end
 --------------------------------------------------------------------------------
 -- Event Handlers
 --
-function mod:UNIT_SPELLCAST_SUCCEEDED(_, _, _, _, spellId)
+function mod:UNIT_SPELLCAST_SUCCEEDED(_, _, _, spellId)
 	if spellId == 239423 then -- Dread Shark // Stage 2 + Stage 3
 		dreadSharkCounter = dreadSharkCounter + 1
 		if not self:Mythic() then
@@ -394,9 +394,8 @@ do
 		fedsNeeded = self:Mythic() and 5 or 3
 		self:OpenInfo(234621, L.inks_fed_count:format(fedCount, fedsNeeded))
 
-		local inkName = self:SpellName(232913)
 		for unit in self:IterateGroup() do
-			local _, _, _, expires = self:UnitDebuff(unit, inkName)
+			local _, _, _, expires = self:UnitDebuff(unit, 232913) -- Befouling Ink
 			debuffs[self:UnitName(unit)] = expires
 			if expires and UnitIsUnit(unit, "player") then
 				self:ShowAura(232913, "Feed")
@@ -406,7 +405,7 @@ do
 
 	function mod:InkApplied(args)
 		if devouringMawActive then
-			local _, _, _, expires = self:UnitDebuff(args.destName, args.spellName)
+			local _, _, _, expires = self:UnitDebuff(args.destName, args.spellId)
 			debuffs[args.destName] = expires
 			if self:Me(args.destGUID) then
 				self:ShowAura(232913, "Feed")
