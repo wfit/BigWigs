@@ -20,11 +20,11 @@
 ## X-Website: https://github.com/BigWigsMods
 ## X-Curse-Project-ID: 2382
 ## X-WoWI-ID: 5086
+## X-WFI-Addon: 1
 
 ## Dependencies: Oken_Core
 ## OptionalDeps: Ace3, LibCandyBar-3.0, LibSharedMedia-3.0, LibSink-2.0, LibDBIcon-1.0, LibDDI-1.0, LibChatAnims, LibDualSpec-1.0, WFI_SmartColor
 ## SavedVariables: BigWigs3DB, BigWigsIconDB, BigWigsStatsDB
-## X-WFI-Addon: 1
 
 embeds.xml
 API.lua
