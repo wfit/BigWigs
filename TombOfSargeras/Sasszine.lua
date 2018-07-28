@@ -22,7 +22,6 @@ local crashingWaveStage3Mythic = {32.5, 33, 42, 39}
 local hydraShotCounter = 1
 local bufferfishCounter = 1
 local devouringMawActive = false
-local hasMurloc = false
 local abs = math.abs
 
 --------------------------------------------------------------------------------
@@ -44,16 +43,16 @@ function mod:GetOptions()
 	return {
 		"stages",
 		"berserk",
-		{230139, "IMPACT", "AURA"}, -- Hydra Shot
+		{230139, "SAY"}, -- Hydra Shot
 		hydraShotMarker,
 		{230201, "TANK", "FLASH"}, -- Burden of Pain
 		230227, -- From the Abyss // Showing this as an alternative to Burden of Pain for non-tanks, they are the same spell
 		230959, -- Concealing Murk
 		232722, -- Slicing Tornado
 		230358, -- Thundering Shock
-		{230384, "ME_ONLY", "FLASH", "AURA"}, -- Consuming Hunger
+		{230384, "ME_ONLY"}, -- Consuming Hunger
 		{234621, "INFOBOX"}, -- Devouring Maw
-		{232913, "AURA"}, -- Befouling Ink
+		232913, -- Befouling Ink
 		232827, -- Crashing Wave
 		239436, -- Dread Shark
 		239362, -- Delicious Bufferfish
@@ -81,7 +80,6 @@ function mod:OnBossEnable()
 	self:Log("SPELL_CAST_START", "SlicingTornado", 232722)
 	self:Log("SPELL_CAST_START", "ThunderingShock", 230358)
 	self:Log("SPELL_AURA_APPLIED", "ConsumingHungerApplied", 230384, 234661) -- Stage 1, Stage 3
-	self:Log("SPELL_AURA_REMOVED", "ConsumingHungerRemoved", 230384, 234661, 230920)
 
 	-- Stage Two: Terrors of the Deep
 	self:Log("SPELL_CAST_SUCCESS", "BeckonSarukel", 232746) -- Devouring Maw
@@ -106,7 +104,6 @@ function mod:OnEngage()
 	hydraShotCounter = 1
 	bufferfishCounter = 1
 	devouringMawActive = false
-	hasMurloc = false
 
 	self:Bar(230358, 10.5) -- Thundering Shock
 	-- Tanks: Burden of Pain
@@ -138,10 +135,10 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(_, _, _, spellId)
 			bufferfishCounter = bufferfishCounter + 1
 			self:Bar(239362, 22.5, CL.count:format(self:SpellName(239362), bufferfishCounter)) -- Delicious Bufferfish
 			if dreadSharkCounter == 3 or dreadSharkCounter == 5 then
-				self:Message(239436, "Urgent", "Warning")
+				self:Message(239436, "orange", "Warning")
 				stage = stage + 1
 			else
-				self:Message(239436, "Urgent", "Warning")
+				self:Message(239436, "orange", "Warning")
 				return -- No stage change yet
 			end
 		end
@@ -156,14 +153,12 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(_, _, _, spellId)
 		self:StopBar(CL.count:format(self:SpellName(230201), burdenCounter)) -- Burden of Pain
 		self:StopBar(CL.count:format(self:SpellName(230227), burdenCounter)) -- From the Abyss
 
-		self:HideAura(230384) -- Consuming Hunger
-
 		slicingTornadoCounter = 1
 		waveCounter = 1
 		burdenCounter = 1
 		hydraShotCounter = 1
 
-		self:Message("stages", "Neutral", "Long", CL.stage:format(stage), false)
+		self:Message("stages", "cyan", "Long", CL.stage:format(stage), false)
 		if stage == 2 then
 			self:Bar(232913, 11) -- Befouling Ink
 			if not self:LFR() then
@@ -198,12 +193,10 @@ end
 
 do
 	local list = mod:NewTargetList()
-	local onMe = false
 	function mod:HydraShot(args)
 		local count = #list+1
 		list[count] = args.destName
 
-		--[[
 		if self:Me(args.destGUID)then
 			if self:Easy() then
 				self:Say(args.spellId)
@@ -212,54 +205,17 @@ do
 				self:SayCountdown(args.spellId, 6, count, 4)
 			end
 		end
-		]]
 
 		if count == 1 then
-			onMe = false
 			self:StopBar(CL.count:format(self:SpellName(230139), hydraShotCounter)) -- Stop previous one if early
-			self:ImpactBar(args.spellId, 6, CL.count:format(args.spellName, hydraShotCounter))
-			self:ScheduleTimer("TargetMessage", 0.3, args.spellId, list, "Important", "Warning", nil, nil, true)
-			if self:Mythic() then
-				self:ScheduleTimer("HydraShotAura", 0.3, args.spellId)
-			end
+			self:CastBar(args.spellId, 6, CL.count:format(args.spellName, hydraShotCounter))
+			self:ScheduleTimer("TargetMessage", 0.3, args.spellId, list, "red", "Warning", nil, nil, true)
 			hydraShotCounter = hydraShotCounter + 1
 			-- Normal stage 3 seems to swing between 41-43 or 51-53
 			self:CDBar(args.spellId, self:Mythic() and 30.5 or stage == 2 and 30 or (self:Normal() and stage == 3 and 41.3) or 40, CL.count:format(args.spellName, hydraShotCounter))
 		end
-		if self:Me(args.destGUID) then
-			onMe = count
-		end
 		if self:GetOption(hydraShotMarker) then -- Targets: LFR: 0, 1 Normal, 3 Heroic, 4 Mythic
 			SetRaidTarget(args.destName, count)
-		end
-	end
-
-	function mod:HydraShotAura(spellId)
-		if onMe then
-			self:ShowAura(spellId, "Spread out", { autoremove = 6 })
-		else
-			local _, _, _, instanceId = UnitPosition("player")
-			local buff, debuff = GetSpellInfo(239362), GetSpellInfo(230139)
-
-			local count = 0
-			local pos = false
-
-			for i = 1, 30 do
-				local unit = ("raid%d"):format(i)
-				local _, _, _, tarInstanceId = UnitPosition(unit)
-
-				if tarInstanceId == instanceId and UnitIsConnected(unit) and not UnitDebuff(unit, buff) and not UnitDebuff(unit, debuff) and not UnitIsDead(unit) then
-					count = count + 1
-					if UnitIsUnit(unit, "player") then
-						pos = count % 4 + 1
-						break
-					end
-				end
-			end
-
-			if pos then
-				self:ShowAura(false, "Soak!", { icon = pos, autoremove = 6 })
-			end
 		end
 	end
 
@@ -274,16 +230,16 @@ do
 end
 
 function mod:BurdenofPainCast(args)
-	self:Message(args.spellId, "Attention", "Warning", CL.casting:format(args.spellName))
+	self:Message(args.spellId, "yellow", "Warning", CL.casting:format(args.spellName))
 end
 
 function mod:BurdenofPain(args)
 	burdenCounter = burdenCounter + 1
 	-- Tanks: Burden of Pain
-	self:TargetMessage(args.spellId, args.destName, "Urgent", "Alarm", nil, nil, true)
+	self:TargetMessage(args.spellId, args.destName, "orange", "Alarm", nil, nil, true)
 	self:Bar(args.spellId, 25.5, CL.count:format(args.spellName, burdenCounter)) -- Timer until cast_start
 	if not self:Tank() or self:GetOption(args.spellId) == 0 then -- Non-Tanks: From the Abyss
-		self:Message(230227, "Urgent", "Alarm", CL.count:format(self:SpellName(230227), burdenCounter-1))
+		self:Message(230227, "orange", "Alarm", CL.count:format(self:SpellName(230227), burdenCounter-1))
 		self:Bar(230227, 28, CL.count:format(self:SpellName(230227), burdenCounter))
 	end
 	if self:Me(args.destGUID) then
@@ -297,14 +253,14 @@ do
 		local t = GetTime()
 		if self:Me(args.destGUID) and t-prev > 1.5 then
 			prev = t
-			self:Message(args.spellId, "Personal", "Alert", CL.underyou:format(args.spellName))
+			self:Message(args.spellId, "blue", "Alert", CL.underyou:format(args.spellName))
 		end
 	end
 end
 
 function mod:SlicingTornado(args)
 	slicingTornadoCounter = slicingTornadoCounter + 1
-	self:Message(args.spellId, "Important", "Long")
+	self:Message(args.spellId, "red", "Warning")
 	if self:Mythic() then
 		self:CDBar(args.spellId, stage == 3 and 35.3 or 34)
 	else
@@ -313,11 +269,8 @@ function mod:SlicingTornado(args)
 end
 
 function mod:ThunderingShock(args)
-	self:Message(args.spellId, "Important", "Info")
+	self:Message(args.spellId, "red", "Warning")
 	self:CDBar(args.spellId, 32.8) -- Can be delayed sometimes by other casts
-	if hasMurloc then
-		self:ShowAura(230384, { pulse = true })
-	end
 end
 
 do
@@ -325,39 +278,25 @@ do
 	function mod:ConsumingHungerApplied(args)
 		list[#list+1] = args.destName
 		if #list == 1 then
-			self:ScheduleTimer("TargetMessage", 0.3, 230384, list, "Attention", "Alert", nil, nil, true)
-		end
-		if self:Me(args.destGUID) then
-			hasMurloc = true
-			if stage == 1 or select(2, UnitClass("player")) == "PALADIN" then
-				self:Flash(230384)
-				self:ShowAura(230384, stage == 1 and "Get stunned!" or "Use Divine Steed")
-			end
-		end
-	end
-
-	function mod:ConsumingHungerRemoved(args)
-		if self:Me(args.destGUID) then
-			hasMurloc = false
-			self:HideAura(230384)
+			self:ScheduleTimer("TargetMessage", 0.3, 230384, list, "yellow", "Alert", nil, nil, true)
 		end
 	end
 end
 
 function mod:BeckonSarukel() -- Devouring Maw
-	self:Message(234621, "Important", "Long")
+	self:Message(234621, "red", "Warning")
 	self:Bar(234621, 41.5)
 	self:PrepareForMaw()
 end
 
 function mod:BefoulingInk()
-	self:Message(232913, "Attention", "Info", CL.incoming:format(self:SpellName(232913))) -- Befouling Ink incoming!
+	self:Message(232913, "yellow", "Info", CL.incoming:format(self:SpellName(232913))) -- Befouling Ink incoming!
 	self:CDBar(232913, stage == 3 and (self:Mythic() and 37 or 32) or 41.5)
 end
 
 function mod:CrashingWave(args)
 	waveCounter = waveCounter + 1
-	self:Message(args.spellId, "Important", "Warning")
+	self:Message(args.spellId, "red", "Warning")
 	self:CastBar(args.spellId, self:LFR() and 7 or 5)
 	local timer = 42
 	if self:Mythic() and stage == 3 then
@@ -370,13 +309,13 @@ end
 
 function mod:DeliciousBufferfish(args)
 	if self:Me(args.destGUID) then
-		self:TargetMessage(239362, args.destName, "Personal", "Positive")
+		self:TargetMessage(239362, args.destName, "blue", "Alert")
 	end
 end
 
 function mod:DeliciousBufferfishRemoved(args)
 	if self:Me(args.destGUID) then
-		self:Message(239362, "Personal", "Info", CL.removed:format(args.spellName))
+		self:Message(239362, "blue", "Alert", CL.removed:format(args.spellName))
 	end
 end
 
@@ -397,9 +336,6 @@ do
 		for unit in self:IterateGroup() do
 			local _, _, _, expires = self:UnitDebuff(unit, 232913) -- Befouling Ink
 			debuffs[self:UnitName(unit)] = expires
-			if expires and UnitIsUnit(unit, "player") then
-				self:ShowAura(232913, "Feed")
-			end
 		end
 	end
 
@@ -407,16 +343,10 @@ do
 		if devouringMawActive then
 			local _, _, _, expires = self:UnitDebuff(args.destName, args.spellId)
 			debuffs[args.destName] = expires
-			if self:Me(args.destGUID) then
-				self:ShowAura(232913, "Feed")
-			end
 		end
 	end
 
 	function mod:InkRemoved(args)
-		if self:Me(args.destGUID) then
-			self:HideAura(232913)
-		end
 		if devouringMawActive then
 			local name = args.destName
 			local expires = debuffs[name] -- time when the debuff should expire
@@ -458,7 +388,7 @@ do
 					end
 					total = total + n
 				end
-				self:Message(234621, "Positive", "Info", CL.over:format(args.spellName) .. " - " .. L.inks_fed:format(list:sub(0, list:len()-2)))
+				self:Message(234621, "green", "Info", CL.over:format(args.spellName) .. " - " .. L.inks_fed:format(list:sub(0, list:len()-2)))
 				self:ScheduleTimer("CloseInfo", 5, 234621) -- delay a bit to make sure the people get enough credit
 			end
 		end

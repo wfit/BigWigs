@@ -16,13 +16,10 @@ if not mod then return end
 mod:RegisterEnableMob(116939, 117264) -- Fallen Avatar, Maiden of Valor
 mod.engageId = 2038
 mod.respawnTime = 25
-mod.instanceId = 1676
 
 --------------------------------------------------------------------------------
 -- Locals
 --
-
-local Hud = Oken.Hud
 
 local timersHeroic = {
 	[234057] = {7, 42, 35, 41, 36, 35, 43}, -- Unbound Chaos
@@ -78,7 +75,6 @@ end
 --
 
 local darkMarkIcons = mod:AddMarkerOption(false, "player", 6, 239739, 6, 4, 3)
-local blades_marker = mod:AddTokenOption { "blades_marker", "Set raid target icons on Shadowy Blades", promote = true }
 function mod:GetOptions()
 	return {
 		"warmup",
@@ -86,24 +82,22 @@ function mod:GetOptions()
 		"berserk",
 		"energy_leak",
 		"custom_on_stop_timers",
-		{239207, "IMPACT"}, -- Touch of Sargeras
+		239207, -- Touch of Sargeras
 		239132, -- Rupture Realities
 		234059, -- Unbound Chaos
-		{236604, "SAY", "FLASH", "SMARTCOLOR", "AURA"}, -- Shadowy Blades
-		blades_marker,
+		{236604, "SAY", "FLASH"}, -- Shadowy Blades
 		239212, -- Lingering Darkness
 		{236494, "TANK"}, -- Desolate
 		236528, -- Ripple of Darkness
-		{233856, "HUD", "INFOBOX"}, -- Cleansing Protocol
-		{233556, "TANK"}, -- Corrupted Matrix
-		{239739, "FLASH", "SAY", "INFOBOX", "PULSE"}, -- Dark Mark
+		{233856, "INFOBOX"}, -- Cleansing Protocol
+		233556, -- Corrupted Matrix
+		{239739, "FLASH", "SAY", "INFOBOX"}, -- Dark Mark
 		darkMarkIcons,
 		235572, -- Rupture Realities
 		242017, -- Black Winds
-		240249, -- Molten Fel
 		236684, -- Fel Infusion
 		240623, -- Tainted Matrix
-		{240728, "SAY"}, -- Tainted Essence
+		240728, -- Tainted Essence
 		234418, -- Rain of the Destroyer
 	},{
 		["warmup"] = "general",
@@ -121,10 +115,9 @@ function mod:OnBossEnable()
 	self:RegisterEvent("RAID_BOSS_WHISPER")
 	self:RegisterEvent("CHAT_MSG_RAID_BOSS_EMOTE")
 
-	self:Log("SPELL_AURA_APPLIED", "GroundEffectDamage", 239212, 240249) -- Lingering Darkness, Molten Fel
-	self:Log("SPELL_PERIODIC_DAMAGE", "GroundEffectDamage", 239212, 240249)
-	self:Log("SPELL_PERIODIC_MISSED", "GroundEffectDamage", 239212, 240249)
-	self:Log("SPELL_DAMAGE", "GroundEffectDamage", 240249)
+	self:Log("SPELL_AURA_APPLIED", "GroundEffectDamage", 239212) -- Lingering Darkness
+	self:Log("SPELL_PERIODIC_DAMAGE", "GroundEffectDamage", 239212)
+	self:Log("SPELL_PERIODIC_MISSED", "GroundEffectDamage", 239212)
 
 	-- Stage One: A Slumber Disturbed
 	self:Log("SPELL_CAST_START", "TouchofSargeras", 239207)
@@ -159,7 +152,6 @@ function mod:OnBossEnable()
 	self:Log("SPELL_AURA_APPLIED_DOSE", "TaintedEssence", 240728)
 
 	self:RegisterMessage("BigWigs_BarCreated", "BarCreated")
-	self:RegisterNetMessage("RequestBladeMark")
 end
 
 function mod:OnEngage()
@@ -228,7 +220,7 @@ do
 		if sum >= 5 then -- Check power gained
 			local t = GetTime()
 			if last and power > last and t-prev > 2 then -- Skip first message, only if power is bigger than before
-				self:Message("energy_leak", "Attention", "Info", L.energy_leak_msg:format(sum), false)
+				self:Message("energy_leak", "yellow", "Info", L.energy_leak_msg:format(sum), false)
 				self:InitCheckUnitPower()
 				prev = t
 			end
@@ -267,23 +259,19 @@ end
 
 do
 	local bladeTimer = nil
-	local nextMark = 1
-	local marked = {}
 
 	function mod:UNIT_SPELLCAST_SUCCEEDED(_, _, _, spellId)
 		if spellId == 234057 then -- Unbound Chaos
 			if self:Tank() then
-				self:Message(234059, "Attention", "Alert")
+				self:Message(234059, "yellow", "Alert")
 			end
 			unboundChaosCounter = unboundChaosCounter + 1
 			self:Bar(234059, timers[spellId][unboundChaosCounter] or 35)
 		elseif spellId == 236573 then -- Shadowy Blades
-			bladeTimer = self:ScheduleTimer("Message", 0.3, 236604, "Attention", "Alert")
+			bladeTimer = self:ScheduleTimer("Message", 0.3, 236604, "yellow", "Alert")
 			shadowyBladesCounter = shadowyBladesCounter + 1
 			self:CDBar(236604, timers[spellId][shadowyBladesCounter] or 30)
 			self:CastBar(236604, 5)
-			nextMark = 1
-			wipe(marked)
 		end
 	end
 
@@ -293,42 +281,16 @@ do
 				self:CancelTimer(bladeTimer)
 				bladeTimer = nil
 			end
-			self:Message(236604, "Personal", "Alarm", CL.you:format(self:SpellName(236604)))
+			self:Message(236604, "blue", "Alarm", CL.you:format(self:SpellName(236604)))
 			self:Flash(236604)
 			self:Say(236604)
-			self:SmartColorSet(236604, 1, 0, 0)
-			self:ScheduleTimer("SmartColorUnset", 5, 236604)
-			self:Send("RequestBladeMark", { guid = UnitGUID("player") })
-			self:ShowAura(236604, 5, "Move out", true)
-		end
-	end
-
-	function mod:RequestBladeMark(data)
-		if self:GetOption(blades_marker) then
-			local guid = data.guid
-			for unit in self:IterateGroup() do
-				if UnitGUID(unit) == guid then
-					if nextMark == 1 then
-						self:ScheduleTimer("ClearBladeMark", 5)
-					end
-					marked[unit] = GetRaidTargetIndex(unit) or 0
-					SetRaidTarget(unit, nextMark)
-					nextMark = nextMark + 1
-				end
-			end
-		end
-	end
-
-	function mod:ClearBladeMark()
-		for unit, mark in pairs(marked) do
-			SetRaidTarget(unit, mark)
 		end
 	end
 end
 
 function mod:CHAT_MSG_RAID_BOSS_EMOTE(_, msg)
 	if msg:find("234418") then -- Rain of the Destroyer
-		self:Message(234418, "Important", "Alarm")
+		self:Message(234418, "red", "Alarm")
 		self:Bar(234418, 35)
 		self:CDBar(234418, 6, self:SpellName(182580)) -- Meteor Impact (estimated)
 	end
@@ -337,7 +299,7 @@ end
 function mod:UNIT_POWER_FREQUENT(event, unit)
 	local power = UnitPower(unit)
 	if power >= 85 then
-		self:Message(233856, "Attention", self:Damager() and "Info", CL.soon:format(self:SpellName(233856))) -- Cleansing Protocol
+		self:Message(233856, "yellow", self:Damager() and "Info", CL.soon:format(self:SpellName(233856))) -- Cleansing Protocol
 		self:UnregisterUnitEvent(event, unit)
 	end
 end
@@ -348,21 +310,21 @@ do
 		local t = GetTime()
 		if self:Me(args.destGUID) and t-prev > 1.5 then
 			prev = t
-			self:Message(args.spellId, "Personal", "Alert", CL.underyou:format(args.spellName))
+			self:Message(args.spellId, "blue", "Alert", CL.underyou:format(args.spellName))
 		end
 	end
 end
 
 function mod:TouchofSargeras(args)
 	self:StopBar(CL.count:format(args.spellName, touchofSargerasCounter))
-	self:Message(args.spellId, "Attention", "Alert", CL.incoming:format(CL.count:format(args.spellName, touchofSargerasCounter)))
-	self:ImpactBar(args.spellId, 10.5, CL.count:format(L.touch_impact, touchofSargerasCounter), args.spellId)
+	self:Message(args.spellId, "yellow", "Alert", CL.incoming:format(CL.count:format(args.spellName, touchofSargerasCounter)))
+	self:Bar(args.spellId, 10.5, L.touch_impact)
 	touchofSargerasCounter = touchofSargerasCounter + 1
 	self:Bar(args.spellId, timers[args.spellId][touchofSargerasCounter] or 42, CL.count:format(args.spellName, touchofSargerasCounter))
 end
 
 function mod:RuptureRealities(args)
-	self:Message(args.spellId, "Urgent", "Warning", CL.casting:format(args.spellName))
+	self:Message(args.spellId, "orange", "Warning", CL.casting:format(args.spellName))
 	ruptureRealitiesCounter = ruptureRealitiesCounter + 1
 	self:Bar(args.spellId, timers[args.spellId][ruptureRealitiesCounter] or 60)
 	self:CastBar(args.spellId, 7.5)
@@ -370,28 +332,28 @@ end
 
 function mod:UnboundChaos(args)
 	if self:Me(args.destGUID) then
-		self:TargetMessage(args.spellId, args.destName, "Urgent", "Alarm")
+		self:TargetMessage(args.spellId, args.destName, "orange", "Alarm")
 	end
 end
 
 function mod:Desolate(args)
-	self:Message(args.spellId, "Attention", "Alert", CL.casting:format(args.spellName))
+	self:Message(args.spellId, "yellow", "Alert", CL.casting:format(args.spellName))
 	desolateCounter = desolateCounter + 1
 	self:CDBar(args.spellId, stage == 2 and (desolateCounter % 2 == 0 and 12 or 23) or (desolateCounter % 4 == 3 and 24.3 or 11.5))
 end
 
 function mod:DesolateApplied(args)
 	local amount = args.amount or 1
-	self:StackMessage(args.spellId, args.destName, amount, "Urgent", "Warning", nil, nil, amount > 1 and true)
+	self:StackMessage(args.spellId, args.destName, amount, "orange", "Warning", nil, nil, amount > 1 and true)
 end
 
 function mod:Consume(args)
-	self:Message("stages", "Neutral", "Info", args.spellName, args.spellId)
+	self:Message("stages", "cyan", "Info", args.spellName, args.spellId)
 	self:StopBar(CL.cast:format(self:SpellName(233856))) -- Malfunction
 end
 
 function mod:RippleofDarkness(args)
-	self:Message(args.spellId, "Urgent", "Warning")
+	self:Message(args.spellId, "orange", "Warning")
 end
 
 do
@@ -422,7 +384,7 @@ do
 	end
 
 	function mod:CleansingProtocol(args)
-		self:Message(233856, "Urgent", "Alarm", CL.casting:format(args.spellName))
+		self:Message(233856, "orange", "Alarm", CL.casting:format(args.spellName))
 		if self:Mythic() then
 			self:CDBar(233856, 80) -- Maiden Shield (if no fail)
 		end
@@ -435,32 +397,10 @@ do
 			maxAbsorb = UnitGetTotalAbsorbs("boss2")
 			timer = self:ScheduleRepeatingTimer(updateInfoBox, 0.1, self)
 		end
-		if self:Hud(233856) then
-			local maiden = args.destGUID
-			local spellName = args.spellName
-			local shieldMax = false
-
-			local cast = Hud:DrawClock(maiden, 80):Register("MaidenCleaningProtocolHUD", true)
-			local shield = Hud:DrawSpinner(maiden, 80):Register("MaidenCleaningProtocolHUD")
-
-			function shield:Progress()
-				local _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, absorb, _, _ = UnitBuff("boss2", spellName)
-				if not absorb then return 0 end
-				if not shieldMax then shieldMax = absorb end
-				return (shieldMax - absorb) / shieldMax
-			end
-
-			function cast:Progress()
-				local _, _, _, _, startTime, endTime = UnitCastingInfo("boss2")
-				if not startTime then return 0 end
-				return ((GetTime() * 1000) - startTime) / (endTime - startTime)
-			end
-		end
 	end
 
 	function mod:CleansingProtocolRemoved(args)
 		self:CloseInfo(233856)
-		Hud:RemoveObject("MaidenCleaningProtocolHUD")
 		if timer then
 			self:CancelTimer(timer)
 			timer = nil
@@ -469,7 +409,7 @@ do
 end
 
 function mod:Malfunction()
-	self:Message(233856, "Positive", "Info", CL.removed:format(self:SpellName(233856))) -- Cleansing Protocol
+	self:Message(233856, "green", "Info", CL.removed:format(self:SpellName(233856))) -- Cleansing Protocol
 	self:StopBar(CL.cast:format(self:SpellName(233856))) -- Cleansing Protocol
 	self:RegisterUnitEvent("UNIT_POWER_FREQUENT", nil, "boss2")
 end
@@ -483,7 +423,7 @@ function mod:MaidenDeath()
 end
 
 function mod:CorruptedMatrix(args)
-	self:Message(args.spellId, "Important", "Warning", CL.incoming:format(args.spellName))
+	self:Message(args.spellId, "red", "Warning", CL.incoming:format(args.spellName))
 	corruptedMatrixCounter = corruptedMatrixCounter + 1
 	self:CDBar(args.spellId, self:Mythic() and 20 or 50)
 	self:CastBar(args.spellId, self:Mythic() and 8 or 10)
@@ -491,7 +431,7 @@ end
 
 function mod:Annihilation() -- Stage 2
 	stage = 2
-	self:Message("stages", "Positive", "Long", CL.stage:format(stage), false)
+	self:Message("stages", "green", "Long", CL.stage:format(stage), false)
 
 	self:StopBar(233556) -- Corrupted Matrix
 	self:StopBar(CL.cast:format(self:SpellName(233556))) -- Corrupted Matrix (cast)
@@ -537,7 +477,7 @@ do
 		list[count] = args.destName
 		local icon = count == 1 and 6 or count == 2 and 4 or 3 -- (Blue -> Green -> Purple) in order of exploding/application
 
-		local _, _, _, expires = self:UnitDebuff(args.destName, args.spellName) -- random duration
+		local _, _, _, expires = self:UnitDebuff(args.destName, args.spellId) -- random duration
 		if self:Me(args.destGUID) then
 			local remaining = expires-GetTime()
 			self:Flash(args.spellId)
@@ -551,7 +491,7 @@ do
 		end
 
 		if count == 1 then
-			self:ScheduleTimer("TargetMessage", 0.3, args.spellId, list, "Attention", "Alarm")
+			self:ScheduleTimer("TargetMessage", 0.3, args.spellId, list, "yellow", "Alarm")
 			darkMarkCounter = darkMarkCounter + 1
 			self:Bar(args.spellId, self:Mythic() and (darkMarkCounter == 2 and 25.5 or 30.5) or 34, CL.count:format(args.spellName, darkMarkCounter))
 			self:OpenInfo(args.spellId, args.spellName)
@@ -597,7 +537,7 @@ do
 end
 
 function mod:RuptureRealitiesP2(args)
-	self:Message(args.spellId, "Urgent", "Warning", CL.casting:format(CL.count:format(args.spellName, ruptureRealitiesCounter)))
+	self:Message(args.spellId, "orange", "Warning", CL.casting:format(CL.count:format(args.spellName, ruptureRealitiesCounter)))
 	self:CastBar(args.spellId, 7.5, CL.count:format(args.spellName, ruptureRealitiesCounter))
 	ruptureRealitiesCounter = ruptureRealitiesCounter + 1
 	self:Bar(args.spellId, 37.7, CL.count:format(args.spellName, ruptureRealitiesCounter))
@@ -606,7 +546,7 @@ end
 function mod:FelInfusion(args)
 	local amount = args.amount or 1
 	if amount % 2 == 0 then
-		self:Message(args.spellId, "Attention", "Info", CL.count:format(args.spellName, amount), nil, false)
+		self:Message(args.spellId, "yellow", "Info", CL.count:format(args.spellName, amount), nil, false)
 	end
 end
 
@@ -617,7 +557,7 @@ do
 		if t-prev > 1.5 then
 			prev = t
 			taintedMatrixCounter = taintedMatrixCounter + 1
-			self:Message(args.spellId, "Important", "Warning", CL.incoming:format(args.spellName))
+			self:Message(args.spellId, "red", "Warning", CL.incoming:format(args.spellName))
 			self:CDBar(args.spellId, 60, CL.count:format(args.spellName, taintedMatrixCounter))
 			self:CastBar(args.spellId, 8)
 		end
@@ -627,7 +567,6 @@ end
 function mod:TaintedEssence(args)
 	local amount = args.amount or 1
 	if self:Me(args.destGUID) and amount > 4 then
-		self:StackMessage(args.spellId, args.destName, amount, "Urgent", amount > 5 and "Warning")
-		self:Say(args.spellId, amount, true)
+		self:StackMessage(args.spellId, args.destName, amount, "orange", "Warning")
 	end
 end

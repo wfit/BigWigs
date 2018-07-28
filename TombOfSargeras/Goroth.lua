@@ -32,9 +32,9 @@ function mod:GetOptions()
 	return {
 		{231363, "TANK", "SAY"}, -- Burning Armor
 		233514, -- Infernal Spike
-		{232249, "FLASH", "SAY", "AURA"}, -- Crashing Comet
-		{233279, "FLASH", "SAY", "IMPACT", "AURA"}, -- Shattering Star
-		{233062, "IMPACT"}, -- Infernal Burning
+		{232249, "FLASH", "SAY"}, -- Crashing Comet
+		{233279, "FLASH", "SAY"}, -- Shattering Star
+		233062, -- Infernal Burning
 		234346, -- Fel Eruption
 		238588, -- Rain of Brimstone
 	},{
@@ -86,7 +86,7 @@ end
 --
 function mod:UNIT_SPELLCAST_SUCCEEDED(_, _, _, spellId)
 	if spellId == 233050 then --Infernal Spike
-		self:Message(233514, "Important", "Alert", CL.casting:format(self:SpellName(spellId)))
+		self:Message(233514, "red", "Alert", CL.casting:format(self:SpellName(spellId)))
 		spikeCounter = spikeCounter + 1
 		if self:LFR() then
 			self:Bar(233514, spikeCounter == 4 and 26 or 16.6)
@@ -95,7 +95,7 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(_, _, _, spellId)
 		end
 	elseif spellId == 233285 then -- Rain of Brimstone
 		rainCounter = rainCounter + 1
-		self:Message(238588, "Urgent", "Warning", CL.incoming:format(self:SpellName(spellId)))
+		self:Message(238588, "orange", "Warning", CL.incoming:format(self:SpellName(spellId)))
 		self:Bar(238588, rainCounter == 5 and 68 or 60, CL.count:format(self:SpellName(spellId), rainCounter))
 		self:Bar(238588, 8, self:SpellName(182580), 238588) -- Meteor Impact
 	end
@@ -113,7 +113,7 @@ function mod:BurningArmorSuccess(args)
 end
 
 function mod:BurningArmor(args)
-	self:TargetMessage(args.spellId, args.destName, "Attention", not self:UnitDebuff("player", self:SpellName(234264)) and "Warning" or "Alarm", nil, nil, true)
+	self:TargetMessage(args.spellId, args.destName, "yellow", not self:UnitDebuff("player", self:SpellName(234264)) and "Warning" or "Alarm", nil, nil, true)
 	if self:Me(args.destGUID) then
 		self:Say(args.spellId)
 	end
@@ -121,27 +121,26 @@ end
 
 function mod:MeltedArmorRemoved(args)
 	if self:Me(args.destGUID) then
-		self:Message(231363, "Urgent", "Warning", CL.removed:format(args.spellName))
+		self:Message(231363, "orange", "Warning", CL.removed:format(args.spellName))
 	end
 end
 
 function mod:ShatteringStarDebuff(args)
-	self:TargetMessage(233279, args.destName, "Attention", "Alarm", CL.count:format(args.spellName, shatteringCounter))
-	self:ImpactBar(233279, 6, CL.count:format(args.spellName, shatteringCounter)) -- <cast: Shattering Star>
+	self:TargetMessage(233279, args.destName, "yellow", "Alarm", CL.count:format(args.spellName, shatteringCounter))
+	self:CastBar(233279, 6, CL.count:format(args.spellName, shatteringCounter)) -- <cast: Shattering Star>
 	shatteringCounter = shatteringCounter + 1
 	local t = (self:Mythic() and shatteringTimersMythic[shatteringCounter] or shatteringTimers[shatteringCounter]) or (self:Mythic() and 29 or (shatteringCounter % 2 == 0 and 19 or 41))
 	self:Bar(233279, t, CL.count:format(args.spellName, shatteringCounter)) -- Shattering Star
 	if self:Me(args.destGUID) then
 		self:Say(233279)
 		self:Flash(233279)
-		self:ShowAura(233279, 6, "Hide", true)
 	end
 end
 
 function mod:InfernalBurning(args)
 	burningCounter = burningCounter + 1
-	self:Message(args.spellId, "Urgent", "Warning", CL.casting:format(args.spellName))
-	self:ImpactBar(args.spellId, self:LFR() and 10 or 6)
+	self:Message(args.spellId, "orange", "Warning", CL.casting:format(args.spellName))
+	self:CastBar(args.spellId, self:LFR() and 10 or 6)
 	self:Bar(args.spellId, self:LFR() and 64.4 or 60.5)
 end
 
@@ -155,14 +154,13 @@ do
 	function mod:CrashingCometApplied(args)
 		list[#list+1] = args.destName
 		if #list == 1 then
-			self:ScheduleTimer("TargetMessage", 0.3, args.spellId, list, "Important", "Warning")
+			self:ScheduleTimer("TargetMessage", 0.3, args.spellId, list, "red", "Warning")
 		end
 
 		if self:Me(args.destGUID) then
 			self:Say(args.spellId)
 			self:Flash(args.spellId)
 			self:SayCountdown(args.spellId, 5)
-			self:ShowAura(args.spellId, 5, "Move out")
 		end
 	end
 end
@@ -170,7 +168,6 @@ end
 function mod:CrashingCometRemoved(args)
 	if self:Me(args.destGUID) then
 		self:CancelSayCountdown(args.spellId)
-		self:HideAura(args.spellId)
 	end
 end
 
@@ -180,7 +177,7 @@ do
 		local t = GetTime()
 		if self:Me(args.destGUID) and t-prev > 1.5 then
 			prev = t
-			self:Message(234346, "Personal", "Alarm", CL.underyou:format(args.spellName))
+			self:Message(234346, "blue", "Alarm", CL.underyou:format(args.spellName))
 		end
 	end
 end

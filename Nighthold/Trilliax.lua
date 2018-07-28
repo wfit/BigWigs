@@ -12,26 +12,15 @@ if not mod then return end
 mod:RegisterEnableMob(104288)
 mod.engageId = 1867
 mod.respawnTime = 15
-mod.instanceId = 1530
 
 --------------------------------------------------------------------------------
 -- Locals
 --
 
-local Hud = Oken.Hud
-
 local phase = 1 -- 1 = Cleaner, 2 = Maniac, 3 = Caretaker
 local imprintCount = 1
 local bondTable = {}
 local mobCollector = {}
-
-local scrubberMark = 0
-local scrubbers = {}
-
-local function resetScrubbers()
-	scrubberMark = 0
-	wipe(scrubbers)
-end
 
 --------------------------------------------------------------------------------
 -- Localization
@@ -48,8 +37,6 @@ end
 -- Initialization
 --
 
-local scrubbers_marker = mod:AddMarkerOption(true, "npc", 1, 211907, 1, 2, 3, 4, 5, 6, 7, 8)
-
 function mod:GetOptions()
 	return {
 		-- General
@@ -60,16 +47,15 @@ function mod:GetOptions()
 
 		-- Cleaner
 		206788, -- Toxic Slice
-		{211615, "SAY", "PROXIMITY", "HUD"}, -- Sterilize
+		{211615, "SAY", "PROXIMITY"}, -- Sterilize
 		206820, -- Cleansing Rage
 
 		-- Maniac
-		{208910, "SAY"}, -- Arcing Bonds
+		208910, -- Arcing Bonds
 		207630, -- Annihilation
 
 		-- Caretaker
 		207502, -- Succulent Feast
-		scrubbers_marker,
 
 		-- Mythic
 		215066, -- Dual Personalities
@@ -102,7 +88,6 @@ function mod:OnBossEnable()
 	self:Log("SPELL_CAST_START", "SucculentFeastCast", 207502)
 	self:Log("SPELL_AURA_APPLIED", "SucculentFeastApplied", 206838)
 	self:Log("SPELL_AURA_REMOVED", "SucculentFeastRemoved", 206838)
-	self:Log("SPELL_CAST_START", "Scrubbing", 211907)
 	self:Log("SPELL_AURA_APPLIED", "Energized", 214670)
 	self:Log("SPELL_CAST_START", "ToxicSliceImprint", 215062) -- mythic imprint
 	self:Death("ImprintDeath", 108303)
@@ -118,10 +103,6 @@ function mod:OnEngage()
 	self:Bar(206788, 11) -- Toxic Slice
 	self:Bar("stages", 45, 206557, 206557) -- The Maniac
 	self:RegisterEvent("INSTANCE_ENCOUNTER_ENGAGE_UNIT")
-	if self:GetOption(scrubbers_marker) then
-		self:RegisterTargetEvents("ScrubberMark")
-	end
-	resetScrubbers()
 end
 
 function mod:OnBossDisable()
@@ -135,7 +116,7 @@ end
 
 function mod:UNIT_SPELLCAST_SUCCEEDED(_, _, _, spellId)
 	if spellId == 207620 then -- Annihilation
-		self:Message(207630, "Important", "Long")
+		self:Message(207630, "red", "Long")
 	end
 end
 
@@ -147,7 +128,7 @@ function mod:INSTANCE_ENCOUNTER_ENGAGE_UNIT()
 			mobCollector[guid] = true
 			local id = self:MobId(guid)
 			if id == 108303 then -- Imprint
-				self:Message(215066, "Neutral", "Long", UnitName(unit), false)
+				self:Message(215066, "cyan", "Long", UnitName(unit), false)
 				self:Bar(214670, 2.5, CL.other:format(L.imprint, self:SpellName(214670))) -- Energized
 				if imprintCount == 1 then
 					self:Bar(215062, 15.8, CL.other:format(L.imprint, self:SpellName(215062))) -- Toxic Slice
@@ -159,7 +140,7 @@ function mod:INSTANCE_ENCOUNTER_ENGAGE_UNIT()
 end
 
 function mod:Phase(args)
-	self:Message("stages", "Neutral", "Long", args.spellName, args.spellId)
+	self:Message("stages", "cyan", "Long", args.spellName, args.spellId)
 	if args.spellId == 206560 then -- Cleaner
 		phase = 1
 		self:Bar("stages", 45, 206557, 206557) -- The Maniac
@@ -176,7 +157,6 @@ function mod:Phase(args)
 		phase = 3
 		self:Bar("stages", 13, 206560, 206560) -- The Cleaner
 		self:StopBar(self:SpellName(206641)) -- Arcane Slash
-		resetScrubbers()
 	end
 end
 
@@ -186,7 +166,7 @@ do
 		local t = GetTime()
 		if self:Me(args.destGUID) and t-prev > 1.5 then
 			prev = t
-			self:Message(args.spellId, "Personal", "Alert", CL.underyou:format(args.spellName))
+			self:Message(args.spellId, "blue", "Alert", CL.underyou:format(args.spellName))
 		end
 	end
 end
@@ -198,7 +178,7 @@ do
 
 	function mod:ArcaneSlash(args)
 		local amount = args.amount or 1
-		self:StackMessage(args.spellId, args.destName, amount, "Important", amount > 2 and "Warning")
+		self:StackMessage(args.spellId, args.destName, amount, "red", amount > 2 and "Warning")
 		local t = phase == 2 and 7.3 or 11
 		if timeToNextPhase(self) > t then
 			self:Bar(args.spellId, t)
@@ -206,7 +186,7 @@ do
 	end
 
 	function mod:ToxicSlice(args)
-		self:Message(args.spellId, "Urgent", "Alarm", CL.incoming:format(args.spellName))
+		self:Message(args.spellId, "orange", "Alarm", CL.incoming:format(args.spellName))
 		if timeToNextPhase(self) > 26 then
 			self:CDBar(args.spellId, 26)
 		end
@@ -218,12 +198,7 @@ do
 	function mod:Sterilize(args)
 		list[#list+1] = args.destName
 		if #list == 1 then
-			self:ScheduleTimer("TargetMessage", 0.1, args.spellId, list, "Important", "Warning")
-		end
-
-		if self:Hud(args.spellId) then
-			-- 40 sec + 5 sec pre-debuff
-			Hud:DrawTimer(args.destGUID, 50, 45):SetColor(120, 152, 242):Register("sterilize" .. args.destGUID)
+			self:ScheduleTimer("TargetMessage", 0.1, args.spellId, list, "red", "Warning")
 		end
 
 		if self:Me(args.destGUID) then
@@ -235,14 +210,13 @@ do
 end
 
 function mod:SterilizeRemoved(args)
-	Hud:RemoveObject("sterilize" .. args.destGUID)
 	if self:Me(args.destGUID) then
 		self:CloseProximity(211615)
 	end
 end
 
 function mod:CleansingRage(args)
-	self:Message(args.spellId, "Attention", "Alarm")
+	self:Message(args.spellId, "yellow", "Alarm")
 end
 
 function mod:ArcingBondsCast()
@@ -266,14 +240,10 @@ do
 		end
 
 		if myPartner then
-			self:Message(208910, "Personal", "Warning", L.yourLink:format(self:ColorName(myPartner)))
+			self:Message(208910, "blue", "Warning", L.yourLink:format(self:ColorName(myPartner)))
 			local _, _, _, expires = self:UnitDebuff("player", args.spellName)
 			local remaining = expires-GetTime()
 			self:Bar(208910, remaining, L.yourLinkShort:format(self:ColorName(myPartner)))
-			self:Emit("TRILLIAX_ARCINGBONDS_NAME", myPartner)
-			if not self:Tank() then
-				self:Say(208910, myPartner, true)
-			end
 			myPartner = nil
 			myPartnerIsNext = nil
 		end
@@ -285,46 +255,30 @@ function mod:Annihilation(args)
 end
 
 function mod:SucculentFeastCast(args)
-	self:Message(args.spellId, "Attention", "Info", CL.incoming:format(args.spellName))
+	self:Message(args.spellId, "yellow", "Info", CL.incoming:format(args.spellName))
 end
 
 function mod:SucculentFeastApplied(args)
 	if self:Me(args.destGUID) then
-		self:TargetMessage(207502, args.destName, "Personal", "Info")
+		self:TargetMessage(207502, args.destName, "blue", "Info")
 	end
 end
 
 function mod:SucculentFeastRemoved(args)
 	if self:Me(args.destGUID) then
-		self:Message(207502, "Personal", "Info", CL.removed:format(args.spellName))
-	end
-end
-
-function mod:Scrubbing(args)
-	if not scrubbers[args.destGUID] then
-		scrubbers[args.destGUID] = scrubberMark + 1
-		scrubberMark = (scrubberMark + 1) % 8
-	end
-end
-
-function mod:ScrubberMark(event, unit)
-	local mark = scrubbers[UnitGUID(unit)]
-	if mark then
-		if GetRaidTargetIndex(unit) ~= mark then
-			self:SetIcon(scrubbers_marker, unit, mark)
-		end
+		self:Message(207502, "blue", "Info", CL.removed:format(args.spellName))
 	end
 end
 
 function mod:Energized(args)
 	if not UnitIsPlayer(args.destName) then
-		self:Message(args.spellId, "Important", self:Dispeller("magic", true) and "Alert", CL.on:format(args.spellName, args.destName))
+		self:Message(args.spellId, "red", self:Dispeller("magic", true) and "Alert", CL.on:format(args.spellName, args.destName))
 		self:Bar(args.spellId, 20.5, CL.other:format(L.imprint, self:SpellName(214670))) -- Energized
 	end
 end
 
 function mod:ToxicSliceImprint(args)
-	self:Message(args.spellId, "Urgent", "Alarm", CL.incoming:format(args.spellName))
+	self:Message(args.spellId, "orange", "Alarm", CL.incoming:format(args.spellName))
 	self:Bar(args.spellId, 17, CL.other:format(L.imprint, args.spellName)) -- Toxic Slice
 end
 

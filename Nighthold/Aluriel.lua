@@ -1,10 +1,5 @@
 
 --------------------------------------------------------------------------------
--- Notes:
--- - The "pre" and actual debuffs for Mark of Frost and Searing Brand are separate
---   because of customization (emphasize and stuff).
-
---------------------------------------------------------------------------------
 -- Module Declaration
 --
 
@@ -13,13 +8,10 @@ if not mod then return end
 mod:RegisterEnableMob(104881)
 mod.engageId = 1871
 mod.respawnTime = 30
-mod.instanceId = 1530
 
 --------------------------------------------------------------------------------
 -- Locals
 --
-
-local Hud = Oken.Hud
 
 local heroicTimers = {
 	-- Annihilate
@@ -45,10 +37,6 @@ local isInfoOpen = false
 local markOfFrostOnMe = nil
 local searingBrandOnMe = nil
 
-local primaryMoFColor = { 112, 221, 255 }
-local alternateMoFColor = { 193, 255, 112 }
-local markColors = {}
-
 --------------------------------------------------------------------------------
 -- Upvalues
 --
@@ -59,22 +47,19 @@ local tDeleteItem, tContains = tDeleteItem, tContains
 -- Initialization
 --
 
-local tanksMarker = mod:AddMarkerOption(true, "player", 7, -14884, 7, 8)
-local searingBrandMarker = mod:AddMarkerOption(true, "player", 1, 213166, 1, 2, 3, 4, 5, 6)
-local fieryAddMarker = mod:AddTokenOption { "fiery_marker", "Set raid target icons on Fiery adds" }
+local searingBrandMarker = mod:AddMarkerOption(false, "player", 1, 213166, 1, 2, 3, 4, 5, 6)
+local fieryAddMarker = mod:AddMarkerOption(false, "npc", 1, 213867, 1, 2, 3, 4, 5, 6)
 function mod:GetOptions()
 	return {
 		--[[ General ]]--
 		{212492, "TANK_HEALER"}, -- Annihilate
 		"stages",
 		"berserk",
-		tanksMarker,
-		230951, -- Severed Soul
 
 		--[[ Master of Frost ]]--
 		{212531, "SAY", "FLASH"}, -- Pre Mark of Frost
-		{212587, "SAY", "FLASH", "PROXIMITY", "HUD"}, -- Mark of Frost
-		{212647, "SAY", "INFOBOX"}, -- Frostbitten
+		{212587, "SAY", "FLASH", "PROXIMITY"}, -- Mark of Frost
+		{212647, "INFOBOX"}, -- Frostbitten
 		212530, -- Replicate: Mark of Frost
 		{212735, "SAY"}, -- Detonate: Mark of Frost
 		213853, -- Animate: Mark of Frost"
@@ -120,7 +105,6 @@ function mod:OnBossEnable()
 	self:Log("SPELL_AURA_APPLIED", "AnnihilateApplied", 215458)
 	self:Log("SPELL_AURA_APPLIED_DOSE", "AnnihilateApplied", 215458)
 	self:Log("SPELL_AURA_APPLIED", "Stages", 216389, 213867, 213869, 213864) -- Icy / Fiery / Magic / Icy² Enchantment
-	self:Log("SPELL_CAST_START", "SeveredSoul", 230951)
 
 	--[[ Master of Frost ]]--
 	self:Log("SPELL_AURA_APPLIED", "PreMarkOfFrostApplied", 212531)
@@ -128,8 +112,8 @@ function mod:OnBossEnable()
 	self:Log("SPELL_AURA_REMOVED", "MarkOfFrostRemoved", 212587)
 	self:Log("SPELL_AURA_APPLIED", "Frostbitten", 212647)
 	self:Log("SPELL_AURA_APPLIED_DOSE", "Frostbitten", 212647)
-	self:Log("SPELL_AURA_REMOVED", "FrostbittenRemoved", 212647)
 	self:Log("SPELL_CAST_START", "ReplicateMarkOfFrost", 212530)
+	self:Log("SPELL_CAST_START", "DetonateMarkOfFrost", 212735) -- Detonate: Mark of Frost
 	self:Log("SPELL_CAST_START", "AnimateMarkOfFrost", 213853)
 	self:Log("SPELL_CAST_START", "FrozenTempest", 213083)
 	self:Death("IcyEnchantmentDeath", 107237)
@@ -138,7 +122,7 @@ function mod:OnBossEnable()
 	self:Log("SPELL_AURA_APPLIED", "PreSearingBrandApplied", 213148)
 	self:Log("SPELL_AURA_APPLIED", "SearingBrandApplied", 213166)
 	self:Log("SPELL_AURA_REMOVED", "SearingBrandRemoved", 213166)
-	self:Log("SPELL_CAST_START", "DetonateSearingBrandOrFrost", 213275, 212735) -- Detonate: Searing Brand, Detonate: Mark of Frost
+	self:Log("SPELL_CAST_START", "DetonateSearingBrand", 213275) -- Detonate: Searing Brand
 	self:Log("SPELL_CAST_SUCCESS", "DetonateSearingBrandSuccess", 213275)
 	self:Log("SPELL_CAST_START", "AnimateSearingBrand", 213567)
 
@@ -170,7 +154,6 @@ function mod:OnEngage()
 	wipe(frostbittenStacks)
 	wipe(mobCollector)
 	wipe(proxList)
-	wipe(markColors)
 	markOfFrostOnMe = nil
 	searingBrandOnMe = nil
 
@@ -184,27 +167,6 @@ function mod:OnEngage()
 		self:Berserk(490)
 	elseif self:Mythic() then
 		self:Berserk(450)
-	end
-
-	if self:GetOption(tanksMarker) then
-		local marked = 0
-		for unit in self:IterateGroup() do
-			if self:Tank(unit) then
-				SetRaidTarget(unit, 8 - marked)
-				marked = marked + 1
-				if marked == 2 then break end
-			end
-		end
-	end
-end
-
-function mod:OnBossDisable()
-	if self:GetOption(tanksMarker) then
-		for unit in self:IterateGroup() do
-			if self:Tank(unit) then
-				SetRaidTarget(unit, 0)
-			end
-		end
 	end
 end
 
@@ -230,19 +192,17 @@ end
 
 function mod:UNIT_SPELLCAST_SUCCEEDED(_, _, _, spellId)
 	if spellId == 215455 then -- Arcane Orb
-		self:Message(213520, "Important")
+		self:Message(213520, "red")
 	elseif spellId == 213390 then -- Detonate: Arcane Orb
-		self:Message(spellId, "Important", "Alarm")
-	elseif spellId == 230901 then -- Fel Soul (spawn)
-		self:CDBar(230504, phase == 1 and 20 or 13) -- Decimate
+		self:Message(spellId, "red", "Alarm")
 	end
 end
 
 --[[ General ]]--
 function mod:AnnihilateCast(args)
-	self:Message(args.spellId, "Important", self:Tank() and "Alarm", CL.casting:format(CL.count:format(args.spellName, annihilateCount)))
+	self:Message(args.spellId, "red", self:Tank() and "Alarm", CL.casting:format(CL.count:format(args.spellName, annihilateCount)))
 	self:StopBar(CL.count:format(args.spellName, annihilateCount))
-	self:Bar(args.spellId, 7, CL.cast:format(CL.count:format(args.spellName, annihilateCount)))
+	self:CastBar(args.spellId, 7, CL.count:format(args.spellName, annihilateCount))
 	annihilateCount = annihilateCount + 1
 	self:Bar(args.spellId, timers[args.spellId][annihilateCount] or 37, CL.count:format(args.spellName, annihilateCount))
 end
@@ -250,14 +210,14 @@ end
 function mod:AnnihilateApplied(args)
 	if self:Tank() then
 		local amount = args.amount or 1
-		self:StackMessage(212492, args.destName, amount, "Important", amount > 1 and "Warning") -- check sound amount
+		self:StackMessage(212492, args.destName, amount, "red", amount > 1 and "Warning") -- check sound amount
 	end
 end
 
 do
 	function mod:Stages(args)
 		phase = phase + 1
-		self:Message("stages", "Neutral", "Long", args.spellName, args.spellId)
+		self:Message("stages", "cyan", "Long", args.spellName, args.spellId)
 
 		if args.spellId == 216389 then -- Icy
 			if self:Mythic() then -- Fel Soul
@@ -301,10 +261,12 @@ end
 --[[ Master of Frost ]]--
 do
 	local preDebuffApplied = 0
+	-- The "pre" and actual debuffs for Mark of Frost and Searing Brand are separate
+	-- because of customization (emphasize and stuff).
 	function mod:PreMarkOfFrostApplied(args)
 		if self:Me(args.destGUID) then
 			preDebuffApplied = GetTime()
-			self:TargetMessage(args.spellId, args.destName, "Attention", "Alert")
+			self:TargetMessage(args.spellId, args.destName, "yellow", "Alert")
 			self:Say(args.spellId)
 			self:Flash(args.spellId)
 			markOfFrostOnMe = true
@@ -319,28 +281,20 @@ do
 		end
 
 		updateProximity(self)
-
-		if self:Hud(212587) then
-			local key = self:HudKey(212587, args.destGUID)
-			Hud:DrawTimer(args.destGUID, 50, 5):SetColor(255, 86, 86):Register(key)
-		end
 	end
 
 	local list = mod:NewTargetList()
-	local last = 0
-	local color = primaryMoFColor
-
 	function mod:MarkOfFrostApplied(args)
 		list[#list+1] = args.destName
 		if #list == 1 then
-			self:ScheduleTimer("TargetMessage", 1, args.spellId, list, "Urgent")
+			self:ScheduleTimer("TargetMessage", 1, args.spellId, list, "orange")
 		end
 
 		if self:Me(args.destGUID) then
 			markOfFrostOnMe = true
 			local t = GetTime()
 			if t-preDebuffApplied > 5.5 then
-				self:TargetMessage(args.spellId, args.destName, "Attention", "Alert")
+				self:TargetMessage(args.spellId, args.destName, "yellow", "Alert")
 				self:Say(args.spellId)
 				self:Flash(args.spellId)
 			end
@@ -355,15 +309,6 @@ do
 		end
 
 		updateProximity(self)
-
-		if self:Hud(args.spellId) then
-			if GetTime() - last > 0.1 then
-				last = GetTime()
-				color = color == primaryMoFColor and alternateMoFColor or primaryMoFColor
-			end
-			markColors[args.destGUID] = color
-			Hud:DrawTimer(args.destGUID, 50, 1.5):SetColor(unpack(color)):Register(args.destKey, true)
-		end
 	end
 end
 
@@ -380,14 +325,21 @@ function mod:MarkOfFrostRemoved(args)
 	end
 
 	updateProximity(self)
-	Hud:RemoveObject(args.destKey)
+
+	-- Mark of Frost is removed immediately, Frostbitten waits until the debuff expires, use the former for a clearer infobox.
+	frostbittenStacks[args.destName] = nil
+	if next(frostbittenStacks) then
+		self:SetInfoByTable(212647, frostbittenStacks)
+	elseif isInfoOpen then
+		isInfoOpen = false
+		self:CloseInfo(212647)
+	end
 end
 
 function mod:Frostbitten(args)
 	local amount = args.amount or 1
-	if self:Me(args.destGUID) and amount % 2 == 0 then
-		self:StackMessage(args.spellId, args.destName, amount, "Important", amount > 7 and "Warning")
-		self:Say(args.spellId, tostring(amount))
+	if self:Me(args.destGUID) and amount % 2 == 0 and amount > 5 then
+		self:StackMessage(args.spellId, args.destName, amount, "red", amount > 7 and "Warning")
 	end
 
 	frostbittenStacks[args.destName] = amount
@@ -398,43 +350,34 @@ function mod:Frostbitten(args)
 	end
 
 	self:SetInfoByTable(args.spellId, frostbittenStacks)
-
-	if self:Hud(212587) then
-		local key = self:HudKey(212587, args.destGUID)
-		local color = markColors[args.destGUID] or primaryMoFColor
-		Hud:DrawTimer(args.destGUID, 50, 1.5):SetColor(unpack(color)):Register(key, true)
-		Hud:DrawText(args.destGUID, amount):Register(key)
-	end
 end
 
-function mod:FrostbittenRemoved(args)
-	frostbittenStacks[args.destName] = nil
-	if not next(frostbittenStacks) and isInfoOpen then
-		self:CloseInfo(args.spellId)
-		isInfoOpen = false
+function mod:DetonateMarkOfFrost(args)
+	self:Message(args.spellId, "red", "Alarm")
+	if markOfFrostOnMe then
+		self:Say(args.spellId, 151913) -- "Detonate"
 	end
 end
 
 function mod:AnimateMarkOfFrost(args)
-	self:Message(args.spellId, "Important", "Info", nil, 31687) -- Water Elemental icon
+	self:Message(args.spellId, "red", "Info", nil, 31687) -- Water Elemental icon
 end
 
 function mod:ReplicateMarkOfFrost(args)
-	self:Message(args.spellId, "Important", "Alarm")
+	self:Message(args.spellId, "red", "Alarm")
 end
 
 do
-	local guid, text = "", ""
+	local guid = ""
 	function mod:FrozenTempest(args)
 		guid = args.sourceGUID
-		self:Message(args.spellId, "Important")
-		text = CL.cast:format(args.spellName)
-		self:Bar(args.spellId, self:Mythic() and 10 or 12, text)
+		self:Message(args.spellId, "red")
+		self:CastBar(args.spellId, self:Mythic() and 10 or 12)
 	end
 
 	function mod:IcyEnchantmentDeath(args)
 		if args.destGUID == guid then
-			self:StopBar(text)
+			self:StopBar(CL.cast:format(self:SpellName(213083))) -- Frozen Tempest
 		end
 	end
 end
@@ -445,7 +388,7 @@ do
 	function mod:PreSearingBrandApplied(args)
 		list[#list+1] = args.destName
 		if #list == 1 then
-			self:ScheduleTimer("TargetMessage", 0.3, args.spellId, list, "Urgent")
+			self:ScheduleTimer("TargetMessage", 0.3, args.spellId, list, "orange")
 		end
 
 		if not tContains(searingBrandTargets, args.destName) then
@@ -475,12 +418,6 @@ function mod:SearingBrandApplied(args)
 		if expires and expires > 0 then
 			local timeLeft = expires - GetTime()
 			self:TargetBar(args.spellId, timeLeft, args.destName)
-			local remaining = self:BarTimeLeft(213275)
-			for i = 1, 5 do
-				if remaining - i > 0 then
-					self:ScheduleTimer("Say", remaining - i, 213148, i, true)
-				end
-			end
 		end
 	end
 
@@ -517,9 +454,9 @@ function mod:SearingBrandRemoved(args)
 	updateProximity(self)
 end
 
-function mod:DetonateSearingBrandOrFrost(args)
-	self:Message(args.spellId, "Important", "Alarm")
-	if markOfFrostOnMe or searingBrandOnMe then
+function mod:DetonateSearingBrand(args)
+	self:Message(args.spellId, "red", "Alarm")
+	if searingBrandOnMe then
 		self:Say(args.spellId, 151913) -- "Detonate"
 	end
 end
@@ -552,7 +489,7 @@ do
 	end
 
 	function mod:AnimateSearingBrand(args)
-		self:Message(args.spellId, "Important", "Info")
+		self:Message(args.spellId, "red", "Info")
 
 		if self:GetOption(fieryAddMarker) then
 			wipe(fieryAddMarks)
@@ -564,11 +501,11 @@ end
 
 --[[ Master of the Arcane ]]--
 function mod:ReplicateArcaneOrb(args)
-	self:Message(args.spellId, "Important", "Alarm")
+	self:Message(args.spellId, "red", "Alarm")
 end
 
 function mod:AnimateArcaneOrb(args)
-	self:Message(args.spellId, "Important", "Info")
+	self:Message(args.spellId, "red", "Info")
 end
 
 do
@@ -577,15 +514,15 @@ do
 		local t = GetTime()
 		if t-prev > 1 then -- Throttle because 8 adds cast it simultaneously
 			prev = t
-			self:Message(args.spellId, "Urgent", "Info")
-			self:Bar(args.spellId, self:Mythic() and 15 or 30, CL.cast:format(args.spellName))
+			self:Message(args.spellId, "orange", "Info")
+			self:CastBar(args.spellId, self:Mythic() and 15 or 30)
 		end
 	end
 end
 
 --[[ Mythic ]]--
-function mod:SeveredSoul(args)
-	self:Message(230901, "Positive", "Alarm", CL.count:format(args.spellName, felLashCount))
+function mod:SeveredSoul()
+	self:Message(230901, "green", "Info")
 	self:Bar(230901, 45, CL.over:format(self:SpellName(230901))) -- Fel Soul
 	self:CDBar(230504, phase % 3 == 1 and 18 or phase % 3 == 2 and 11 or 10) -- Decimate
 	if phase % 3 == 0 then -- Magic
@@ -600,12 +537,12 @@ function mod:SeveredSoulRemoved()
 end
 
 function mod:Decimate(args)
-	self:Message(args.spellId, "Urgent", "Alarm")
+	self:Message(args.spellId, "orange")
 	self:CDBar(args.spellId, phase % 3 == 1 and 20.5 or phase % 3 == 2 and 17 or 18)
 end
 
 function mod:FelLash(args)
-	self:Message(args.spellId, "Positive", "Long", CL.count:format(args.spellName, felLashCount))
+	self:Message(args.spellId, "green", "Long", CL.count:format(args.spellName, felLashCount))
 	felLashCount = felLashCount + 1
 	local timer = timers[args.spellId][felLashCount]
 	if timer then
@@ -620,7 +557,7 @@ do
 		local t = GetTime()
 		if self:Me(args.destGUID) and t-prev > 1.5 then
 			prev = t
-			self:Message(args.spellId, "Personal", "Alert", CL.underyou:format(args.spellName))
+			self:Message(args.spellId, "blue", "Alert", CL.underyou:format(args.spellName))
 		end
 	end
 end

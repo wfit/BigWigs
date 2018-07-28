@@ -13,28 +13,15 @@ if not mod then return end
 mod:RegisterEnableMob(105906, 105393, 105304) -- Eye of Il'gynoth, Il'gynoth, Dominator Tentacle
 mod.engageId = 1873
 mod.respawnTime = 30
-mod.instanceId = 1520
 
 --------------------------------------------------------------------------------
 -- Locals
 --
 
 local mobCollector = {}
-local fixateOnMe = nil
 local phase = 1 -- 1 = Outside, 2 = Boss, 3 = Outside, 4 = Boss
-
-local ichors = {}
-local ichorsMarked = {}
-local unknownIchorMark = {}
-local ichorsMarks = {}
-
-local function resetIchorsMarker()
-	wipe(ichors)
-	wipe(ichorsMarked)
-	wipe(unknownIchorMark)
-	ichorsMarks = { [1] = true, [2] = true, [3] = true, [4] = true, [5] = true, [6] = true, [7] = true, [8] = true }
-end
-
+local deathglareMarked = {} -- save GUIDs of marked mobs
+local deathglareMarks  = { [6] = true, [5] = true, [4] = true, [3] = true } -- available marks to use
 local deathBlossomCount = 1
 
 local phaseStartTime = 0
@@ -68,11 +55,11 @@ local spawnDataMythic = {
 			{ 21.5, 1}, -- 1x
 			{ 96.5, 2}, -- 2x
 			{181.5, 1}, -- 1x
-			{251.9, 1}, -- 1x
+			{251.0, 1}, -- 1x
 		},
 		[-13191] = { -- Corruptor Tentacle, Spew Corruption (208929) SPELL_CAST_START
 			{ 90.0, 2}, -- 2x
-			{185.4, 2}, -- 2x
+			{185.0, 2}, -- 2x
 			{235.0, 1}, -- 1x
 			{280.0, 2}, -- 2x
 			{300.0, 3}, -- 3x
@@ -87,9 +74,9 @@ local spawnDataMythic = {
 			{251.5, 1}, -- 1x
 		},
 		[-13191] = { -- Corruptor Tentacle, Spew Corruption (208929) SPELL_CAST_START
-			{ 45.2, 2}, -- 2x
-			{120.2, 2}, -- 2x
-			{235.2, 2}, -- 2x
+			{ 45.0, 2}, -- 2x
+			{120.0, 2}, -- 2x
+			{235.0, 2}, -- 2x
 			{300.0, 4}, -- 4x
 		},
 	}
@@ -122,20 +109,13 @@ if L then
 
 	L.remaining = "Remaining"
 	L.missed = "Missed"
-
-	L.ichor_fail = "FAIL: %s's Ichor did not hit the boss :("
 end
 
 --------------------------------------------------------------------------------
 -- Initialization
 --
 
-local ichors_marks = mod:AddTokenOption { "ichors_marks", "Set markers on Ichors", promote = true }
-local ichors_flash = mod:AddCustomOption { "ichors_flash", "Pulse attribution",
-	desc = "Display a Pulse alert with the symbol of the Ichor fixated on you." }
-local ichors_fails = mod:AddTokenOption { "ichors_fails", "Announce Ichors fails",
-	desc = "Announces name of fixated players whose ichors did not hit the boss" }
-
+local tentacleMarker = mod:AddMarkerOption(false, "npc", 6, L.deathglare_tentacle, 6, 5, 4, 3) -- Deathglare Tentacle
 function mod:GetOptions()
 	return {
 		"infobox",
@@ -153,9 +133,6 @@ function mod:GetOptions()
 		-- Nightmare Ichor
 		210099, -- Fixate
 		209469, -- Touch of Corruption
-		ichors_marks,
-		ichors_flash,
-		ichors_fails,
 
 		-- Nightmare Horror
 		"nightmare_horror", -- Nightmare Horror
@@ -166,6 +143,7 @@ function mod:GetOptions()
 
 		-- Deathglare Tentacle
 		208697, -- Mind Flay
+		tentacleMarker,
 
 		--[[ Stage Two ]]--
 		{215128, "SAY", "FLASH", "PROXIMITY"}, -- Cursed Blood
@@ -202,10 +180,7 @@ function mod:OnBossEnable()
 
 	-- Nightmare Ichor
 	self:Log("SPELL_AURA_APPLIED", "Fixate", 210099)
-	self:Log("SPELL_AURA_REMOVED", "FixateRemoved", 210099)
 	self:Log("SPELL_AURA_APPLIED_DOSE", "TouchOfCorruption", 209469)
-	self:Death("IchorDeath", 105721)
-	self:RegisterNetMessage("IchorMarked")
 
 	-- Nightmare Horror
 	self:Log("SPELL_AURA_APPLIED", "SummonNightmareHorror", 209387) -- Seeping Corruption, buffed on spawn
@@ -219,6 +194,7 @@ function mod:OnBossEnable()
 
 	-- Deathglare Tentacle
 	self:Log("SPELL_CAST_START", "MindFlay", 208697) -- Also used for spawn messages
+	self:Death("DeathglareDeath", 105322)
 
 	--[[ Stage Two ]]--
 	self:Log("SPELL_AURA_APPLIED", "StuffOfNightmares", 209915)
@@ -231,18 +207,16 @@ function mod:OnBossEnable()
 	--[[ Mythic ]]--
 	self:Log("SPELL_CAST_START", "DeathBlossom", 218415)
 	self:Log("SPELL_CAST_SUCCESS", "DeathBlossomSuccess", 218415)
-
 end
 
 function mod:OnEngage()
 	wipe(mobCollector)
-	fixateOnMe = nil
 	phase = 1
 	deathBlossomCount = 1
 	blobsRemaining = self:LFR() and 15 or self:Mythic() and 22 or 20
 	blobsMissed = 0
 	self:CDBar(208689, 11.5) -- Ground Slam
-	self:CDBar("nightmare_horror", self:Mythic() and 79 or 65, L.nightmare_horror, L.nightmare_horror_icon) -- Summon Nightmare Horror
+	self:CDBar("nightmare_horror", self:Mythic() and 80 or 65, L.nightmare_horror, L.nightmare_horror_icon) -- Summon Nightmare Horror
 
 	self:OpenInfo("infobox", self:SpellName(-13186)) -- Nightmare Ichor
 	self:SetInfo("infobox", 1, L.remaining)
@@ -257,9 +231,11 @@ function mod:OnEngage()
 	self:StartSpawnTimer(-13190, 1) -- Deathglare Tentacle
 	self:StartSpawnTimer(-13191, 1) -- Corruptor Tentacle
 
-	resetIchorsMarker()
-	if self:GetOption(ichors_marks) then
-		self:RegisterTargetEvents("IchorMark")
+	wipe(deathglareMarked)
+	if self:GetOption(tentacleMarker) then
+		deathglareMarks = { [6] = true, [5] = true, [4] = true, [3] = true }
+
+		self:RegisterTargetEvents("DeathglareMark")
 	end
 end
 
@@ -290,21 +266,38 @@ function mod:StartSpawnTimer(addType, count)
 	self:ScheduleTimer("StartSpawnTimer", length, addType, count+1)
 end
 
+function mod:DeathglareMark(event, unit, guid)
+	if self:MobId(guid) == 105322 and not deathglareMarked[guid] then
+		local icon = next(deathglareMarks)
+		if icon then -- At least one icon unused
+			SetRaidTarget(unit, icon)
+			deathglareMarks[icon] = nil -- Mark is no longer available
+			deathglareMarked[guid] = icon -- Save the tentacle we marked and the icon we marked it with
+		end
+	end
+end
+
+function mod:DeathglareDeath(args)
+	if deathglareMarked[args.destGUID] then -- Did we mark the Tentacle?
+		deathglareMarks[deathglareMarked[args.destGUID]] = true -- Mark used is available again
+	end
+end
+
 do
 	local prev = 0
 	function mod:NightmareCorruption(args)
 		local t = GetTime()
 		if self:Me(args.destGUID) and t-prev > 1.5 then
 			prev = t
-			self:Message(args.spellId, "Personal", "Alert", CL.you:format(args.spellName))
+			self:Message(args.spellId, "blue", "Alert", CL.you:format(args.spellName))
 		end
 	end
 end
 
 -- Dominator Tentacle
-function mod:RAID_BOSS_WHISPER(_, msg, sender)
+function mod:RAID_BOSS_WHISPER(_, msg)
 	if msg:find("208689", nil, true) then -- Ground Slam
-		self:Message(208689, "Personal", "Alarm", CL.you:format(self:SpellName(208689)))
+		self:Message(208689, "blue", "Alarm", CL.you:format(self:SpellName(208689)))
 		self:Flash(208689)
 		self:Say(208689)
 	end
@@ -321,117 +314,50 @@ do
 		local t = GetTime()
 		if t-prev > 1 then
 			prev = t
-			self:Message(args.spellId, "Urgent")
+			self:Message(args.spellId, "orange")
 			self:Bar(args.spellId, 10)
 		end
 	end
 end
 
-function mod:EyeDamageCast(args)
-	if ichorsMarked[args.sourceGUID] then -- Did we mark the Ichor?
-		ichorsMarks[ichorsMarked[args.sourceGUID]] = true -- Mark used is available again
-	end
+function mod:EyeDamageCast()
 	if blobsRemaining > 0 then -- Don't count blobs killed after the eye dies as missed
 		blobsMissed = blobsMissed + 1
 		self:SetInfo("infobox", 4, blobsMissed)
 	end
 end
 
-function mod:EyeDamage(args)
+function mod:EyeDamage()
 	blobsRemaining = blobsRemaining - 1
 	blobsMissed = blobsMissed - 1
 	self:SetInfo("infobox", 2, blobsRemaining)
 	self:SetInfo("infobox", 4, blobsMissed)
-
-	-- When an Ichor damages the boss, remove the record for the corresponding ichor
-	-- This will prevent the death handler to announce a fail
-	ichors[args.sourceGUID] = nil
 end
 
 -- Nightmare Ichor
-local function send_ichor_mark(ichor, player, mark)
-	mod:Send("IchorMarked", { ichor = ichor, player = player, mark = mark }, "RAID")
-end
-
 function mod:Fixate(args)
 	if self:Me(args.destGUID) then
-		self:TargetMessage(args.spellId, args.destName, "Attention", "Info")
-		fixateOnMe = true
-	end
-
-	-- When an Ichor fixates a target, save it as the "owner" of this Ichor
-	local guid = args.sourceGUID
-	ichors[guid] = args.destGUID
-
-	-- This Ichor was marked before fixating a player
-	if unknownIchorMark[guid] then
-		send_ichor_mark(guid, args.destGUID, unknownIchorMark[guid])
-		unknownIchorMark[guid] = nil
-	end
-end
-
-function mod:FixateRemoved(args)
-	if self:Me(args.destGUID) then
-		fixateOnMe = nil
-	end
-end
-
-function mod:IchorDeath(args)
-	if ichorsMarked[args.destGUID] then -- Did we mark the Ichor?
-		ichorsMarks[ichorsMarked[args.destGUID]] = true -- Mark used is available again
-	end
-
-	local owner = ichors[args.destGUID]
-	if owner then
-		ichors[args.destGUID] = nil
-		if self:Token(ichors_fails) then
-			-- If an owner still exists when the Icor dies, then the owner failed!
-			SendChatMessage(L.ichor_fail:format(UnitName(self:UnitId(owner))), "RAID")
-		end
-	end
-end
-
-function mod:IchorMarked(data)
-	if self:Me(data.player) and self:GetOption(ichors_flash) then
-		self:Pulse(false, "Interface\\TargetingFrame\\UI-RaidTargetingIcon_" .. data.mark)
-	end
-end
-
-function mod:IchorMark(event, unit)
-	local guid = UnitGUID(unit)
-	if self:MobId(guid) == 105721 and not ichorsMarked[guid] and self:Token(ichors_marks) then
-		local icon = next(ichorsMarks)
-		if icon then -- At least one icon unused
-			SetRaidTarget(unit, icon)
-			ichorsMarks[icon] = nil -- Mark is no longer available
-			ichorsMarked[guid] = icon -- Save the tentacle we marked and the icon we marked it with
-
-			if ichors[guid] then
-				send_ichor_mark(guid, ichors[guid], icon)
-			else
-				unknownIchorMark[guid] = icon
-			end
-		end
+		self:TargetMessage(args.spellId, args.destName, "yellow", "Info")
 	end
 end
 
 function mod:TouchOfCorruption(args)
 	local amount = args.amount or 1
 	if amount % 2 == 0 and (self:Me(args.destGUID) or (amount > 5 and self:Healer())) then
-		self:StackMessage(args.spellId, args.destName, amount, "Important")
+		self:StackMessage(args.spellId, args.destName, amount, "red")
 	end
 end
 
 -- Nightmare Horror
-function mod:SummonNightmareHorror(args)
-	self:Message("nightmare_horror", "Important", "Info", CL.spawned:format(self:SpellName(L.nightmare_horror)), L.nightmare_horror_icon)
+function mod:SummonNightmareHorror()
+	self:Message("nightmare_horror", "red", "Info", CL.spawned:format(self:SpellName(L.nightmare_horror)), L.nightmare_horror_icon)
 	self:Bar("nightmare_horror", 220, L.nightmare_horror, L.nightmare_horror_icon) -- Summon Nightmare Horror < TODO beta timer, need live data
 	self:Bar(210984, 13.8) -- Eye of Fate
 end
 
 function mod:EyeOfFate(args)
 	local amount = args.amount or 1
-	self:StackMessage(args.spellId, args.destName, amount, "Important", self:Tank() and amount > 1 and "Warning")
+	self:StackMessage(args.spellId, args.destName, amount, "red", self:Tank() and amount > 1 and "Warning")
 end
 
 function mod:EyeOfFateCast(args)
@@ -447,7 +373,7 @@ do
 			local t = GetTime()
 			if t-prev > 2 then
 				prev = t
-				self:Message(args.spellId, "Neutral", "Info", CL.spawned:format(self:SpellName(L.corruptor_tentacle)), L.corruptor_tentacle_icon)
+				self:Message(args.spellId, "cyan", "Info", CL.spawned:format(self:SpellName(L.corruptor_tentacle)), L.corruptor_tentacle_icon)
 			end
 		end
 	end
@@ -458,7 +384,7 @@ do
 	function mod:SpewCorruption(args)
 		list[#list+1] = args.destName
 		if #list == 1 then
-			self:ScheduleTimer("TargetMessage", 0.3, args.spellId, list, "Urgent", "Alert")
+			self:ScheduleTimer("TargetMessage", 0.3, args.spellId, list, "orange", "Alert")
 		end
 
 		if self:Me(args.destGUID) then
@@ -479,15 +405,15 @@ do
 			if t-prev > 2 then
 				prev = t
 				if self:Mythic() and phase == 4 then
-					self:Message("shriveled_eyestalk", "Neutral", "Info", CL.spawned:format(self:SpellName(L.shriveled_eyestalk)), L.shriveled_eyestalk_icon)
+					self:Message("shriveled_eyestalk", "cyan", "Info", CL.spawned:format(self:SpellName(L.shriveled_eyestalk)), L.shriveled_eyestalk_icon)
 				else
-					self:Message(args.spellId, "Neutral", "Info", CL.spawned:format(self:SpellName(L.deathglare_tentacle)), L.deathglare_tentacle_icon)
+					self:Message(args.spellId, "cyan", "Info", CL.spawned:format(self:SpellName(L.deathglare_tentacle)), L.deathglare_tentacle_icon)
 				end
 			end
 		end
 
 		if self:Interrupter(args.sourceGUID) then -- avoid spam
-			self:Message(args.spellId, "Attention", "Info", CL.casting:format(args.spellName))
+			self:Message(args.spellId, "yellow", "Info", CL.casting:format(args.spellName))
 		end
 	end
 end
@@ -495,7 +421,7 @@ end
 --[[ Stage Two ]]--
 function mod:StuffOfNightmares()
 	if self.isEngaged then -- Gets buffed when the boss spawns
-		self:Message("stages", "Neutral", "Long", CL.stage:format(1), false)
+		self:Message("stages", "cyan", "Long", CL.stage:format(1), false)
 		phase = phase + 1
 		blobsRemaining = self:LFR() and 15 or self:Mythic() and 22 or 20
 		blobsMissed = 0
@@ -511,8 +437,6 @@ function mod:StuffOfNightmares()
 		if self:Mythic() then
 			self:Bar(218415, 80) -- Death Blossom
 		end
-
-		resetIchorsMarker()
 	end
 end
 
@@ -522,10 +446,8 @@ function mod:StuffOfNightmaresRemoved()
 	self:StopBar(nextDeathglareText)
 	self:StopBar(218415) -- Death Blossom
 
-	self:Message("stages", "Neutral", "Long", CL.stage:format(2), false)
+	self:Message("stages", "cyan", "Long", CL.stage:format(2), false)
 	phase = phase + 1
-
-	self:Bar(215128, self:Mythic() and phase == 4 and 25 or self:Mythic() and phase == 2 and 23 or 15) -- Cursed Blood
 
 	if self:Mythic() and phase == 4 then
 		self:Bar("shriveled_eyestalk", 10, L.shriveled_eyestalk, L.shriveled_eyestalk_icon)
@@ -535,13 +457,13 @@ end
 
 function mod:DarkReconstitution(args)
 	local timer = self:Mythic() and 55 or 50
-	self:DelayedMessage("stages", timer-10, "Neutral", CL.custom_sec:format(CL.stage:format(1), 10), args.spellId, "Info")
+	self:DelayedMessage("stages", timer-10, "cyan", CL.custom_sec:format(CL.stage:format(1), 10), args.spellId, "Info")
 	self:Bar("stages", timer, CL.stage:format(1), args.spellId) -- cast after 10s in phase (5s in Mythic)
 end
 
 function mod:FinalTorpor(args)
 	local timer = self:Mythic() and 55 or 90
-	self:DelayedMessage(args.spellId, timer-10, "Neutral", CL.custom_sec:format(args.spellName, 10), args.spellId, "Info")
+	self:DelayedMessage(args.spellId, timer-10, "cyan", CL.custom_sec:format(args.spellName, 10), args.spellId, "Info")
 	self:Bar(args.spellId, timer) -- cast after 10s in phase (5s in Mythic)
 end
 
@@ -550,7 +472,7 @@ do
 
 	local function warn(self, spellId)
 		if not isOnMe then
-			self:Message(spellId, "Attention", "Alert")
+			self:Message(spellId, "yellow", "Alert")
 		end
 		scheduled = nil
 	end
@@ -558,7 +480,7 @@ do
 	function mod:CursedBlood(args)
 		if self:Me(args.destGUID) then
 			isOnMe = true
-			self:TargetMessage(args.spellId, args.destName, "Personal", "Warning")
+			self:TargetMessage(args.spellId, args.destName, "blue", "Warning")
 			self:Flash(args.spellId)
 			self:Say(args.spellId)
 			self:TargetBar(args.spellId, 8, args.destName)
@@ -573,7 +495,7 @@ do
 
 		if not scheduled then
 			scheduled = self:ScheduleTimer(warn, 0.1, self, args.spellId)
-			self:CDBar(args.spellId, self:Mythic() and phase == 4 and 28 or self:Mythic() and phase == 2 and 27 or 15)
+			self:CDBar(args.spellId, 15)
 		end
 	end
 
@@ -599,14 +521,14 @@ end
 
 --[[ Mythic ]]--
 function mod:DeathBlossom(args)
-	self:Message(args.spellId, "Urgent", "Alarm")
+	self:Message(args.spellId, "orange", "Alarm")
 	self:CastBar(args.spellId, 15)
 	deathBlossomCount = deathBlossomCount + 1
 end
 
 function mod:DeathBlossomSuccess(args)
-	self:Message(args.spellId, "Positive", "Long", CL.over:format(args.spellName))
-	local time = deathBlossomCount == 2 and 85 or deathBlossomCount == 3 and 20 or 0
+	self:Message(args.spellId, "green", "Long", CL.over:format(args.spellName))
+	local time = deathBlossomCount == 2 and 90 or deathBlossomCount == 3 and 20 or 0
 	if phase == 3 then
 		time = deathBlossomCount == 2 and 60 or deathBlossomCount == 3 and 100 or 0
 	end

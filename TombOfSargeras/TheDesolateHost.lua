@@ -21,8 +21,6 @@ mod.respawnTime = 40
 -- Locals
 --
 
-local Hud = Oken.Hud
-
 local myRealm = 0 -- 1 = Spirit Realm, 0 = Corporeal Realm
 local phasedList = {}
 local unphasedList = {}
@@ -37,19 +35,6 @@ local armorAppliedTimer, armorRemovedTimer = nil, nil
 local soulList = mod:NewTargetList()
 local nextWailingSouls, nextTormentedCries = 0, 0
 
-local nextAddsSpawn = 1
-local nextAddsTimer
-local addsSpawn = {
-	{ "Adds Up (2)", 181437 },
-	{ "Adds Down (2)", 100082 },
-	{ "Adds Up (3): 2x Templars", 181437 },
-	{ "Adds Down (3): 3x Priestess", 100082 },
-	{ "Adds Up (4)", 181437 },
-	{ "Adds Down (4)", 100082 },
-	{ "Adds Up 5)", 181437 },
-	{ "Adds Down (5)", 100082 },
-}
-
 --------------------------------------------------------------------------------
 -- Localization
 --
@@ -58,13 +43,12 @@ local L = mod:GetLocale()
 if L then
 	L.infobox_players = "Players"
 	L.armor_remaining = "%s Remaining (%d)" -- Bonecage Armor Remaining (#)
+	L.custom_on_mythic_armor = "Ignore Bonecage Armor on Reanimated Templars in Mythic Difficulty"
+	L.custom_on_mythic_armor_desc = "Leave this option enabled if you are offtanking Reanimated Templars to ignore warnings and counting the Bonecage Armor on the Ranimated Templars"
 	L.custom_on_armor_plates = "Bonecage Armor icon on Enemy Nameplate"
 	L.custom_on_armor_plates_desc = "Show an icon on the nameplate of Reanimated Templars who have Bonecage Armor.\nRequires the use of Enemy Nameplates. This feature is currently only supported by KuiNameplates."
 	L.custom_on_armor_plates_icon = 236513
 	L.tormentingCriesSay = "Cries" -- Tormenting Cries (short say)
-
-	L.adds = CL.adds
-	L.adds_desc = "Timers and warnings for the add spawns."
 end
 --------------------------------------------------------------------------------
 -- Initialization
@@ -78,20 +62,20 @@ function mod:GetOptions()
 		236678, -- Quietus
 		{235924, "SAY"}, -- Spear of Anguish
 		235907, -- Collapsing Fissure
-		{238570, "SAY", "ICON", "AURA"}, -- Tormented Cries
-		"adds",
+		{238570, "SAY", "ICON"}, -- Tormented Cries
 		235927, -- Rupturing Slam
 		236513, -- Bonecage Armor
 		"custom_on_armor_plates",
+		"custom_on_mythic_armor",
 		236131, -- Wither
-		{236459, "ME_ONLY", "FLASH", "AURA"}, -- Soulbind
+		{236459, "ME_ONLY"}, -- Soulbind
 		soulBindMarker,
 		236072, -- Wailing Souls
-		{236515, "ME_ONLY", "HUD"}, -- Shattering Scream
-		{236361}, -- Spirit Chains
+		{236515, "ME_ONLY"}, -- Shattering Scream
+		236361, -- Spirit Chains
 		236241, -- Soul Rot
-		{236542, "IMPACT"}, -- Sundering Doom
-		{236544, "IMPACT"}, -- Doomed Sundering
+		236542, -- Sundering Doom
+		236544, -- Doomed Sundering
 		236548, -- Torment
 	},{
 		["infobox"] = "general",
@@ -137,7 +121,6 @@ function mod:OnBossEnable()
 	self:Log("SPELL_CAST_SUCCESS", "WailingSouls", 236072)
 	-- Adds
 	self:Log("SPELL_AURA_APPLIED", "ShatteringScream", 236515)
-	self:Log("SPELL_AURA_REMOVED", "ShatteringScreamRemoved", 236515)
 	self:Log("SPELL_AURA_APPLIED", "SpiritChains", 236361)
 
 	-- Tormented Souls
@@ -161,7 +144,6 @@ function mod:OnEngage()
 	tormentedCriesCounter = 1
 	wailingSoulsCounter = 1
 	spearCount = 1
-	nextAddsSpawn = 1
 	armorAppliedTimer, armorRemovedTimer = nil, nil
 	nextWailingSouls, nextTormentedCries = GetTime() + 60, GetTime() + 120
 	wipe(soulList)
@@ -191,11 +173,6 @@ function mod:OnEngage()
 	end
 	self:CDBar(236072, 60) -- Wailing Souls
 	self:CDBar(238570, 120) -- Tormented Cries
-
-	if self:GetOption("adds") then
-		self:Bar("adds", 60, addsSpawn[nextAddsSpawn][1], addsSpawn[nextAddsSpawn][2])
-		nextAddsTimer = self:ScheduleTimer("AddsSpawn", 60)
-	end
 end
 
 --------------------------------------------------------------------------------
@@ -204,7 +181,7 @@ end
 
 function mod:UNIT_SPELLCAST_SUCCEEDED(_, _, _, spellId)
 	if spellId == 235885 then -- Collapsing Fissure
-		self:Message(235907, "Attention", "Alert", spellId, 235907)
+		self:Message(235907, "yellow", "Alert", spellId, 235907)
 		local t = stage == 2 and 15.8 or 30.5
 		local remaining = nextTormentedCries - GetTime()
 		if stage ~= 2 and remaining < 30.5 and remaining > 0 then
@@ -213,9 +190,6 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(_, _, _, spellId)
 		self:Bar(235907, t)
 	elseif spellId == 239978 then -- Soul Pallor // Stage 2
 		stage = 2
-
-		self:CancelTimer(nextAddsTimer)
-		self:StopBar(addsSpawn[nextAddsSpawn][1]) -- Adds spawn
 
 		self:StopBar(236072) -- Wailing Souls
 		self:StopBar(238570) -- Tormented Cries
@@ -230,15 +204,6 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(_, _, _, spellId)
 
 		self:CDBar(236542, 17) -- Sundering Doom
 		self:CDBar(236544, 28) -- Doomed Sundering
-	end
-end
-
-function mod:AddsSpawn()
-	self:Message("adds", "Neutral", "Info", addsSpawn[nextAddsSpawn][1], addsSpawn[nextAddsSpawn][2])
-	nextAddsSpawn = nextAddsSpawn + 1
-	if addsSpawn[nextAddsSpawn] then
-		self:Bar("adds", 60, addsSpawn[nextAddsSpawn][1], addsSpawn[nextAddsSpawn][2])
-		nextAddsTimer = self:ScheduleTimer("AddsSpawn", 60)
 	end
 end
 
@@ -287,7 +252,7 @@ do
 		tDeleteItem(unphasedList, args.destName)
 		if self:Me(args.destGUID) then
 			myRealm = 1
-			self:Message(239006, "Neutral", "Info", self:SpellName(-14857), false) -- Dissonance // Spirit Realm
+			self:Message(239006, "cyan", "Info", self:SpellName(-14857), false) -- Dissonance // Spirit Realm
 		end
 		if not self:Easy() then -- No Dissonance in LFR/Normal
 			updateProximity(self)
@@ -300,7 +265,7 @@ do
 		tDeleteItem(phasedList, args.destName)
 		if self:Me(args.destGUID) then
 			myRealm = 0 -- Corporeal Realm
-			self:Message(239006, "Neutral", "Info", self:SpellName(-14856), false) -- Dissonance // Corporeal Realm
+			self:Message(239006, "cyan", "Info", self:SpellName(-14856), false) -- Dissonance // Corporeal Realm
 		end
 		if not self:Easy() then -- No Dissonance in LFR/Normal
 			updateProximity(self)
@@ -315,17 +280,17 @@ do
 		local t = GetTime()
 		if self:Me(args.destGUID) and t-prev > 1.5 then
 			prev = t
-			self:Message(args.spellId, "Personal", "Alert", CL.underyou:format(args.spellName))
+			self:Message(args.spellId, "blue", "Alert", CL.underyou:format(args.spellName))
 		end
 	end
 end
 
 function mod:Quietus(args)
-	self:Message(args.spellId, "Important", "Warning")
+	self:Message(args.spellId, "red", "Warning")
 end
 
 function mod:SpearofAnguish(args)
-	self:TargetMessage(args.spellId, args.destName, "Urgent", "Alarm", CL.count:format(args.spellName, spearCount), nil, true)
+	self:TargetMessage(args.spellId, args.destName, "orange", "Alarm", CL.count:format(args.spellName, spearCount), nil, true)
 	if self:Me(args.destGUID) then
 		self:Say(args.spellId)
 		self:SayCountdown(args.spellId, 6)
@@ -346,7 +311,7 @@ function mod:SpearofAnguishRemoved(args)
 end
 
 function mod:TormentedCries(args)
-	self:Message(args.spellId, "Attention", "Info", CL.incoming:format(args.spellName))
+	self:Message(args.spellId, "yellow", "Info", CL.incoming:format(args.spellName))
 	tormentedCriesCounter = tormentedCriesCounter + 1
 	if tormentedCriesCounter <= 2 then -- Does a 3rd cast exist?
 		nextTormentedCries = GetTime() + 120
@@ -356,11 +321,10 @@ function mod:TormentedCries(args)
 end
 
 function mod:TormentedCriesApplied(args)
-	self:TargetMessage(238570, args.destName, "Urgent", "Alarm")
+	self:TargetMessage(238570, args.destName, "orange", "Alarm")
 	if self:Me(args.destGUID) then
 		self:Say(238570, L.tormentingCriesSay)
 		self:SayCountdown(238570, 4)
-		self:ShowAura(238570, 4, "Derrière boss")
 	end
 	self:PrimaryIcon(238570, args.destName)
 end
@@ -369,7 +333,6 @@ function mod:TormentedCriesRemoved(args)
 	self:PrimaryIcon(238570)
 	if self:Me(args.destGUID) then
 		self:CancelSayCountdown(238570)
-		self:HideAura(238570)
 	end
 end
 
@@ -379,7 +342,7 @@ do
 		local t = GetTime()
 		if self:Me(args.destGUID) and t-prev > 1.5 then
 			prev = t
-			self:Message(238570, "Personal", "Alert", CL.underyou:format(args.spellName))
+			self:Message(238570, "blue", "Alert", CL.underyou:format(args.spellName))
 		end
 	end
 end
@@ -390,7 +353,7 @@ do
 		local t = GetTime()
 		if t-prev > 3 then
 			prev = t
-			self:Message(args.spellId, "Attention", "Alert", CL.incoming:format(args.spellName))
+			self:Message(args.spellId, "yellow", "Alert", CL.incoming:format(args.spellName))
 		end
 	end
 end
@@ -398,14 +361,15 @@ end
 do
 	local function printArmorApplied(self, spellId, spellName)
 		armorAppliedTimer = nil
-		self:Message(spellId, "Attention", "Warning", CL.count:format(spellName, boneArmorCounter))
+		self:Message(spellId, "yellow", "Warning", CL.count:format(spellName, boneArmorCounter))
 	end
 	local function printArmorRemoved(self, spellId, spellName)
 		armorRemovedTimer = nil
-		self:Message(spellId, "Positive", "Info", L.armor_remaining:format(spellName, boneArmorCounter))
+		self:Message(spellId, "green", "Info", L.armor_remaining:format(spellName, boneArmorCounter))
 	end
 
 	function mod:BonecageArmor(args)
+		if self:Mythic() and self:GetOption("custom_on_mythic_armor") and self:MobId(args.destGUID) == 118715 then return end -- Reanimated Templar
 		boneArmorCounter = boneArmorCounter + 1
 		self:SetInfo("infobox", 2, boneArmorCounter)
 		if self:GetOption("custom_on_armor_plates") then
@@ -417,6 +381,7 @@ do
 	end
 
 	function mod:BonecageArmorRemoved(args)
+		if self:Mythic() and self:GetOption("custom_on_mythic_armor") and self:MobId(args.destGUID) == 118715 then return end -- Reanimated Templar
 		boneArmorCounter = boneArmorCounter - 1
 		self:SetInfo("infobox", 2, boneArmorCounter)
 		if self:GetOption("custom_on_armor_plates") then
@@ -430,7 +395,7 @@ end
 
 function mod:Wither(args)
 	if self:Me(args.destGUID) then
-		self:TargetMessage(236131, args.destName, "Personal", "Alarm")
+		self:TargetMessage(236131, args.destName, "blue", "Alarm")
 	end
 end
 
@@ -438,10 +403,6 @@ do
 	local linkOnMe = false
 	function mod:Soulbind(args)
 		soulList[#soulList+1] = args.destName
-		if self:Me(args.destGUID) then
-			self:Flash(args.spellId)
-			self:ShowAura(args.spellId, "Spirit Chain")
-		end
 		if #soulList == 1 then
 			local t = stage == 2 and 19.4 or 24.3
 			if self:Easy() then
@@ -461,11 +422,11 @@ do
 				SetRaidTarget(args.destName, 4)
 			end
 			if self:Me(args.destGUID) then
-				self:Message(args.spellId, "Personal", "Warning", CL.link:format(soulList[1]))
+				self:Message(args.spellId, "blue", "Warning", CL.link:format(soulList[1]))
 			elseif linkOnMe then
-				self:Message(args.spellId, "Personal", "Warning", CL.link:format(soulList[2]))
+				self:Message(args.spellId, "blue", "Warning", CL.link:format(soulList[2]))
 			elseif not self:CheckOption(args.spellId, "ME_ONLY") then
-				self:Message(args.spellId, "Positive", "Info", CL.link_both:format(soulList[1], soulList[2]))
+				self:Message(args.spellId, "green", "Info", CL.link_both:format(soulList[1], soulList[2]))
 			end
 			wipe(soulList)
 		end
@@ -474,8 +435,7 @@ end
 
 function mod:SoulbindRemoved(args)
 	if self:Me(args.destGUID) then
-		self:Message(args.spellId, "Personal", "Long", CL.link_removed)
-		self:HideAura(args.spellId)
+		self:Message(args.spellId, "blue", "Long", CL.link_removed)
 	end
 	if self:GetOption(soulBindMarker) then
 		SetRaidTarget(args.destName, 0)
@@ -483,7 +443,7 @@ function mod:SoulbindRemoved(args)
 end
 
 function mod:WailingSouls(args)
-	self:Message(args.spellId, "Important", "Warning")
+	self:Message(args.spellId, "red", "Warning")
 	wailingSoulsCounter = wailingSoulsCounter + 1
 	if wailingSoulsCounter <= 2 then -- XXX Does a 3rd cast exist?
 		nextWailingSouls = GetTime() + 120
@@ -497,41 +457,27 @@ do
 	function mod:ShatteringScream(args)
 		list[#list+1] = args.destName
 		if #list == 1 then
-			self:ScheduleTimer("TargetMessage", 0.5, args.spellId, list, "Attention", "Warning")
-		end
-
-		if self:Me(args.destGUID) and self:Hud(args.spellId) then
-			local timer = Hud:DrawTimer("player", 50, args.spellId):Register("ShatteringScreamHUD", true)
-			local label = Hud:DrawText("player", tostring(boneArmorCounter)):Register("ShatteringScreamHUD")
-			function timer:OnUpdate()
-				label:SetText(tostring(boneArmorCounter))
-			end
-		end
-	end
-
-	function mod:ShatteringScreamRemoved(args)
-		if self:Me(args.destGUID) then
-			Hud:RemoveObject("ShatteringScreamHUD")
+			self:ScheduleTimer("TargetMessage", 0.5, args.spellId, list, "yellow", "Warning")
 		end
 	end
 end
 
 function mod:SpiritChains(args)
 	if self:Me(args.destGUID) then
-		self:TargetMessage(args.spellId, args.destName, "Personal", "Alert")
+		self:TargetMessage(args.spellId, args.destName, "blue", "Alert")
 	end
 end
 
 function mod:SunderingDoom(args)
-	self:Message(args.spellId, "Important", "Warning")
+	self:Message(args.spellId, "red", "Warning")
 	self:Bar(args.spellId, self:Easy() and 26.5 or 25)
-	self:ImpactBar(args.spellId, self:Easy() and 6 or self:Heroic() and 5 or 4)
+	self:CastBar(args.spellId, self:Easy() and 6 or self:Heroic() and 5 or 4)
 end
 
 function mod:DoomedSundering(args)
-	self:Message(args.spellId, "Important", "Warning")
+	self:Message(args.spellId, "red", "Warning")
 	self:Bar(args.spellId, self:Easy() and 26.5 or 25)
-	self:ImpactBar(args.spellId, self:Easy() and 6 or self:Heroic() and 5 or 4)
+	self:CastBar(args.spellId, self:Easy() and 6 or self:Heroic() and 5 or 4)
 end
 
 do
@@ -540,7 +486,7 @@ do
 		local t = GetTime()
 		if t-prev > 1 then
 			prev = t
-			self:StackMessage(args.spellId, args.destName, args.amount, "Attention", "Info")
+			self:StackMessage(args.spellId, args.destName, args.amount, "yellow", "Info")
 		end
 	end
 end
