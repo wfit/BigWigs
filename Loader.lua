@@ -55,6 +55,7 @@ local tooltipFunctions = {}
 local next, tonumber, strsplit = next, tonumber, strsplit
 local SendAddonMessage, Ambiguate, CTimerAfter, CTimerNewTicker = C_ChatInfo.SendAddonMessage, Ambiguate, C_Timer.After, C_Timer.NewTicker
 local GetInstanceInfo, GetBestMapForUnit, GetMapInfo = GetInstanceInfo, C_Map.GetBestMapForUnit, C_Map.GetMapInfo
+local UnitName = UnitName
 
 -- Try to grab unhooked copies of critical funcs (hooked by some crappy addons)
 public.GetBestMapForUnit = GetBestMapForUnit
@@ -266,7 +267,7 @@ end
 -- GLOBALS: GetAddOnEnableState, GetAddOnInfo, GetAddOnMetadata, GetLocale, GetNumGroupMembers, GetRealmName, GetSpecialization, GetSpecializationRole, GetTime, GRAY_FONT_COLOR, hash_SlashCmdList, InCombatLockdown
 -- GLOBALS: IsAddOnLoaded, IsAltKeyDown, IsControlKeyDown, IsEncounterInProgress, IsInGroup, IsInRaid, IsLoggedIn, IsPartyLFG, IsSpellKnown, LFGDungeonReadyPopup
 -- GLOBALS: LibStub, LoadAddOn, message, PlaySound, print, RAID_CLASS_COLORS, RaidNotice_AddMessage, RaidWarningFrame, RegisterAddonMessagePrefix, RolePollPopup, select, StopSound
--- GLOBALS: tostring, tremove, type, UnitAffectingCombat, UnitClass, UnitGroupRolesAssigned, UnitIsConnected, UnitIsDeadOrGhost, UnitName, UnitSetRole, unpack, SLASH_BigWigs1, SLASH_BigWigs2
+-- GLOBALS: tostring, tremove, type, UnitAffectingCombat, UnitClass, UnitGroupRolesAssigned, UnitIsConnected, UnitIsDeadOrGhost, UnitSetRole, unpack, SLASH_BigWigs1, SLASH_BigWigs2
 -- GLOBALS: SLASH_BigWigsVersion1, wipe
 
 -----------------------------------------------------------------------
@@ -294,6 +295,7 @@ local function load(obj, index)
 		loadOnSlash[index] = nil
 	end
 
+	EnableAddOn(index) -- Make sure it wasn't left disabled for whatever reason
 	local loaded, reason = LoadAddOn(index)
 	if not loaded then
 		sysprint(ADDON_LOAD_FAILED:format(GetAddOnInfo(index), _G["ADDON_"..reason]))
@@ -302,14 +304,18 @@ local function load(obj, index)
 end
 
 local function loadAddons(tbl)
-	if not tbl then return end
-	for _, index in next, tbl do
+	if not tbl[1] then return end
+
+	for i = 1, #tbl do
+		local index = tbl[i]
 		if not IsAddOnLoaded(index) and load(nil, index) then
 			local name = GetAddOnInfo(index)
 			public:SendMessage("BigWigs_ModulePackLoaded", name)
 		end
 	end
-	tbl = nil
+	for i = #tbl, 1, -1 do
+		tbl[i] = nil
+	end
 end
 
 local function loadZone(zone)
@@ -372,10 +378,18 @@ do
 
 	for i = 1, GetNumAddOns() do
 		local name = GetAddOnInfo(i)
+		if reqFuncAddons[name] then
+			EnableAddOn(i) -- Make sure it wasn't left disabled for whatever reason
+		end
+
 		if IsAddOnEnabled(i) then
 			local meta = GetAddOnMetadata(i, "X-BigWigs-LoadOn-CoreEnabled")
 			if meta then
-				loadOnCoreEnabled[#loadOnCoreEnabled + 1] = i
+				if name == "BigWigs_Plugins" then -- Always first
+					table.insert(loadOnCoreEnabled, 1, i)
+				else
+					loadOnCoreEnabled[#loadOnCoreEnabled + 1] = i
+				end
 			end
 			meta = GetAddOnMetadata(i, "X-BigWigs-LoadOn-InstanceId")
 			if meta then
@@ -423,8 +437,6 @@ do
 					loadOnSlash[i][j] = slash
 				end
 			end
-		elseif reqFuncAddons[name] then
-			sysprint(L.coreAddonDisabled:format(name))
 		else
 			local meta = GetAddOnMetadata(i, "X-BigWigs-LoadOn-InstanceId")
 			if meta then -- Disabled content
@@ -572,7 +584,8 @@ do
 		end
 	end
 
-	for _, index in next, loadOnWorldBoss do
+	for i = 1, #loadOnWorldBoss do
+		local index = loadOnWorldBoss[i]
 		local zones = GetAddOnMetadata(index, "X-BigWigs-LoadOn-WorldBoss")
 		if zones then
 			iterateWorldBosses(index, strsplit(",", zones))
@@ -627,6 +640,38 @@ function mod:ADDON_LOADED(addon)
 				if k:find("BigWigs_Bosses_", nil, true) and not next(v) then
 					BigWigs3DB.namespaces[k] = nil
 				end
+				-- XXX start temp 8.0.1 color conversion
+				if k == "BigWigs_Plugins_Colors" then
+					for profiles, profileList in next, v do
+						for name, tbl in next, profileList do
+							if tbl["Positive"] then
+								tbl["green"] = tbl["Positive"]
+								tbl["Positive"] = nil
+							end
+							if tbl["Personal"] then
+								tbl["blue"] = tbl["Personal"]
+								tbl["Personal"] = nil
+							end
+							if tbl["Important"] then
+								tbl["red"] = tbl["Important"]
+								tbl["Important"] = nil
+							end
+							if tbl["Urgent"] then
+								tbl["orange"] = tbl["Urgent"]
+								tbl["Urgent"] = nil
+							end
+							if tbl["Neutral"] then
+								tbl["cyan"] = tbl["Neutral"]
+								tbl["Neutral"] = nil
+							end
+							if tbl["Attention"] then
+								tbl["yellow"] = tbl["Attention"]
+								tbl["Attention"] = nil
+							end
+						end
+					end
+				end
+				-- XXX end temp 8.0.1 color conversion
 			end
 		end
 		BigWigs3DB.fPrint = nil -- XXX temp 7.3.5

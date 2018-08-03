@@ -171,7 +171,7 @@ function mod:Misery(args)
 end
 
 function mod:ShadowStrike()
-	self:Message(243960, "orange", "Warning")
+	self:Message(243960, "purple", "Warning")
 	self:CDBar(243960, 9.8)
 end
 
