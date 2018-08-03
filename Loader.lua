@@ -304,7 +304,7 @@ local function load(obj, index)
 end
 
 local function loadAddons(tbl)
-	if not tbl[1] then return end
+	if not tbl or not tbl[1] then return end
 
 	for i = 1, #tbl do
 		local index = tbl[i]
