@@ -70,8 +70,8 @@ local function onRelease(self)
 	prototype.OnRelease(self)
 	self:SetValue(nil)
 end
-local function onClick(this, button)
-	local self = this.obj
+local function onClick(frame)
+	local self = frame.obj
 	if self.disabled then return end
 	self.value = not self.value
 	if self.value then
