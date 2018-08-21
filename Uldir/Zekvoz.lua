@@ -39,22 +39,22 @@ function mod:GetOptions()
 	return {
 		--[[ General ]]--
 		"stages",
-		{265530, "IMPACT"}, -- Surging Darkness
+		265530, -- Surging Darkness
 		265231, -- Void Lash
 		{265248, "TANK"}, -- Shatter
 
 		--[[ Stage 1 ]]--
-		{264382, "AURA"}, -- Eye Beam
+		{264382, "AURA", "SAY"}, -- Eye Beam
 		-18390, -- Qiraji Warrior
 
 		--[[ Stage 2 ]]--
-		{265360, "AURA"}, -- Roiling Deceit
+		{265360, "AURA", "SAY", "SAY_COUNTDOWN"}, -- Roiling Deceit
 		-18397, -- Anub'ar Voidweaver
 		267180, -- Void Bolt
 
 		--[[ Stage 3 ]]--
 		267239, -- Orb of Corruption
-		265662, -- Corruptor's Pact
+		{265662, "SAY_COUNTDOWN"}, -- Corruptor's Pact
 	},{
 		["stages"] = "general",
 		[264382] = CL.stage:format(1),
@@ -151,11 +151,6 @@ function mod:SurgingDarkness(args)
 	self:Message(args.spellId, "red")
 	self:PlaySound(args.spellId, "long")
 	self:Bar(args.spellId, 63.5)
-
-	for i = 0, 2 do
-		local interval = 7
-		self:ScheduleTimer("ImpactBar", 3.5 + i * interval, args.spellId, interval)
-	end
 end
 
 function mod:VoidLash(args)

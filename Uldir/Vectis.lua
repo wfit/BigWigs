@@ -35,7 +35,7 @@ function mod:GetOptions()
 		{265127, "AURA", "HUD"}, -- Lingering Infection
 
 		267242, -- Contagion
-		{265212, "SAY", "ICON", "AURA"}, -- Gestate
+		{265212, "SAY", "SAY_COUNTDOWN", "ICON", "AURA"}, -- Gestate
 		265217, -- Liquefy
 		266459, -- Pathogen Bomb
 	}
