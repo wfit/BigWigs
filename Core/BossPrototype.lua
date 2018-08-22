@@ -2165,10 +2165,10 @@ do
 		local textType = type(text)
 		local msg = format(L.cast, textType == "string" and text or spells[text or key])
 		if checkFlag(self, key, C.CASTBAR) then
-			self:SendMessage("BigWigs_StartBar", self, key, msg, length, icons[icon or textType == "number" and text or key])
-			if checkFlag(self, key, C.COUNTDOWN) then
-				self:SendMessage("BigWigs_StartEmphasize", self, key, msg, length)
-			end
+			self:SendMessage("BigWigs_StartImpactBar", self, key, msg, length, icons[icon or textType == "number" and text or key])
+		end
+		if checkFlag(self, key, C.COUNTDOWN) then
+			self:SendMessage("BigWigs_StartEmphasize", self, key, msg, length)
 		end
 	end
 
