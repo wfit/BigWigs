@@ -20,7 +20,7 @@ local sounds = {
 	Alert = "BigWigs: Alert",
 	Alarm = "BigWigs: Alarm",
 	Warning = "BigWigs: Raid Warning",
-	Beware = "BigWigs: [DBM] ".. L.Beware,
+	Beware = "BigWigs: [DBM] Beware",
 }
 
 --------------------------------------------------------------------------------
@@ -35,7 +35,7 @@ plugin.defaultDB = {
 		Alert = "BigWigs: Alert",
 		Alarm = "BigWigs: Alarm",
 		Warning = "BigWigs: Raid Warning",
-		Beware = "BigWigs: [DBM] ".. L.Beware,
+		Beware = "BigWigs: [DBM] Beware",
 	},
 }
 

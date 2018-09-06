@@ -1995,7 +1995,7 @@ function plugin:StartImpactBar(_, module, key, text, time, icon, color)
 	elseif db.outline ~= "NONE" then
 		flags = db.outline
 	end
-	local f = media:Fetch(FONT, db.font)
+	local f = media:Fetch(FONT, db.fontName)
 	bar.candyBarLabel:SetFont(f, db.fontSizeImpact, flags)
 	bar.candyBarDuration:SetFont(f, db.fontSizeImpact, flags)
 

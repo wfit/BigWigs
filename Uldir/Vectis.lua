@@ -26,9 +26,8 @@ local infectionCount = 0
 -- Initialization
 --
 
-local omegaVectorMarker = mod:AddMarkerOption(false, "player", 1, 265143, 1, 2, 3, 4) -- Omega Vector
+local omegaVectorMarker = mod:AddMarkerOption(true, "player", 1, 265143, 1, 2, 3, 4) -- Omega Vector
 local bigwigOmega = mod:AddCustomOption { "use_bigwigs_omega", "Use the original BigWigs Omega Vector code", default = false }
-
 function mod:GetOptions()
 	return {
 		{265178, "TANK"}, -- Evolving Affliction
