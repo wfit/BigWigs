@@ -28,7 +28,8 @@
 
 embeds.xml
 API.lua
-
 locales.xml
+
+Media\Media.lua
 Loader.lua
 modules.xml

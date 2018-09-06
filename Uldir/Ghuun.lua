@@ -7,7 +7,6 @@
 -- - Thousand Maws add specifics
 -- - Stop and Start bars on transitions better
 -- - Amount of orbs/energy left until Reorigination Blast
--- - Restart timers after Reorigination Blast Success with new timings
 -- - Check ground damage id's
 -- - Last target hit for tank warnings?
 
@@ -61,9 +60,9 @@ function mod:OnBossEnable()
 	self:RegisterUnitEvent("UNIT_SPELLCAST_SUCCEEDED", nil, "boss1")
 
 	-- Stage 1
-	self:Log("SPELL_CAST_SUCCESS", "ExplosiveCorruptionSuccess", 272505)
-	self:Log("SPELL_AURA_APPLIED", "ExplosiveCorruptionApplied", 272506)
-	self:Log("SPELL_AURA_REMOVED", "ExplosiveCorruptionRemoved", 272506)
+	self:Log("SPELL_CAST_SUCCESS", "ExplosiveCorruptionSuccess", 274262, 272505)
+	self:Log("SPELL_AURA_APPLIED", "ExplosiveCorruptionApplied", 275756, 272506)
+	self:Log("SPELL_AURA_REMOVED", "ExplosiveCorruptionRemoved", 275756, 272506)
 	self:Log("SPELL_CAST_START", "ThousandMaws", 267509)
 	self:Log("SPELL_CAST_START", "Torment", 267427)
 	self:Log("SPELL_CAST_START", "MassiveSmash", 267412)
@@ -71,6 +70,7 @@ function mod:OnBossEnable()
 	self:Log("SPELL_CAST_START", "DecayingEruption", 267462)
 	self:Log("SPELL_CAST_START", "ReoriginationBlast", 263482)
 	self:Log("SPELL_CAST_SUCCESS", "ReoriginationBlastSuccess", 263482)
+	self:Log("SPELL_AURA_REMOVED", "ReoriginationBlastRemoved", 263504)
 
 	-- Stage 2
 	self:Log("SPELL_AURA_APPLIED", "CorruptingBiteApplied", 270443) -- Stage 2 start
@@ -79,6 +79,7 @@ function mod:OnBossEnable()
 	self:Log("SPELL_CAST_SUCCESS", "BloodFeastSuccess", 263235)
 	self:Log("SPELL_AURA_REMOVED", "BloodFeastRemoved", 263235)
 	self:Log("SPELL_CAST_START", "MindNumbingChatter", 263307)
+	self:Death("HorrorDeath", 134010)
 
 	-- Stage 3
 	self:Log("SPELL_CAST_SUCCESS", "Collapse", 276839)
@@ -114,19 +115,18 @@ end
 -- Stage 1
 function mod:CorruptingBiteApplied()
 	stage = 2
-	self:Message("stages", "cyan", nil, CL.stage:format(stage))
+	self:Message("stages", "cyan", nil, CL.stage:format(stage), false)
 	self:PlaySound("stages", "long")
 	waveOfCorruptionCount = 1
 
 	self:Bar(272506, 9) -- Explosive Corruption
 	self:Bar(270373, 15.5) -- Wave of Corruption
 	self:Bar(263235, 47) -- Blood Feast
-	self:Bar(263307, 67.5) -- Mind-Numbing Chatter
 end
 
 function mod:ExplosiveCorruptionSuccess(args)
 	self:TargetMessage2(272506, "orange", args.destName)
-		if self:Me(args.destGUID) then
+	if self:Me(args.destGUID) then
 		self:PlaySound(272506, "warning")
 	end
 	self:CDBar(272506, stage == 1 and 13 or 13.4)
@@ -134,14 +134,15 @@ end
 
 function mod:ExplosiveCorruptionApplied(args)
 	if self:Me(args.destGUID) then
-		self:Say(args.spellId)
-		self:SayCountdown(args.spellId, 5)
+		self:TargetMessage2(272506, "blue", args.destName)
+		self:Say(272506)
+		self:SayCountdown(272506, 4)
 	end
 end
 
 function mod:ExplosiveCorruptionRemoved(args)
 	if self:Me(args.destGUID) then
-		self:CancelSayCountdown(args.spellId)
+		self:CancelSayCountdown(272506)
 	end
 end
 
@@ -192,6 +193,19 @@ function mod:ReoriginationBlastSuccess(args)
 		self:StopBar(267409) -- Dark Bargain
 		self:StopBar(272506) -- Explosive Corruption
 		self:StopBar(267462) -- Decaying Eruption
+	else
+		self:PauseBar(272506) -- Explosive Corruption
+		self:PauseBar(270373) -- Wave of Corruption
+		self:PauseBar(263235) -- Blood Feast
+	end
+end
+
+
+function mod:ReoriginationBlastRemoved(args)
+	if stage == 2 then -- These bars don't exist in stage 1, no stun happens in stage 3
+		self:ResumeBar(272506) -- Explosive Corruption
+		self:ResumeBar(270373) -- Wave of Corruption
+		self:ResumeBar(263235) -- Blood Feast
 	end
 end
 
@@ -209,6 +223,7 @@ function mod:BloodFeastSuccess(args)
 		self:SayCountdown(args.spellId, 8)
 	end
 	self:CDBar(args.spellId, 62)
+	self:CDBar(263307, 20) -- Mind-Numbing Chatter
 end
 
 function mod:BloodFeastRemoved(args)
@@ -220,19 +235,23 @@ end
 function mod:MindNumbingChatter(args)
 	self:Message(args.spellId, "orange", nil, CL.casting:format(args.spellName))
 	self:PlaySound(args.spellId, "alert")
-	self:CDBar(args.spellId, 62)
+	self:CDBar(args.spellId, 13.5)
 end
+
+function mod:HorrorDeath()
+	self:StopBar(263307) -- Mind-Numbing Chatter
+end
+
 
 -- Stage 3
 function mod:Collapse(args)
 	stage = 3
-	self:Message("stages", "cyan", nil, CL.stage:format(stage))
+	self:Message("stages", "cyan", nil, CL.stage:format(stage), false)
 	self:PlaySound("stages", "long")
 
 	self:StopBar(272506) -- Explosive Corruption
 	self:StopBar(270373) -- Wave of Corruption
 	self:StopBar(263235) -- Blood Feast
-	self:StopBar(263307) -- Mind-Numbing Chatter
 	self:StopBar(263482) -- Reorigination Blast
 
 	waveOfCorruptionCount = 1

@@ -18,8 +18,8 @@ function mod:GetOptions()
 		{262277, "TANK"}, -- Thrashing Terror
 		262292, -- Rotting Regurgitation
 		{262288, "IMPACT"}, -- Shockwave Stomp
-		{262313, "ME_ONLY", "AURA"}, -- Malodorous Miasma
-		{262314, "ME_ONLY", "PULSE", "AURA"}, -- Putrid Paroxysm
+		{262313, "ME_ONLY", "SAY", "SAY_COUNTDOWN", "AURA"}, -- Malodorous Miasma
+		{262314, "ME_ONLY", "FLASH", "SAY", "SAY_COUNTDOWN", "PULSE", "AURA"}, -- Putrid Paroxysm
 		262364, -- Enticing Essence -- XXX Used for CL.adds right now
 		262378, -- Fetid Frenzy
 	}
@@ -76,13 +76,16 @@ end
 function mod:MalodorousMiasmaApplied(args)
 	self:TargetMessage2(args.spellId, "orange", args.destName)
 	self:PlaySound(args.spellId, "info", nil, args.destName)
-	if self:Me(args.destGUID) then
+	if self:Mythic() and self:Me(args.destGUID) then
+		self:Say(args.spellId)
+		self:SayCountdown(args.spellId, 18)
 		self:ShowDebuffAura(args.spellId)
 	end
 end
 
 function mod:MalodorousMiasmaRemoved(args)
-	if self:Me(args.destGUID) then
+	if self:Mythic() and self:Me(args.destGUID) then
+		self:CancelSayCountdown(args.spellId)
 		self:HideAura(args.spellId)
 	end
 end
@@ -93,12 +96,19 @@ function mod:PutridParoxysmApplied(args)
 	if self:Me(args.destGUID) then
 		self:Flash(args.spellId)
 		self:ShowDebuffAura(args.spellId)
+		if self:Mythic() then
+			self:Say(args.spellId)
+			self:SayCountdown(args.spellId, 6)
+		end
 	end
 end
 
 function mod:PutridParoxysmRemoved(args)
 	if self:Me(args.destGUID) then
 		self:HideAura(args.spellId)
+		if self:Mythic() then
+			self:CancelSayCountdown(args.spellId)
+		end
 	end
 end
 
