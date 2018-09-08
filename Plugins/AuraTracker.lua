@@ -212,6 +212,7 @@ end
 
 local pool = {}
 local borderlessPool = {}
+local index = 0
 
 local function inset(frame, inset)
 	frame:SetPoint("LEFT", inset, 0)
@@ -226,6 +227,8 @@ local function allocIcon(borderless)
 
 	-- A new icon need to be created (pool is empty)
 	if not icon then
+		index = index + 1
+
 		icon = CreateFrame("Frame", nil, anchor)
 		icon.borderless = borderless
 
@@ -299,7 +302,7 @@ local function allocIcon(borderless)
 		icon.cdText = cd:GetRegions()
 
 		-- Shine effect
-		local shine = CreateFrame("Frame", nil, widgets, "AutoCastShineTemplate")
+		local shine = CreateFrame("Frame", "BigWigsAura" .. index .. "Shine", widgets, "AutoCastShineTemplate")
 		shine:SetAllPoints()
 		shine:Show()
 		icon.shine = shine
