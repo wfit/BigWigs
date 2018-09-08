@@ -19,23 +19,27 @@ local plasmaCount = 1
 local defensiveBeamCount = 1
 local timersUldirDefensiveBeam = {30, 15, 15, 15} -- XXX Check times for each difficulty
 
+local cudgelTarget
+
 --------------------------------------------------------------------------------
 -- Initialization
 --
 
+local cudgelMarker = mod:AddMarkerOption(true, "player", 1, 271296, 1)
 function mod:GetOptions()
 	return {
 		"stages",
 		{271224, "SAY", "AURA"}, -- Plasma Discharge
 		270290, -- Blood Storm
 		{271296, "IMPACT"}, -- Cudgel of Gore
+		cudgelMarker,
 		271728, -- Retrieve Cudgel
 		{271895, "SAY"}, -- Sanguine Static
 		271965, -- Powered Down
 		{275270, "HUD"}, -- Fixate
 		275432, -- Uldir Defensive Beam
-		{275189, "SAY", "SAY_COUNTDOWN"}, -- Hardened Arteries
-		{275205, "SAY", "SAY_COUNTDOWN", "FLASH"}, -- Enlarged Heart
+		{275189, "SAY", "SAY_COUNTDOWN", "AURA"}, -- Hardened Arteries
+		{275205, "SAY", "SAY_COUNTDOWN", "FLASH", "AURA"}, -- Enlarged Heart
 	}
 end
 
@@ -114,19 +118,30 @@ do
 	end
 end
 
-function mod:CudgelofGore(args)
-	self:PlaySound(args.spellId, "warning")
-	self:Message(args.spellId, "red")
-	self:ImpactBar(args.spellId, 4.5)
-	self:CDBar(args.spellId, 59)
-end
+do
+	local function markTarget(self, name, guid)
+		cudgelTarget = name
+		self:SetIcon(cudgelMarker, name, 1)
+	end
 
-function mod:RetrieveCudgel(args)
-	self:PlaySound(args.spellId, "alarm")
-	self:Message(args.spellId, "orange")
-	self:CDBar(args.spellId, 59)
-end
+	function mod:CudgelofGore(args)
+		self:PlaySound(args.spellId, "warning")
+		self:Message(args.spellId, "red")
+		self:ImpactBar(args.spellId, 4.5)
+		self:CDBar(args.spellId, 59)
+		self:GetBossTarget(markTarget, 0.5, args.sourceGUID)
+	end
 
+	function mod:RetrieveCudgel(args)
+		self:PlaySound(args.spellId, "alarm")
+		self:Message(args.spellId, "orange")
+		self:CDBar(args.spellId, 59)
+
+		if cudgelTarget then
+			self:ResetIcon(cudgelMarker, cudgelTarget)
+		end
+	end
+end
 do
 	local function printTarget(self, name, guid)
 		self:PlaySound(271895, "alert")
@@ -204,16 +219,18 @@ do
 		if t-prev > 2 then
 			self:Message(args.spellId, "yellow")
 			self:PlaySound(args.spellId, "alert")
-			if self:Me(args.destGUID) then
-				self:Say(args.spellId)
-				self:SayCountdown(args.spellId, 6)
-			end
+		end
+		if self:Me(args.destGUID) then
+			self:Say(args.spellId)
+			self:SayCountdown(args.spellId, 6)
+			self:ShowDebuffAura(args.spellId)
 		end
 	end
 
 	function mod:HardenedArteriesRemoved(args)
 		if self:Me(args.destGUID) then
 			self:CancelSayCountdown(args.spellId)
+			self:HideAura(args.spellId)
 		end
 	end
 end
@@ -227,6 +244,7 @@ function mod:EnlargedHeartApplied(args)
 		self:PlaySound(args.spellId, "warning")
 		self:Flash(args.spellId)
 		self:SayCountdown(args.spellId, 6)
+		self:ShowDebuffAura(args.spellId)
 	end
 	self:TargetMessage2(args.spellId, "orange", args.destName)
 	self:TargetBar(args.spellId, 6, args.destName)
@@ -235,6 +253,7 @@ end
 function mod:EnlargedHeartRemoved(args)
 	if self:Me(args.destGUID) then
 		self:CancelSayCountdown(args.spellId)
+		self:HideAura(args.spellId)
 	end
 	self:StopBar(args.spellId, args.destName)
 end

@@ -493,6 +493,15 @@ do
 								self[func](self, args)
 							end
 						end
+						if m and m["*"] then
+							local func = m["*"]
+							args.mobId, args.destGUID, args.destName, args.destFlags, args.destRaidFlags = mobId, destGUID, destName, destFlags, args.destRaidFlags
+							if type(func) == "function" then
+								func(args)
+							else
+								self[func](self, args)
+							end
+						end
 					end
 				end
 			else
@@ -2282,6 +2291,10 @@ function boss:SetIcon(key, target, icon)
 		if not unit or not UnitExists(unit) then return end
 		SetRaidTarget(unit, icon)
 	end
+end
+
+function boss:ResetIcon(key, target)
+	self:SetIcon(key, target, 0)
 end
 
 -------------------------------------------------------------------------------
