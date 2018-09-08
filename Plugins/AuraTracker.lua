@@ -298,6 +298,12 @@ local function allocIcon(borderless)
 		icon.cd = cd
 		icon.cdText = cd:GetRegions()
 
+		-- Shine effect
+		local shine = CreateFrame("Frame", nil, widgets, "AutoCastShineTemplate")
+		shine:SetAllPoints()
+		shine:Show()
+		icon.shine = shine
+
 		-- A layer that is higher than the cooldown frame
 		local content = CreateFrame("Frame", nil, widgets)
 		content:SetAllPoints(icon)
@@ -332,7 +338,7 @@ local function freeIcon(icon)
 	icon.fadeIn:Stop()
 	icon.pulseIn:Stop()
 	icon:Hide()
-	ActionButton_HideOverlayGlow(icon)
+	AutoCastShine_AutoCastStop(icon.shine)
 	tinsert(icon.borderless and borderlessPool or pool, icon)
 end
 
@@ -564,9 +570,9 @@ function plugin:BigWigs_ShowAura(_, module, key, options)
 	end
 
 	if options.glow then
-		ActionButton_ShowOverlayGlow(aura.icon)
+		AutoCastShine_AutoCastStart(icon.shine)
 	elseif aura.pin == nil then
-		ActionButton_HideOverlayGlow(aura.icon)
+		AutoCastShine_AutoCastStop(icon.shine)
 	end
 
 	if options.pin then
