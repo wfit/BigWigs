@@ -2333,12 +2333,12 @@ end
 -- @number seconds the amount of time in seconds until the countdown expires
 -- @number[opt] icon Add the designated raid icon to the countdown
 -- @number[opt] startAt When to start sending messages in say, default value is at 3 seconds remaining
-function boss:SayCountdown(key, seconds, icon, startAt)
+function boss:SayCountdown(key, seconds, icon, startAt, channel)
 	if not checkFlag(self, key, C.SAY_COUNTDOWN) then return end
 	local tbl = {false, startAt or 3}
 	local function printTime()
 		if not tbl[1] then
-			SendChatMessage(icon and format("{rt%d} %d", icon, tbl[2]) or tbl[2], "SAY")
+			SendChatMessage(icon and format("{rt%d} %d", icon, tbl[2]) or tbl[2], channel or "SAY")
 			tbl[2] = tbl[2] - 1
 		end
 	end
