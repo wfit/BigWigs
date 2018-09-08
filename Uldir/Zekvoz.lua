@@ -57,7 +57,7 @@ function mod:GetOptions()
 
 		--[[ Stage 3 ]]--
 		267239, -- Orb of Corruption
-		{265662, "SAY_COUNTDOWN"}, -- Corruptor's Pact
+		{265662, "SAY_COUNTDOWN", "IMPACT"}, -- Corruptor's Pact
 	},{
 		["stages"] = "general",
 		[264382] = CL.stage:format(1),
@@ -188,6 +188,7 @@ do
 		self:PrimaryIcon(264382, name)
 		if self:Me(guid) then
 			self:Say(264382, count)
+			self:ShowAura(264382, "Eye on YOU", 3, true)
 		end
 		if eyeBeamCount == 3 then
 			self:ScheduleTimer("PrimaryIcon", 3, 264382)
@@ -200,7 +201,9 @@ do
 		if eyeBeamCount == 4 then
 			eyeBeamCount = 1
 		elseif eyeBeamCount == 3 then
-			self:CDBar(args.spellId, 32.8)
+			local cd = 32.8
+			self:CDBar(args.spellId, cd)
+			self:ScheduleTimer("PlaySound", cd - 3, args.spellId, "beware")
 		end
 	end
 end
@@ -232,13 +235,14 @@ do
 			if self:Me(args.destGUID) then
 				self:PlaySound(args.spellId, "warning")
 				self:SayCountdown(args.spellId, 12)
+				self:ShowDebuffAura(args.spellId, { countdown = true, glow = mod:BarTimeLeft(265530) < 12 })
 				self:Say(args.spellId)
 			end
 		else
 			roilingDeceitTargets[args.destGUID] = nil
 			if self:Me(args.destGUID) then
 				self:SayCountdown(args.spellId, 12)
-				self:ShowDebuffAura(args.spellId, { countdown = true })
+				self:ShowDebuffAura(args.spellId, { countdown = true, glow = mod:BarTimeLeft(265530) < 12 })
 			end
 		end
 	end
@@ -269,7 +273,8 @@ function mod:CorruptorsPact(args)
 	if self:Me(args.destGUID) then
 		self:PlaySound(args.spellId, "long")
 		self:TargetMessage2(args.spellId, "blue", args.destName)
-		self:SayCountdown(args.spellId, 20)
+		self:SayCountdown(args.spellId, 20, nil, nil, "YELL")
+		self:ScheduleTimer("ImpactBar", 10, args.spellId, 10, "Mind Control")
 	end
 end
 
