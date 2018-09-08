@@ -1,4 +1,3 @@
-
 --------------------------------------------------------------------------------
 -- Module Declaration
 --
@@ -19,8 +18,10 @@ local omegaList = {}
 local omegaIconCount = 1
 local pathogenBombCount = 1
 local nextLiquify = 0
+local lingeringInfectionList = {}
 local liquified = false
 local infectionCount = 0
+local gestateCount = 0
 
 --------------------------------------------------------------------------------
 -- Initialization
@@ -30,14 +31,14 @@ local omegaVectorMarker = mod:AddMarkerOption(true, "player", 1, 265143, 1, 2, 3
 local bigwigOmega = mod:AddCustomOption { "use_bigwigs_omega", "Use the original BigWigs Omega Vector code", default = false }
 function mod:GetOptions()
 	return {
-		{265178, "TANK"}, -- Evolving Affliction
-		{265129, "SAY", "AURA", "SAY_COUNTDOWN"}, -- Omega Vector
+		{ 265143, "SAY_COUNTDOWN", "SAY", "AURA", "SAY_COUNTDOWN" }, -- Omega Vector
 		omegaVectorMarker,
 		bigwigOmega,
-		{265127, "AURA", "HUD"}, -- Lingering Infection
+		{ 265127, "INFOBOX", "AURA", "HUD" }, -- Lingering Infection
+		{ 265178, "TANK" }, -- Evolving Affliction
 
 		267242, -- Contagion
-		{265212, "SAY", "SAY_COUNTDOWN", "ICON", "AURA"}, -- Gestate
+		{ 265212, "SAY", "SAY_COUNTDOWN", "ICON", "AURA" }, -- Gestate
 		265217, -- Liquefy
 		266459, -- Plague Bomb
 	}
@@ -45,16 +46,15 @@ end
 
 function mod:OnBossEnable()
 	self:Log("SPELL_AURA_APPLIED", "OmegaVectorApplied", 265129, 265143) -- Normal, Heroic
+	self:Log("SPELL_AURA_APPLIED_DOSE", "OmegaVectorApplied", 265129, 265143) -- Normal, Heroic
 	self:Log("SPELL_AURA_REMOVED", "OmegaVectorRemoved", 265129, 265143) -- Normal, Heroic
+	self:Log("SPELL_AURA_APPLIED", "LingeringInfection", 265127)
+	self:Log("SPELL_AURA_APPLIED_DOSE", "LingeringInfection", 265127)
 	self:Log("SPELL_CAST_SUCCESS", "EvolvingAffliction", 265178)
 	self:Log("SPELL_AURA_APPLIED", "EvolvingAfflictionApplied", 265178)
 	self:Log("SPELL_AURA_APPLIED_DOSE", "EvolvingAfflictionApplied", 265178)
-	self:Log("SPELL_AURA_APPLIED", "OmegaVectorApplied", 265129)
-	self:Log("SPELL_AURA_REMOVED", "OmegaVectorRemoved", 265129)
-	self:Log("SPELL_AURA_APPLIED", "LingeringInfectionApplied", 265127)
-	self:Log("SPELL_AURA_APPLIED_DOSE", "LingeringInfectionApplied", 265127)
 	self:Log("SPELL_CAST_START", "Contagion", 267242)
-	self:Log("SPELL_CAST_START", "Gestate", 265209)
+	self:Log("SPELL_CAST_SUCCESS", "Gestate", 265209)
 	self:Log("SPELL_AURA_APPLIED", "GestateApplied", 265212)
 	self:Log("SPELL_AURA_REMOVED", "GestateRemoved", 265212)
 	self:Log("SPELL_CAST_START", "Liquefy", 265217)
@@ -64,224 +64,227 @@ end
 
 function mod:OnEngage()
 	omegaList = {}
+	lingeringInfectionList = {}
 	omegaIconCount = 1
 
-	self:Bar(267242, self:Easy() and 20.5 or 11.5) -- Contagion
-	self:Bar(265212, self:Easy() and 10.5 or 14.5) -- Gestate
+	self:Bar(267242, 20.5) -- Contagion
+	self:Bar(265212, 10) -- Gestate
 
 	nextLiquify = GetTime() + 90
 	self:Bar(265217, 90) -- Liquefy
 
+	self:OpenInfo(265127, self:SpellName(265127)) -- Lingering Infection
+
 	liquified = false
 	infectionCount = 0
 	self:OmegaVectorReset()
-	self:RegisterEvent("UNIT_AURA") -- XXX Blizzard does not emit SPELL_AURA_APPLIED/REMOVED for multiple stacks
+
+	gestateCount = 0
+
+	-- self:RegisterEvent("UNIT_AURA") -- XXX Blizzard does not emit SPELL_AURA_APPLIED/REMOVED for multiple stacks
 end
 
 --------------------------------------------------------------------------------
 -- Omega Vector
 --
 
-do
-	local vectorKeys = { "vector_1", "vector_2", "vector_3", "vector_4" }
-	local soakerKeys = { "soaker_1", "soaker_2", "soaker_3", "soaker_4" }
+local vectorKeys = { "vector_1", "vector_2", "vector_3", "vector_4" }
+local soakerKeys = { "soaker_1", "soaker_2", "soaker_3", "soaker_4" }
 
-	local airborne = {}
-	local roster = { tank = {}, melee = {}, ranged = {}, healer = {}, index = {}, role = {} }
-	local playerUnit, playerIsTank
-	local vectors = {} -- [1-4] indexes points to the player having the vector, [units] indexes is a list of vectors for the unit
-	local stacks = {}
-	local soakers = {} -- [1-4] indexes points to the player soaking, [units] indexes point to the soaked vector for unit
-	local pending = {} -- Vectors not yet attributed
+local airborne = {}
+local roster = { tank = {}, melee = {}, ranged = {}, healer = {}, index = {}, role = {} }
+local playerUnit, playerIsTank
+local vectors = {} -- [1-4] indexes points to the player having the vector, [units] indexes is a list of vectors for the unit
+local stacks = {}
+local soakers = {} -- [1-4] indexes points to the player soaking, [units] indexes point to the soaked vector for unit
+local pending = {} -- Vectors not yet attributed
 
-	local function trace(color, str, ...)
-		print(format("|cff" .. color .. str, ...))
+local function trace(color, str, ...)
+	print(format("|cff" .. color .. str, ...))
+end
+
+function mod:OmegaVectorReset()
+	wipe(airborne)
+	wipe(vectors)
+	for i = 1, (self:Mythic() and 4 or 3) do
+		airborne[i] = i
+		vectors[i] = false
 	end
-
-	function mod:OmegaVectorReset()
-		wipe(airborne)
-		wipe(vectors)
-		for i = 1, (self:Mythic() and 4 or 3) do
-			airborne[i] = i
-			vectors[i] = false
-		end
-		for key in pairs(roster) do
-			wipe(roster[key])
-		end
-		local i = 1
-		for unit in self:IterateGroup { strict = true } do
-			local role = (self:Tank(unit) and roster.tank) or (self:Melee(unit) and roster.melee) or roster.ranged
-			role[unit] = true
-			if self:Healer(unit) then
-				roster.healer[unit] = true
-			end
-			roster.index[unit] = i
-			roster.role[unit] = (role == roster.tank and "tank") or (role == roster.melee and "melee") or "ranged"
-			vectors[unit] = {}
-			stacks[unit] = 0
-			if UnitIsUnit("player", unit) then
-				playerUnit = unit
-				playerIsTank = role == roster.tank
-			end
-			i = i + 1
-		end
-		wipe(soakers)
-		wipe(pending)
+	for key in pairs(roster) do
+		wipe(roster[key])
 	end
+	local i = 1
+	for unit in self:IterateGroup { strict = true } do
+		local role = (self:Tank(unit) and roster.tank) or (self:Melee(unit) and roster.melee) or roster.ranged
+		role[unit] = true
+		if self:Healer(unit) then
+			roster.healer[unit] = true
+		end
+		roster.index[unit] = i
+		roster.role[unit] = (role == roster.tank and "tank") or (role == roster.melee and "melee") or "ranged"
+		vectors[unit] = {}
+		stacks[unit] = 0
+		if UnitIsUnit("player", unit) then
+			playerUnit = unit
+			playerIsTank = role == roster.tank
+		end
+		i = i + 1
+	end
+	wipe(soakers)
+	wipe(pending)
+end
 
-	local minOverall -- Min. amount of stacks (not including tanks)
-	local minMelee, minRanged
-	local function updateStats()
-		minOverall = 99
-		minMelee = 99
-		minRanged = 99
-		for unit in mod:IterateGroup { alive = true } do
-			local count = stacks[unit] + (soakers[unit] and 1 or 0)
-			if not roster.tank[unit] and count < minOverall then
-				minOverall = count
-			end
-			if roster.melee[unit] and count < minMelee then
-				minMelee = count
-			end
-			if roster.ranged[unit] and count < minRanged then
-				minRanged = count
-			end
+local minOverall -- Min. amount of stacks (not including tanks)
+local minMelee, minRanged
+local function updateStats()
+	minOverall = 99
+	minMelee = 99
+	minRanged = 99
+	for unit in mod:IterateGroup { alive = true } do
+		local count = stacks[unit] + (soakers[unit] and 1 or 0)
+		if not roster.tank[unit] and count < minOverall then
+			minOverall = count
+		end
+		if roster.melee[unit] and count < minMelee then
+			minMelee = count
+		end
+		if roster.ranged[unit] and count < minRanged then
+			minRanged = count
 		end
 	end
+end
 
-	local function isEligible(unit)
-		if roster.tank[unit] then
-			return true -- Tanks are always eligible
-		elseif #vectors[unit] > 0 or soakers[unit] then
-			return false -- People with either the vector or already soaking are not
-		elseif stacks[unit] == 10 and minOverall < 10 then
-			return false -- People with 10 stacks are not eligible if some people have 9
-		elseif stacks[unit] == 11 then
-			return false -- People with 11 stacks are never eligible
+local function isEligible(unit)
+	if roster.tank[unit] then
+		return true -- Tanks are always eligible
+	elseif #vectors[unit] > 0 or soakers[unit] then
+		return false -- People with either the vector or already soaking are not
+	elseif stacks[unit] == 10 and minOverall < 10 then
+		return false -- People with 10 stacks are not eligible if some people have 9
+	elseif stacks[unit] == 11 then
+		return false -- People with 11 stacks are never eligible
+	else
+		return true
+	end
+end
+
+local function mostSuitableFor(unit)
+	local allowCrossSwitch = (minMelee - minRanged) ~= 0
+	local unitRole, unitIdx = roster.role[unit], roster.index[unit]
+	return function(a, b)
+		local aRole, bRole = roster.role[a], roster.role[b]
+		local aTank, bTank = roster.tank[a], roster.tank[b]
+		if aTank ~= bTank then
+			return not aTank
+		elseif not allowCrossSwitch and aRole ~= bRole and (aRole == unitRole or bRole == unitRole) then
+			-- Cross switch is forbidden, only one of the candidate has the same role as the unit
+			return aRole == unitRole
 		else
-			return true
-		end
-	end
-
-	local function mostSuitableFor(unit)
-		local allowCrossSwitch = (minMelee - minRanged) ~= 0
-		local unitRole, unitIdx = roster.role[unit], roster.index[unit]
-		return function(a, b)
-			local aRole, bRole = roster.role[a], roster.role[b]
-			local aTank, bTank = roster.tank[a], roster.tank[b]
-			if aTank ~= bTank then
-				return not aTank
-			elseif not allowCrossSwitch and aRole ~= bRole and (aRole == unitRole or bRole == unitRole) then
-				-- Cross switch is forbidden, only one of the candidate has the same role as the unit
-				return aRole == unitRole
+			local aStacks, bStacks = stacks[a], stacks[b]
+			local aCross, bCross = unitRole ~= aRole, unitRole ~= bRole
+			local aHealer, bHealer = roster.healer[a], roster.healer[b]
+			if aStacks ~= bStacks then
+				return aStacks < bStacks
+			elseif aCross ~= bCross then
+				return not aCross
+			elseif aHealer ~= bHealer then
+				if aCross then
+					return aHealer
+				else
+					return not aHealer
+				end
 			else
-				local aStacks, bStacks = stacks[a], stacks[b]
-				local aCross, bCross = unitRole ~= aRole, unitRole ~= bRole
-				local aHealer, bHealer = roster.healer[a], roster.healer[b]
-				if aStacks ~= bStacks then
-					return aStacks < bStacks
-				elseif aCross ~= bCross then
-					return not aCross
-				elseif aHealer ~= bHealer then
-					if aCross then
-						return aHealer
-					else
-						return not aHealer
-					end
+				local aDistance, bDistance = math.abs(unitIdx - roster.index[a]), math.abs(unitIdx - roster.index[b])
+				if aDistance ~= bDistance then
+					return aDistance < bDistance
 				else
-					local aDistance, bDistance = math.abs(unitIdx - roster.index[a]), math.abs(unitIdx - roster.index[b])
-					if aDistance ~= bDistance then
-						return aDistance < bDistance
-					else
-						return a < b
-					end
+					return a < b
 				end
 			end
 		end
 	end
+end
 
-	local function performAttribution(spellId)
-		while #pending > 0 do
-			local entry = table.remove(pending)
-			local vector, unit, expires = entry.id, entry.unit, entry.expires
+local function performAttribution(spellId)
+	while #pending > 0 do
+		local entry = table.remove(pending)
+		local vector, unit, expires = entry.id, entry.unit, entry.expires
 
-			updateStats()
-			local candidates = mod:EnumerateGroup { alive = true, filter = isEligible }
-			table.sort(candidates, mostSuitableFor(unit))
-			local soaker = candidates[1]
-			local toTanks = roster.tank[soaker]
+		updateStats()
+		local candidates = mod:EnumerateGroup { alive = true, filter = isEligible }
+		table.sort(candidates, mostSuitableFor(unit))
+		local soaker = candidates[1]
+		local toTanks = roster.tank[soaker]
 
-			soakers[vector] = soaker
-			soakers[soaker] = vector
+		soakers[vector] = soaker
+		soakers[soaker] = vector
 
-			-- Tracing
-			local str = ""
-			for i = 1, 4 do
-				if not candidates[i] then break end
-				str = str .. format(" %s(%d)", UnitName(candidates[i]), stacks[candidates[i]])
+		-- Tracing
+		local str = ""
+		for i = 1, 4 do
+			if not candidates[i] then break end
+			str = str .. format(" %s(%d)", UnitName(candidates[i]), stacks[candidates[i]])
+		end
+		local arrow = roster.role[unit] == roster.role[soaker] and "--->" or "-X->"
+		trace("ffffff", "|T%d:16:16:0:0|t %s %s%s", 137000 + vector, UnitName(unit), arrow, str)
+
+		-- Display soaker name to player
+		if unit == playerUnit then
+			if toTanks then
+				mod:ShowAura(spellId, "TANKS", { key = vectorKeys[vector], pulse = true, icon = "inv_shield_06" })
+			else
+				mod:ShowAura(spellId, UnitName(soaker), { key = vectorKeys[vector], pulse = false })
 			end
-			local arrow = roster.role[unit] == roster.role[soaker] and "--->" or "-X->"
-			trace("ffffff", "|T%d:16:16:0:0|t %s %s%s", 137000 + vector, UnitName(unit), arrow, str)
+		end
 
-			-- Display soaker name to player
-			if unit == playerUnit then
-				if toTanks then
-					mod:ShowAura(spellId, "TANKS", { key = vectorKeys[vector], pulse = true, icon = "inv_shield_06" })
-				else
-					mod:ShowAura(spellId, UnitName(soaker), { key = vectorKeys[vector], pulse = false })
-				end
-			end
-
-			-- Display unit name to soaker
-			if not toTanks and soaker == playerUnit then
-				local icon = vectors[unit][1]
-				mod:PlaySound(spellId, "beware")
-				mod:ShowAura(spellId, UnitName(unit), expires - GetTime(), {
-					key = soakerKeys[vector],
-					countdown = icon == vector,
-					icon = icon,
-					borderless = false,
-					stacks = icon ~= vector and "{rt" .. vector .. "}" or nil
-				})
-				if liquified then
-					local left = expires - GetTime()
-					for t = (left - 2), 0, -2 do
-						mod:Say(spellId, UnitName(unit), true, "YELL")
-					end
+		-- Display unit name to soaker
+		if not toTanks and soaker == playerUnit then
+			local icon = vectors[unit][1]
+			mod:PlaySound(spellId, "beware")
+			mod:ShowAura(spellId, UnitName(unit), expires - GetTime(), {
+				key = soakerKeys[vector],
+				countdown = icon == vector,
+				icon = icon,
+				borderless = false,
+				stacks = icon ~= vector and "{rt" .. vector .. "}" or nil
+			})
+			if liquified then
+				local left = expires - GetTime()
+				for t = (left - 2), 0, -2 do
+					mod:Say(spellId, UnitName(unit), true, "YELL")
 				end
 			end
 		end
 	end
+end
 
-	-- Enmulate SPELL_AURA_APPLIED / SPELL_AURA_REMOVED for multiple vectors on one target
-	local select, UnitDebuff = select, UnitDebuff
-	local fakeArgs = { spellId = 265129 }
-	function mod:UNIT_AURA(_, unit)
-		if not roster.index[unit] then return end
-		local count = 0
-		for i = 1, 40 do
-			local spellId = select(10, UnitDebuff(unit, i))
-			if not spellId then
-				break
-			elseif spellId == 265129 then
-				count = count + 1
-			end
+-- Enmulate SPELL_AURA_APPLIED / SPELL_AURA_REMOVED for multiple vectors on one target
+local select, UnitDebuff = select, UnitDebuff
+local fakeArgs = { spellId = 265143 }
+function mod:UNIT_AURA(_, unit)
+	if not roster.index[unit] then return end
+	local count = 0
+	for i = 1, 40 do
+		local spellId = select(10, UnitDebuff(unit, i))
+		if not spellId then
+			break
+		elseif spellId == 265143 or spellId == 265129 then
+			count = count + 1
 		end
-		if #vectors[unit] ~= count then
-			local delta = #vectors[unit] - count
-			local deltaAbs = math.abs(delta)
-			trace("ffff00", "Synthesizing %d %s on %s.", deltaAbs, delta < 0 and "SPELL_AURA_APPLIED" or "SPELL_AURA_REMOVED", UnitName(unit))
-			local fn = delta < 0 and self.OmegaVectorApplied or self.OmegaVectorRemoved
-			fakeArgs.destUnit = unit
-			for i = 1, deltaAbs do fn(self, fakeArgs) end
-		end
+	end
+	if #vectors[unit] ~= count then
+		local delta = #vectors[unit] - count
+		local deltaAbs = math.abs(delta)
+		trace("ffff00", "Synthesizing %d %s on %s.", deltaAbs, delta < 0 and "SPELL_AURA_APPLIED" or "SPELL_AURA_REMOVED", UnitName(unit))
+		local fn = delta < 0 and self.OmegaVectorApplied or self.OmegaVectorRemoved
+		fakeArgs.destUnit = unit
+		for i = 1, deltaAbs do fn(self, fakeArgs) end
 	end
 end
 
 --------------------------------------------------------------------------------
 -- Event Handlers
 --
-
 function mod:OmegaVectorApplied(args)
 	if self:GetOption(bigwigOmega) then
 		if not omegaList[args.destName] then
@@ -290,7 +293,7 @@ function mod:OmegaVectorApplied(args)
 			omegaList[args.destName] = omegaList[args.destName] + 1
 		end
 		if self:GetOption(omegaVectorMarker) and omegaList[args.destName] == 1 then
-			SetRaidTarget(args.destName, self:Easy() and 1 or (omegaIconCount % 3) + 1) -- Normal: 1 Heroic+: 1->2->3->1
+			SetRaidTarget(args.destName, (omegaIconCount % 3) + 1) -- Normal: 1 Heroic+: 1->2->3->1
 			omegaIconCount = omegaIconCount + 1
 		end
 		if self:Me(args.destGUID) then
@@ -335,11 +338,11 @@ function mod:OmegaVectorApplied(args)
 
 			-- Show temp aura for vector
 			if unit == playerUnit then
-				self:PlaySound(args.spellId, "warning")
-				self:Say(args.spellId, format("{rt%d}", vector), true)
-				self:TargetMessage2(args.spellId, "orange", args.destName)
+				self:PlaySound(265143, "warning")
+				self:Say(265143, format("{rt%d}", vector), true)
+				self:TargetMessage2(265143, "orange", args.destName)
 				infectionCount = infectionCount + 1
-				self:ShowAura(args.spellId, 10, "...", {
+				self:ShowAura(265143, 10, "...", {
 					key = vectorKeys[vector],
 					countdown = false,
 					stacks = "{rt" .. vector .. "}"
@@ -348,7 +351,7 @@ function mod:OmegaVectorApplied(args)
 		end
 
 		-- Only perform soaker attribution if no vectors are airborne
-		if #airborne < 1 then performAttribution(args.spellId) end
+		if #airborne < 1 then performAttribution(265143) end
 	end
 end
 
@@ -402,7 +405,7 @@ function mod:OmegaVectorRemoved(args)
 					local stacksOverride
 					if vectors[unit][1] == soakedVector then stacksOverride = false end
 					-- Update icon and stacks parts
-					self:ShowAura(args.spellId, {
+					self:ShowAura(265143, {
 						key = soakerKeys[soakedVector],
 						pulse = false,
 						icon = vectors[unit][1],
@@ -410,6 +413,36 @@ function mod:OmegaVectorRemoved(args)
 						stacks = stacksOverride
 					})
 				end
+			end
+		end
+	end
+end
+
+do
+	local rangeCheck, rangeObject
+
+	function mod:CheckRange(object, range)
+		for unit in mod:IterateGroup() do
+			if not UnitIsUnit(unit, "player") and not UnitIsDead(unit) and self:Range(unit) <= range then
+				object:SetColor(1, 0.2, 0.2)
+				return
+			end
+		end
+		object:SetColor(0.2, 1, 0.2)
+	end
+
+	function mod:LingeringInfection(args)
+		lingeringInfectionList[args.destName] = args.amount or 1
+		self:SetInfoByTable(args.spellId, lingeringInfectionList)
+
+		if self:Me(args.destGUID) then
+			infectionCount = infectionCount + 1
+			self:ShowAura(args.spellId, "Infection", { pin = -1, pulse = false, stacks = args.amount or 1, countdown = false })
+
+			if infectionCount >= 6 and not rangeObject and self:Hud(args.spellId) then
+				rangeObject = Hud:DrawSpinner("player", 60)
+				rangeCheck = self:ScheduleRepeatingTimer("CheckRange", 0.2, rangeObject, 5)
+				self:CheckRange(rangeObject, 5)
 			end
 		end
 	end
@@ -426,86 +459,42 @@ function mod:EvolvingAfflictionApplied(args)
 	self:PlaySound(args.spellId, "alert", args.destName)
 end
 
-do
-	local rangeCheck, rangeObject
-
-	function mod:CheckRange(object, range)
-		for unit in mod:IterateGroup() do
-			if not UnitIsUnit(unit, "player") and not UnitIsDead(unit) and self:Range(unit) <= range then
-				object:SetColor(1, 0.2, 0.2)
-				return
-			end
-		end
-		object:SetColor(0.2, 1, 0.2)
-	end
-
-	function mod:LingeringInfectionApplied(args)
-		if self:Me(args.destGUID) then
-			infectionCount = infectionCount + 1
-			self:ShowAura(args.spellId, "Infection", { pin = -1, pulse = false, stacks = args.amount or 1, countdown = false })
-
-			if infectionCount >= 6 and not rangeObject and self:Hud(args.spellId) then
-				rangeObject = Hud:DrawSpinner("player", 60)
-				rangeCheck = self:ScheduleRepeatingTimer("CheckRange", 0.2, rangeObject, 5)
-				self:CheckRange(rangeObject, 5)
-			end
-		end
-	end
-end
-
 function mod:Contagion(args)
 	self:Message(args.spellId, "orange")
 	self:PlaySound(args.spellId, "alarm")
-	local timer = self:Easy() and 23.1 or 13.5
+	local timer = 23.1
 	if nextLiquify > GetTime() + timer then
 		self:Bar(args.spellId, timer)
 	end
 end
 
-do
-	local targetFound = false
-	local function printTarget(self, name, guid)
-		if not self:Tank(name) then
-			targetFound = true
-			if self:Me(guid) then
-				self:PlaySound(265212, "alert", nil, name)
-				self:Say(265212)
-			end
-			self:TargetMessage2(265212, "orange", name)
-			self:PrimaryIcon(265212, name)
-		end
+function mod:Gestate(args)
+	local timer = 25
+	gestateCount = gestateCount + 1
+	if nextLiquify > GetTime() + timer then
+		self:CDBar(265212, timer)
 	end
+	if self:Me(args.destGUID) then
+		self:PlaySound(265212, "alert")
+		self:Say(265212)
+	end
+	self:TargetMessage2(265212, "orange", args.destName)
+	self:PrimaryIcon(265212, args.destName)
+end
 
-	function mod:Gestate(args)
-		targetFound = false
-		self:GetBossTarget(printTarget, 0.5, args.sourceGUID)
-		local timer = self:Easy() and 25 or 30
-		if nextLiquify > GetTime() + timer then
-			self:CDBar(265212, timer)
-		end
+function mod:GestateApplied(args)
+	if self:Me(args.destGUID) then
+		self:SayCountdown(args.spellId, 5)
+		self:ShowDebuffAura(args.spellId)
 	end
+end
 
-	function mod:GestateApplied(args)
-		if not targetFound then
-			if self:Me(args.destGUID) then
-				self:PlaySound(args.spellId, "alert")
-				self:SayCountdown(args.spellId, 5)
-				self:ShowDebuffAura(args.spellId)
-			end
-			self:TargetMessage2(args.spellId, "orange", args.destName)
-			self:PrimaryIcon(265212, args.destName)
-		elseif self:Me(args.destGUID) then
-			self:SayCountdown(args.spellId, 5)
-		end
+function mod:GestateRemoved(args)
+	if self:Me(args.destGUID) then
+		self:CancelSayCountdown(args.spellId)
+		self:HideAura(args.spellId)
 	end
-
-	function mod:GestateRemoved(args)
-		if self:Me(args.destGUID) then
-			self:CancelSayCountdown(args.spellId)
-			self:HideAura(args.spellId)
-		end
-		self:PrimaryIcon(args.spellId)
-	end
+	self:PrimaryIcon(args.spellId)
 end
 
 function mod:Liquefy(args)

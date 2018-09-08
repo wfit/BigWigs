@@ -1,4 +1,3 @@
-
 --------------------------------------------------------------------------------
 -- Module Declaration
 --
@@ -9,17 +8,18 @@ mod:RegisterEnableMob(133298)
 mod.engageId = 2128
 --mod.respawnTime = 30
 
+local hasDebuff = false
+
 --------------------------------------------------------------------------------
 -- Initialization
 --
-
 function mod:GetOptions()
 	return {
-		{262277, "TANK"}, -- Thrashing Terror
+		{ 262277, "TANK" }, -- Thrashing Terror
 		262292, -- Rotting Regurgitation
-		{262288, "IMPACT"}, -- Shockwave Stomp
-		{262313, "ME_ONLY", "SAY", "SAY_COUNTDOWN", "AURA"}, -- Malodorous Miasma
-		{262314, "ME_ONLY", "FLASH", "SAY", "SAY_COUNTDOWN", "PULSE", "AURA"}, -- Putrid Paroxysm
+		{ 262288, "IMPACT" }, -- Shockwave Stomp
+		{ 262313, "ME_ONLY", "SAY", "SAY_COUNTDOWN", "AURA", "SMARTCOLOR" }, -- Malodorous Miasma
+		{ 262314, "ME_ONLY", "FLASH", "SAY", "SAY_COUNTDOWN", "PULSE", "AURA", "SMARTCOLOR" }, -- Putrid Paroxysm
 		262364, -- Enticing Essence -- XXX Used for CL.adds right now
 		262378, -- Fetid Frenzy
 	}
@@ -47,12 +47,16 @@ function mod:OnEngage()
 		self:Bar(262288, 26) -- Shockwave Stomp
 	end
 	self:Bar(262364, self:Easy() and 50 or 35.5, CL.adds) -- Adds / Enticing Essence
+	hasDebuff = false
+end
+
+local function nextStomp()
+	return mod:BarTimeLeft(262288)
 end
 
 --------------------------------------------------------------------------------
 -- Event Handlers
 --
-
 function mod:TerribleThrash(args)
 	self:Message(args.spellId, "purple")
 	self:PlaySound(args.spellId, "alert")
@@ -68,7 +72,7 @@ end
 
 function mod:ShockwaveStomp(args)
 	self:Message(args.spellId, "orange")
-	self:PlaySound(args.spellId, "alarm")
+	self:PlaySound(args.spellId, hasDebuff and "beware" or "alarm")
 	self:ImpactBar(args.spellId, 2.5)
 	self:Bar(args.spellId, 30)
 end
@@ -76,17 +80,27 @@ end
 function mod:MalodorousMiasmaApplied(args)
 	self:TargetMessage2(args.spellId, "orange", args.destName)
 	self:PlaySound(args.spellId, "info", nil, args.destName)
-	if self:Mythic() and self:Me(args.destGUID) then
-		self:Say(args.spellId)
-		self:SayCountdown(args.spellId, 18)
+	if self:Me(args.destGUID) then
 		self:ShowDebuffAura(args.spellId)
+		hasDebuff = true
+		if nextStomp() < 18 + 6 + 3 then
+			self:SmartColorSet(args.spellId, 1, 0.5, 0)
+		end
+		if self:Mythic() then
+			self:Say(args.spellId)
+			self:SayCountdown(args.spellId, 18)
+		end
 	end
 end
 
 function mod:MalodorousMiasmaRemoved(args)
-	if self:Mythic() and self:Me(args.destGUID) then
-		self:CancelSayCountdown(args.spellId)
+	if self:Me(args.destGUID) then
 		self:HideAura(args.spellId)
+		self:SmartColorUnset(args.spellId)
+		hasDebuff = false
+		if self:Mythic() then
+			self:CancelSayCountdown(args.spellId)
+		end
 	end
 end
 
@@ -94,8 +108,11 @@ function mod:PutridParoxysmApplied(args)
 	self:TargetMessage2(args.spellId, "blue", args.destName)
 	self:PlaySound(args.spellId, "warning", nil, args.destName)
 	if self:Me(args.destGUID) then
-		self:Flash(args.spellId)
 		self:ShowDebuffAura(args.spellId)
+		hasDebuff = true
+		if nextStomp() < 6 + 3 then
+			self:SmartColorSet(args.spellId, 1, 0, 0)
+		end
 		if self:Mythic() then
 			self:Say(args.spellId)
 			self:SayCountdown(args.spellId, 6)
@@ -106,6 +123,8 @@ end
 function mod:PutridParoxysmRemoved(args)
 	if self:Me(args.destGUID) then
 		self:HideAura(args.spellId)
+		self:SmartColorUnset(args.spellId)
+		hasDebuff = false
 		if self:Mythic() then
 			self:CancelSayCountdown(args.spellId)
 		end
@@ -116,7 +135,7 @@ do
 	local prev = 0
 	function mod:EnticingEssence(args)
 		local t = GetTime()
-		if t-prev > 2 then
+		if t - prev > 2 then
 			prev = t
 			self:Message(args.spellId, "red")
 			self:PlaySound(args.spellId, "warning")
@@ -133,7 +152,7 @@ do
 	local prev = 0
 	function mod:TrashChuteVisualState(args)
 		local t = GetTime()
-		if t-prev > 2 then
+		if t - prev > 2 then
 			prev = t
 			self:Message(262364, "cyan", nil, CL.incoming:format(CL.adds))
 			self:PlaySound(262364, "long")
