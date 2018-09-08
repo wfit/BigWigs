@@ -51,7 +51,7 @@ function mod:GetOptions()
 		263307, -- Mind-Numbing Chatter
 		-- Stage 3
 		274582, -- Malignant Growth
-		275160, -- Gaze of G'huun
+		{275160, "IMPACT"}, -- Gaze of G'huun
 		263321, -- Undulating Mass
 	}
 end
@@ -273,6 +273,7 @@ function mod:GazeofGhuun(args)
 	self:Message(args.spellId, "orange")
 	self:PlaySound(args.spellId, "warning")
 	self:Bar(args.spellId, 21.9)
+	self:ImpactBar(args.spellId, 2)
 end
 
 do
