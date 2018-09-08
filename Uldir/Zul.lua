@@ -15,7 +15,7 @@ mod.engageId = 2145 -- XXX Needs checking
 
 function mod:GetOptions()
 	return {
-		{273365, "SAY", "SAY_COUNTDOWN"}, -- Dark Revelation
+		{273365, "SAY", "SAY_COUNTDOWN", "AURA"}, -- Dark Revelation
 		{269936, "SAY"}, -- Fixate
 		273360, -- Pool of Darkness
 		273889, -- Call of Blood
@@ -33,6 +33,7 @@ function mod:OnBossEnable()
 	-- Stage 1
 	self:Log("SPELL_CAST_SUCCESS", "DarkRevelation", 273365)
 	self:Log("SPELL_AURA_APPLIED", "DarkRevelationApplied", 273365)
+	self:Log("SPELL_AURA_REMOVED", "DarkRevelationRemoved", 273365)
 	self:Log("SPELL_AURA_APPLIED", "FixateApplied", 269936, 276020)
 	self:Log("SPELL_CAST_START", "PoolofDarkness", 273360)
 	self:Log("SPELL_CAST_START", "CallofBlood", 273889, 274098, 274119)
@@ -72,8 +73,15 @@ do
 			self:PlaySound(args.spellId, "warning")
 			self:Say(args.spellId)
 			self:SayCountdown(args.spellId, 10)
+			self:ShowDebuffAura(args.spellId)
 		end
 		self:TargetsMessage(args.spellId, "yellow", playerList)
+	end
+
+	function mod:DarkRevelationRemoved(args)
+		if self:Me(args.destGUID) then
+			self:HideAura(args.spellId)
+		end
 	end
 end
 

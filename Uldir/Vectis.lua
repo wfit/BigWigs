@@ -39,8 +39,9 @@ function mod:GetOptions()
 
 		267242, -- Contagion
 		{ 265212, "SAY", "SAY_COUNTDOWN", "ICON", "AURA" }, -- Gestate
+		{ 265206, "IMPACT" }, -- Immunosuppression
 		265217, -- Liquefy
-		266459, -- Plague Bomb
+		{ 266459, "HUD" }, -- Plague Bomb
 	}
 end
 
@@ -57,9 +58,11 @@ function mod:OnBossEnable()
 	self:Log("SPELL_CAST_SUCCESS", "Gestate", 265209)
 	self:Log("SPELL_AURA_APPLIED", "GestateApplied", 265212)
 	self:Log("SPELL_AURA_REMOVED", "GestateRemoved", 265212)
+	self:Log("SPELL_CAST_START", "Immunosuppression", 265206)
 	self:Log("SPELL_CAST_START", "Liquefy", 265217)
 	self:Log("SPELL_AURA_REMOVED", "LiquefyRemoved", 265217)
 	self:Log("SPELL_CAST_SUCCESS", "PlagueBomb", 266459)
+	self:Death("AmalgamDeath", 135016)
 end
 
 function mod:OnEngage()
@@ -101,6 +104,23 @@ local pending = {} -- Vectors not yet attributed
 
 local function trace(color, str, ...)
 	print(format("|cff" .. color .. str, ...))
+end
+
+local spamTicker
+
+local function StopSpamming()
+	if spamTicker then
+		spamTicker:Cancel()
+		spamTicker = nil
+	end
+end
+
+local function StartSpamming(icon)
+	StopSpamming()
+	local msg = "{rt" .. icon .. "}"
+	spamTicker = C_Timer.NewTicker(2, function()
+		SendChatMessage(msg, "YELL")
+	end)
 end
 
 function mod:OmegaVectorReset()
@@ -234,6 +254,7 @@ local function performAttribution(spellId)
 				mod:ShowAura(spellId, "TANKS", { key = vectorKeys[vector], pulse = true, icon = "inv_shield_06" })
 			else
 				mod:ShowAura(spellId, UnitName(soaker), { key = vectorKeys[vector], pulse = false })
+				StartSpamming(vector)
 			end
 		end
 
@@ -248,6 +269,7 @@ local function performAttribution(spellId)
 				borderless = false,
 				stacks = icon ~= vector and "{rt" .. vector .. "}" or nil
 			})
+			StartSpamming(vector)
 			if liquified then
 				local left = expires - GetTime()
 				for t = (left - 2), 0, -2 do
@@ -286,7 +308,7 @@ end
 -- Event Handlers
 --
 function mod:OmegaVectorApplied(args)
-	if self:GetOption(bigwigOmega) then
+	if self:Normal() or self:GetOption(bigwigOmega) then
 		if not omegaList[args.destName] then
 			omegaList[args.destName] = 1
 		else
@@ -356,7 +378,7 @@ function mod:OmegaVectorApplied(args)
 end
 
 function mod:OmegaVectorRemoved(args)
-	if self:GetOption(bigwigOmega) then
+	if self:Normal() or self:GetOption(bigwigOmega) then
 		omegaList[args.destName] = omegaList[args.destName] - 1
 		if omegaList[args.destName] == 0 then
 			omegaList[args.destName] = nil
@@ -390,6 +412,7 @@ function mod:OmegaVectorRemoved(args)
 			if unit == playerUnit then
 				infectionCount = infectionCount - 1
 				self:HideAura(vectorKeys[vector])
+				StopSpamming()
 			end
 		end
 
@@ -398,6 +421,7 @@ function mod:OmegaVectorRemoved(args)
 			if soakers[vector] == playerUnit then
 				-- I'm the soaker for this vector, just remove it
 				self:HideAura(soakerKeys[vector])
+				StopSpamming()
 			else
 				local soakedVector = soakers[playerUnit]
 				if vectors[soakedVector] == unit then
@@ -497,6 +521,21 @@ function mod:GestateRemoved(args)
 	self:PrimaryIcon(args.spellId)
 end
 
+do
+	local function barLabel()
+		return "Immunosupression (Add #" .. gestateCount .. ")"
+	end
+
+	function mod:Immunosuppression(args)
+		self:ImpactBar(args.spellId, 3, barLabel())
+		self:Bar(args.spellId, 10)
+	end
+
+	function mod:AmalgamDeath(args)
+		self:StopBar(barLabel())
+	end
+end
+
 function mod:Liquefy(args)
 	self:Message(args.spellId, "cyan", nil, CL.intermission)
 	self:PlaySound(args.spellId, "long")
@@ -532,5 +571,11 @@ function mod:PlagueBomb(args)
 	pathogenBombCount = pathogenBombCount + 1
 	if pathogenBombCount < 3 then
 		self:Bar(args.spellId, 12.2)
+	end
+	if self:Hud(args.spellId) then
+		local spinner = Hud:DrawSpinner("player", 50, 8):SetColor(0.5, 1, 0.5)
+		function spinner:OnDone()
+			spinner:Remove()
+		end
 	end
 end

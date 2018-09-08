@@ -62,7 +62,7 @@ function mod:OnBossEnable()
 	self:Log("SPELL_CAST_SUCCESS", "UldirDefensiveBeam", 277973, 277742, 269827) -- Sideways Beams, Room 2 Roof Beams, Room 3 Roof Beams
 	self:Log("SPELL_PERIODIC_DAMAGE", "UldirDefensiveBeamDamage", 268253)
 	self:Log("SPELL_PERIODIC_MISSED", "UldirDefensiveBeamDamage", 268253)
-	self:Death("AddDeath", "*")
+	self:Death("AddDeath", 136315, 143067, 143065)
 end
 
 function mod:OnEngage()
@@ -97,7 +97,8 @@ do
 
 	function mod:AddMark(_, unit)
 		local guid = UnitGUID(unit)
-		if self:MobId(guid) ~= self:MobId("boss1") and not markers[guid] then
+		local mobId = self:MobId(guid)
+		if (mobId == 136315 or mobId == 143067 or mobId == 143065) and not markers[guid] then
 			mark(unit, guid)
 		end
 	end
