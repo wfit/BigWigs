@@ -48,7 +48,7 @@ function mod:GetOptions()
 		{270447, "TANK"}, -- Growing Corruption
 		{270373, "HUD"}, -- Wave of Corruption
 		{263235, "SAY", "SAY_COUNTDOWN"}, -- Blood Feast
-		263307, -- Mind-Numbing Chatter
+		{263307, "IMPACT"}, -- Mind-Numbing Chatter
 		-- Stage 3
 		274582, -- Malignant Growth
 		{275160, "IMPACT"}, -- Gaze of G'huun
@@ -294,6 +294,7 @@ function mod:MindNumbingChatter(args)
 	self:Message(args.spellId, "orange", nil, CL.casting:format(args.spellName))
 	self:PlaySound(args.spellId, "alert")
 	self:CDBar(args.spellId, 13.5)
+	self:ImpactBar(args.spellId, 1.5)
 end
 
 function mod:HorrorDeath()
