@@ -100,16 +100,50 @@ function mod:OnEngage()
 	self:CDBar(272506, 8) -- Explosive Corruption
 end
 
+function mod:CheckRange(object, range)
+	for unit in mod:IterateGroup() do
+		if not UnitIsUnit(unit, "player") and not UnitIsDead(unit) and self:Range(unit) <= range then
+			object:SetColor(1, 0.2, 0.2)
+			return
+		end
+	end
+	object:SetColor(0.2, 1, 0.2)
+end
+
 --------------------------------------------------------------------------------
 -- Event Handlers
 --
 
-function mod:UNIT_SPELLCAST_SUCCEEDED(_, _, _, spellId)
-	if spellId == 270373 then -- Wave of Corruption
-		self:Message(spellId, "yellow")
-		self:PlaySound(spellId, "alarm")
-		waveOfCorruptionCount = waveOfCorruptionCount + 1
-		self:Bar(spellId, waveOfCorruptionCount % 2 == 0 and 20.5 or 40.5)
+do
+	local rangeCheck, rangeObject
+
+	function mod:CreateWaveOfCurruptionHUD()
+		if self:Hud(272404) then
+			rangeObject = Hud:DrawSpinner("player", 50)
+			rangeCheck = self:ScheduleRepeatingTimer("CheckRange", 0.1, rangeObject, 6)
+			self:CheckRange(rangeObject, 5)
+			self:ScheduleTimer("ClearWaveOfCurruptionHUD", 4)
+		end
+	end
+
+	function mod:ClearWaveOfCurruptionHUD()
+		if rangeObject then
+			self:CancelTimer(rangeCheck)
+			rangeObject:Remove()
+			rangeObject = nil
+		end
+	end
+
+	function mod:UNIT_SPELLCAST_SUCCEEDED(_, _, _, spellId)
+		if spellId == 270373 then -- Wave of Corruption
+			self:Message(spellId, "yellow")
+			self:PlaySound(spellId, "alarm")
+			waveOfCorruptionCount = waveOfCorruptionCount + 1
+
+			local cd = waveOfCorruptionCount % 2 == 0 and 20.5 or 40.5
+			self:Bar(spellId, cd)
+			self:ScheduleTimer("CreateWaveOfCurruptionHUD", cd - 3)
+		end
 	end
 end
 
@@ -123,6 +157,8 @@ function mod:CorruptingBiteApplied()
 	self:Bar(272506, 9) -- Explosive Corruption
 	self:Bar(270373, 15.5) -- Wave of Corruption
 	self:Bar(263235, 47) -- Blood Feast
+
+	self:ScheduleTimer("CreateWaveOfCurruptionHUD", 15.5 - 3)
 end
 
 do

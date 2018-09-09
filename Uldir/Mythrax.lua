@@ -66,6 +66,16 @@ function mod:OnEngage()
 	self:ScheduleTimer("CreateOblivionSphereHUD", 9 - 3)
 end
 
+function mod:CheckRange(object, range)
+	for unit in mod:IterateGroup() do
+		if not UnitIsUnit(unit, "player") and not UnitIsDead(unit) and self:Range(unit) <= range then
+			object:SetColor(1, 0.2, 0.2)
+			return
+		end
+	end
+	object:SetColor(0.2, 1, 0.2)
+end
+
 --------------------------------------------------------------------------------
 -- Event Handlers
 --
@@ -98,16 +108,6 @@ function mod:ObliterationBlast(args)
 end
 
 do
-	function mod:CheckRange(object, range)
-		for unit in mod:IterateGroup() do
-			if not UnitIsUnit(unit, "player") and not UnitIsDead(unit) and self:Range(unit) <= range then
-				object:SetColor(1, 0.2, 0.2)
-				return
-			end
-		end
-		object:SetColor(0.2, 1, 0.2)
-	end
-
 	local rangeCheck, rangeObject
 
 	function mod:CreateOblivionSphereHUD()
