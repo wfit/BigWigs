@@ -34,7 +34,7 @@ function mod:GetOptions()
 		{ 265143, "SAY_COUNTDOWN", "SAY", "AURA", "SAY_COUNTDOWN" }, -- Omega Vector
 		omegaVectorMarker,
 		bigwigOmega,
-		{ 265127, "INFOBOX", "AURA", "HUD" }, -- Lingering Infection
+		{ 265127, "INFOBOX", "HUD" }, -- Lingering Infection
 		{ 265178, "TANK" }, -- Evolving Affliction
 
 		267242, -- Contagion
@@ -461,8 +461,6 @@ do
 
 		if self:Me(args.destGUID) then
 			infectionCount = infectionCount + 1
-			self:ShowAura(args.spellId, "Infection", { pin = -1, pulse = false, stacks = args.amount or 1, countdown = false })
-
 			if infectionCount >= 6 and not rangeObject and self:Hud(args.spellId) then
 				rangeObject = Hud:DrawSpinner("player", 60)
 				rangeCheck = self:ScheduleRepeatingTimer("CheckRange", 0.2, rangeObject, 5)

@@ -13,6 +13,8 @@ mod.engageId = 2135
 -- Locals
 --
 
+local Hud = Oken.Hud
+
 local annihilationList = {}
 
 --------------------------------------------------------------------------------
@@ -24,7 +26,7 @@ function mod:GetOptions()
 		{272146, "INFOBOX"}, -- Annihilation
 		{273282, "TANK"}, -- Essence Shear
 		273538, -- Obliteration Blast
-		272404, -- Oblivion Sphere
+		{272404, "HUD"}, -- Oblivion Sphere
 		{272536, "SAY", "SAY_COUNTDOWN"}, -- Imminent Ruin
 		273810, -- Xalzaix's Awakening
 		274230, -- Oblivion's Veil
@@ -61,6 +63,7 @@ function mod:OnEngage()
 	self:Bar(272404, 9) -- Oblivion Sphere
 	self:Bar(273282, 20) -- Essence Shear
 
+	self:ScheduleTimer("CreateOblivionSphereHUD", 9 - 3)
 end
 
 --------------------------------------------------------------------------------
@@ -95,6 +98,35 @@ function mod:ObliterationBlast(args)
 end
 
 do
+	function mod:CheckRange(object, range)
+		for unit in mod:IterateGroup() do
+			if not UnitIsUnit(unit, "player") and not UnitIsDead(unit) and self:Range(unit) <= range then
+				object:SetColor(1, 0.2, 0.2)
+				return
+			end
+		end
+		object:SetColor(0.2, 1, 0.2)
+	end
+
+	local rangeCheck, rangeObject
+
+	function mod:CreateOblivionSphereHUD()
+		if self:Hud(272404) then
+			rangeObject = Hud:DrawSpinner("player", 50)
+			rangeCheck = self:ScheduleRepeatingTimer("CheckRange", 0.1, rangeObject, 6)
+			self:CheckRange(rangeObject, 6)
+			self:ScheduleTimer("ClearOblivionSphereHUD", 4)
+		end
+	end
+
+	function mod:ClearOblivionSphereHUD()
+		if rangeObject then
+			self:CancelTimer(rangeCheck)
+			rangeObject:Remove()
+			rangeObject = nil
+		end
+	end
+
 	local prev = 0
 	function mod:OblivionSphere(args)
 		local t = GetTime()
@@ -103,6 +135,7 @@ do
 			self:Message(args.spellId, "red")
 			self:PlaySound(args.spellId, "warning")
 			self:Bar(args.spellId, 15)
+			self:ScheduleTimer("CreateOblivionSphereHUD", 15 - 3)
 		end
 	end
 end

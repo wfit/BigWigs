@@ -203,7 +203,7 @@ do
 		elseif eyeBeamCount == 3 then
 			local cd = 32.8
 			self:CDBar(args.spellId, cd)
-			self:ScheduleTimer("PlaySound", cd - 3, args.spellId, "beware")
+			self:ScheduleTimer("PlaySound", cd - 3, 264382, "beware")
 		end
 	end
 end
