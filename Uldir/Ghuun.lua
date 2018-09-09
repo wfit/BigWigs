@@ -46,7 +46,7 @@ function mod:GetOptions()
 		263482, -- Reorigination Blast
 		-- Stage 2
 		{270447, "TANK"}, -- Growing Corruption
-		270373, -- Wave of Corruption
+		{270373, "HUD"}, -- Wave of Corruption
 		{263235, "SAY", "SAY_COUNTDOWN"}, -- Blood Feast
 		263307, -- Mind-Numbing Chatter
 		-- Stage 3
@@ -118,7 +118,7 @@ do
 	local rangeCheck, rangeObject
 
 	function mod:CreateWaveOfCurruptionHUD()
-		if self:Hud(272404) then
+		if self:Hud(270373) then
 			rangeObject = Hud:DrawSpinner("player", 50)
 			rangeCheck = self:ScheduleRepeatingTimer("CheckRange", 0.1, rangeObject, 6)
 			self:CheckRange(rangeObject, 5)
