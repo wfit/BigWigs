@@ -17,6 +17,8 @@ local Hud = Oken.Hud
 local omegaList = {}
 local omegaIconCount = 1
 local pathogenBombCount = 1
+local contagionCount = 1
+local immunosuppressionCount = 1
 local nextLiquify = 0
 local lingeringInfectionList = {}
 local liquified = false
@@ -59,6 +61,7 @@ function mod:OnBossEnable()
 	self:Log("SPELL_AURA_APPLIED", "GestateApplied", 265212)
 	self:Log("SPELL_AURA_REMOVED", "GestateRemoved", 265212)
 	self:Log("SPELL_CAST_START", "Immunosuppression", 265206)
+	self:Death("PlagueAmalgamDeath", 135016)
 	self:Log("SPELL_CAST_START", "Liquefy", 265217)
 	self:Log("SPELL_AURA_REMOVED", "LiquefyRemoved", 265217)
 	self:Log("SPELL_CAST_SUCCESS", "PlagueBomb", 266459)
@@ -69,8 +72,9 @@ function mod:OnEngage()
 	omegaList = {}
 	lingeringInfectionList = {}
 	omegaIconCount = 1
+	contagionCount = 1
 
-	self:Bar(267242, 20.5) -- Contagion
+	self:Bar(267242, 20.5, CL.count:format(self:SpellName(267242), contagionCount)) -- Contagion
 	self:Bar(265212, 10) -- Gestate
 
 	nextLiquify = GetTime() + 90
@@ -482,11 +486,12 @@ function mod:EvolvingAfflictionApplied(args)
 end
 
 function mod:Contagion(args)
-	self:Message(args.spellId, "orange")
+	self:Message(args.spellId, "orange", nil, CL.count:format(args.spellName, contagionCount))
 	self:PlaySound(args.spellId, "alarm")
+	contagionCount = contagionCount + 1
 	local timer = 23.1
 	if nextLiquify > GetTime() + timer then
-		self:Bar(args.spellId, timer)
+		self:Bar(args.spellId, timer, CL.count:format(args.spellName, contagionCount))
 	end
 end
 
@@ -502,6 +507,8 @@ function mod:Gestate(args)
 	end
 	self:TargetMessage2(265212, "orange", args.destName)
 	self:PrimaryIcon(265212, args.destName)
+	immunosuppressionCount = 1
+	self:CDBar(265206, 6, CL.count:format(self:SpellName(265206), immunosuppressionCount)) -- Immunosuppression
 end
 
 function mod:GestateApplied(args)
@@ -525,11 +532,15 @@ do
 	end
 
 	function mod:Immunosuppression(args)
+		self:Message(args.spellId, "orange", nil, CL.count:format(args.spellName, immunosuppressionCount))
+		self:PlaySound(args.spellId, "alarm")
+		immunosuppressionCount = immunosuppressionCount + 1
+		self:Bar(args.spellId, 9.7, CL.count:format(args.spellName, immunosuppressionCount))
 		self:ImpactBar(args.spellId, 3, barLabel())
-		self:Bar(args.spellId, 10)
 	end
 
 	function mod:AmalgamDeath(args)
+		self:StopBar(CL.count:format(self:SpellName(265206), contagionCount))
 		self:StopBar(barLabel())
 	end
 end
@@ -540,7 +551,7 @@ function mod:Liquefy(args)
 	self:CastBar(args.spellId, 33)
 
 	self:StopBar(265209) -- Gestate
-	self:StopBar(267242) -- Contagion
+	self:StopBar(CL.count:format(self:SpellName(267242), contagionCount)) -- Contagion
 	self:StopBar(265178) -- Evolving Affliction
 
 	pathogenBombCount = 1
