@@ -192,6 +192,7 @@ do
 			end
 			self:Say(272506)
 			self:SayCountdown(272506, 4)
+			self:ShowAura(272506, "Explosive C.", 4, true)
 		end
 	end
 
