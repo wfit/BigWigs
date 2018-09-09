@@ -36,7 +36,7 @@ function mod:GetOptions()
 	return {
 		"stages",
 		-- Stage 1
-		{272506, "SAY", "SAY_COUNTDOWN"}, -- Explosive Corruption
+		{272506, "SAY", "SAY_COUNTDOWN", "AURA"}, -- Explosive Corruption
 		270287, -- Blighted Ground
 		267509, -- Thousand Maws
 		267427, -- Torment
@@ -181,6 +181,7 @@ do
 				self:PlaySound(272506, "alarm")
 				self:Say(272506)
 				self:SayCountdown(272506, 4)
+				self:ShowDebuffAura(272506)
 			end
 			self:TargetsMessage(272506, "orange", playerList, 3)
 		elseif self:Me(args.destGUID) then -- Secondary Target or Stage 3 initial application
@@ -198,6 +199,7 @@ do
 		if self:Me(args.destGUID) then
 			castOnMe = false
 			self:CancelSayCountdown(272506)
+			self:HideAura(272506)
 		end
 	end
 end
