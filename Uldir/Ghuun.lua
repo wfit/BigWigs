@@ -24,6 +24,8 @@ mod.engageId = 2122
 -- Initialization
 --
 
+local Hud = Oken.Hud
+
 local stage = 1
 local waveCounter = 0
 local waveOfCorruptionCount = 1
@@ -124,7 +126,7 @@ function mod:CorruptingBiteApplied()
 	self:Bar(270373, 15.5) -- Wave of Corruption
 	self:Bar(263235, 47) -- Blood Feast
 
-	self:ScheduleTimer("CreateWaveOfCurruptionHUD", 15.5 - 3)
+	self:ScheduleTimer("CreateWaveOfCurruptionHUD", 15.5 - 4)
 end
 
 do
@@ -146,7 +148,7 @@ do
 			if self:Me(args.destGUID) then
 				self:PlaySound(272506, "alarm")
 				self:Say(272506)
-				self:SayCountdown(272506, 4)
+				self:SayCountdown(272506, 5)
 				self:ShowAura(272506, "Explosive C.", 4, true)
 			end
 			self:TargetsMessage(272506, "orange", playerList, 3, nil, nil, 2) -- Travel time
@@ -236,7 +238,9 @@ end
 -- Stage 2
 function mod:GrowingCorruption(args)
 	self:StackMessage(args.spellId, args.destName, args.amount, "purple")
-	self:PlaySound(args.spellId, "alarm")
+	if args.amount and args.amount >= 3 then
+		self:PlaySound(args.spellId, "alarm")
+	end
 end
 
 do
@@ -265,7 +269,7 @@ do
 		waveOfCorruptionCount = waveOfCorruptionCount + 1
 		local cd = stage == 3 and 25.5 or waveOfCorruptionCount % 2 == 0 and 15 or 31
 		self:Bar(args.spellId, cd)
-		self:ScheduleTimer("CreateWaveOfCurruptionHUD", cd - 3)
+		self:ScheduleTimer("CreateWaveOfCurruptionHUD", cd - 4)
 	end
 end
 
