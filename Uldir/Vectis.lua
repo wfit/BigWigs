@@ -65,7 +65,6 @@ function mod:OnBossEnable()
 	self:Log("SPELL_CAST_START", "Liquefy", 265217)
 	self:Log("SPELL_AURA_REMOVED", "LiquefyRemoved", 265217)
 	self:Log("SPELL_CAST_SUCCESS", "PlagueBomb", 266459)
-	self:Death("AmalgamDeath", 135016)
 end
 
 function mod:OnEngage()
@@ -326,6 +325,7 @@ function mod:OmegaVectorApplied(args)
 			self:TargetMessage2(265143, "blue", args.destName)
 			self:PlaySound(265143, "alarm")
 			self:SayCountdown(265143, 10)
+			self:ShowDebuffAura(args.spellId)
 		end
 	else
 		-- Target unit and Vector ID
@@ -391,6 +391,7 @@ function mod:OmegaVectorRemoved(args)
 			end
 			if self:Me(args.destGUID) then
 				self:CancelSayCountdown(265143)
+				self:HideAura(args.spellId)
 			end
 		end
 	else
@@ -462,6 +463,8 @@ do
 	function mod:LingeringInfection(args)
 		lingeringInfectionList[args.destName] = args.amount or 1
 		self:SetInfoByTable(args.spellId, lingeringInfectionList)
+		self:ShowAura(args.spellId, "Infection", { pin = -1, pulse = false, stacks = args.amount or 1, countdown = false })
+
 
 		if self:Me(args.destGUID) then
 			infectionCount = infectionCount + 1
@@ -539,7 +542,7 @@ do
 		self:ImpactBar(args.spellId, 3, barLabel())
 	end
 
-	function mod:AmalgamDeath(args)
+	function mod:PlagueAmalgamDeath(args)
 		self:StopBar(CL.count:format(self:SpellName(265206), contagionCount))
 		self:StopBar(barLabel())
 	end
