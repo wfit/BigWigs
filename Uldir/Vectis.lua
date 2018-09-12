@@ -325,7 +325,7 @@ function mod:OmegaVectorApplied(args)
 			self:TargetMessage2(265143, "blue", args.destName)
 			self:PlaySound(265143, "alarm")
 			self:SayCountdown(265143, 10)
-			self:ShowDebuffAura(args.spellId)
+			self:ShowAura(265143, "Vector", 10)
 		end
 	else
 		-- Target unit and Vector ID
@@ -391,7 +391,7 @@ function mod:OmegaVectorRemoved(args)
 			end
 			if self:Me(args.destGUID) then
 				self:CancelSayCountdown(265143)
-				self:HideAura(args.spellId)
+				self:HideAura(265143)
 			end
 		end
 	else
