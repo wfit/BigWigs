@@ -312,7 +312,7 @@ end
 -- Event Handlers
 --
 function mod:OmegaVectorApplied(args)
-	if self:Normal() or self:GetOption(bigwigOmega) then
+	if self:Normal() or self:GetOption(bigwigOmega) or true then
 		if not omegaList[args.destName] then
 			omegaList[args.destName] = 1
 		else
@@ -382,7 +382,7 @@ function mod:OmegaVectorApplied(args)
 end
 
 function mod:OmegaVectorRemoved(args)
-	if self:Normal() or self:GetOption(bigwigOmega) then
+	if self:Normal() or self:GetOption(bigwigOmega) or true then
 		omegaList[args.destName] = omegaList[args.destName] - 1
 		if omegaList[args.destName] == 0 then
 			omegaList[args.destName] = nil
