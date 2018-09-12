@@ -6,7 +6,7 @@ local mod, CL = BigWigs:NewBoss("Fetid Devourer", 1861, 2146)
 if not mod then return end
 mod:RegisterEnableMob(133298)
 mod.engageId = 2128
---mod.respawnTime = 30
+mod.respawnTime = 32
 
 local trashCount = 0
 
@@ -35,6 +35,7 @@ function mod:OnBossEnable()
 	self:Log("SPELL_AURA_APPLIED_DOSE", "MalodorousMiasmaApplied", 262313)
 	self:Log("SPELL_AURA_REMOVED", "MalodorousMiasmaRemoved", 262313)
 	self:Log("SPELL_AURA_APPLIED", "PutridParoxysmApplied", 262314)
+	self:Log("SPELL_AURA_APPLIED_DOSE", "PutridParoxysmApplied", 262314)
 	self:Log("SPELL_AURA_REMOVED", "PutridParoxysmRemoved", 262314)
 	self:Log("SPELL_CAST_START", "EnticingEssence", 262364)
 	self:Log("SPELL_AURA_APPLIED", "FetidFrenzy", 262378)
@@ -83,8 +84,13 @@ function mod:ShockwaveStomp(args)
 end
 
 function mod:MalodorousMiasmaApplied(args)
-	self:TargetMessage2(args.spellId, "orange", args.destName)
-	self:PlaySound(args.spellId, "info", nil, args.destName)
+	local amount = args.amount or 1
+	if amount == 1 then
+		self:TargetMessage2(args.spellId, "orange", args.destName)
+	else
+		self:StackMessage(args.spellId, args.destName, args.amount, "orange")
+	end
+	self:PlaySound(args.spellId, self:Mythic() and "warning" or "info", nil, args.destName) -- spread in Mythic
 	if self:Me(args.destGUID) then
 		self:ShowDebuffAura(args.spellId)
 		hasDebuff = true
@@ -92,8 +98,10 @@ function mod:MalodorousMiasmaApplied(args)
 			self:SmartColorSet(args.spellId, 1, 0.5, 0)
 		end
 		if self:Mythic() then
-			self:CancelSayCountdown(args.spellId)
+			if amount == 1 then
 			self:Say(args.spellId)
+		end
+			self:CancelSayCountdown(args.spellId)
 			self:SayCountdown(args.spellId, 18, 10)
 		end
 	end
@@ -111,7 +119,12 @@ function mod:MalodorousMiasmaRemoved(args)
 end
 
 function mod:PutridParoxysmApplied(args)
-	self:TargetMessage2(args.spellId, "blue", args.destName)
+	local amount = args.amount or 1
+	if amount == 1 then
+		self:TargetMessage2(args.spellId, "orange", args.destName)
+	else
+		self:StackMessage(args.spellId, args.destName, args.amount, "orange")
+	end
 	self:PlaySound(args.spellId, "warning", nil, args.destName)
 	if self:Me(args.destGUID) then
 		self:ShowDebuffAura(args.spellId)
@@ -120,8 +133,10 @@ function mod:PutridParoxysmApplied(args)
 			self:SmartColorSet(args.spellId, 1, 0, 0)
 		end
 		if self:Mythic() then
+			if amount == 1 then
+				self:Say(args.spellId)
+			end
 			self:CancelSayCountdown(args.spellId)
-			self:Say(args.spellId)
 			self:SayCountdown(args.spellId, 6)
 		end
 	end
