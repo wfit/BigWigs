@@ -322,9 +322,10 @@ function mod:OmegaVectorApplied(args)
 			omegaIconCount = omegaIconCount + 1
 		end
 		if self:Me(args.destGUID) then
+			local _, _, _, expirationTime = self:UnitDebuff("player", args.spellId)
 			self:TargetMessage2(265143, "blue", args.destName)
 			self:PlaySound(265143, "alarm")
-			self:SayCountdown(265143, 10)
+			self:SayCountdown(265143, expirationTime - GetTime())
 			self:ShowDebuffAura(265143, args.spellId)
 		end
 	else
