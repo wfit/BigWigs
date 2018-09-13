@@ -325,7 +325,7 @@ function mod:OmegaVectorApplied(args)
 			self:TargetMessage2(265143, "blue", args.destName)
 			self:PlaySound(265143, "alarm")
 			self:SayCountdown(265143, 10)
-			self:ShowAura(265143, "Vector", 10)
+			self:ShowDebuffAura(265143, args.spellId)
 		end
 	else
 		-- Target unit and Vector ID

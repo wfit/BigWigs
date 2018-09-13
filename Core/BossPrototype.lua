@@ -2572,14 +2572,17 @@ end
 do
 	local opts = {}
 
-	function boss:ShowDebuffAura(key, ...)
-		local name, stacks, _, expirationTime = self:UnitDebuff("player", key)
+	function boss:ShowDebuffAura(key, spellId, ...)
+		if type(spellId) ~= "number" then
+			return boss:ShowDebuffAura(key, key, spellId, ...)
+		end
+		local name, stacks, _, expirationTime = self:UnitDebuff("player", spellId)
 		if name then
 			opts.stacks = (stacks and stacks > 2) and stacks or nil
 			opts.duration = expirationTime > 0 and (expirationTime - GetTime()) or nil
 			self:ShowAura(key, name, opts, ...)
 		else
-			BigWigs:Print(format("No debuff found for aura %d!", key))
+			BigWigs:Print(format("No debuff found for aura %d!", spellId))
 		end
 	end
 
