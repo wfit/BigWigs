@@ -88,7 +88,7 @@ function mod:MalodorousMiasmaApplied(args)
 		end
 		if self:Mythic() then
 			self:Say(args.spellId)
-			self:SayCountdown(args.spellId, 18)
+			self:SayCountdown(args.spellId, 18, 10)
 		end
 	end
 end
