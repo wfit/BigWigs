@@ -102,7 +102,7 @@ function mod:MalodorousMiasmaApplied(args)
 			self:Say(args.spellId)
 		end
 			self:CancelSayCountdown(args.spellId)
-			self:SayCountdown(args.spellId, 18, 10)
+			self:SayCountdown(args.spellId, 18, nil, 10)
 		end
 	end
 end
