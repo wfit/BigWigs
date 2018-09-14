@@ -2574,7 +2574,7 @@ do
 
 	function boss:ShowDebuffAura(key, spellId, ...)
 		if type(spellId) ~= "number" then
-			return boss:ShowDebuffAura(key, key, spellId, ...)
+			return self:ShowDebuffAura(key, key, spellId, ...)
 		end
 		local name, stacks, _, expirationTime = self:UnitDebuff("player", spellId)
 		if name then
