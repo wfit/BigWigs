@@ -22,6 +22,7 @@ local L = mod:GetLocale()
 if L then
 	L.sideLaser = "(Side) Beams" -- short for: (location) Uldir Defensive Beam
 	L.upLaser = "(Roof) Beams"
+	L.mythic_beams = "(Side + Roof) Beams"
 end
 
 local markers = {}
@@ -42,6 +43,11 @@ function mod:GetOptions()
 		267795, -- Purifying Flame
 		267878, -- Wind Tunnel
 		268253, -- Uldir Defensive Beam
+		-- Mythic
+		{279662, "SAY", "SAY_COUNTDOWN", "FLASH"}, -- Endemic Virus
+	},{
+		[268198] = CL.general,
+		[279662] = CL.mythic,
 	}
 end
 
@@ -63,6 +69,10 @@ function mod:OnBossEnable()
 	self:Log("SPELL_PERIODIC_DAMAGE", "UldirDefensiveBeamDamage", 268253)
 	self:Log("SPELL_PERIODIC_MISSED", "UldirDefensiveBeamDamage", 268253)
 	self:Death("AddDeath", 136315, 143067, 143065)
+
+	-- Mythic
+	self:Log("SPELL_AURA_APPLIED", "EndemicVirusApplied", 279662)
+	self:Log("SPELL_AURA_REMOVED", "EndemicVirusRemoved", 279662)
 end
 
 function mod:OnEngage()
@@ -141,15 +151,16 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(_, unit, _, spellId)
 			self:StopBar(L.upLaser)
 			self:CDBar(268253, 10, L.sideLaser)
 		end
-		self:Message(spellId, "cyan", nil, CL.count:format(self:SpellName(spellId), room), "ability_mage_firestarter")
+		self:Message2(spellId, "cyan", CL.count:format(self:SpellName(spellId), room), "ability_mage_firestarter")
 		self:PlaySound(spellId, "info")
 		self:Bar(spellId, 182, CL.count:format(self:SpellName(spellId), room), "ability_mage_firestarter")
 	end
 end
 
 function mod:ClingingCorruption(args)
-	self:Message(args.spellId, "orange")
-	if self:Interrupter() then
+	self:Message2(args.spellId, "orange")
+	local _, ready = self:Interrupter()
+	if ready then
 		self:PlaySound(args.spellId, "alert")
 	end
 end
@@ -168,12 +179,12 @@ function mod:CleansingPurgeFinished(args)
 	elseif self:MobId(args.sourceGUID) == 137023 then -- Room 3
 		room = 3
 	end
-	self:Message(269051, "red", nil, CL.casting:format(CL.count:format(args.spellName, room)), "ability_mage_firestarter") -- XXX Casting or Activating?
+	self:Message2(269051, "red", CL.casting:format(CL.count:format(args.spellName, room)), "ability_mage_firestarter") -- XXX Casting or Activating?
 	self:PlaySound(269051, "alarm")
 end
 
 function mod:SanitizingStrikeStart(args)
-	self:Message(args.spellId, "purple")
+	self:Message2(args.spellId, "purple")
 	self:PlaySound(args.spellId, "alert")
 	self:ImpactBar(args.spellId, 3)
 end
@@ -188,7 +199,7 @@ function mod:SanitizingStrikeApplied(args)
 end
 
 function mod:PurifyingFlame(args)
-	self:Message(args.spellId, "yellow")
+	self:Message2(args.spellId, "yellow")
 	self:PlaySound(args.spellId, "alert")
 	self:Bar(args.spellId, 23.2)
 end
@@ -201,7 +212,7 @@ do
 			if t - prev > 2 then
 				prev = t
 				self:PlaySound(267795, "alarm")
-				self:TargetMessage2(267795, "blue", args.destName, true)
+				self:PersonalMessage(267795, "underyou")
 			end
 		end
 	end
@@ -213,7 +224,7 @@ do
 		local t = GetTime()
 		if t - prev > 2 then
 			prev = t
-			self:Message(267878, "red")
+			self:Message2(267878, "red")
 			self:PlaySound(267878, "warning")
 			self:CastBar(267878, 11)
 			self:CDBar(267878, 46.5)
@@ -228,6 +239,11 @@ function mod:UldirDefensiveBeam(args)
 		castTime = 4
 		nextBeam = L.sideLaser
 		timer = 31.5
+	elseif self:Mythic() then
+		beamType = L.mythic_beams
+		castTime = 4
+		nextBeam = L.mythic_beams
+		timer = 31.5
 	elseif args.spellId == 277973 then
 		beamType = L.sideLaser
 		castTime = 4
@@ -239,7 +255,7 @@ function mod:UldirDefensiveBeam(args)
 		nextBeam = L.sideLaser
 		timer = stage == 3 and 16 or 17
 	end
-	self:Message(268253, "yellow", nil, beamType)
+	self:Message2(268253, "yellow", beamType)
 	self:PlaySound(268253, "alert")
 	self:CastBar(268253, castTime, beamType)
 	self:CDBar(268253, timer, nextBeam)
@@ -253,8 +269,29 @@ do
 			if t - prev > 2 then
 				prev = t
 				self:PlaySound(args.spellId, "alarm")
-				self:TargetMessage2(args.spellId, "blue", args.destName, true)
+				self:PersonalMessage(args.spellId, "underyou")
 			end
+		end
+	end
+end
+
+-- Mythic
+do
+	local playerList = mod:NewTargetList()
+	function mod:EndemicVirusApplied(args)
+		playerList[#playerList+1] = args.destName
+		self:PlaySound(args.spellId, "warning", nil, playerList)
+		self:TargetsMessage(args.spellId, "yellow", playerList)
+		if self:Me(args.destGUID) then
+			self:Flash(args.spellId)
+			self:Say(args.spellId)
+			self:SayCountdown(args.spellId, 20)
+		end
+	end
+
+	function mod:EndemicVirusRemoved(args)
+		if self:Me(args.destGUID) then
+			self:CancelSayCountdown(args.spellId)
 		end
 	end
 end

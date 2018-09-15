@@ -1508,6 +1508,7 @@ do
 end
 
 do
+	local GetSpellCooldown = GetSpellCooldown
 	local canInterrupt = false
 	local spellList = {
 		106839, -- Skull Bash (Druid)
@@ -1539,14 +1540,26 @@ do
 	-- @string[opt] guid if not nil, will only return true if the GUID matches your target or focus.
 	-- @return boolean
 	function boss:Interrupter(guid)
-		-- We will probably need to make this smarter
-		if guid then
-			if canInterrupt and (UnitGUID("target") == guid or UnitGUID("focus") == guid) then
-				return canInterrupt
+		if canInterrupt then
+			local ready = true
+			local start, duration = GetSpellCooldown(canInterrupt)
+			if start > 0 then -- On cooldown currently
+				local endTime = start + duration
+				local t = GetTime()
+				if endTime - t > 1 then -- Greater than 1 second remaining on cooldown, not ready
+					ready = false
+				end
 			end
-			return
+
+			if guid then
+				if UnitGUID("target") == guid or UnitGUID("focus") == guid then
+					return canInterrupt, ready
+				end
+				return
+			end
+
+			return canInterrupt, ready
 		end
-		return canInterrupt
 	end
 end
 
@@ -1707,9 +1720,9 @@ end
 --- Open the "Info Box" display.
 -- @param key the option key to check
 -- @string title the title of the window
-function boss:OpenInfo(key, title)
+function boss:OpenInfo(key, title, TEMP)
 	if checkFlag(self, key, C.INFOBOX) then
-		self:SendMessage("BigWigs_ShowInfoBox", self, title or (type(key) == "number" and spells[key]))
+		self:SendMessage("BigWigs_ShowInfoBox", self, title or (type(key) == "number" and spells[key]), TEMP)
 	end
 end
 
@@ -1834,6 +1847,20 @@ function boss:Message(key, color, sound, text, icon)
 				self:SendMessage("BigWigs_Sound", self, key, sound)
 			end
 		end
+	end
+end
+
+function boss:Message2(key, color, text, icon)
+	if checkFlag(self, key, C.MESSAGE) then
+		self:SendMessage("BigWigs_Message", self, key, type(text) == "string" and text or spells[text or key], color, icon ~= false and icons[icon or key])
+	end
+end
+
+function boss:PersonalMessage(key, localeString, text, icon)
+	if checkFlag(self, key, C.MESSAGE) then
+		local str = localeString and CL[localeString] or CL.you
+		local msg = format(str, type(text) == "string" and text or spells[text or key])
+		self:SendMessage("BigWigs_Message", self, key, msg, "blue", icon ~= false and icons[icon or key])
 	end
 end
 

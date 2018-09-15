@@ -40,7 +40,7 @@ function mod:GetOptions()
 		{271895, "SAY"}, -- Sanguine Static
 		{275270, "HUD"}, -- Fixate
 		275432, -- Uldir Defensive Beam
-		{275189, "SAY_COUNTDOWN", "AURA"}, -- Hardened Arteries
+		{275189, "SAY_COUNTDOWN", "AURA", "FLASH"}, -- Hardened Arteries
 		{275205, "SAY", "SAY_COUNTDOWN", "FLASH", "AURA"}, -- Enlarged Heart
 	}
 end
@@ -83,7 +83,7 @@ function mod:OnEngage()
 	self:Bar(271728, 52) -- Retrieve Cudgel
 	if self:Mythic() then
 		self:Bar(275189, 25, CL.count:format(self:SpellName(275189), arteriesCount)) -- Hardened Arteries
-		self:Bar(275205, 26) -- Enlarged Heart
+		self:Bar(275205, 25) -- Enlarged Heart
 	end
 	self:RegisterUnitEvent("UNIT_HEALTH_FREQUENT", nil, "boss1")
 end
@@ -95,7 +95,7 @@ end
 function mod:UNIT_HEALTH_FREQUENT(event, unit)
 	local hp = UnitHealth(unit) / UnitHealthMax(unit) * 100
 	if hp < 38 then -- Intermission at 35%
-		self:Message("stages", "green", nil, CL.soon:format(CL.intermission), false)
+		self:Message2("stages", "green", CL.soon:format(CL.intermission), false)
 		self:UnregisterUnitEvent(event, unit)
 	end
 end
@@ -140,8 +140,8 @@ do
 	end
 
 function mod:CudgelofGore(args)
-	self:PlaySound(args.spellId, "warning", nil, CL.count:format(args.spellName, cudgelCount))
-	self:Message(args.spellId, "red")
+	self:PlaySound(args.spellId, "warning")
+	self:Message2(args.spellId, "red", CL.count:format(args.spellName, cudgelCount))
 	self:ImpactBar(args.spellId, 4.5, CL.count:format(args.spellName, cudgelCount))
 	cudgelCount = cudgelCount + 1
 	self:CDBar(args.spellId, 59, CL.count:format(args.spellName, cudgelCount))
@@ -150,7 +150,7 @@ end
 
 	function mod:RetrieveCudgel(args)
 		self:PlaySound(args.spellId, "alarm")
-		self:Message(args.spellId, "orange")
+		self:Message2(args.spellId, "orange")
 		self:CDBar(args.spellId, 59)
 
 		if cudgelTarget then
@@ -178,7 +178,7 @@ end
 
 function mod:PoweredDown(args)
 	self:PlaySound("stages", "long")
-	self:Message("stages", "green", nil, CL.intermission, false)
+	self:Message2("stages", "green", CL.intermission, false)
 	self:StopBar(271224) -- Plasma Discharge
 	self:StopBar(271895) -- Sanguine Static
 	self:StopBar(CL.count:format(self:SpellName(271296), cudgelCount)) -- Cudgel of Gore
@@ -186,10 +186,12 @@ function mod:PoweredDown(args)
 	self:StopBar(275205) -- Enlarged Heart
 	self:StopBar(CL.count:format(self:SpellName(275189), arteriesCount)) -- Hardened Arteries
 
-	self:CDBar("stages", 87.5, CL.intermission)
+	self:CDBar("stages", 87.5, CL.intermission, 271965) -- Powered Down
 
-	defensiveBeamCount = 1
-	self:StartDefensiveBeamTimer(timersUldirDefensiveBeam[defensiveBeamCount])
+	if not self:Easy() then
+		defensiveBeamCount = 1
+		self:StartDefensiveBeamTimer(timersUldirDefensiveBeam[defensiveBeamCount])
+	end
 end
 
 function mod:StartDefensiveBeamTimer(timer)
@@ -205,7 +207,7 @@ end
 function mod:PoweredDownRemoved(args)
 	stage = 2
 	self:PlaySound("stages", "long")
-	self:Message("stages", "green", nil, CL.stage:format(stage), false)
+	self:Message2("stages", "green", CL.stage:format(stage), false)
 
 	arteriesCount = 1
 	cudgelCount = 1
@@ -214,16 +216,16 @@ function mod:PoweredDownRemoved(args)
 	self:Bar(271895, 27.5) -- Sanguine Static
 	self:Bar(271296, 37, CL.count:format(self:SpellName(271296), cudgelCount)) -- Cudgel of Gore
 	self:Bar(271728, 57.5) -- Retrieve Cudgel
-	--if self:Mythic() then XXX Need timers
-	--	self:Bar(275189, 25, CL.count:format(self:SpellName(275189), arteriesCount)) -- Hardened Arteries
-	--	self:Bar(275205, 26) -- Enlarged Heart
-	--end
+	if self:Mythic() then
+		self:Bar(275189, 31, CL.count:format(self:SpellName(275189), arteriesCount)) -- Hardened Arteries
+		self:Bar(275205, 31) -- Enlarged Heart
+	end
 end
 
 function mod:Fixate(args)
 	if self:Me(args.destGUID) then
 		self:PlaySound(args.spellId, "warning")
-		self:TargetMessage2(args.spellId, "blue", args.destName)
+		self:PersonalMessage(args.spellId)
 		if self:Hud(args.spellId) then
 			Hud:DrawArea(args.sourceGUID, 50):SetColor(0.8, 0.2, 0.2):Register(args.sourceKey, true)
 			Hud:DrawText(args.sourceGUID, "Fixate"):Register(args.sourceKey)
@@ -243,12 +245,13 @@ do
 		local t = GetTime()
 		if t-prev > 2 then
 			prev = t
-			self:Message(args.spellId, "yellow", nil, CL.count:format(args.spellName, arteriesCount))
+			self:Message2(args.spellId, "yellow", CL.count:format(args.spellName, arteriesCount))
 			self:PlaySound(args.spellId, "alert")
 			arteriesCount = arteriesCount + 1
 			self:CDBar(args.spellId, 60.5, CL.count:format(args.spellName, arteriesCount))
 		end
 		if self:Me(args.destGUID) then
+			self:Flash(args.spellId)
 			self:SayCountdown(args.spellId, 6)
 			self:ShowDebuffAura(args.spellId)
 		end
@@ -293,7 +296,7 @@ do
 			if t-prev > 2 then
 				prev = t
 				self:PlaySound(args.spellId, "alarm")
-				self:TargetMessage2(args.spellId, "blue", args.destName, true)
+				self:PersonalMessage(args.spellId, "underyou")
 			end
 		end
 	end
