@@ -83,7 +83,7 @@ function mod:TerribleThrash(args)
 end
 
 function mod:RottingRegurgitation(args)
-	self:Message2("breath", "yellow", nil, 18609, 262292) -- Breath (Rotting Regurgitation)
+	self:Message2("breath", "yellow", 18609, 262292) -- Breath (Rotting Regurgitation)
 	self:PlaySound("breath", "alert")
 	self:CDBar("breath", self:Easy() and 30.5 or 46, 18609, 262292) -- 41.3, 52.1, 46.3, 41.9, 32.6, 34.1 XXX
 	self:CastBar("breath", 6.5, 18609, 262292)
