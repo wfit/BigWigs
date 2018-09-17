@@ -18,7 +18,7 @@ local mod, CL = BigWigs:NewBoss("G'huun", 1861, 2147)
 if not mod then return end
 mod:RegisterEnableMob(132998)
 mod.engageId = 2122
---mod.respawnTime = 30
+mod.respawnTime = 30
 
 --------------------------------------------------------------------------------
 -- Initialization
@@ -53,7 +53,7 @@ function mod:GetOptions()
 		{263307, "IMPACT"}, -- Mind-Numbing Chatter
 		-- Stage 3
 		274582, -- Malignant Growth
-		{275160, "IMPACT"}, -- Gaze of G'huun
+		{275160, "EMPHASIZE", "IMPACT"}, -- Gaze of G'huun
 		263321, -- Undulating Mass
 	}
 end
