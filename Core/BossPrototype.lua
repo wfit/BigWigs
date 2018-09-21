@@ -52,6 +52,9 @@ local updateData = function(module)
 
 	local tree = GetSpecialization()
 	if tree then
+		if not GetSpecializationRole(tree) then
+			return
+		end
 		myRole = GetSpecializationRole(tree):lower()
 		myDamagerRole = nil
 		if myRole == "damager" then
