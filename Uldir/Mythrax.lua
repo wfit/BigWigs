@@ -48,7 +48,7 @@ function mod:GetOptions()
 		{272146, "INFOBOX"}, -- Annihilation
 		{273282, "TANK"}, -- Essence Shear
 		273538, -- Obliteration Blast
-		{272404, "PROXIMITY", "HUD"}, -- Oblivion Sphere
+		{272404, "PROXIMITY", "HUD", "SMARTCOLOR"}, -- Oblivion Sphere
 		{272536, "SAY", "SAY_COUNTDOWN"}, -- Imminent Ruin
 		imminentRuinMarker,
 		279013, -- Essence Shatter
@@ -88,6 +88,9 @@ function mod:OnBossEnable()
 	self:Log("SPELL_CAST_START", "ObliterationBeam", 272115)
 	self:Log("SPELL_CAST_SUCCESS", "VisionsofMadness", 273949)
 	self:Log("SPELL_CAST_START", "EssenceShatter", 279013)
+
+	self:Log("SPELL_AURA_APPLIED", "OblivionSphereApplied", 272407)
+	self:Log("SPELL_AURA_REMOVED", "OblivionSphereRemoved", 272407)
 
 	-- Mythic
 	self:Log("SPELL_CAST_SUCCESS", "LivingWeapon", 276922)
@@ -247,7 +250,7 @@ do
 			rangeObject = Hud:DrawSpinner("player", 50)
 			rangeCheck = self:ScheduleRepeatingTimer("CheckRange", 0.1, rangeObject, 6)
 			self:CheckRange(rangeObject, 6)
-			self:ScheduleTimer("ClearOblivionSphereHUD", 4)
+			self:ScheduleTimer("ClearOblivionSphereHUD", 3)
 		end
 	end
 
@@ -366,6 +369,18 @@ end
 function mod:EssenceShatter(args)
 	self:Message2(args.spellId, "red", CL.casting:format(args.spellName))
 	self:PlaySound(args.spellId, "long")
+end
+
+function mod:OblivionSphereApplied(args)
+	if self:Me(args.destGUID) then
+		self:SmartColorSet(272404, 1, 0.5, 0)
+	end
+end
+
+function mod:OblivionSphereRemoved(args)
+	if self:Me(args.destGUID) then
+		self:SmartColorUnset(272404)
+	end
 end
 
 -- Mythic
