@@ -186,14 +186,14 @@ end
 function mod:TrashChuteVisualState()
 	trashCount = trashCount + 1
 	if (self:Mythic() and trashCount % 3 == 2) or (not self:Mythic() and trashCount % 2 == 1) then -- Small add
-		self:Message2(262364, "cyan", nil, CL.incoming:format(self:SpellName(-17867)))
+		self:Message2(262364, "cyan", CL.incoming:format(self:SpellName(-17867)))
 		self:PlaySound(262364, "long")
 		if not self:Mythic() then
 			self:Bar(262364, self:Mythic() and 75 or self:Easy() and 60 or 55, self:SpellName(-18875)) -- Waste Disposal Units
 			self:Bar(262364, 10, CL.spawning:format(CL.adds)) -- Adds / Enticing Essence
 		end
 	elseif (self:Mythic() and trashCount % 3 == 1) then -- Big Add
-		self:Message2(262364, "cyan", nil, CL.incoming:format(self:SpellName(-18565)))
+		self:Message2(262364, "cyan", CL.incoming:format(self:SpellName(-18565)))
 		self:PlaySound(262364, "long")
 		self:Bar(262364, 75, self:SpellName(-18875)) -- Waste Disposal Units
 		self:Bar(262364, 20, CL.spawning:format(CL.adds)) -- Adds
