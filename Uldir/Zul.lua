@@ -108,7 +108,7 @@ end
 function mod:OnEngage()
 	stage = 1
 	self:Bar(273361, 21) -- Pool of Darkness
-	self:Bar(273365, 30) -- Dark Revelation
+	self:CDBar(273365, self:Easy() and 41 or 30) -- Dark Revelation
 
 	self:CDBar("crawg", self:Mythic() and 46.5 or 37, CL.soon:format(L.crawg_msg), L.crawg_icon)
 	self:CDBar("bloodhexer", self:Mythic() and 73 or 50, CL.soon:format(L.bloodhexer_msg), L.bloodhexer_icon)
@@ -171,7 +171,7 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(_, _, _, spellId)
 end
 
 function mod:DarkRevelation(args)
-	self:CDBar(args.spellId, 56) -- pull:30.5, 58.4, 56.0, 64.4
+	self:CDBar(args.spellId, self:Easy() and 51 or 56) -- pull:30.5, 58.4, 56.0, 64.4
 end
 
 do
@@ -230,7 +230,7 @@ do
 		if self:GetOption(darkRevelationMarker) then
 			SetRaidTarget(args.destName, 0)
 		end
-		local t = GetTime()
+		local t = args.time
 		if t-prev > 1 then
 			prev = t
 			self:Message2(-18530, "cyan", CL.spawning:format(self:SpellName(-18530)), 172884) -- Minion of Zul, spell_shadow_shadowfiend
@@ -248,7 +248,7 @@ do
 	local prev = 0
 	function mod:FixateApplied(args)
 		if self:Me(args.destGUID) then
-			local t = GetTime()
+			local t = args.time
 			if t-prev > 2 then
 				prev = t
 				self:PersonalMessage(269936)
@@ -392,7 +392,7 @@ do
 		if self:GetOption(deathwishMarker) then
 			SetRaidTarget(args.destName, 0)
 		end
-		local t = GetTime()
+		local t = args.time
 		if t-prev > 1 then
 			prev = t
 			self:Message2(-18530, "cyan", CL.spawning:format(self:SpellName(-18530)), 172884) -- Minion of Zul, spell_shadow_shadowfiend

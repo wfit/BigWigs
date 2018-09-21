@@ -33,7 +33,7 @@ local L = mod:GetLocale()
 if L then
 	L.surging_darkness_eruption = "Eruption (%d)"
 	L.mythic_adds = "Mythic Adds"
-	L.mythic_adds_desc = "Show timers when adds will spawn in Mythic (Both Qiraji Warrior and Anub'ar Voidweaver spawn at the same time)."
+	L.mythic_adds_desc = "Show timers for when the adds will spawn in Mythic (both Qiraji Warrior and Anub'ar Voidweaver spawn at the same time)."
 	L.mythic_adds_icon = "inv_misc_ahnqirajtrinket_01"
 end
 
@@ -219,7 +219,7 @@ do
 	local function printTarget(self, name, guid)
 		local count = CL.count:format(self:SpellName(264382), eyeBeamCount)
 		self:TargetMessage2(264382, "yellow", name, count)
-		self:PlaySound(264382, "alert")
+		self:PlaySound(264382, "alert", nil, name)
 		self:PrimaryIcon(264382, name)
 		if self:Me(guid) then
 			self:Say(264382, count)
