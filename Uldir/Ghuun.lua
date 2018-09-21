@@ -370,16 +370,17 @@ do
 		end
 	end
 
-function mod:WaveofCorruption(args)
-	self:Message2(args.spellId, "yellow", CL.count:format(args.spellName, waveOfCorruptionCount))
-	self:PlaySound(args.spellId, "alarm")
-	self:StopBar(CL.count:format(args.spellName, waveOfCorruptionCount))
-	waveOfCorruptionCount = waveOfCorruptionCount + 1
-	local cd = stage == 3 and (self:Mythic() and 15.9 or 25.5) or waveOfCorruptionCount % 2 == 0 and 15 or 31
-	self:Bar(args.spellId, cd, CL.count:format(args.spellName, waveOfCorruptionCount))
-	self:ScheduleTimer("CreateWaveOfCurruptionHUD", cd - 4)
-	if stage == 2 and waveOfCorruptionCount % 2 == 1 then -- Update Blood feast timer
-		self:Bar(263235, 15) -- Blood Feast
+	function mod:WaveofCorruption(args)
+		self:Message2(args.spellId, "yellow", CL.count:format(args.spellName, waveOfCorruptionCount))
+		self:PlaySound(args.spellId, "alarm")
+		self:StopBar(CL.count:format(args.spellName, waveOfCorruptionCount))
+		waveOfCorruptionCount = waveOfCorruptionCount + 1
+		local cd = stage == 3 and (self:Mythic() and 15.9 or 25.5) or waveOfCorruptionCount % 2 == 0 and 15 or 31
+		self:Bar(args.spellId, cd, CL.count:format(args.spellName, waveOfCorruptionCount))
+		self:ScheduleTimer("CreateWaveOfCurruptionHUD", cd - 4)
+		if stage == 2 and waveOfCorruptionCount % 2 == 1 then -- Update Blood feast timer
+			self:Bar(263235, 15) -- Blood Feast
+		end
 	end
 end
 

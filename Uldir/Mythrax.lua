@@ -195,6 +195,10 @@ function mod:UNIT_SPELLCAST_SUCCEEDED(_, _, _, spellId)
 	end
 end
 
+function mod:OnBossDisable()
+	self:ClearOblivionSphereHUD()
+end
+
 function mod:Annihilation(args)
 	annihilationList[args.destName] = args.amount or 1
 	self:SetInfoByTable(args.spellId, annihilationList)
